@@ -212,56 +212,95 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="relative w-full max-w-sm overflow-hidden bg-white border border-black/10 rounded-2xl shadow-2xl z-10 p-6 space-y-5"
+            className="relative w-full max-w-sm overflow-hidden bg-white/95 backdrop-blur-md border border-gray-200/60 rounded-3xl shadow-2xl z-10 p-6 space-y-5 font-sans"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-black/5 pb-3">
-              <div className="flex items-center gap-1.5">
-                <Sparkles size={16} className="text-[#FF6B00]" />
-                <h3 className="text-lg font-bold font-display text-black uppercase tracking-tight">
-                  {mode === 'login' && 'Login to TripGod'}
-                  {mode === 'signup' && 'Create TripGod Account'}
-                  {mode === 'otp' && 'Verify Your Email'}
-                </h3>
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-[#FF6B00]/10 rounded-xl text-[#FF6B00] shadow-sm">
+                  <Sparkles size={18} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black font-display text-black uppercase tracking-tight">
+                    {mode === 'otp' ? 'Verify Code' : 'TripGod Account'}
+                  </h3>
+                  <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wider">
+                    {mode === 'otp' ? 'Check your email inbox' : 'Adventure awaits you'}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-1 rounded-full hover:bg-black/5 transition-colors"
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-all duration-200"
               >
                 <X size={18} />
               </button>
             </div>
 
             {error && (
-              <div className="p-3 text-xs bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r font-semibold">
+              <div className="p-3.5 text-xs bg-red-50 border-l-4 border-red-500 text-red-700 rounded-xl font-semibold">
                 {error}
               </div>
             )}
 
             {/* Success Checkmark Animation */}
             {success ? (
-              <div className="py-8 flex flex-col items-center justify-center space-y-4 font-sans text-center">
+              <div className="py-10 flex flex-col items-center justify-center space-y-4 font-sans text-center">
                 <motionImport
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                  className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center border-2 border-green-500 text-green-500"
+                  className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center border-2 border-green-500 text-green-500 shadow-lg shadow-green-500/10"
                 >
-                  <CheckCircle size={32} className="stroke-[2.5]" />
+                  <CheckCircle size={40} className="stroke-[2.5]" />
                 </motionImport>
                 <div>
-                  <h4 className="font-bold text-base text-black">OTP Verified Successfully!</h4>
-                  <p className="text-xs text-gray-500 mt-1">Logging you in, please wait...</p>
+                  <h4 className="font-extrabold text-lg text-black">OTP Verified Successfully!</h4>
+                  <p className="text-xs text-gray-500 mt-1">Setting up your session, please wait...</p>
                 </div>
               </div>
             ) : (
               <>
-                {/* 1. LOGIN MODE FORM */}
+                {/* 1. SEGMENTED TABS CONTROLLER (Only show in login/signup modes) */}
+                {mode !== 'otp' && (
+                  <div className="flex bg-gray-100 p-1.5 rounded-xl border border-gray-200/50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('login');
+                        setError('');
+                      }}
+                      className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all duration-300 ${
+                        mode === 'login'
+                          ? 'bg-white text-black shadow-sm'
+                          : 'text-gray-400 hover:text-black'
+                      }`}
+                    >
+                      Login
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('signup');
+                        setError('');
+                      }}
+                      className={`flex-1 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all duration-300 ${
+                        mode === 'signup'
+                          ? 'bg-white text-black shadow-sm'
+                          : 'text-gray-400 hover:text-black'
+                      }`}
+                    >
+                      Create Account
+                    </button>
+                  </div>
+                )}
+
+                {/* 2. LOGIN MODE FORM */}
                 {mode === 'login' && (
-                  <form onSubmit={handleLoginSubmit} className="space-y-4 font-sans text-left">
+                  <form onSubmit={handleLoginSubmit} className="space-y-5 font-sans text-left">
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                        <Mail size={12} className="text-black" /> Email Address
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                        <Mail size={12} className="text-gray-500" /> Email Address
                       </label>
                       <input
                         type="email"
@@ -271,12 +310,12 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                           setEmail(e.target.value);
                           setError('');
                         }}
-                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-semibold text-sm"
+                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 font-semibold text-sm transition-all duration-200 placeholder-gray-400"
                         placeholder="name@example.com"
                       />
                     </div>
 
-                    <div className="flex gap-2 p-3 bg-gray-50 text-gray-500 rounded-lg text-[10px] leading-relaxed border border-black/5 font-semibold">
+                    <div className="flex gap-2.5 p-3.5 bg-gray-50 text-gray-500 rounded-xl text-[10px] leading-relaxed border border-gray-200/50 font-semibold">
                       <ShieldCheck size={16} className="text-black flex-shrink-0" />
                       <span>
                         Enter your registered email. We will send a 6-digit OTP code to verify and log you in.
@@ -286,32 +325,19 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer font-display disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 border-none cursor-pointer font-display disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? 'Sending OTP...' : 'Send Verification OTP'} {!loading && <ArrowRight size={14} className="inline ml-1" />}
                     </button>
-
-                    <div className="text-center pt-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMode('signup');
-                          setError('');
-                        }}
-                        className="text-xs font-black text-black hover:text-[#FF6B00] hover:underline"
-                      >
-                        Don't have an account? Sign Up Here
-                      </button>
-                    </div>
                   </form>
                 )}
 
-                {/* 2. SIGNUP MODE FORM */}
+                {/* 3. SIGNUP MODE FORM */}
                 {mode === 'signup' && (
                   <form onSubmit={handleSignupSubmit} className="space-y-4 font-sans text-left">
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                        <User size={12} className="text-black" /> Full Name
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                        <User size={12} className="text-gray-500" /> Full Name
                       </label>
                       <input
                         type="text"
@@ -321,14 +347,14 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                           setName(e.target.value);
                           setError('');
                         }}
-                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-semibold text-sm"
+                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 font-semibold text-sm transition-all duration-200 placeholder-gray-400"
                         placeholder="Enter your name"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                        <Mail size={12} className="text-black" /> Email Address
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                        <Mail size={12} className="text-gray-500" /> Email Address
                       </label>
                       <input
                         type="email"
@@ -338,14 +364,14 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                           setEmail(e.target.value);
                           setError('');
                         }}
-                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-semibold text-sm"
+                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 font-semibold text-sm transition-all duration-200 placeholder-gray-400"
                         placeholder="name@example.com"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                        <Phone size={12} className="text-black" /> Mobile Number
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                        <Phone size={12} className="text-gray-500" /> Mobile Number
                       </label>
                       <input
                         type="tel"
@@ -356,7 +382,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                           setPhone(e.target.value.replace(/\D/g, ''));
                           setError('');
                         }}
-                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-semibold text-sm"
+                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 font-semibold text-sm transition-all duration-200 placeholder-gray-400"
                         placeholder="Enter 10-digit number"
                       />
                     </div>
@@ -364,34 +390,21 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer font-display disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 border-none cursor-pointer font-display disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? 'Sending OTP...' : 'Create Account & Verify'} {!loading && <ArrowRight size={14} className="inline ml-1" />}
                     </button>
-
-                    <div className="text-center pt-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMode('login');
-                          setError('');
-                        }}
-                        className="text-xs font-black text-black hover:text-[#FF6B00] hover:underline"
-                      >
-                        Already have an account? Log In
-                      </button>
-                    </div>
                   </form>
                 )}
 
-                {/* 3. OTP VERIFICATION FORM */}
+                {/* 4. OTP VERIFICATION FORM */}
                 {mode === 'otp' && (
                   <div className="space-y-5 font-sans text-left">
-                    <div className="text-center space-y-1.5">
-                      <p className="text-xs font-medium text-gray-600">
-                        OTP verification code sent to:
+                    <div className="text-center space-y-2 bg-gray-50 p-4 border border-gray-200/40 rounded-2xl">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        OTP verification code sent to
                       </p>
-                      <p className="text-xs font-bold text-black font-mono select-all bg-gray-50 px-2.5 py-1 rounded inline-block border border-black/5">
+                      <p className="text-sm font-bold text-black font-mono select-all bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm inline-block">
                         {email}
                       </p>
                     </div>
@@ -407,7 +420,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                           value={val}
                           onChange={(e) => handleOtpInput(e.target.value, idx)}
                           onKeyDown={(e) => handleKeyDown(e, idx)}
-                          className="w-11 h-12 border-2 border-black rounded-xl text-center font-black text-base text-black bg-white focus:outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/15"
+                          className="w-11 h-12 border border-gray-300 rounded-xl text-center font-black text-base text-black bg-white focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 transition-all duration-200"
                         />
                       ))}
                     </div>
@@ -415,8 +428,8 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                     {/* Countdown and Resend */}
                     <div className="text-center">
                       {countdown > 0 ? (
-                        <span className="text-[11px] font-semibold text-gray-400">
-                          Resend OTP code in <strong className="text-black font-mono">{countdown}s</strong>
+                        <span className="text-[11px] font-bold text-gray-400">
+                          Resend OTP code in <strong className="text-black font-mono bg-gray-100 px-1.5 py-0.5 rounded">{countdown}s</strong>
                         </span>
                       ) : (
                         <button
@@ -436,13 +449,13 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                           setMode('login');
                           setError('');
                         }}
-                        className="flex-1 py-3 border border-black/20 rounded-xl text-xs font-bold bg-white text-black hover:bg-black hover:text-[#FF5F00] hover:border-black transition-all hover:scale-[1.02]"
+                        className="flex-1 py-3 border border-gray-200 rounded-xl text-xs font-black bg-white text-black hover:bg-black hover:text-[#FF5F00] hover:border-black transition-all hover:scale-[1.01] active:scale-[0.99]"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={verifyOtp}
-                        className="flex-1 py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                        className="flex-1 py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
                       >
                         Verify & Login
                       </button>
