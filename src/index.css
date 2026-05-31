@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #FF6B00;
+  --color-brand-black: #000000;
+  --color-brand-white: #FFFFFF;
+  --font-display: 'Outfit', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FF6B00;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Custom glow utility */
+.hover-glow {
+  transition: all 0.3s ease;
+}
+.hover-glow:hover {
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
+  border-color: #FF6B00;
+}
+
+/* Base styling */
+body {
+  font-family: var(--font-sans);
+  background-color: #FAF9F6;
+  color: #000000;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom horizontal scroll for mobile stretches */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Repeating travel doodles wallpaper */
+.bg-travel-doodle {
+  background-color: #F05E43;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg stroke='%23ffffff' stroke-width='0.85' fill='none' opacity='0.12' stroke-linecap='round' stroke-linejoin='round'%3E%3C!-- Mountains --%3E%3Cpath d='M15 50 L35 25 L55 50 M30 44 L40 34 M35 25 L45 38'/%3E%3Cpath d='M45 50 L60 33 L75 50'/%3E%3C!-- Compass --%3E%3Ccircle cx='120' cy='45' r='14'/%3E%3Cpath d='M120 27 v36 M102 45 h36 M113 38 l14 14 M113 52 l14 -14'/%3E%3C!-- Plane --%3E%3Cpath d='M180 30 L195 30 L198 25 L200 30 L208 30 L204 33 L207 40 L202 35 L190 35 L180 30 Z'/%3E%3Cpath d='M195 30 Q188 22 180 20' stroke-dasharray='2,2'/%3E%3C!-- Tent --%3E%3Cpath d='M25 155 L45 125 L65 155 Z M45 125 L45 155 M35 155 L45 140 L55 155'/%3E%3C!-- Backpack --%3E%3Crect x='105' y='125' width='18' height='22' rx='3'/%3E%3Cpath d='M105 132 h18 M111 125 v-4 M117 125 v-4 M102 135 h3 M123 135 h3 M109 147 h10'/%3E%3C!-- Waves --%3E%3Cpath d='M170 145 c6 -4 12 -4 18 0 s12 4 18 0 s12 -4 18 0'/%3E%3Cpath d='M173 151 c6 -4 12 -4 18 0 s12 4 18 0 s12 -4 18 0'/%3E%3C!-- Text: TRAVEL --%3E%3Cpath d='M75 90 h8 M79 90 v12 M88 90 h6 M91 90 c3 0 5 2 5 4 s-2 4 -5 4 h-3 M91 98 l5 4 M103 102 l5 -12 h2 l5 12 M105 98 h6 M118 90 l4 10 l4 -10 M127 90 h8 v12 h-8 v-12 M127 96 h6 M140 90 h5 v12 h-5 M140 102 h8'/%3E%3C!-- Small Details --%3E%3Ccircle cx='80' cy='30' r='1.5' fill='%23ffffff'/%3E%3Ccircle cx='155' cy='135' r='1.5' fill='%23ffffff'/%3E%3Ccircle cx='150' cy='45' r='1' fill='%23ffffff'/%3E%3Cpath d='M15 130 l5 5 M20 130 l-5 5'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+}

@@ -1,0 +1,1075 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { 
+  Waves, Zap, Compass, Milestone, 
+  ArrowRight, ShieldCheck, CreditCard, 
+  Star, MessageSquare, Lock, PhoneCall, ChevronDown
+} from 'lucide-react';
+import CountUp from '../components/CountUp';
+
+const BungeeIcon = (props) => (
+  <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M 75 15 L 90 15" strokeWidth="8" />
+    <path d="M 82 15 Q 85 30 75 40 T 80 58" strokeWidth="4" />
+    <path d="M 80 58 L 68 62" />
+    <path d="M 68 62 L 45 74" strokeWidth="8" />
+    <circle cx="37" cy="78" r="6" fill="#FF6B00" />
+    <path d="M 68 62 L 60 48" />
+    <path d="M 50 68 L 38 58 M 50 68 L 56 80" />
+  </svg>
+);
+
+const RaftingIcon = (props) => (
+  <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M 25 58 C 25 73 75 73 75 58 C 75 48 25 48 25 58 Z" fill="#FF6B00" />
+    <path d="M 15 78 Q 30 73 45 78 T 75 78 T 90 78" strokeWidth="4" />
+    <circle cx="43" cy="38" r="5" fill="#FF6B00" />
+    <path d="M 43 43 L 48 53" />
+    <path d="M 33 33 L 58 63" strokeWidth="4" />
+    <circle cx="63" cy="38" r="5" fill="#FF6B00" />
+    <path d="M 63 43 L 68 53" />
+    <path d="M 53 33 L 78 63" strokeWidth="4" />
+  </svg>
+);
+
+const ParaglidingIcon = (props) => (
+  <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M 20 40 C 20 15 80 15 80 40 C 65 35 35 35 20 40 Z" fill="#FF6B00" />
+    <path d="M 20 40 L 50 72 M 38 37 L 50 72 M 62 37 L 50 72 M 80 40 L 50 72" strokeWidth="2.5" />
+    <circle cx="50" cy="76" r="5" fill="#FF6B00" />
+    <path d="M 50 81 L 50 92 L 45 97 M 50 92 L 55 97" />
+  </svg>
+);
+
+const ZiplineIcon = (props) => (
+  <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M 15 35 L 85 65" strokeWidth="4" />
+    <path d="M 45 48 L 55 52" strokeWidth="8" />
+    <path d="M 50 50 L 50 64" strokeWidth="3" />
+    <circle cx="50" cy="69" r="5" fill="#FF6B00" />
+    <path d="M 50 74 L 45 84 L 35 87 M 45 84 L 55 89" />
+    <path d="M 50 76 L 65 71 M 50 76 L 35 79" />
+  </svg>
+);
+
+const BikeIcon = (props) => (
+  <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="30" cy="65" r="14" />
+    <circle cx="70" cy="65" r="14" />
+    <path d="M 30 65 L 46 38 L 64 38 L 70 65" />
+    <path d="M 46 38 L 50 65" />
+    <path d="M 60 25 L 68 25 L 72 38" />
+    <path d="M 40 32 L 50 32" strokeWidth="8" />
+  </svg>
+);
+
+const BungeeJumperSvg = (props) => (
+  <svg viewBox="0 0 100 120" className="w-14 sm:w-20 h-auto" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    {/* Cord attachment */}
+    <line x1="50" y1="5" x2="50" y2="18" stroke="#FFD700" strokeWidth="4" />
+    {/* Legs together, diving headfirst */}
+    <path d="M 45 18 L 50 45 M 55 18 L 50 45" stroke="#000000" strokeWidth="7" />
+    {/* Torso */}
+    <path d="M 50 45 L 50 80" stroke="#FF6B00" strokeWidth="12" />
+    {/* Arms wide open */}
+    <path d="M 15 65 L 50 50 L 85 65" stroke="#FF6B00" strokeWidth="8" />
+    {/* Head */}
+    <circle cx="50" cy="92" r="9" fill="#FF6B00" />
+  </svg>
+);
+
+const heroSlides = [
+  {
+    image: '/rafting-hero.jpg',
+    activity: 'White Water Rafting',
+    accent: 'Rafting'
+  },
+  {
+    image: '/bungee-hero.jpg',
+    activity: 'Bungee Jumping',
+    accent: 'Bungee'
+  },
+  {
+    image: '/zipline-hero.jpg',
+    activity: 'Ganga Ziplining',
+    accent: 'Zipline'
+  },
+  {
+    image: '/paragliding-hero.jpg',
+    activity: 'Mountain Paragliding',
+    accent: 'Paragliding'
+  },
+  {
+    image: '/camping-hero.jpg',
+    activity: 'Riverside Camping',
+    accent: 'Camping'
+  }
+];
+
+export default function Home({ setRoute, openBookingModal }) {
+  // Slideshow state
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Mouse position tracking for Hero tilt parallax
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setMousePos({ x, y });
+  };
+  const handleMouseLeave = () => {
+    setMousePos({ x: 0, y: 0 });
+  };
+
+  // Reviews auto-sliding states
+  const [activeReviewIdx, setActiveReviewIdx] = useState(0);
+  const [isHoveringReviews, setIsHoveringReviews] = useState(false);
+  const reviewsContainerRef = useRef(null);
+
+  // FAQ state
+  const [openFaqIdx, setOpenFaqIdx] = useState(null);
+
+  const toggleFaq = (idx) => {
+    setOpenFaqIdx(openFaqIdx === idx ? null : idx);
+  };
+
+  // Scroll animations for Bungee Jumper
+  const { scrollY } = useScroll();
+  const ropeHeight = useTransform(scrollY, [0, 1500], [15, 2500]);
+  const jumperRotate = useTransform(scrollY, [0, 300, 600, 900, 1200], [0, -25, 25, -15, 0]);
+  const jumperOpacity = useTransform(scrollY, [0, 1000, 1400], [1, 1, 0]);
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12
+      }
+    }
+  };
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 35 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80, damping: 15 } }
+  };
+
+  const quickAccess = [
+    { label: 'Bungee', icon: BungeeIcon, route: 'bungee' },
+    { label: 'Rafting', icon: RaftingIcon, route: 'rafting' },
+    { label: 'Paragliding', icon: ParaglidingIcon, route: 'paragliding' },
+    { label: 'Zipline', icon: ZiplineIcon, route: 'zipline' },
+    { label: 'Bike Rent', icon: BikeIcon, route: 'bikerent' }
+  ];
+
+  const activities = [
+    {
+      id: 'rafting',
+      name: 'River Rafting',
+      desc: 'Fight the rapids of the holy Ganges with certified guides.',
+      price: '1,290',
+      img: '/rafting-hero.jpg',
+      route: 'rafting'
+    },
+    {
+      id: 'bungee',
+      name: 'Bungee Jumping',
+      desc: 'Leap from India\'s highest fixed platform in Tapovan/Shivpuri.',
+      price: '3,500',
+      img: '/bungee-hero.jpg',
+      route: 'bungee'
+    },
+    {
+      id: 'zipline',
+      name: 'Ganga Zipline',
+      desc: 'Glide over the gushing Ganges at speeds up to 140-160 km/h.',
+      price: '2,000',
+      img: '/zipline-hero.jpg',
+      route: 'zipline'
+    },
+    {
+      id: 'paragliding',
+      name: 'Paragliding',
+      desc: 'Soar high above Rishikesh hills with experienced tandem pilots.',
+      price: '4,500',
+      img: '/paragliding-hero.jpg',
+      route: 'paragliding'
+    },
+    {
+      id: 'swing',
+      name: 'Giant Swing',
+      desc: 'Swing 113m above deep valleys, single or in couples.',
+      price: '3,600',
+      img: '/swing-hero.png',
+      route: 'swing'
+    },
+    {
+      id: 'camping',
+      name: 'Riverside Camping',
+      desc: 'Swiss tents, bonfire, snacks and buffet meals near Shivpuri.',
+      price: '1,800',
+      img: '/camping-hero.jpg',
+      route: 'camping'
+    },
+    {
+      id: 'bikerent',
+      name: 'Bike & Scooty Rentals',
+      desc: 'Rent scooters and cruise bikes from ₹500/day to explore Rishikesh on your own terms.',
+      price: '500',
+      img: '/bikerent-hero.jpg',
+      route: 'bikerent'
+    },
+    {
+      id: 'pickup',
+      name: 'Pickup & Drop',
+      desc: 'Local Rishikesh transfers via Mahindra & Vikram blue autos. 100% offline bookings with zero advance.',
+      price: 'Price on Call',
+      img: '/vikram-blue.jpg',
+      route: 'pickup'
+    },
+    {
+      id: 'hotels',
+      name: 'Resort & Hotel Stays',
+      desc: 'Book beautiful river-view resorts, cottages, and yoga ashrams.',
+      price: '2,200',
+      img: '/hotels-hero.jpg',
+      route: 'hotels'
+    }
+  ];
+
+  const raftingStretches = [
+    {
+      km: '12 KM',
+      stretch: 'Shivpuri → Laxman Jhula',
+      time: '2-3 hrs',
+      level: 'Moderate',
+      price: 1290,
+      badge: 'MOST POPULAR'
+    },
+    {
+      km: '16 KM',
+      stretch: 'Shivpuri → Nim Beach',
+      time: '3.5 hrs',
+      level: 'Thrilling',
+      price: 1590
+    },
+    {
+      km: '26 KM',
+      stretch: 'Marine Drive → Nim Beach',
+      time: '5-6 hrs',
+      level: 'Advanced',
+      price: 2490
+    }
+  ];
+
+  const stats = [
+    { label: 'Happy Customers', value: '500+' },
+    { label: 'Adventure Types', value: '4' },
+    { label: 'Refund Guarantee', value: '100%' },
+    { label: 'WhatsApp Support', value: '24/7' }
+  ];
+
+  const rentalBikes = [
+    {
+      id: 'bike-activa',
+      name: 'Activa or Similar',
+      type: 'Automatic Scooter',
+      spec: 'Easy Handling | Practical for Rishikesh Streets',
+      price: 800,
+      img: '/scooty-rent.jpg',
+      badge: 'POPULAR'
+    },
+    {
+      id: 'bike-classic',
+      name: 'Royal Enfield Classic',
+      type: 'Cruiser Motorcycle',
+      spec: '350cc | Comfort Seat | Iconic Thump',
+      price: 1300,
+      img: '/classic-rent.png',
+      badge: 'ICONIC THUMP'
+    },
+    {
+      id: 'bike-hunter',
+      name: 'Hunter 350',
+      type: 'Urban Roadster',
+      spec: '350cc | Nimble Handling | Retro Styling',
+      price: 1300,
+      img: '/hunter-rent.jpg'
+    },
+    {
+      id: 'bike-xpulse',
+      name: 'Xpulse 200',
+      type: 'Dual-Purpose Dual-Sport',
+      spec: '200cc | Light Weight | Long Travel Suspension',
+      price: 1300,
+      img: '/xpulse-rent.jpg'
+    },
+    {
+      id: 'bike-himalayan',
+      name: 'Himalayan 450 CC',
+      type: 'Adventure Tourer',
+      spec: '450cc | Sherpa Liquid-Cooled Engine',
+      price: 1600,
+      img: '/himalayan-rent.jpg'
+    }
+  ];
+
+  const reviews = [
+    { name: 'Amit Sharma', initials: 'AS', location: 'India • Rishikesh', activity: 'River Rafting', stars: 5, text: 'Rafting from Shivpuri was an incredible experience! The guides were very professional and safety-conscious.' },
+    { name: 'Priya Patel', initials: 'PP', location: 'India • Rishikesh', activity: 'Bungee Jumping', stars: 5, text: 'The 117m jump was terrifying but amazing. The DSLR video they gave was cinema quality!' },
+    { name: 'Vikram Singh', initials: 'VS', location: 'India • Rishikesh', activity: 'Ganga Zipline', stars: 5, text: 'Zipping across the Ganges was the highlight of our Rishikesh trip. Breath-taking views!' },
+    { name: 'Rohan Gupta', initials: 'RG', location: 'India • Rishikesh', activity: 'Riverside Camping', stars: 5, text: 'Swiss tents were clean, food was delicious, and the bonfire night was magical. Highly recommended!' },
+    { name: 'Sara Khan', initials: 'SK', location: 'India • Rishikesh', activity: 'Giant Swing', stars: 5, text: 'An absolute adrenaline rush. TripGod made booking so easy via WhatsApp!' }
+  ];
+
+  const faqs = [
+    {
+      q: "How much advance payment is required to secure a booking?",
+      a: "You only need to pay a 10% advance online using UPI, credit cards, or net banking. The remaining 90% balance can be paid directly in cash or UPI at the venue or rental desk before starting your activity."
+    },
+    {
+      q: "What is your refund and cancellation policy?",
+      a: "If you cancel 24 hours or more before your scheduled trip time, your 10% booking advance is 100% refundable, no questions asked. Cancellations made within 24 hours of the trip are non-refundable."
+    },
+    {
+      q: "Is swimming mandatory for river rafting?",
+      a: "Not at all! Every rafter is equipped with a high-buoyancy life jacket, safety helmet, and guided by a certified rafting operator. Non-swimmers can comfortably do all rafting stretches."
+    },
+    {
+      q: "What documents do I need to rent a bike or scooty?",
+      a: "You need a physical, valid Indian or International Driving License (DL) for two-wheelers, plus one original Government Photo ID (Aadhaar, Passport, or Voter ID) which will be safely kept and returned upon vehicle submission."
+    },
+    {
+      q: "Is TripGod an aggregator or the direct operator?",
+      a: "TripGod is a marketplace aggregator. We tie up with certified, highly vetted, and safe adventure companies in Rishikesh. We ensure premium quality, standard flat rates, and handle cancellations/refunds reliably."
+    }
+  ];
+
+  // Auto sliding reviews effect
+  useEffect(() => {
+    if (isHoveringReviews) return;
+    const interval = setInterval(() => {
+      setActiveReviewIdx((prev) => (prev + 1) % reviews.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isHoveringReviews, reviews.length]);
+
+  return (
+    <div className="w-full min-h-screen bg-gradient-to-b from-[#FAF8F5] via-[#F3F5F6] to-[#FAF8F5] text-black">
+      {/* 1. Hero Section */}
+      <div 
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        className="relative min-h-[85vh] md:min-h-[90vh] flex items-center justify-center bg-[#0B0C10] font-sans overflow-hidden cursor-default"
+      >
+        {/* Infinite Cross-fading Adventure Slideshow Background */}
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentHeroSlide}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 0.5, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              style={{ backgroundImage: `url(${heroSlides[currentHeroSlide].image})` }}
+              className="absolute inset-0 bg-cover bg-center"
+            />
+          </AnimatePresence>
+          {/* Dark Glassmorphic/Overlay Gradients */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/60 to-black/85 z-[1]" />
+          <div className="absolute inset-0 bg-radial-gradient from-transparent via-[#050508]/40 to-[#0B0C10]/95 z-[1]" />
+
+          {/* Interactive Floating Splash Water Droplets/Particles */}
+          <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none">
+            {/* Ambient Base Glow Blobs shifting with mouse */}
+            <motion.div 
+              animate={{
+                x: mousePos.x * 30,
+                y: mousePos.y * 30
+              }}
+              transition={{ type: "spring", stiffness: 60, damping: 20 }}
+              className="absolute top-1/4 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full bg-[#FF5F00]/15 blur-[120px]" 
+            />
+            <motion.div 
+              animate={{
+                x: mousePos.x * -30,
+                y: mousePos.y * -30
+              }}
+              transition={{ type: "spring", stiffness: 60, damping: 20 }}
+              className="absolute bottom-1/4 right-1/4 w-[250px] sm:w-[450px] h-[250px] sm:h-[450px] rounded-full bg-[#FF3E00]/10 blur-[100px]" 
+            />
+
+            {/* Drifting water bubbles/particles */}
+            {[...Array(12)].map((_, i) => {
+              const size = [8, 12, 16, 20, 24][i % 5];
+              const delays = [0, 2, 4, 1.5, 3, 5, 0.5, 2.5, 1, 3.5, 2, 4.5];
+              const duration = [8, 12, 10, 14, 9, 11, 13, 8, 11, 9, 14, 10];
+              const startX = [10, 25, 45, 60, 80, 95, 15, 35, 55, 70, 85, 90];
+              const startY = [90, 85, 95, 90, 88, 92, 87, 89, 93, 86, 91, 94];
+
+              return (
+                <motion.div
+                  key={i}
+                  animate={{
+                    y: [0, -350],
+                    x: [0, (i % 2 === 0 ? 30 : -30)],
+                    opacity: [0, 0.45, 0]
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: duration[i % duration.length],
+                    ease: "easeInOut",
+                    delay: delays[i % delays.length]
+                  }}
+                  style={{
+                    left: `${startX[i % startX.length]}%`,
+                    top: `${startY[i % startY.length]}%`,
+                    width: size,
+                    height: size
+                  }}
+                  className="absolute rounded-full bg-white/20 border border-white/30 backdrop-blur-xs"
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Light Glassmorphic Refraction Layer */}
+        <div className="absolute inset-0 bg-[#0B0C10]/15 backdrop-blur-[2px] z-[2] pointer-events-none" />
+
+        {/* Content Wrapper */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-6 pt-16 pb-12">
+          <motion.span 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md text-[#FF6B00] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)] animate-pulse"
+          >
+            Rishikesh's #1 Adventure Partner
+          </motion.span>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-black text-white leading-tight font-display tracking-tight uppercase"
+          >
+            CHASE THE WILD RUSH <br />
+            IN <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF7A00] to-[#FF3E00] drop-shadow-[0_2px_10px_rgba(255,95,0,0.2)] font-black">RISHIKESH</span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-medium"
+          >
+            Rishikesh's #1 adventure booking platform. Book bungee jumps, river rafting, paragliding & camps at just <strong className="text-accent">10% advance</strong> with <strong className="text-white">100% refund guarantee</strong>.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+          >
+            <button 
+              onClick={() => setRoute('rafting')}
+              className="w-full sm:w-auto py-4 px-8 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-[0_8px_30px_rgba(255,95,0,0.4)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.6)] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-300 border-none cursor-pointer text-center"
+            >
+              Book Now
+            </button>
+            <button 
+              onClick={() => {
+                document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="w-full sm:w-auto py-4 px-8 border border-white/20 text-white font-black text-sm uppercase tracking-wider rounded-xl bg-white/5 backdrop-blur-sm hover:border-[#FF5F00]/50 hover:bg-[#FF5F00]/10 hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-300 text-center cursor-pointer shadow-lg"
+            >
+              View All Adventures
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Bungee Jumping Platform & Jumper Group (positioned relative to screen viewport width) */}
+        <div className="absolute top-6 right-2 sm:right-12 md:right-24 z-20 pointer-events-none select-none">
+          {/* Platform Structure */}
+          <div className="w-24 md:w-32 h-4 bg-neutral-800 border-2 border-black rounded-l-xl shadow-lg relative">
+            {/* Flashing light on the tip */}
+            <div className="absolute top-0.5 left-1.5 w-2 h-2 rounded-full bg-accent animate-pulse" />
+            
+            {/* Hanging rope anchor - attached to the bottom left of the platform */}
+            <div className="absolute top-3 left-1 flex flex-col items-center w-4">
+              {/* Pulley/Knot */}
+              <div className="w-2 h-2 bg-neutral-700 rounded-sm" />
+              
+              {/* Stretching Bungee Rope */}
+              <motion.div 
+                style={{ height: ropeHeight }} 
+                className="w-0.5 bg-[#FFD700] border-l border-black/20 origin-top shadow-sm" 
+              />
+              
+              {/* Bungee Jumper Figure */}
+              <motion.div
+                style={{ rotate: jumperRotate, opacity: jumperOpacity }}
+                className="-mt-2.5 flex flex-col items-center"
+              >
+                <BungeeJumperSvg />
+                <span className="text-[7px] md:text-[9px] font-black text-accent tracking-widest uppercase mt-2 bg-black/70 backdrop-blur-xs px-2 py-0.5 rounded border border-accent/20 whitespace-nowrap">
+                  LIVE THE LEAP
+                </span>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* Wave Separator */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
+          <svg viewBox="0 0 1440 120" className="w-full h-auto fill-black translate-y-[2px]" preserveAspectRatio="none">
+            <path d="M0,32L120,42.7C240,53,480,75,720,74.7C960,75,1200,53,1320,42.7L1440,32L1440,120L1320,120C1200,120,960,120,720,120C480,120,240,120,120,120L0,120Z"></path>
+          </svg>
+        </div>
+      </div>
+
+      {/* 5. Infinite Running Stats Ticker */}
+      <div className="bg-black text-white py-5 overflow-hidden border-y border-white/10 font-sans">
+        <div className="flex whitespace-nowrap">
+          <motion.div 
+            animate={{ x: [0, "-33.33%"] }}
+            transition={{ 
+              ease: "linear", 
+              duration: 20, 
+              repeat: Infinity 
+            }}
+            className="flex items-center gap-12 pr-12 text-xs sm:text-sm font-black tracking-widest uppercase"
+          >
+            {[1, 2, 3].map((setIdx) => (
+              <React.Fragment key={setIdx}>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">500+</strong> HAPPY CUSTOMERS</span>
+                <span className="text-white/20 text-lg">•</span>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">4</strong> ADVENTURE TYPES</span>
+                <span className="text-white/20 text-lg">•</span>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">100%</strong> REFUND GUARANTEE</span>
+                <span className="text-white/20 text-lg">•</span>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">24/7</strong> WHATSAPP SUPPORT</span>
+                <span className="text-white/20 text-lg">•</span>
+              </React.Fragment>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      {/* 2. Quick Access Row */}
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="bg-white/40 backdrop-blur-md border-y border-black/5 py-6 shadow-sm"
+      >
+        <div className="max-w-6xl mx-auto px-4 grid grid-cols-5 gap-2 text-center">
+          {quickAccess.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <button 
+                key={index} 
+                onClick={() => setRoute(item.route)}
+                className="flex flex-col items-center gap-1 cursor-pointer group"
+              >
+                <div className="text-accent group-hover:scale-110 transition-transform duration-300 flex items-center justify-center h-10">
+                  <Icon className="w-10 h-10" />
+                </div>
+                <span className="font-bold text-xs text-black tracking-tight mt-1 group-hover:text-accent transition-colors">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* 3. Activity Cards Section */}
+      <div id="adventures" className="max-w-6xl mx-auto px-6 py-20 space-y-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center space-y-2"
+        >
+          <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Select Your Thrill</span>
+          <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">CHOOSE YOUR ADVENTURE</h2>
+          <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+        </motion.div>
+
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8"
+        >
+          {activities.map((act) => (
+            <motion.div
+              key={act.id}
+              variants={fadeInUp}
+              whileHover={{ y: -5 }}
+              onClick={() => setRoute(act.route)}
+              className="border border-white/60 bg-white/60 backdrop-blur-md rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:scale-[1.01] hover:border-accent/40 flex flex-col h-full shadow-[0_8px_32px_rgba(0,0,0,0.04)] group"
+            >
+              {/* Image box */}
+              <div className="h-32 sm:h-56 bg-gray-100 overflow-hidden relative">
+                <img 
+                  src={act.img} 
+                  alt={act.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+                <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-[#FF5F00] text-white text-[9px] sm:text-xs font-black py-0.5 sm:py-1 px-2 sm:px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
+                  {act.price.includes('Call') || act.price.includes('Enquire') ? act.price : `FROM ₹${act.price}`}
+                </div>
+              </div>
+
+              {/* Text content */}
+              <div className="p-3 sm:p-6 flex-1 flex flex-col justify-between space-y-3 sm:space-y-4">
+                <div className="space-y-1 sm:space-y-2">
+                  <h3 className="text-sm sm:text-xl font-bold font-display tracking-tight text-black group-hover:text-[#FF5F00] transition-colors truncate">
+                    {act.name}
+                  </h3>
+                  <p className="text-[10px] sm:text-sm text-gray-600 leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">
+                    {act.desc}
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5">
+                  <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-black flex items-center gap-1 group-hover:text-[#FF5F00] group-hover:underline decoration-accent decoration-2">
+                    Details <ArrowRight size={10} className="sm:hidden" /> <ArrowRight size={14} className="hidden sm:inline" />
+                  </span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setRoute(act.route);
+                    }}
+                    className="w-full sm:w-auto py-1.5 sm:py-2.5 px-2 sm:px-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-[9px] sm:text-xs font-black uppercase rounded-lg hover:shadow-[0_4px_15px_rgba(255,95,0,0.4)] transition-all duration-300 hover:scale-[1.02] border-none text-center cursor-pointer font-display"
+                  >
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* 4. Rafting Stretches Section */}
+      <div className="py-20 border-y border-black/5 overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 space-y-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-2"
+          >
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Recommended Rafting Rates</span>
+            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
+              #1 CHOICE IN RISHIKESH - CHOOSE YOUR RAFTING STRETCH
+            </h2>
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+          </motion.div>
+
+          {/* Cards container with responsive horizontal scroll on mobile */}
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto pt-5 pb-4 md:pb-0 no-scrollbar snap-x snap-mandatory"
+          >
+            {raftingStretches.map((str, idx) => (
+              <motion.div
+                key={idx}
+                variants={fadeInUp}
+                whileHover={{ y: -5 }}
+                onClick={() => setRoute('rafting')}
+                className="flex-shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-center bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-6 space-y-6 flex flex-col justify-between relative hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+              >
+                {str.badge && (
+                  <span className="absolute -top-3 right-6 bg-black text-[#FF6B00] text-[10px] font-black tracking-wider py-1 px-3 rounded-full border border-[#FF6B00]/30 shadow-md">
+                    {str.badge}
+                  </span>
+                )}
+
+                <div className="space-y-4">
+                  <span className="text-3xl font-black font-display text-[#FF5F00]">{str.km}</span>
+                  <div>
+                    <h4 className="font-bold text-lg text-black font-display leading-snug">{str.stretch}</h4>
+                    <div className="flex gap-2 mt-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                      <span>{str.time}</span>
+                      <span>•</span>
+                      <span>{str.level}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-black/5">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xs font-bold text-gray-500">₹</span>
+                    <span className="text-3xl font-black text-black">
+                      <CountUp end={str.price} />
+                    </span>
+                    <span className="text-xs font-bold text-gray-500">/person</span>
+                  </div>
+
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openBookingModal({
+                        id: `rafting-${idx}`,
+                        name: `River Rafting - ${str.km}`,
+                        stretch: str.stretch,
+                        price: str.price,
+                        category: 'rafting'
+                      });
+                    }}
+                    className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer"
+                  >
+                    Book Now
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      {/* 4.5. Bike & Scooty Rentals Section */}
+      <div className="py-20 border-b border-black/5">
+        <div className="max-w-6xl mx-auto px-6 space-y-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-2"
+          >
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Explore Rishikesh Solo</span>
+            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
+              BIKE & SCOOTY RENTALS
+            </h2>
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+          </motion.div>
+
+          {/* Cards container with responsive horizontal scroll on mobile */}
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-6 overflow-x-auto pt-5 pb-4 md:pb-0 no-scrollbar snap-x snap-mandatory"
+          >
+            {rentalBikes.map((bike, idx) => (
+              <motion.div
+                key={idx}
+                variants={fadeInUp}
+                whileHover={{ y: -5 }}
+                onClick={() => setRoute('bikerent')}
+                className="flex-shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-center bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden flex flex-col justify-between relative hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+              >
+                {bike.badge && (
+                  <span className="absolute top-4 right-4 bg-black text-[#FF6B00] text-[10px] font-black tracking-wider py-1 px-3 rounded-full border border-[#FF6B00]/30 shadow-md z-10">
+                    {bike.badge}
+                  </span>
+                )}
+
+                <div className="h-48 bg-gray-100 overflow-hidden relative border-b border-black/5">
+                  <img src={bike.img} alt={bike.name} className="w-full h-full object-cover" />
+                  <div className="absolute bottom-4 left-4 bg-[#FF5F00] text-white text-xs font-black py-1 px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
+                    FROM ₹{bike.price}/DAY
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
+                      {bike.type}
+                    </span>
+                    <h3 className="font-bold text-lg font-display text-black">{bike.name}</h3>
+                    <p className="text-xs text-gray-600 font-medium leading-relaxed">{bike.spec}</p>
+                  </div>
+
+                  <div className="pt-4 border-t border-black/5 mt-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openBookingModal({
+                          id: bike.id,
+                          name: `${bike.name} Rental`,
+                          price: bike.price,
+                          category: 'bikerent',
+                          slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent']
+                        });
+                      }}
+                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                    >
+                      Book Rental
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+
+
+      {/* 6. Trust Section (Compact Infinite Running Ticker) */}
+      <div className="py-6 border-y border-black/5 bg-[#FF5F00]/5 overflow-hidden">
+        <div className="flex whitespace-nowrap">
+          <motion.div 
+            animate={{ x: [0, "-50%"] }}
+            transition={{ 
+              ease: "linear", 
+              duration: 25, 
+              repeat: Infinity 
+            }}
+            className="flex items-center gap-12 pr-12 text-xs font-black tracking-widest uppercase"
+          >
+            {[1, 2].map((setIdx) => (
+              <React.Fragment key={setIdx}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#FF5F00]/15 rounded-full flex items-center justify-center text-[#FF5F00] flex-shrink-0 border border-[#FF5F00]/10">
+                    <Lock size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div className="text-left font-sans">
+                    <h4 className="font-bold text-[10px] font-display tracking-wider text-black uppercase leading-tight">FREE CANCELLATION</h4>
+                    <p className="text-[9px] text-gray-500 font-semibold leading-none mt-0.5">100% refund up to 24h prior.</p>
+                  </div>
+                </div>
+                <span className="text-black/10 text-lg font-bold">•</span>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#FF5F00]/15 rounded-full flex items-center justify-center text-[#FF5F00] flex-shrink-0 border border-[#FF5F00]/10">
+                    <CreditCard size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div className="text-left font-sans">
+                    <h4 className="font-bold text-[10px] font-display tracking-wider text-black uppercase leading-tight">PAY 10% TO BOOK</h4>
+                    <p className="text-[9px] text-gray-500 font-semibold leading-none mt-0.5">Pay 90% balance at venue.</p>
+                  </div>
+                </div>
+                <span className="text-black/10 text-lg font-bold">•</span>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#FF5F00]/15 rounded-full flex items-center justify-center text-[#FF5F00] flex-shrink-0 border border-[#FF5F00]/10">
+                    <Star size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div className="text-left font-sans">
+                    <h4 className="font-bold text-[10px] font-display tracking-wider text-black uppercase leading-tight">VERIFIED OPERATORS</h4>
+                    <p className="text-[9px] text-gray-500 font-semibold leading-none mt-0.5">Safety-first certified crews.</p>
+                  </div>
+                </div>
+                <span className="text-black/10 text-lg font-bold">•</span>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#FF5F00]/15 rounded-full flex items-center justify-center text-[#FF5F00] flex-shrink-0 border border-[#FF5F00]/10">
+                    <PhoneCall size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div className="text-left font-sans">
+                    <h4 className="font-bold text-[10px] font-display tracking-wider text-black uppercase leading-tight">24/7 WHATSAPP HELP</h4>
+                    <p className="text-[9px] text-gray-500 font-semibold leading-none mt-0.5">Instant chat support anytime.</p>
+                  </div>
+                </div>
+                <span className="text-black/10 text-lg font-bold">•</span>
+              </React.Fragment>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      {/* 6.5. FAQ Section */}
+      <div className="py-20 border-y border-black/5">
+        <div className="max-w-4xl mx-auto px-6 space-y-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-2"
+          >
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">GOT QUESTIONS?</span>
+            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent uppercase">
+              FREQUENTLY ASKED QUESTIONS
+            </h2>
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+          </motion.div>
+
+          <div className="space-y-4 max-w-3xl mx-auto font-sans">
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaqIdx === idx;
+              return (
+                <div 
+                  key={idx}
+                  className="border border-white/60 bg-white/60 backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.03)] hover:border-accent/40"
+                >
+                  <button
+                    onClick={() => toggleFaq(idx)}
+                    className="w-full p-5 flex items-center justify-between text-left cursor-pointer group"
+                  >
+                    <span className="font-bold text-sm sm:text-base text-black group-hover:text-accent transition-colors pr-4">
+                      {faq.q}
+                    </span>
+                    <ChevronDown 
+                      size={20} 
+                      className={`text-gray-400 group-hover:text-accent transform transition-transform duration-300 ${isOpen ? 'rotate-180 text-accent' : ''}`} 
+                    />
+                  </button>
+                  
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                      >
+                        <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-600 font-medium leading-relaxed border-t border-black/5">
+                          {faq.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 7. Reviews Section (Infinite Translucent Marquee Slider - Luxury Dark Obsidian Edition) */}
+      <div className="bg-[#0B0C10] py-20 overflow-hidden relative border-y border-white/5">
+        {/* Glowing Sunset Ambient Glow Blobs */}
+        <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] rounded-full bg-[#FF5F00]/5 blur-[80px] pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] rounded-full bg-[#FF3E00]/5 blur-[80px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto px-6 space-y-10 relative z-10 text-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="space-y-2"
+          >
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block font-display">Testimonials</span>
+            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight text-white uppercase">WHAT OUR CUSTOMERS SAY</h2>
+            <div className="w-16 h-1 bg-[#FF6B00] mx-auto mt-4" />
+          </motion.div>
+        </div>
+
+        {/* Infinite Horizontal Carousel */}
+        <div className="w-full mt-10 flex overflow-hidden py-4 no-scrollbar relative select-none">
+          {/* Left/Right fading gradients to look premium */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#0B0C10] to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#0B0C10] to-transparent z-10 pointer-events-none" />
+
+          <motion.div
+            animate={{ x: [0, "-50%"] }}
+            transition={{
+              ease: "linear",
+              duration: 35,
+              repeat: Infinity
+            }}
+            className="flex whitespace-nowrap"
+          >
+            {/* Block 1 */}
+            <div className="flex gap-6 shrink-0 pr-6">
+              {reviews.map((rev, idx) => (
+                <div 
+                  key={idx}
+                  className="w-[250px] sm:w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                >
+                  <div className="space-y-3">
+                    {/* User Profile header */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] flex items-center justify-center font-bold text-white font-display text-xs border border-white/10 shadow-inner">
+                        {rev.initials}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs text-white font-display leading-tight">{rev.name}</h4>
+                        <p className="text-[9px] text-white/50 font-semibold">{rev.location}</p>
+                      </div>
+                      {/* Stars */}
+                      <div className="flex text-yellow-400 gap-0.5 ml-auto text-[10px]">
+                        {[...Array(rev.stars)].map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Review Text */}
+                    <p className="text-[11px] sm:text-xs text-white/80 font-medium leading-relaxed whitespace-normal">
+                      "{rev.text}"
+                    </p>
+                  </div>
+
+                  {/* Bottom tag */}
+                  <div>
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#FF6B00] px-2.5 py-1 bg-[#FF6B00]/10 rounded-lg border border-[#FF6B00]/15 inline-block font-display">
+                      {rev.activity}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Block 2 (Duplicate for seamless loop) */}
+            <div className="flex gap-6 shrink-0 pr-6" aria-hidden="true">
+              {reviews.map((rev, idx) => (
+                <div 
+                  key={`dup-${idx}`}
+                  className="w-[250px] sm:w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                >
+                  <div className="space-y-3">
+                    {/* User Profile header */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] flex items-center justify-center font-bold text-white font-display text-xs border border-white/10 shadow-inner">
+                        {rev.initials}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xs text-white font-display leading-tight">{rev.name}</h4>
+                        <p className="text-[9px] text-white/50 font-semibold">{rev.location}</p>
+                      </div>
+                      {/* Stars */}
+                      <div className="flex text-yellow-400 gap-0.5 ml-auto text-[10px]">
+                        {[...Array(rev.stars)].map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Review Text */}
+                    <p className="text-[11px] sm:text-xs text-white/80 font-medium leading-relaxed whitespace-normal">
+                      "{rev.text}"
+                    </p>
+                  </div>
+
+                  {/* Bottom tag */}
+                  <div>
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#FF6B00] px-2.5 py-1 bg-[#FF6B00]/10 rounded-lg border border-[#FF6B00]/15 inline-block font-display">
+                      {rev.activity}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}

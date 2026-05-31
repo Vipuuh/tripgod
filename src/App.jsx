@@ -1,0 +1,465 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ShoppingBag, Search, LogIn, MessageSquare, X, 
+  MapPin, Phone, Mail, ChevronRight, Waves, Bike, Car, Building2, User
+} from 'lucide-react';
+
+// Pages
+import Home from './pages/Home';
+import Rafting from './pages/Rafting';
+import Bungee from './pages/Bungee';
+import Zipline from './pages/Zipline';
+import Paragliding from './pages/Paragliding';
+import Swing from './pages/Swing';
+import Camping from './pages/Camping';
+import BikeRent from './pages/BikeRent';
+import Pickup from './pages/Pickup';
+import Hotels from './pages/Hotels';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import RefundPolicy from './pages/RefundPolicy';
+
+// Components
+import BookingModal from './components/BookingModal';
+import CartModal from './components/CartModal';
+import LoginModal from './components/LoginModal';
+
+export default function App() {
+  // Navigation State
+  const [route, setRoute] = useState('home');
+  
+  // Cart State
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Booking Modal State
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [bookingActivity, setBookingActivity] = useState(null);
+
+  // Search Drawer State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Login State
+  const [userLoggedIn, setUserLoggedIn] = useState(() => {
+    return localStorage.getItem('tripgod_logged_in') === 'true';
+  });
+  const [userName, setUserName] = useState(() => {
+    return localStorage.getItem('tripgod_user_name') || '';
+  });
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+  // Scroll Progress State
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Handle scroll progress
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalScroll > 0) {
+        setScrollProgress(window.scrollY / totalScroll);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Sync hash routing if user uses back/forward buttons
+  useEffect(() => {
+    const handleHashChange = () => {
+      let hash = window.location.hash;
+      if (hash.startsWith('#/')) {
+        hash = hash.substring(2);
+      } else if (hash.startsWith('#')) {
+        hash = hash.substring(1);
+      }
+
+      const validRoutes = ['home', 'rafting', 'bungee', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'privacy', 'terms', 'refund'];
+
+      if (validRoutes.includes(hash)) {
+        setRoute(hash);
+        window.scrollTo(0, 0);
+      } else if (hash === 'adventures') {
+        setRoute('home');
+        setTimeout(() => {
+          document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      } else {
+        setRoute('home');
+        window.scrollTo(0, 0);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    // Initialize if hash exists on load
+    if (window.location.hash) {
+      handleHashChange();
+    }
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Update URL hash when route changes
+  const navigateTo = (newRoute) => {
+    if (newRoute === 'adventures') {
+      window.location.hash = '#adventures';
+      setRoute('home');
+      setTimeout(() => {
+        document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    } else {
+      window.location.hash = `#/${newRoute}`;
+      setRoute(newRoute);
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleAddToCart = (item) => {
+    setCart((prev) => [...prev, item]);
+    setIsCartOpen(true);
+  };
+
+  const handleRemoveFromCart = (cartId) => {
+    setCart((prev) => prev.filter((item) => item.cartId !== cartId));
+  };
+
+  const openBookingModal = (activity) => {
+    setBookingActivity(activity);
+    setIsBookingModalOpen(true);
+  };
+
+  // Adventure listings for search
+  const searchableAdventures = [
+    { name: 'River Rafting (12 KM Shivpuri)', route: 'rafting' },
+    { name: 'River Rafting (16 KM Nim Beach)', route: 'rafting' },
+    { name: 'River Rafting (26 KM Marine Drive)', route: 'rafting' },
+    { name: 'Bungee Jumping (117M Jumps)', route: 'bungee' },
+    { name: 'Giant Swing (113M Valleys)', route: 'swing' },
+    { name: 'Ganga Zipline Crossings', route: 'zipline' },
+    { name: 'Tandem Paragliding', route: 'paragliding' },
+    { name: 'Riverside Swiss Tent Camping', route: 'camping' },
+    { name: 'Activa or Similar Scooty Rent', route: 'bikerent' },
+    { name: 'Royal Enfield Classic Rent', route: 'bikerent' },
+    { name: 'Hunter 350 Rent', route: 'bikerent' },
+    { name: 'Xpulse 200 Rent', route: 'bikerent' },
+    { name: 'Himalayan 450 CC Rent', route: 'bikerent' },
+    { name: 'Haridwar Railway Station Cabs', route: 'pickup' },
+    { name: 'Dehradun Airport Transfers', route: 'pickup' },
+    { name: 'Ashram Stays & Resorts', route: 'hotels' }
+  ];
+
+  const filteredAdventures = searchQuery
+    ? searchableAdventures.filter(adv => adv.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
+
+  return (
+    <div className="relative min-h-[75vh] bg-gradient-to-b from-[#FAF8F5] via-[#F3F5F6] to-[#FAF8F5] text-black font-sans selection:bg-accent selection:text-black">
+      {/* 1. Scroll Progress Bar */}
+      <div 
+        className="fixed top-0 left-0 right-0 h-1 bg-accent z-50 transform origin-left transition-transform duration-100"
+        style={{ transform: `scaleX(${scrollProgress})` }}
+      />
+
+      {/* 2. Sticky Header */}
+      <header className="sticky top-0 z-40 bg-white/80 border-b border-black/5 backdrop-blur-md shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <div 
+            onClick={() => navigateTo('home')}
+            className="flex items-center cursor-pointer select-none"
+          >
+            <span className="font-black text-2xl tracking-tighter text-black">TRIP</span>
+            <span className="font-black text-2xl tracking-tighter text-accent bg-black px-1.5 py-0.5 rounded ml-0.5">GOD</span>
+          </div>
+
+          {/* Right Action Items */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Search Trigger */}
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
+            >
+              <Search size={20} />
+            </button>
+
+            {/* Cart Trigger */}
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
+            >
+              <ShoppingBag size={20} />
+              {cart.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-accent border border-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
+            </button>
+
+            {/* Login Button */}
+            {userLoggedIn ? (
+              <button 
+                onClick={() => {
+                  setUserLoggedIn(false);
+                  setUserName('');
+                  localStorage.removeItem('tripgod_logged_in');
+                  localStorage.removeItem('tripgod_user_name');
+                  localStorage.removeItem('tripgod_user_email');
+                }}
+                className="py-2 px-4 bg-[#FF5F00]/10 border border-[#FF5F00]/30 text-[#FF5F00] rounded-full font-bold text-xs uppercase flex items-center gap-1.5 transition-all hover:scale-105 hover:bg-[#FF5F00]/20"
+              >
+                <User size={14} /> <span>{userName || 'Esha'}</span>
+              </button>
+            ) : (
+              <button 
+                onClick={() => setIsLoginOpen(true)}
+                className="py-2 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white rounded-full font-black text-xs uppercase tracking-wider shadow-md hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] transition-all hover:scale-105 border-none cursor-pointer font-display"
+              >
+                Login
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* 3. Page Rendering Wrapper */}
+      <main className="w-full min-h-[75vh]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={route}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+          >
+            {route === 'home' && <Home setRoute={navigateTo} openBookingModal={openBookingModal} />}
+            {route === 'rafting' && <Rafting openBookingModal={openBookingModal} />}
+            {route === 'bungee' && <Bungee openBookingModal={openBookingModal} />}
+            {route === 'zipline' && <Zipline openBookingModal={openBookingModal} />}
+            {route === 'paragliding' && <Paragliding openBookingModal={openBookingModal} />}
+            {route === 'swing' && <Swing openBookingModal={openBookingModal} />}
+            {route === 'camping' && <Camping openBookingModal={openBookingModal} />}
+            {route === 'bikerent' && <BikeRent openBookingModal={openBookingModal} />}
+            {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
+            {route === 'hotels' && <Hotels />}
+            {route === 'privacy' && <Privacy />}
+            {route === 'terms' && <Terms />}
+            {route === 'refund' && <RefundPolicy />}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+
+      {/* 4. Footer */}
+      <footer className="bg-black text-white py-16 border-t border-white/10 font-sans">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
+          
+          {/* Logo & Tagline */}
+          <div className="space-y-4 md:col-span-1">
+            <div className="flex items-center select-none">
+              <span className="font-black text-2xl tracking-tighter text-white">TRIP</span>
+              <span className="font-black text-2xl tracking-tighter text-accent bg-white/10 px-1.5 py-0.5 rounded ml-0.5">GOD</span>
+            </div>
+            <p className="text-gray-400 text-xs font-semibold leading-relaxed">
+              Rishikesh's #1 Adventure Booking Partner. Handpicked activities, verified crews and a 100% refund guarantee.
+            </p>
+            {/* Embedded WhatsApp block */}
+            <a 
+              href="https://wa.me/919837371137"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#D5F538] text-black font-black text-xs px-4 py-2.5 rounded-xl uppercase tracking-wider hover-glow transition-all"
+            >
+              <MessageSquare size={14} /> WhatsApp Reservation
+            </a>
+          </div>
+
+          {/* Column 1: Adventures */}
+          <div className="space-y-3">
+            <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Adventures</h4>
+            <ul className="space-y-2 text-xs font-medium text-gray-400">
+              <li><button onClick={() => navigateTo('rafting')} className="hover:text-accent transition-colors">River Rafting</button></li>
+              <li><button onClick={() => navigateTo('bungee')} className="hover:text-accent transition-colors">Bungee Jumping</button></li>
+              <li><button onClick={() => navigateTo('zipline')} className="hover:text-accent transition-colors">Ganga Zipline</button></li>
+              <li><button onClick={() => navigateTo('paragliding')} className="hover:text-accent transition-colors">Paragliding</button></li>
+              <li><button onClick={() => navigateTo('swing')} className="hover:text-accent transition-colors">Giant Swing</button></li>
+              <li><button onClick={() => navigateTo('camping')} className="hover:text-accent transition-colors">Riverside Camping</button></li>
+            </ul>
+          </div>
+
+          {/* Column 2: Services */}
+          <div className="space-y-3">
+            <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Services</h4>
+            <ul className="space-y-2 text-xs font-medium text-gray-400">
+              <li><button onClick={() => navigateTo('bikerent')} className="hover:text-accent transition-colors">Bike & Scooty Rent</button></li>
+              <li><button onClick={() => navigateTo('pickup')} className="hover:text-accent transition-colors">Pickup Drop Cabs</button></li>
+              <li><button onClick={() => navigateTo('hotels')} className="hover:text-accent transition-colors">Boutique Stays</button></li>
+            </ul>
+          </div>
+
+          {/* Column 3: Contact */}
+          <div className="space-y-3">
+            <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Contact</h4>
+            <ul className="space-y-2 text-xs font-medium text-gray-400">
+              <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: 9837371137</li>
+              <li className="flex items-center gap-2"><Mail size={12} /> Email: Tripgod.in@gmail.com</li>
+              <li className="flex items-center gap-2"><MapPin size={12} /> Rishikesh, Uttarakhand, India</li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Copyright */}
+        <div className="max-w-6xl mx-auto px-6 pt-10 mt-10 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+          <span>&copy; 2026 TripGod.in. All rights reserved.</span>
+          <div className="flex flex-wrap gap-4 sm:gap-6 justify-center sm:justify-end">
+            <button onClick={() => navigateTo('privacy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
+            <button onClick={() => navigateTo('terms')} className="hover:text-white transition-colors cursor-pointer">Terms & Conditions</button>
+            <button onClick={() => navigateTo('refund')} className="hover:text-white transition-colors cursor-pointer">Refund & Cancellation Policy</button>
+          </div>
+        </div>
+      </footer>
+
+      {/* 5. Floating WhatsApp Pulsing Button */}
+      <a
+        href="https://wa.me/919837371137"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-20 right-6 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform group cursor-pointer"
+        style={{ contentVisibility: 'auto' }}
+      >
+        {/* Pulsing rings */}
+        <span className="absolute inset-0 rounded-full bg-green-500/40 animate-ping" style={{ animationDuration: '3s' }} />
+        <span className="absolute -inset-1.5 rounded-full bg-green-500/20 animate-pulse" style={{ animationDuration: '3s' }} />
+        
+        {/* White Phone Icon representing WhatsApp */}
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          viewBox="0 0 448 512" 
+          className="w-7 h-7 fill-white relative z-10 transition-transform group-hover:rotate-12"
+        >
+          <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+        </svg>
+      </a>
+
+      {/* 6. Unified Booking Modal */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        activity={bookingActivity}
+        onAddToCart={handleAddToCart}
+      />
+
+      {/* 7. Unified Cart Sidebar Drawer */}
+      <CartModal
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cart={cart}
+        onRemoveItem={handleRemoveFromCart}
+      />
+
+      {/* 8. Search Drawer Overlay */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/60 backdrop-blur-sm">
+            {/* Backdrop click */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => {
+                setIsSearchOpen(false);
+                setSearchQuery('');
+              }}
+            />
+
+            {/* Search Box */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: -20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: -20 }}
+              className="relative w-full max-w-xl bg-white border border-black/10 rounded-2xl shadow-2xl z-10 p-6 space-y-4 mt-12"
+            >
+              <div className="flex items-center justify-between border-b border-black/10 pb-3">
+                <h3 className="text-lg font-bold font-display text-black">Search Rishikesh Adventures</h3>
+                <button 
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery('');
+                  }}
+                  className="p-1 rounded-full hover:bg-black/5"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <input
+                type="text"
+                autoFocus
+                placeholder="Type 'rafting', 'bungee', 'camping'..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-black rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-accent font-semibold"
+              />
+
+              {searchQuery && (
+                <div className="max-h-60 overflow-y-auto border border-black/5 rounded-xl divide-y divide-black/5 bg-gray-50">
+                  {filteredAdventures.length > 0 ? (
+                    filteredAdventures.map((adv, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          navigateTo(adv.route);
+                          setIsSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className="w-full text-left py-3 px-4 text-xs font-bold text-gray-700 hover:bg-accent hover:text-black flex justify-between items-center transition-colors"
+                      >
+                        <span>{adv.name}</span>
+                        <ChevronRight size={14} />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="py-4 text-center text-xs font-semibold text-gray-400">
+                      No matching adventures found. Try 'rafting' or 'bike'.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Suggestions */}
+              <div className="space-y-1.5 pt-1">
+                <span className="block text-[10px] text-gray-400 font-bold uppercase">Popular Queries</span>
+                <div className="flex flex-wrap gap-2">
+                  {['Rafting', 'Bungee', 'Camping', 'Scooty'].map((term, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSearchQuery(term)}
+                      className="px-3 py-1 bg-gray-150 border border-black/5 hover:border-black hover:bg-accent rounded-full text-xs font-bold transition-all"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* 9. Login Modal */}
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onLogin={(data) => {
+          setUserName(data.name);
+          setUserLoggedIn(true);
+          localStorage.setItem('tripgod_logged_in', 'true');
+          localStorage.setItem('tripgod_user_name', data.name);
+          if (data.email) {
+            localStorage.setItem('tripgod_user_email', data.email);
+          }
+        }}
+      />
+    </div>
+  );
+}
