@@ -94,11 +94,11 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
       } else {
         const errText = await response.text();
         console.error('EmailJS error:', errText);
-        setError('Failed to send OTP email. Please make sure your EmailJS service is active.');
+        setError(`EmailJS Error: ${errText || 'Failed to send'}`);
       }
     } catch (err) {
       console.error('Email sending failed:', err);
-      setError('Connection error. Please check your internet connection.');
+      setError(`Connection error: ${err.message || 'Check your internet connection'}`);
     } finally {
       setLoading(false);
     }
