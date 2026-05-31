@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion as motionImport, AnimatePresence as AnimatePresenceImport } from 'framer-motion';
-import { X, Mail, User, Phone, ShieldCheck, ShieldAlert, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
+import { X, Mail, User, Phone, ShieldCheck, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
 
 export default function LoginModal({ isOpen, onClose, onLogin }) {
   const [mode, setMode] = useState('login'); // 'login' | 'signup' | 'otp'
@@ -12,10 +12,9 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [otpInputs, setOtpInputs] = useState(['', '', '', '', '', '']);
   const [countdown, setCountdown] = useState(60);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   const timerRef = useRef(null);
   const inputRefs = useRef([]);
@@ -52,29 +51,57 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
       setGeneratedOtp('');
       setOtpInputs(['', '', '', '', '', '']);
       setCountdown(60);
-      setShowToast(false);
       setError('');
       setSuccess(false);
+      setLoading(false);
     }
   }, [isOpen]);
 
-  // Generate 6-digit OTP
-  const triggerOtpSend = (targetEmail, targetName) => {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(code);
-    setCountdown(60);
-    setMode('otp');
-    setOtpInputs(['', '', '', '', '', '']);
+  // Generate 6-digit OTP and send via EmailJS
+  const triggerOtpSend = async (targetEmail, targetName) => {
+    setLoading(true);
     setError('');
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Trigger SMTP Toast Simulation
-    setToastMessage(code);
-    setShowToast(true);
+    try {
+      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          service_id: 'service_heo4ylg',
+          template_id: 'template_klczx1c',
+          user_id: '4xZnfSBQiVmBt_PfZ',
+          template_params: {
+            to_name: targetName,
+            to_email: targetEmail,
+            otp_code: code,
+          },
+        }),
+      });
 
-    // Auto focus first OTP input box after render
-    setTimeout(() => {
-      inputRefs.current[0]?.focus();
-    }, 150);
+      if (response.ok) {
+        setGeneratedOtp(code);
+        setCountdown(60);
+        setMode('otp');
+        setOtpInputs(['', '', '', '', '', '']);
+        
+        // Auto focus first OTP input box after render
+        setTimeout(() => {
+          inputRefs.current[0]?.focus();
+        }, 150);
+      } else {
+        const errText = await response.text();
+        console.error('EmailJS error:', errText);
+        setError('Failed to send OTP email. Please make sure your EmailJS service is active.');
+      }
+    } catch (err) {
+      console.error('Email sending failed:', err);
+      setError('Connection error. Please check your internet connection.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLoginSubmit = (e) => {
@@ -151,7 +178,6 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
     if (enteredOtp === generatedOtp) {
       setSuccess(true);
       setError('');
-      setShowToast(false);
 
       // Perform actual login
       const registeredUser = localStorage.getItem(`tripgod_profile_${email}`)
@@ -179,46 +205,6 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
             className="absolute inset-0 cursor-pointer"
             onClick={onClose}
           />
-
-          {/* Simulated SMTP Toast Notification */}
-          <AnimatePresenceImport>
-            {showToast && (
-              <motionImport
-                initial={{ opacity: 0, y: -50, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                className="fixed top-6 right-6 z-[9999] max-w-sm w-80 bg-black text-white border-2 border-[#FF6B00] rounded-2xl p-4 shadow-[0_15px_30px_rgba(255,107,0,0.2)] flex gap-4 text-left font-sans"
-              >
-                <div className="text-3xl animate-bounce">📬</div>
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black tracking-widest text-[#FF6B00] uppercase bg-[#FF6B00]/10 px-2 py-0.5 rounded border border-[#FF6B00]/20">
-                      SMTP SERVER
-                    </span>
-                    <button 
-                      onClick={() => setShowToast(false)} 
-                      className="text-white/40 hover:text-white text-xs font-bold"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                  <h4 className="font-bold text-xs text-white">Gmail Verification Service</h4>
-                  <p className="text-[10px] text-gray-400 leading-relaxed">
-                    Sent to: <strong className="text-white font-mono">{email}</strong>
-                  </p>
-                  <div className="p-2 bg-white/5 border border-white/10 rounded-lg flex items-center justify-between mt-1">
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Your OTP is:</span>
-                    <span className="font-mono text-[#FF6B00] font-black text-base tracking-widest select-all animate-pulse">
-                      {toastMessage}
-                    </span>
-                  </div>
-                  <span className="text-[8px] text-[#FF6B00] font-semibold block pt-1">
-                    💡 Click or double-click to select and copy the code.
-                  </span>
-                </div>
-              </motionImport>
-            )}
-          </AnimatePresenceImport>
 
           {/* Modal Container */}
           <motionImport
@@ -298,9 +284,10 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
 
                     <button
                       type="submit"
-                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer font-display"
+                      disabled={loading}
+                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer font-display disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Send Verification OTP <ArrowRight size={14} className="inline ml-1" />
+                      {loading ? 'Sending OTP...' : 'Send Verification OTP'} {!loading && <ArrowRight size={14} className="inline ml-1" />}
                     </button>
 
                     <div className="text-center pt-2">
@@ -375,9 +362,10 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
 
                     <button
                       type="submit"
-                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer font-display"
+                      disabled={loading}
+                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer font-display disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Create Account & Verify <ArrowRight size={14} className="inline ml-1" />
+                      {loading ? 'Sending OTP...' : 'Create Account & Verify'} {!loading && <ArrowRight size={14} className="inline ml-1" />}
                     </button>
 
                     <div className="text-center pt-2">
@@ -400,7 +388,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                   <div className="space-y-5 font-sans text-left">
                     <div className="text-center space-y-1.5">
                       <p className="text-xs font-medium text-gray-600">
-                        We have simulated sending an OTP to:
+                        OTP verification code sent to:
                       </p>
                       <p className="text-xs font-bold text-black font-mono select-all bg-gray-50 px-2.5 py-1 rounded inline-block border border-black/5">
                         {email}
@@ -431,10 +419,11 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                         </span>
                       ) : (
                         <button
+                          disabled={loading}
                           onClick={() => triggerOtpSend(email, name || email.split('@')[0])}
-                          className="text-[11px] font-black text-[#FF6B00] hover:underline"
+                          className="text-[11px] font-black text-[#FF6B00] hover:underline disabled:opacity-50"
                         >
-                          Didn't receive the email? Resend OTP
+                          {loading ? 'Resending...' : "Didn't receive the email? Resend OTP"}
                         </button>
                       )}
                     </div>
