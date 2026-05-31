@@ -31,6 +31,15 @@ export default function ActivityDetail({
     setCurrentImgIdx(0);
   }, [id]);
 
+  // Auto-play image gallery slideshow (slides every 4 seconds)
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImgIdx((prev) => (prev + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [images.length, currentImgIdx]);
+
   const reviews = [
     { name: 'Amit Sharma', stars: 5, text: `Amazing experience! Booking with TripGod was seamless. They sent the location and driver details over WhatsApp immediately.` },
     { name: 'Pooja V.', stars: 5, text: `Professional operators, certified gear. I felt 100% safe during the activity. The 10% advance feature is a lifesaver!` },

@@ -113,6 +113,15 @@ export default function Bungee({ openBookingModal }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-play image gallery slideshow (slides every 4 seconds)
+  useEffect(() => {
+    if (!selectedBungee || !selectedBungee.images || selectedBungee.images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImgIdx((prev) => (prev + 1) % selectedBungee.images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [selectedBungee, currentImgIdx]);
+
   const staggerContainer = {
     hidden: { opacity: 0 },
     show: {

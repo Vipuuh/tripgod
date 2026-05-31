@@ -91,6 +91,15 @@ export default function Rafting({ openBookingModal }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-play image gallery slideshow (slides every 4 seconds)
+  useEffect(() => {
+    if (!selectedStretch || !selectedStretch.images || selectedStretch.images.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentImgIdx((prev) => (prev + 1) % selectedStretch.images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [selectedStretch, currentImgIdx]);
+
   const staggerContainer = {
     hidden: { opacity: 0 },
     show: {
