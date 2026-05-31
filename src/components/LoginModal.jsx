@@ -76,6 +76,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
           template_params: {
             to_name: targetName,
             to_email: targetEmail,
+            email: targetEmail,
             otp_code: code,
           },
         }),
