@@ -348,45 +348,6 @@ export default function Bungee({ openBookingModal }) {
                 )}
               </div>
 
-              {/* Pay 10% Banner */}
-              <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-black">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck size={28} className="text-black flex-shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm uppercase tracking-tight">PAY 10% ADVANCE ONLINE TO SECURE SLOT</h4>
-                    <p className="text-xs text-gray-600 font-medium">Book now at just ₹{Math.round(selectedBungee.price * 0.1)} per jumper. Pay 90% balance on arrival.</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => openBookingModal({
-                    id: selectedBungee.id,
-                    name: selectedBungee.name,
-                    price: selectedBungee.price,
-                    category: 'bungee',
-                    videoIncluded: selectedBungee.videoIncluded
-                  })}
-                  className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
-                >
-                  Book Now
-                </button>
-              </div>
-
-              {/* Auto Sliding Reviews */}
-              <div className="border border-black/5 bg-gray-50 rounded-xl p-6 relative overflow-hidden min-h-[110px] flex items-center">
-                <div className="space-y-2 w-full">
-                  <div className="flex text-yellow-400 gap-0.5">
-                    {[...Array(reviews[activeReviewIdx].stars)].map((_, i) => (
-                      <Star key={i} size={12} fill="currentColor" />
-                    ))}
-                  </div>
-                  <p className="text-sm font-medium italic text-black pr-16">
-                    "{reviews[activeReviewIdx].text}"
-                  </p>
-                  <span className="text-xs font-bold text-gray-500">— {reviews[activeReviewIdx].name}</span>
-                </div>
-                <span className="absolute right-6 text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-bold px-2 py-0.5 rounded">Jump Guest</span>
-              </div>
-
               {/* About and Highlights */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold font-display text-black uppercase tracking-tight">About this Jump</h3>
@@ -467,6 +428,54 @@ export default function Bungee({ openBookingModal }) {
                   </p>
                   <p className="text-xs text-gray-500">Full refund if canceled up to 24 hours prior to selected schedule. No slot transfer within 12 hours.</p>
                 </div>
+              </div>
+
+              {/* Pay 10% Banner */}
+              <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-black mt-6">
+                <div className="flex items-center gap-3">
+                  <ShieldCheck size={28} className="text-black flex-shrink-0" />
+                  <div>
+                    <h4 className="font-bold text-sm uppercase tracking-tight">PAY 10% ADVANCE ONLINE TO SECURE SLOT</h4>
+                    <p className="text-xs text-gray-600 font-medium">Book now at just ₹{Math.round(selectedBungee.price * 0.1)} per jumper. Pay 90% balance on arrival.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => openBookingModal({
+                    id: selectedBungee.id,
+                    name: selectedBungee.name,
+                    price: selectedBungee.price,
+                    category: 'bungee',
+                    videoIncluded: selectedBungee.videoIncluded
+                  })}
+                  className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                >
+                  Book Now
+                </button>
+              </div>
+
+              {/* Auto Sliding Reviews */}
+              <div className="border border-black/5 bg-gray-50 rounded-xl p-6 relative overflow-hidden min-h-[130px] flex items-center mt-6">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeReviewIdx}
+                    initial={{ opacity: 0, x: 40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -40 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                    className="space-y-2 w-full"
+                  >
+                    <div className="flex text-yellow-400 gap-0.5">
+                      {[...Array(reviews[activeReviewIdx].stars)].map((_, i) => (
+                        <Star key={i} size={12} fill="currentColor" />
+                      ))}
+                    </div>
+                    <p className="text-sm font-medium italic text-black pr-16 leading-relaxed">
+                      "{reviews[activeReviewIdx].text}"
+                    </p>
+                    <span className="text-xs font-bold text-gray-500">— {reviews[activeReviewIdx].name}</span>
+                  </motion.div>
+                </AnimatePresence>
+                <span className="absolute right-6 top-6 text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-bold px-2 py-0.5 rounded">Jump Guest</span>
               </div>
             </div>
 
