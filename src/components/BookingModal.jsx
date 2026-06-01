@@ -168,7 +168,11 @@ My payment ID is verified. Please confirm my slots.`;
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md overflow-hidden">
+          {/* Glowing refractive backdrop blobs */}
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-[#FF5F00]/15 blur-[120px] pointer-events-none animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#8000FF]/15 blur-[130px] pointer-events-none" />
+
           {/* Backdrop click */}
           <motion.div 
             initial={{ opacity: 0 }}
@@ -184,125 +188,46 @@ My payment ID is verified. Please confirm my slots.`;
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="relative w-full max-w-lg overflow-hidden bg-white border border-black/10 rounded-2xl shadow-2xl z-10 flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-lg overflow-hidden bg-[#0d0d12]/80 border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(255,95,0,0.2)] z-10 flex flex-col max-h-[90vh] backdrop-blur-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-black/5 bg-black text-white">
+            <div className="flex items-center justify-between p-5 border-b border-white/10 bg-black/40 text-white backdrop-blur-md">
               <div>
-                <span className="text-[10px] tracking-wider uppercase text-[#FF5F00] font-bold px-2 py-0.5 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded">
+                <span className="text-[9px] tracking-wider uppercase text-[#FF5F00] font-black px-2 py-0.5 bg-[#FF5F00]/15 border border-[#FF5F00]/30 rounded">
                   {activity.category.toUpperCase()}
                 </span>
                 <h3 className="text-xl font-bold tracking-tight mt-1 font-display">Book {activity.name}</h3>
               </div>
               <button 
                 onClick={onClose}
-                className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 text-white scrollbar-thin">
               {activity.stretch && (
-                <div className="p-3 text-xs bg-gray-50 border-l-4 border-black text-black font-medium">
+                <div className="p-3 text-xs bg-white/5 border-l-4 border-[#FF5F00] text-gray-200 font-medium rounded-r-lg">
                   Route: {activity.stretch}
                 </div>
               )}
 
               {error && (
-                <div className="p-3 text-sm bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r">
+                <div className="p-3 text-sm bg-red-500/10 border-l-4 border-red-500 text-red-400 rounded-r-lg font-semibold">
                   {error}
                 </div>
               )}
 
-              {/* Date selection */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                  <Calendar size={14} className="text-black" /> {isBikeRent ? 'Select Start Date' : 'Select Date'}
-                </label>
-                <input
-                  type="date"
-                  min={minDate}
-                  value={date}
-                  onChange={(e) => {
-                    setDate(e.target.value);
-                    setError('');
-                  }}
-                  className="w-full px-4 py-3 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm"
-                />
-              </div>
-
-              {/* Time slot and Guests */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                    <Clock size={14} className="text-black" /> {isBikeRent ? 'Rental Duration' : 'Select Slot'}
-                  </label>
-                  <select
-                    value={slot}
-                    onChange={(e) => setSlot(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-black bg-white focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm"
-                  >
-                    {slots.map((s, idx) => (
-                      <option key={idx} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                    <Users size={14} className="text-black" /> {isBikeRent ? 'No. of Vehicles' : 'Total Guests'}
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={guests}
-                    onChange={(e) => setGuests(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-semibold text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Optional extras depending on category */}
-              {(activity.category === 'rafting' || (activity.category === 'bungee' && activity.videoIncluded)) && (
-                <div className="flex items-start gap-3 p-3.5 border border-green-500/20 bg-green-50/50 rounded-xl">
-                  <div className="mt-0.5 text-green-600 bg-green-100 p-1 rounded-full flex items-center justify-center flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <span className="block text-sm font-bold text-green-900">Free DSLR Video & Photos Included</span>
-                    <span className="block text-xs text-green-700/80">Get high-quality cinematic footage and photos of your experience delivered directly via WhatsApp.</span>
-                  </div>
-                </div>
-              )}
-
-              {activity.category === 'bungee' && !activity.videoIncluded && (
-                <label className="flex items-start gap-3 p-3 border border-black/10 rounded-lg cursor-pointer hover:bg-accent/5 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={hasVideoOption}
-                    onChange={(e) => setHasVideoOption(e.target.checked)}
-                    className="mt-1 accent-black w-4 h-4"
-                  />
-                  <div>
-                    <span className="block text-sm font-bold">Add DSLR Video & Photos (+₹400/person)</span>
-                    <span className="block text-xs text-gray-500">Get cinematic footage of your bungee jump delivered directly via WhatsApp link.</span>
-                  </div>
-                </label>
-              )}
-
-              {/* Contact Details Form */}
-              <div className="p-4 border-2 border-black rounded-xl space-y-3.5 bg-gray-50/50">
-                <h4 className="text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5 font-display">
-                  <Users size={14} /> Contact Details (For Tickets)
+              {/* Contact Details Form (AT THE TOP) */}
+              <div className="p-4 border border-white/10 rounded-2xl space-y-3.5 bg-white/5 backdrop-blur-md">
+                <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5 font-display">
+                  <Users size={14} className="text-[#FF5F00]" /> Contact Details (For Tickets)
                 </h4>
                 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
                   <input
                     type="text"
                     placeholder="Enter full name"
@@ -311,13 +236,13 @@ My payment ID is verified. Please confirm my slots.`;
                       setName(e.target.value);
                       localStorage.setItem('tripgod_user_name', e.target.value);
                     }}
-                    className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                    className="w-full px-3.5 py-2.5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm bg-white/5 placeholder-white/20 transition-all duration-200"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Mobile Number</label>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mobile Number</label>
                     <input
                       type="tel"
                       placeholder="10-digit number"
@@ -331,12 +256,12 @@ My payment ID is verified. Please confirm my slots.`;
                         parsed.phone = val;
                         localStorage.setItem(`tripgod_profile_${emailKey}`, JSON.stringify(parsed));
                       }}
-                      className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                      className="w-full px-3.5 py-2.5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm bg-white/5 placeholder-white/20 transition-all duration-200"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
                     <input
                       type="email"
                       placeholder="name@email.com"
@@ -349,25 +274,106 @@ My payment ID is verified. Please confirm my slots.`;
                         parsed.phone = phone;
                         localStorage.setItem(`tripgod_profile_${e.target.value}`, JSON.stringify(parsed));
                       }}
-                      className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                      className="w-full px-3.5 py-2.5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm bg-white/5 placeholder-white/20 transition-all duration-200"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Date selection */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                  <Calendar size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'Select Start Date' : 'Select Date'}
+                </label>
+                <input
+                  type="date"
+                  min={minDate}
+                  value={date}
+                  style={{ colorScheme: 'dark' }}
+                  onChange={(e) => {
+                    setDate(e.target.value);
+                    setError('');
+                  }}
+                  className="w-full px-4 py-3 border border-white/10 rounded-xl text-white bg-white/5 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm transition-all duration-200"
+                />
+              </div>
+
+              {/* Time slot and Guests */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                    <Clock size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'Rental Duration' : 'Select Slot'}
+                  </label>
+                  <select
+                    value={slot}
+                    onChange={(e) => setSlot(e.target.value)}
+                    className="w-full px-4 py-3 border border-white/10 rounded-xl text-white bg-white/5 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm transition-all duration-200 select-dark"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    {slots.map((s, idx) => (
+                      <option key={idx} value={s} className="bg-[#121216] text-white">{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                    <Users size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'No. of Vehicles' : 'Total Guests'}
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={guests}
+                    onChange={(e) => setGuests(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full px-4 py-3 border border-white/10 rounded-xl text-white bg-white/5 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-semibold text-sm transition-all duration-200"
+                  />
+                </div>
+              </div>
+
+              {/* Optional extras depending on category */}
+              {(activity.category === 'rafting' || (activity.category === 'bungee' && activity.videoIncluded)) && (
+                <div className="flex items-start gap-3 p-3.5 border border-green-500/20 bg-green-500/10 rounded-2xl">
+                  <div className="mt-0.5 text-green-400 bg-green-500/10 p-1.5 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-green-200">Free DSLR Video & Photos Included</span>
+                    <span className="block text-xs text-green-300/80">Get high-quality cinematic footage and photos of your experience delivered directly via WhatsApp.</span>
+                  </div>
+                </div>
+              )}
+
+              {activity.category === 'bungee' && !activity.videoIncluded && (
+                <label className="flex items-start gap-3 p-3.5 border border-white/10 bg-white/5 rounded-2xl cursor-pointer hover:bg-white/10 transition-all duration-200">
+                  <input
+                    type="checkbox"
+                    checked={hasVideoOption}
+                    onChange={(e) => setHasVideoOption(e.target.checked)}
+                    className="mt-1 accent-[#FF5F00] w-4 h-4"
+                  />
+                  <div>
+                    <span className="block text-sm font-bold text-white">Add DSLR Video & Photos (+₹400/person)</span>
+                    <span className="block text-xs text-gray-400">Get cinematic footage of your bungee jump delivered directly via WhatsApp link.</span>
+                  </div>
+                </label>
+              )}
+
               <div className="grid grid-cols-2 gap-2 py-1">
-                <div className="flex items-center gap-2 p-2.5 bg-[#FFF0E5] text-black rounded-lg text-[11px] font-semibold border border-[#FF6B00]">
-                  <ShieldCheck size={14} className="flex-shrink-0" />
+                <div className="flex items-center gap-2 p-2.5 bg-[#FF5F00]/10 text-white rounded-xl text-[10px] font-bold border border-[#FF5F00]/20">
+                  <ShieldCheck size={14} className="flex-shrink-0 text-[#FF5F00]" />
                   <span>FREE CANCELLATION UP TO 24H</span>
                 </div>
-                <div className="flex items-center gap-2 p-2.5 bg-gray-50 text-black rounded-lg text-[11px] font-semibold border border-gray-200">
-                  <CreditCard size={14} className="flex-shrink-0" />
+                <div className="flex items-center gap-2 p-2.5 bg-white/5 text-white rounded-xl text-[10px] font-bold border border-white/10">
+                  <CreditCard size={14} className="flex-shrink-0 text-gray-400" />
                   <span>PAY ONLY 10% ADVANCE</span>
                 </div>
               </div>
 
               {/* Pricing breakdown */}
-              <div className="p-4 bg-black text-white rounded-xl space-y-2.5 font-sans">
+              <div className="p-4 bg-white/5 border border-white/10 text-white rounded-2xl space-y-2.5 font-sans">
                 <div className="flex justify-between items-center text-xs text-gray-400">
                   <span>{isBikeRent ? 'Price per day' : 'Price per person'}</span>
                   <span>₹{pricePerPerson.toLocaleString('en-IN')}</span>
@@ -378,7 +384,7 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
                 <div className="h-px bg-white/10 my-1" />
                 
-                <div className="flex justify-between items-center text-sm font-bold text-accent">
+                <div className="flex justify-between items-center text-sm font-black text-[#FF5F00]">
                   <span className="flex items-center gap-1.5">
                     Pay 10% Advance Now
                   </span>
@@ -392,16 +398,16 @@ My payment ID is verified. Please confirm my slots.`;
             </div>
 
             {/* Footer buttons */}
-            <div className="p-5 bg-gray-50 border-t border-black/5 flex gap-3">
+            <div className="p-5 bg-black/40 border-t border-white/10 flex gap-3">
               <button
                 onClick={handleAddToCartClick}
-                className="flex-1 py-3 px-4 rounded-xl border border-black/20 font-bold text-sm bg-white hover:bg-black hover:text-[#FF5F00] hover:border-black transition-all duration-300 hover:scale-[1.02]"
+                className="flex-1 py-3 px-4 rounded-xl border border-white/20 font-bold text-sm bg-transparent text-white hover:bg-white hover:text-black hover:border-white transition-all duration-300 hover:scale-[1.02] cursor-pointer"
               >
                 Add to Cart
               </button>
               <button
                 onClick={handleRazorpayPayment}
-                className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
+                className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
               >
                 <CreditCard size={16} />
                 <span>Pay 10% & Book</span>

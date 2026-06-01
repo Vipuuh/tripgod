@@ -105,7 +105,11 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-md overflow-hidden">
+          {/* Glowing refractive backdrop blobs for the cart */}
+          <div className="absolute top-1/3 right-80 w-72 h-72 rounded-full bg-[#FF5F00]/10 blur-[120px] pointer-events-none animate-pulse" />
+          <div className="absolute bottom-1/3 right-96 w-80 h-80 rounded-full bg-[#8000FF]/10 blur-[130px] pointer-events-none" />
+
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -121,117 +125,53 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="relative w-full max-w-md h-full bg-white shadow-2xl z-10 flex flex-col border-l border-black/10"
+            className="relative w-full max-w-md h-full bg-[#0d0d12]/80 backdrop-blur-2xl shadow-2xl z-10 flex flex-col border-l border-white/10 text-white"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 bg-black text-white">
+            <div className="flex items-center justify-between p-6 bg-black/40 border-b border-white/10 text-white backdrop-blur-md">
               <div className="flex items-center gap-2">
                 <span className="font-display font-bold text-xl tracking-tight">Your Booking Cart</span>
-                <span className="bg-[#FF5F00] text-white font-bold text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                <span className="bg-[#FF5F00] text-white font-black text-xs rounded-full px-2.5 py-0.5 min-w-[22px] text-center shadow-[0_0_10px_rgba(255,95,0,0.5)]">
                   {cart.length}
                 </span>
               </div>
               <button
                 onClick={onClose}
-                className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Scrollable list */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-thin text-white">
               {error && (
-                <div className="p-3 text-sm bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r font-semibold">
+                <div className="p-3 text-sm bg-red-500/10 border-l-4 border-red-500 text-red-400 rounded-r-lg font-semibold">
                   {error}
                 </div>
               )}
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-12">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-gray-500 border border-white/10">
                     <Trash2 size={28} />
                   </div>
                   <div>
                     <h3 className="font-bold text-lg">Your cart is empty</h3>
-                    <p className="text-sm text-gray-500 max-w-[250px] mt-1 mx-auto">
+                    <p className="text-sm text-gray-400 max-w-[250px] mt-1 mx-auto">
                       Choose an adventure or rental vehicle and add it to your booking cart to proceed.
                     </p>
                   </div>
                 </div>
               ) : (
                 <>
-                  {cart.map((item) => (
-                    <motion.div
-                      key={item.cartId}
-                      layout
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="p-4 border-2 border-black rounded-xl space-y-3 relative group"
-                    >
-                      <button
-                        onClick={() => onRemoveItem(item.cartId)}
-                        className="absolute top-4 right-4 p-1 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-
-                      <div>
-                        <span className="text-[10px] bg-black text-accent font-bold px-2 py-0.5 rounded tracking-wide uppercase">
-                          {item.category}
-                        </span>
-                        <h4 className="font-bold text-base mt-1 text-black font-display pr-6">{item.name}</h4>
-                        {item.stretch && (
-                          <p className="text-xs text-gray-500 font-medium">{item.stretch}</p>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2 text-xs font-semibold text-gray-700 bg-gray-50 p-2 rounded-lg">
-                        <div className="flex items-center gap-1">
-                          <Calendar size={12} className="text-black" />
-                          <span>{item.date.split('-').reverse().join('/')}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock size={12} className="text-black" />
-                          <span>{item.slot}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users size={12} className="text-black" />
-                          <span>{item.guests} Guest(s)</span>
-                        </div>
-                      </div>
-
-                      {item.hasVideoOption && (
-                        <div className="flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 px-2 py-1 rounded">
-                          <CheckCircle size={12} />
-                          <span>DSLR Video & Photos Included</span>
-                        </div>
-                      )}
-
-                      <div className="flex justify-between items-center pt-2 border-t border-dashed border-black/10">
-                        <span className="text-xs text-gray-500">Price breakdown</span>
-                        <span className="font-bold text-sm text-black">
-                          ₹{item.totalPrice.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs text-gray-700 bg-[#FFF0E5] p-1.5 rounded border border-[#FF6B00]/50">
-                        <span>10% booking advance</span>
-                        <span className="font-bold text-black">
-                          ₹{item.advancePayment.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  {/* Contact Details Form */}
-                  <div className="p-4 border-2 border-black rounded-xl space-y-3.5 bg-gray-50/50 mt-6">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5 font-display">
-                      <Users size={14} /> Contact Details (For Tickets)
+                  {/* Contact Details Form (AT THE TOP) */}
+                  <div className="p-4 border border-white/10 rounded-2xl space-y-3.5 bg-white/5 backdrop-blur-md">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5 font-display">
+                      <Users size={14} className="text-[#FF5F00]" /> Contact Details (For Tickets)
                     </h4>
                     
                     <div className="space-y-1">
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
                       <input
                         type="text"
                         placeholder="Enter full name"
@@ -240,13 +180,13 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                           setName(e.target.value);
                           localStorage.setItem('tripgod_user_name', e.target.value);
                         }}
-                        className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                        className="w-full px-3.5 py-2.5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm bg-white/5 placeholder-white/20 transition-all duration-200"
                       />
                     </div>
 
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Mobile Number</label>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Mobile Number</label>
                         <input
                           type="tel"
                           placeholder="10-digit number"
@@ -260,12 +200,12 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                             parsed.phone = val;
                             localStorage.setItem(`tripgod_profile_${emailKey}`, JSON.stringify(parsed));
                           }}
-                          className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                          className="w-full px-3.5 py-2.5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm bg-white/5 placeholder-white/20 transition-all duration-200"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
                         <input
                           type="email"
                           placeholder="name@email.com"
@@ -278,36 +218,106 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                             parsed.phone = phone;
                             localStorage.setItem(`tripgod_profile_${e.target.value}`, JSON.stringify(parsed));
                           }}
-                          className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                          className="w-full px-3.5 py-2.5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/20 font-medium text-sm bg-white/5 placeholder-white/20 transition-all duration-200"
                         />
                       </div>
                     </div>
                   </div>
+
+                  {/* Divider */}
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Cart Items</span>
+                    <span className="h-px bg-white/10 flex-1 ml-3" />
+                  </div>
+
+                  {cart.map((item) => (
+                    <motion.div
+                      key={item.cartId}
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="p-4 border border-white/10 bg-white/5 rounded-2xl space-y-3 relative group hover:border-[#FF5F00]/30 transition-all duration-200"
+                    >
+                      <button
+                        onClick={() => onRemoveItem(item.cartId)}
+                        className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+
+                      <div>
+                        <span className="text-[9px] bg-black text-[#FF5F00] font-black px-2 py-0.5 rounded tracking-wider uppercase border border-[#FF5F00]/20">
+                          {item.category}
+                        </span>
+                        <h4 className="font-bold text-base mt-1 text-white font-display pr-6">{item.name}</h4>
+                        {item.stretch && (
+                          <p className="text-xs text-gray-400 font-medium">{item.stretch}</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 text-[10px] font-bold text-gray-300 bg-white/5 p-2 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-1">
+                          <Calendar size={12} className="text-[#FF5F00]" />
+                          <span>{item.date.split('-').reverse().join('/')}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock size={12} className="text-[#FF5F00]" />
+                          <span>{item.slot}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users size={12} className="text-[#FF5F00]" />
+                          <span>{item.guests} Guest(s)</span>
+                        </div>
+                      </div>
+
+                      {item.hasVideoOption && (
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-400 bg-green-500/10 px-2.5 py-1 rounded-lg border border-green-500/20">
+                          <CheckCircle size={12} />
+                          <span>DSLR Video & Photos Included</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center pt-2 border-t border-dashed border-white/10">
+                        <span className="text-xs text-gray-400">Price breakdown</span>
+                        <span className="font-bold text-sm text-white">
+                          ₹{item.totalPrice.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs text-gray-300 bg-[#FF5F00]/10 p-2 rounded-lg border border-[#FF5F00]/20">
+                        <span>10% booking advance</span>
+                        <span className="font-bold text-white">
+                          ₹{item.advancePayment.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
                 </>
               )}
             </div>
 
             {/* Sticky summary & checkout */}
             {cart.length > 0 && (
-              <div className="p-6 bg-gray-50 border-t border-black/10 space-y-4">
+              <div className="p-6 bg-black/40 border-t border-white/10 space-y-4 backdrop-blur-md">
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm text-gray-600">
+                  <div className="flex justify-between items-center text-sm text-gray-400">
                     <span>Subtotal</span>
                     <span>₹{totalCost.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between items-center font-bold text-base text-black">
+                  <div className="flex justify-between items-center font-bold text-base text-[#FF5F00]">
                     <span className="flex items-center gap-1">
                       Pay 10% Advance Now
                     </span>
-                    <span className="text-lg">₹{totalAdvance.toLocaleString('en-IN')}</span>
+                    <span className="text-lg font-black">₹{totalAdvance.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs text-gray-500">
+                  <div className="flex justify-between items-center text-xs text-gray-400">
                     <span>Pay at Rishikesh (90%)</span>
                     <span>₹{totalRemaining.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
-                <div className="flex gap-2 p-3 bg-yellow-50 text-yellow-800 rounded-lg text-xs font-semibold leading-relaxed border border-yellow-200">
+                <div className="flex gap-2 p-3 bg-yellow-500/10 text-yellow-400 rounded-xl text-xs font-semibold leading-relaxed border border-yellow-500/20">
                   <ShieldAlert size={16} className="flex-shrink-0 mt-0.5" />
                   <span>
                     Pay 10% advance via UPI to verify slot. Balance at activity point. Full refund if canceled 24h prior.
@@ -316,7 +326,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
 
                 <button
                   onClick={handleRazorpayCheckout}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                  className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
                 >
                   <CreditCard size={18} />
                   <span>Pay 10% & Book All</span>
