@@ -11,6 +11,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart })
   const [hasVideoOption, setHasVideoOption] = useState(false);
   const [error, setError] = useState('');
 
+  // Contact States for direct Razorpay prefilling
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+
   // Default slots based on activity
   const slots = activity.slots || ['08:00 AM', '10:30 AM', '01:30 PM', '04:00 PM'];
   
@@ -24,6 +29,16 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart })
       setGuests(1);
       setHasVideoOption(activity.category === 'rafting' || (activity.category === 'bungee' && activity.videoIncluded));
       setError('');
+
+      // Prefill user details if logged in
+      const userEmail = localStorage.getItem('tripgod_user_email') || '';
+      const userName = localStorage.getItem('tripgod_user_name') || '';
+      const storedProfile = localStorage.getItem(`tripgod_profile_${userEmail}`);
+      const userPhone = storedProfile ? JSON.parse(storedProfile).phone : '';
+      
+      setName(userName);
+      setEmail(userEmail);
+      setPhone(userPhone);
     }
   }, [activity]);
 
@@ -45,16 +60,23 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart })
       setError('Please select a date.');
       return;
     }
+    if (!name.trim()) {
+      setError('Please enter your name.');
+      return;
+    }
+    if (!phone || phone.length < 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
 
     if (!window.Razorpay) {
       setError('Razorpay SDK failed to load. Please check your internet connection or reload the page.');
       return;
     }
-
-    const userEmail = localStorage.getItem('tripgod_user_email') || '';
-    const userName = localStorage.getItem('tripgod_user_name') || 'Guest User';
-    const storedProfile = localStorage.getItem(`tripgod_profile_${userEmail}`);
-    const userPhone = storedProfile ? JSON.parse(storedProfile).phone : '';
 
     const options = {
       key: "rzp_live_SwElxrZFXDUFIx",
@@ -70,6 +92,10 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart })
 ----------------------------------
 *Payment Confirmation ID:* ${paymentId}
 *Status:* Paid 10% Advance Booking
+----------------------------------
+*Customer Name:* ${name}
+*Customer Email:* ${email}
+*Customer Phone:* ${phone}
 ----------------------------------
 *Activity:* ${activity.name} ${activity.stretch ? `(${activity.stretch})` : ''}
 *Date:* ${date.split('-').reverse().join('/')}
@@ -88,9 +114,9 @@ My payment ID is verified. Please confirm my slots.`;
         onClose();
       },
       prefill: {
-        name: userName,
-        email: userEmail,
-        contact: userPhone
+        name: name,
+        email: email,
+        contact: phone
       },
       theme: {
         color: "#FF5F00"
@@ -104,6 +130,18 @@ My payment ID is verified. Please confirm my slots.`;
   const handleAddToCartClick = () => {
     if (!date) {
       setError('Please select a date.');
+      return;
+    }
+    if (!name.trim()) {
+      setError('Please enter your name.');
+      return;
+    }
+    if (!phone || phone.length < 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -256,6 +294,66 @@ My payment ID is verified. Please confirm my slots.`;
                   </div>
                 </label>
               )}
+
+              {/* Contact Details Form */}
+              <div className="p-4 border-2 border-black rounded-xl space-y-3.5 bg-gray-50/50">
+                <h4 className="text-xs font-black uppercase tracking-wider text-black flex items-center gap-1.5 font-display">
+                  <Users size={14} /> Contact Details (For Tickets)
+                </h4>
+                
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter full name"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      localStorage.setItem('tripgod_user_name', e.target.value);
+                    }}
+                    className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Mobile Number</label>
+                    <input
+                      type="tel"
+                      placeholder="10-digit number"
+                      value={phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setPhone(val);
+                        const emailKey = email || 'guest';
+                        const existing = localStorage.getItem(`tripgod_profile_${emailKey}`);
+                        const parsed = existing ? JSON.parse(existing) : {};
+                        parsed.phone = val;
+                        localStorage.setItem(`tripgod_profile_${emailKey}`, JSON.stringify(parsed));
+                      }}
+                      className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="name@email.com"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        localStorage.setItem('tripgod_user_email', e.target.value);
+                        const existing = localStorage.getItem(`tripgod_profile_${e.target.value}`);
+                        const parsed = existing ? JSON.parse(existing) : {};
+                        parsed.phone = phone;
+                        localStorage.setItem(`tripgod_profile_${e.target.value}`, JSON.stringify(parsed));
+                      }}
+                      className="w-full px-3.5 py-2.5 border-2 border-black rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-accent font-medium text-sm bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-2 py-1">
                 <div className="flex items-center gap-2 p-2.5 bg-[#FFF0E5] text-black rounded-lg text-[11px] font-semibold border border-[#FF6B00]">
