@@ -295,7 +295,7 @@ export default function Rafting({ openBookingModal }) {
                 </button>
 
                 {/* Bottom Slide Indicators (Dots) */}
-                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-xs">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-xs">
                   {selectedStretch.images.map((_, dotIdx) => (
                     <button
                       key={dotIdx}
@@ -304,22 +304,22 @@ export default function Rafting({ openBookingModal }) {
                     />
                   ))}
                 </div>
+              </div>
 
-                {/* Specs overlay on image */}
-                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-[11px] sm:text-xs bg-black/75 backdrop-blur-sm p-3 sm:p-4 rounded-xl">
-                  <div className="flex gap-4 flex-wrap">
-                    <div>
-                      <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Duration</span>
-                      <span className="font-bold">{selectedStretch.duration}</span>
-                    </div>
-                    <div>
-                      <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Rapids Category</span>
-                      <span className="font-bold">{selectedStretch.difficulty}</span>
-                    </div>
+              {/* Specs card below image */}
+              <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-[11px] sm:text-xs bg-black/85 p-3.5 sm:p-4 rounded-2xl border border-white/5 shadow-sm">
+                <div className="flex gap-4 flex-wrap">
+                  <div>
+                    <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Duration</span>
+                    <span className="font-bold text-white">{selectedStretch.duration}</span>
                   </div>
-                  <div className="self-start xs:self-auto px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs flex-shrink-0">
-                    <Play size={12} fill="currentColor" /> Free DSLR Video
+                  <div>
+                    <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Rapids Category</span>
+                    <span className="font-bold text-white">{selectedStretch.difficulty}</span>
                   </div>
+                </div>
+                <div className="self-start xs:self-auto px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs flex-shrink-0">
+                  <Play size={12} fill="currentColor" /> Free DSLR Video
                 </div>
               </div>
 
