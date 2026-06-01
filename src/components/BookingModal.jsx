@@ -40,29 +40,65 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart })
   const isBikeRent = activity.category === 'bikerent';
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
-  const handleWhatsAppDirectBook = () => {
+  const handleRazorpayPayment = () => {
     if (!date) {
       setError('Please select a date.');
       return;
     }
-    
-    const message = `*NEW BOOKING REQUEST - TRIPGOD*
+
+    if (!window.Razorpay) {
+      setError('Razorpay SDK failed to load. Please check your internet connection or reload the page.');
+      return;
+    }
+
+    const userEmail = localStorage.getItem('tripgod_user_email') || '';
+    const userName = localStorage.getItem('tripgod_user_name') || 'Guest User';
+    const storedProfile = localStorage.getItem(`tripgod_profile_${userEmail}`);
+    const userPhone = storedProfile ? JSON.parse(storedProfile).phone : '';
+
+    const options = {
+      key: "rzp_live_SwElxrZFXDUFIx",
+      amount: advancePayment * 100, // paise
+      currency: "INR",
+      name: "TripGod Rishikesh",
+      description: `${activity.name} - 10% Advance`,
+      image: "/tripgod-logo.png",
+      handler: function (response) {
+        const paymentId = response.razorpay_payment_id;
+
+        const message = `*BOOKING SUCCESSFUL & PAID - TRIPGOD*
+----------------------------------
+*Payment Confirmation ID:* ${paymentId}
+*Status:* Paid 10% Advance Booking
 ----------------------------------
 *Activity:* ${activity.name} ${activity.stretch ? `(${activity.stretch})` : ''}
-*Date:* ${date}
+*Date:* ${date.split('-').reverse().join('/')}
 *Slot:* ${slot}
 *${isBikeRent ? 'No. of Vehicles' : 'Guests'}:* ${guests} ${unitLabel}
 ${hasVideoOption ? `*Add-ons:* DSLR Video Included\n` : ''}
-*Price Breakdown:*
+*Price Summary:*
 - Total Price: ₹${totalPrice.toLocaleString('en-IN')}
-- *10% Advance Pay:* ₹${advancePayment.toLocaleString('en-IN')}
+- *10% Paid Advance:* ₹${advancePayment.toLocaleString('en-IN')}
 - Pay at Rishikesh (90%): ₹${remainingPayment.toLocaleString('en-IN')}
 ----------------------------------
-Please confirm the booking slot and send payment link for the 10% advance.`;
+My payment ID is verified. Please confirm my slots.`;
 
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
-    onClose();
+        const encoded = encodeURIComponent(message);
+        window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
+        onClose();
+      },
+      prefill: {
+        name: userName,
+        email: userEmail,
+        contact: userPhone
+      },
+      theme: {
+        color: "#FF5F00"
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
 
   const handleAddToCartClick = () => {
@@ -266,11 +302,11 @@ Please confirm the booking slot and send payment link for the 10% advance.`;
                 Add to Cart
               </button>
               <button
-                onClick={handleWhatsAppDirectBook}
+                onClick={handleRazorpayPayment}
                 className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
               >
-                <MessageSquare size={16} />
-                <span>Book via WhatsApp</span>
+                <CreditCard size={16} />
+                <span>Pay 10% & Book</span>
               </button>
             </div>
           </motion.div>

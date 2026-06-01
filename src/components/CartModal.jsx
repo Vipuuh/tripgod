@@ -1,39 +1,74 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Calendar, Clock, Users, ShieldAlert, CheckCircle, MessageSquare } from 'lucide-react';
+import { X, Trash2, Calendar, Clock, Users, ShieldAlert, CheckCircle, CreditCard } from 'lucide-react';
 
 export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
   const totalCost = cart.reduce((acc, item) => acc + item.totalPrice, 0);
   const totalAdvance = cart.reduce((acc, item) => acc + item.advancePayment, 0);
   const totalRemaining = totalCost - totalAdvance;
 
-  const handleCheckout = () => {
+  const handleRazorpayCheckout = () => {
     if (cart.length === 0) return;
 
-    let message = `*NEW BOOKING CART REQUEST - TRIPGOD*\n`;
-    message += `----------------------------------\n`;
-    
-    cart.forEach((item, index) => {
-      message += `*${index + 1}. ${item.name}*\n`;
-      if (item.stretch) message += `   Route: ${item.stretch}\n`;
-      message += `   Date: ${item.date}\n`;
-      message += `   Slot: ${item.slot}\n`;
-      message += `   Guests: ${item.guests} Person(s)\n`;
-      if (item.hasVideoOption) message += `   Add-ons: DSLR Video Included\n`;
-      message += `   Subtotal: ₹${item.totalPrice.toLocaleString('en-IN')}\n`;
-      message += `----------------------------------\n`;
-    });
+    if (!window.Razorpay) {
+      alert('Razorpay SDK failed to load. Please check your internet connection or reload the page.');
+      return;
+    }
 
-    message += `*CART TOTALS:*\n`;
-    message += `- Grand Total Price: ₹${totalCost.toLocaleString('en-IN')}\n`;
-    message += `- *Total 10% Advance Pay:* ₹${totalAdvance.toLocaleString('en-IN')}\n`;
-    message += `- Pay at Rishikesh (90%): ₹${totalRemaining.toLocaleString('en-IN')}\n`;
-    message += `----------------------------------\n`;
-    message += `Please confirm availability for these slots and send UPI QR / payment link for ₹${totalAdvance.toLocaleString('en-IN')} advance.`;
+    const userEmail = localStorage.getItem('tripgod_user_email') || '';
+    const userName = localStorage.getItem('tripgod_user_name') || 'Guest User';
+    const storedProfile = localStorage.getItem(`tripgod_profile_${userEmail}`);
+    const userPhone = storedProfile ? JSON.parse(storedProfile).phone : '';
 
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
-    onClose();
+    const options = {
+      key: "rzp_live_SwElxrZFXDUFIx",
+      amount: totalAdvance * 100, // paise
+      currency: "INR",
+      name: "TripGod Rishikesh",
+      description: `Cart Checkout (${cart.length} Activities) - 10% Advance`,
+      image: "/tripgod-logo.png",
+      handler: function (response) {
+        const paymentId = response.razorpay_payment_id;
+
+        let message = `*BOOKING CART SUCCESSFUL & PAID - TRIPGOD*\n`;
+        message += `*Payment Confirmation ID:* ${paymentId}\n`;
+        message += `*Status:* Paid 10% Advance Booking\n`;
+        message += `----------------------------------\n`;
+        
+        cart.forEach((item, index) => {
+          message += `*${index + 1}. ${item.name}*\n`;
+          if (item.stretch) message += `   Route: ${item.stretch}\n`;
+          message += `   Date: ${item.date.split('-').reverse().join('/')}\n`;
+          message += `   Slot: ${item.slot}\n`;
+          message += `   Guests: ${item.guests} Person(s)\n`;
+          if (item.hasVideoOption) message += `   Add-ons: DSLR Video Included\n`;
+          message += `   Subtotal: ₹${item.totalPrice.toLocaleString('en-IN')}\n`;
+          message += `----------------------------------\n`;
+        });
+
+        message += `*CART TOTALS:*\n`;
+        message += `- Grand Total Price: ₹${totalCost.toLocaleString('en-IN')}\n`;
+        message += `- *Total 10% Paid Advance:* ₹${totalAdvance.toLocaleString('en-IN')}\n`;
+        message += `- Pay at Rishikesh (90%): ₹${totalRemaining.toLocaleString('en-IN')}\n`;
+        message += `----------------------------------\n`;
+        message += `My payment ID is verified. Please confirm my slots.`;
+
+        const encoded = encodeURIComponent(message);
+        window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
+        onClose();
+      },
+      prefill: {
+        name: userName,
+        email: userEmail,
+        contact: userPhone
+      },
+      theme: {
+        color: "#FF5F00"
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
 
   return (
@@ -182,11 +217,11 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                 </div>
 
                 <button
-                  onClick={handleCheckout}
+                  onClick={handleRazorpayCheckout}
                   className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
                 >
-                  <MessageSquare size={18} />
-                  <span>Book All via WhatsApp</span>
+                  <CreditCard size={18} />
+                  <span>Pay 10% & Book All</span>
                 </button>
               </div>
             )}
