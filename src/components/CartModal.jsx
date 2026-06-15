@@ -110,6 +110,31 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
           console.error('Failed to save booking:', err);
         }
 
+        // Trigger background automated WhatsApp notifications for each cart item
+        cart.forEach((item) => {
+          fetch('/api/send-booking-whatsapp', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: name,
+              email: email,
+              phone: phone,
+              activityName: item.name,
+              stretch: item.stretch || '',
+              date: item.date.split('-').reverse().join('/'),
+              slot: item.slot,
+              guests: item.guests,
+              totalPrice: item.totalPrice,
+              advancePaid: Math.round(item.totalPrice * 0.1),
+              remainingPaid: item.totalPrice - Math.round(item.totalPrice * 0.1),
+              paymentId: paymentId,
+              category: item.category || 'rafting'
+            })
+          }).catch(err => console.error('Error triggering WhatsApp notification for cart item:', err));
+        });
+
         const encoded = encodeURIComponent(message);
         window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
         onClose();
