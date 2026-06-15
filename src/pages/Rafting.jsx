@@ -10,7 +10,7 @@ const stretchesData = [
     id: 'rafting-12km',
     name: '12 KM Rafting Stretch',
     stretch: 'Shivpuri → Laxman Jhula',
-    price: 1290,
+    price: 10,
     difficulty: 'Moderate',
     difficultyColor: 'bg-green-100 text-green-800',
     duration: '2-3 Hours',

@@ -135,6 +135,29 @@ My payment ID is verified. Please confirm my slots.`;
           console.error('Failed to save booking:', err);
         }
 
+        // Trigger background automated WhatsApp notifications
+        fetch('/api/send-booking-whatsapp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            phone: phone,
+            activityName: activity.name,
+            stretch: activity.stretch || '',
+            date: date.split('-').reverse().join('/'),
+            slot: slot,
+            guests: guests,
+            totalPrice: totalPrice,
+            advancePaid: advancePayment,
+            remainingPaid: remainingPayment,
+            paymentId: paymentId,
+            category: activity.category
+          })
+        }).catch(err => console.error('WhatsApp notification error:', err));
+
         const encoded = encodeURIComponent(message);
         window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
         onClose();
