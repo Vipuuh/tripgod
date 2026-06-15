@@ -179,7 +179,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
             className="relative w-full max-w-md h-full bg-white/80 border-l border-white/40 shadow-2xl z-10 flex flex-col backdrop-blur-2xl text-black"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 bg-white/40 border-b border-black/5 text-black backdrop-blur-md">
+            <div className="flex items-center justify-between p-6 bg-transparent border-b border-black/5 text-black">
               <div className="flex items-center gap-2">
                 <span className="font-display font-bold text-xl tracking-tight text-black">Your Booking Cart</span>
                 <span className="bg-[#FF5F00] text-white font-black text-xs rounded-full px-2.5 py-0.5 min-w-[22px] text-center shadow-[0_0_10px_rgba(255,95,0,0.4)]">
@@ -350,7 +350,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
 
             {/* Sticky summary & checkout */}
             {cart.length > 0 && (
-              <div className="p-6 bg-white/40 border-t border-black/5 space-y-4 backdrop-blur-md">
+              <div className="p-6 bg-transparent border-t border-black/5 space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm text-gray-500">
                     <span>Subtotal</span>

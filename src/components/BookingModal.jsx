@@ -240,7 +240,7 @@ My payment ID is verified. Please confirm my slots.`;
             className="relative w-full max-w-lg overflow-hidden bg-white/80 border border-white/40 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] z-10 flex flex-col max-h-[90vh] backdrop-blur-2xl text-black"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-black/5 bg-white/40 text-black backdrop-blur-md">
+            <div className="flex items-center justify-between p-5 border-b border-black/5 bg-transparent text-black">
               <div>
                 <span className="text-[9px] tracking-wider uppercase text-[#FF5F00] font-black px-2 py-0.5 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded">
                   {activity.category.toUpperCase()}
@@ -372,7 +372,13 @@ My payment ID is verified. Please confirm my slots.`;
                     min="1"
                     max="30"
                     value={guests}
-                    onChange={(e) => setGuests(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setGuests(val === '' ? '' : Math.max(1, parseInt(val) || 1));
+                    }}
+                    onBlur={() => {
+                      if (guests === '' || guests < 1) setGuests(1);
+                    }}
                     className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
                   />
                 </div>
@@ -445,7 +451,7 @@ My payment ID is verified. Please confirm my slots.`;
             </div>
 
             {/* Footer buttons */}
-            <div className="p-5 bg-white/40 border-t border-black/5 flex gap-3">
+            <div className="p-5 bg-transparent border-t border-black/5 flex gap-3">
               <button
                 onClick={handleAddToCartClick}
                 className="flex-1 py-3 px-4 rounded-xl border border-black/20 font-bold text-sm bg-transparent text-black hover:bg-black hover:text-[#FF5F00] hover:border-black transition-all duration-300 hover:scale-[1.02] cursor-pointer"
