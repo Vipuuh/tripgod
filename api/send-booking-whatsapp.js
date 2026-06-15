@@ -101,8 +101,6 @@ ${locationLink}
 ✅ *Paid Advance (10%):* ₹${advancePaid.toLocaleString('en-IN')}
 ⏳ *Remaining Balance (90%):* ₹${remainingPaid.toLocaleString('en-IN')}
 
-*Note:* You can pay the remaining balance of ₹${remainingPaid.toLocaleString('en-IN')} online at https://razorpay.me/@tripgod or directly to the operator at the venue via Cash/UPI.
-
 _Thank you for booking with TripGod! See you in Rishikesh!_`;
 
     // --- Message 2: To Agency/Vendor ---
@@ -110,6 +108,7 @@ _Thank you for booking with TripGod! See you in Rishikesh!_`;
 
 Hi Team, a new client has booked your service via TripGod. Please reserve the slot:
 
+🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
 👤 *Customer Name:* ${customerName}
 📞 *Customer Phone:* +${customerPhone}
 ⏰ *Arrival Date:* ${date}
