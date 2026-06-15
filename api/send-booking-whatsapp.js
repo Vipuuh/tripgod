@@ -83,57 +83,60 @@ export default async function handler(req, res) {
     const agencyPhone = formatPhone(AGENCY_PHONES[category] || ADMIN_PHONE);
 
     // --- Message 1: To Customer ---
-    const customerMsg = `*TripGod Booking Confirmed!* 🏔️
+    const customerMsg = `*TripGod Booking Confirmed!*
     
 Hi *${customerName}*, your booking is confirmed!
 
-🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
-📅 *Date & Time:* ${date} at ${slot}
-👥 *${isBikeRent ? 'Vehicles' : 'Guests'}:* ${guests} ${unitLabel}
+Activity: ${activityName} ${stretch ? `(${stretch})` : ''}
+Date: ${date}
+Time/Slot: ${slot}
+Guests: ${guests} ${unitLabel}
 
-📍 *Pickup / Activity Location (Google Maps):*
+Pickup / Activity Location (Google Maps):
 ${locationLink}
 
-📞 *Operator Helpdesk:* +${agencyPhone}
+Operator Helpdesk: +${agencyPhone}
 
-💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
-✅ *Paid Advance (10%):* ₹${advancePaid.toLocaleString('en-IN')}
-⏳ *Remaining Balance (90%):* ₹${remainingPaid.toLocaleString('en-IN')}
+Total Amount: ₹${totalPrice.toLocaleString('en-IN')}
+Paid Advance (10%): ₹${advancePaid.toLocaleString('en-IN')}
+Remaining Balance (90%): ₹${remainingPaid.toLocaleString('en-IN')}
 
-*Note:* Bacha hua remaining balance amount (₹${remainingPaid.toLocaleString('en-IN')}) aap direct operator/agent ko activity site/venue par cash ya UPI se pay kar sakte hain.
+*Note:* You can pay the remaining balance of ₹${remainingPaid.toLocaleString('en-IN')} online at https://razorpay.me/@tripgod or directly to the operator at the venue via Cash/UPI.
 
 _Thank you for booking with TripGod! See you in Rishikesh!_`;
 
     // --- Message 2: To Agency/Vendor ---
-    const agencyMsg = `*New Booking from TripGod!* ⚡
+    const agencyMsg = `*New Booking from TripGod!*
 
 Hi Team, a new client has booked your service via TripGod. Please reserve the slot:
 
-👤 *Customer Name:* ${customerName}
-📞 *Customer Phone:* +${customerPhone}
-📅 *Arrival Date & Time:* ${date} at ${slot}
-👥 *Total Booked:* ${guests} ${unitLabel}
+Customer Name: ${customerName}
+Customer Phone: +${customerPhone}
+Arrival Date: ${date}
+Arrival Time: ${slot}
+Total Booked: ${guests} ${unitLabel}
 
-💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
-✅ *Paid Advance (10%):* ₹${advancePaid.toLocaleString('en-IN')}
-⏳ *Remaining Balance (90%):* ₹${remainingPaid.toLocaleString('en-IN')} (To be collected from customer at venue)
+Total Amount: ₹${totalPrice.toLocaleString('en-IN')}
+Paid Advance (10%): ₹${advancePaid.toLocaleString('en-IN')}
+Remaining Balance (90%): ₹${remainingPaid.toLocaleString('en-IN')} (To be collected from customer)
 
-🔒 *Booking Status:* 10% Advance Paid (TripGod ID: ${paymentId})
+Booking Status: 10% Advance Paid (TripGod ID: ${paymentId})
 
 _Please ensure premium service. Thank you!_`;
 
     // --- Message 3: To Admin (Aapke Personal Number Par Alert) ---
-    const adminMsg = `*TripGod Booking Alert!* 🔔
+    const adminMsg = `*TripGod Booking Alert!*
 
 New booking completed successfully:
 
-- *Activity:* ${activityName}
-- *Customer:* ${customerName} (+${customerPhone})
-- *Date/Slot:* ${date} (${slot})
-- *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}
-- *Paid Advance (10%):* ₹${advancePaid.toLocaleString('en-IN')}
-- *Remaining Balance (90%):* ₹${remainingPaid.toLocaleString('en-IN')}
-- *Razorpay ID:* ${paymentId}`;
+- Activity: ${activityName}
+- Customer: ${customerName} (+${customerPhone})
+- Date: ${date}
+- Slot/Time: ${slot}
+- Total Price: ₹${totalPrice.toLocaleString('en-IN')}
+- Paid Advance (10%): ₹${advancePaid.toLocaleString('en-IN')}
+- Remaining Balance (90%): ₹${remainingPaid.toLocaleString('en-IN')}
+- Razorpay ID: ${paymentId}`;
 
     // Helper to send message using UltraMsg
     const sendWhatsApp = async (to, body) => {
