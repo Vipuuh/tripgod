@@ -95,8 +95,12 @@ Hi *${customerName}*, your booking is confirmed!
 ${locationLink}
 
 📞 *Operator Helpdesk:* +${agencyPhone}
-🔒 *10% Paid Advance:* ₹${advancePaid.toLocaleString('en-IN')}
-💰 *Pay at Rishikesh (90%):* ₹${remainingPaid.toLocaleString('en-IN')}
+
+💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
+✅ *Paid Advance (10%):* ₹${advancePaid.toLocaleString('en-IN')}
+⏳ *Remaining Balance (90%):* ₹${remainingPaid.toLocaleString('en-IN')}
+
+*Note:* Bacha hua remaining balance amount (₹${remainingPaid.toLocaleString('en-IN')}) aap direct operator/agent ko activity site/venue par cash ya UPI se pay kar sakte hain.
 
 _Thank you for booking with TripGod! See you in Rishikesh!_`;
 
@@ -109,6 +113,11 @@ Hi Team, a new client has booked your service via TripGod. Please reserve the sl
 📞 *Customer Phone:* +${customerPhone}
 📅 *Arrival Date & Time:* ${date} at ${slot}
 👥 *Total Booked:* ${guests} ${unitLabel}
+
+💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
+✅ *Paid Advance (10%):* ₹${advancePaid.toLocaleString('en-IN')}
+⏳ *Remaining Balance (90%):* ₹${remainingPaid.toLocaleString('en-IN')} (To be collected from customer at venue)
+
 🔒 *Booking Status:* 10% Advance Paid (TripGod ID: ${paymentId})
 
 _Please ensure premium service. Thank you!_`;
@@ -121,7 +130,9 @@ New booking completed successfully:
 - *Activity:* ${activityName}
 - *Customer:* ${customerName} (+${customerPhone})
 - *Date/Slot:* ${date} (${slot})
-- *Paid Advance (10%):* ₹${advancePaid}
+- *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}
+- *Paid Advance (10%):* ₹${advancePaid.toLocaleString('en-IN')}
+- *Remaining Balance (90%):* ₹${remainingPaid.toLocaleString('en-IN')}
 - *Razorpay ID:* ${paymentId}`;
 
     // Helper to send message using UltraMsg
