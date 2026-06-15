@@ -1,8 +1,6 @@
 // api/send-booking-whatsapp.js
 // Vercel Serverless Function to send WhatsApp notifications via UltraMsg
 
-import fetch from 'node-fetch';
-
 const ULTRAMSG_INSTANCE = "instance180883";
 const ULTRAMSG_TOKEN = "dl5l1lya95t54rtt";
 const ADMIN_PHONE = "919837371137"; // TripGod Admin Number
