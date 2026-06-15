@@ -84,6 +84,32 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
         message += `----------------------------------\n`;
         message += `My payment ID is verified. Please confirm my slots.`;
 
+        // Save booking locally
+        try {
+          const storedBookings = localStorage.getItem(`tripgod_bookings_${email}`) 
+            ? JSON.parse(localStorage.getItem(`tripgod_bookings_${email}`)) 
+            : [];
+          const newBooking = {
+            id: paymentId,
+            date: new Date().toLocaleDateString('en-IN'),
+            activities: cart.map(item => ({
+              name: item.name,
+              stretch: item.stretch || '',
+              date: item.date.split('-').reverse().join('/'),
+              slot: item.slot,
+              guests: item.guests,
+              subtotal: item.totalPrice
+            })),
+            totalPrice: totalCost,
+            advancePaid: totalAdvance,
+            remainingPaid: totalRemaining
+          };
+          storedBookings.push(newBooking);
+          localStorage.setItem(`tripgod_bookings_${email}`, JSON.stringify(storedBookings));
+        } catch (err) {
+          console.error('Failed to save booking:', err);
+        }
+
         const encoded = encodeURIComponent(message);
         window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
         onClose();

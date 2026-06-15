@@ -24,6 +24,7 @@ import RefundPolicy from './pages/RefundPolicy';
 import BookingModal from './components/BookingModal';
 import CartModal from './components/CartModal';
 import LoginModal from './components/LoginModal';
+import AccountModal from './components/AccountModal';
 
 export default function App() {
   // Navigation State
@@ -49,6 +50,7 @@ export default function App() {
     return localStorage.getItem('tripgod_user_name') || '';
   });
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
 
   // Scroll Progress State
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -199,14 +201,8 @@ export default function App() {
             {/* Login Button */}
             {userLoggedIn ? (
               <button 
-                onClick={() => {
-                  setUserLoggedIn(false);
-                  setUserName('');
-                  localStorage.removeItem('tripgod_logged_in');
-                  localStorage.removeItem('tripgod_user_name');
-                  localStorage.removeItem('tripgod_user_email');
-                }}
-                className="py-2 px-4 bg-[#FF5F00]/10 border border-[#FF5F00]/30 text-[#FF5F00] rounded-full font-bold text-xs uppercase flex items-center gap-1.5 transition-all hover:scale-105 hover:bg-[#FF5F00]/20"
+                onClick={() => setIsAccountOpen(true)}
+                className="py-2 px-4 bg-[#FF5F00]/10 border border-[#FF5F00]/30 text-[#FF5F00] rounded-full font-bold text-xs uppercase flex items-center gap-1.5 transition-all hover:scale-105 hover:bg-[#FF5F00]/20 cursor-pointer"
               >
                 <User size={14} /> <span>{userName || 'Esha'}</span>
               </button>
@@ -458,6 +454,21 @@ export default function App() {
           if (data.email) {
             localStorage.setItem('tripgod_user_email', data.email);
           }
+        }}
+      />
+
+      {/* 10. Account Modal */}
+      <AccountModal
+        isOpen={isAccountOpen}
+        onClose={() => setIsAccountOpen(false)}
+        userName={userName}
+        userEmail={localStorage.getItem('tripgod_user_email') || ''}
+        onLogout={() => {
+          setUserLoggedIn(false);
+          setUserName('');
+          localStorage.removeItem('tripgod_logged_in');
+          localStorage.removeItem('tripgod_user_name');
+          localStorage.removeItem('tripgod_user_email');
         }}
       />
     </div>
