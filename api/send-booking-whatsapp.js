@@ -134,14 +134,18 @@ New booking completed successfully:
         priority: 10
       };
 
+      console.log(`Sending WhatsApp message to ${to}...`);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: new URLSearchParams(payload)
+        body: new URLSearchParams(payload).toString()
       });
-      return response.json();
+      
+      const result = await response.json();
+      console.log(`UltraMsg response for ${to}:`, result);
+      return result;
     };
 
     // Send notifications in parallel
