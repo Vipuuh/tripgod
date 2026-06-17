@@ -178,7 +178,7 @@ New booking completed successfully:
       promises.push(sendWhatsApp(agencyPhone, agencyMsg).catch(err => console.error("Error sending to agency:", err)));
     }
 
-    // 4. Send Gmail Alert to Admin/Vendor via Nodemailer
+    // 4. Send Gmail Alerts (to Admin and Customer) via Nodemailer
     promises.push(sendEmailAlert({
       activityName,
       stretch,
@@ -192,7 +192,9 @@ New booking completed successfully:
       totalPrice,
       advancePaid,
       remainingPaid,
-      paymentId
+      paymentId,
+      locationLink,
+      agencyPhone
     }).catch(err => console.error("Error sending booking alert email:", err)));
 
     await Promise.all(promises);
@@ -205,13 +207,13 @@ New booking completed successfully:
   }
 }
 
-// Helper to send email notification using Gmail SMTP via Nodemailer
+// Helper to send email notifications using Gmail SMTP via Nodemailer
 async function sendEmailAlert(data) {
   const gmailUser = process.env.GMAIL_USER;
   const gmailPass = process.env.GMAIL_PASS;
   
   if (!gmailUser || !gmailPass) {
-    console.log("Gmail credentials (GMAIL_USER / GMAIL_PASS) not set. Skipping email notification.");
+    console.log("Gmail credentials (GMAIL_USER / GMAIL_PASS) not set. Skipping email notifications.");
     return null;
   }
 
@@ -229,10 +231,84 @@ async function sendEmailAlert(data) {
   const isBikeRent = data.category === 'bikerent';
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
-  const mailOptions = {
-    from: `"TripGod Booking Alert" <${gmailUser}>`,
+  // --- Email 1: To Customer (Booking Confirmation / Ticket) ---
+  const customerMailOptions = {
+    from: `"TripGod" <${gmailUser}>`,
+    to: data.customerEmail,
+    subject: `🎟️ TripGod Booking Confirmed! - ${data.activityName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #eee; border-radius: 12px; background-color: #ffffff; color: #333333; line-height: 1.6;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h1 style="color: #FF6B00; margin: 0; font-size: 28px; font-weight: 900;">TRIP<span style="background-color: #f3f4f6; padding: 2px 8px; border-radius: 4px; color: #111; margin-left: 2px;">GOD</span></h1>
+          <p style="color: #666; font-size: 14px; margin-top: 5px;">Rishikesh's #1 Adventure Booking Partner</p>
+        </div>
+        
+        <div style="background-color: #FFF0E5; border-left: 4px solid #FF6B00; padding: 15px; border-radius: 6px; margin-bottom: 25px;">
+          <h3 style="color: #FF6B00; margin: 0 0 5px 0;">Booking Confirmed! 🏔️</h3>
+          <p style="margin: 0; font-size: 14px; color: #555;">Hi <strong>${data.customerName}</strong>, your adventure booking is successfully confirmed. See you in Rishikesh!</p>
+        </div>
+
+        <h3 style="color: #111; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 0;">Adventure Details</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 12px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Activity:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.activityName} ${data.stretch ? `(${data.stretch})` : ''}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Arrival Date:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.date}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Arrival Slot/Time:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.slot}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Total Booked:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.guests} ${unitLabel}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Location:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;"><a href="${data.locationLink}" style="color: #FF6B00; font-weight: bold; text-decoration: none;">Open in Google Maps 📍</a></td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Operator Contact:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;">+${data.agencyPhone}</td>
+          </tr>
+        </table>
+
+        <h3 style="color: #111; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 25px;">Payment Details</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 12px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Total Price:</td>
+            <td style="padding: 12px; font-weight: bold; color: #111; border-bottom: 1px solid #eee;">₹${data.totalPrice.toLocaleString('en-IN')}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">Paid Advance (10%):</td>
+            <td style="padding: 12px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">₹${data.advancePaid.toLocaleString('en-IN')}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">Remaining Balance (90%):</td>
+            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">₹${data.remainingPaid.toLocaleString('en-IN')} (To be paid at venue)</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; font-weight: bold;">Booking Transaction ID:</td>
+            <td style="padding: 12px; font-family: monospace; font-size: 13px;">${data.paymentId}</td>
+          </tr>
+        </table>
+        
+        <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center; font-size: 12px; color: #888;">
+          <p style="margin: 0 0 5px 0;">Need help? Contact TripGod Support at +91 9837371137 or reply to this email.</p>
+          <p style="margin: 0;">© 2026 TripGod Rishikesh. All rights reserved.</p>
+        </div>
+      </div>
+    `
+  };
+
+  // --- Email 2: To Admin (Booking Alert) ---
+  const adminMailOptions = {
+    from: `"TripGod Alert" <${gmailUser}>`,
     to: notificationEmail,
-    subject: `🔔 New TripGod Booking: ${data.activityName} - ${data.customerName}`,
+    subject: `🔔 New Booking Alert: ${data.activityName} - ${data.customerName}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff; color: #333333;">
         <h2 style="color: #FF6B00; margin-top: 0; border-bottom: 2px solid #FF6B00; padding-bottom: 10px;">New Booking Confirmed! 🏔️</h2>
@@ -296,6 +372,17 @@ async function sendEmailAlert(data) {
     `
   };
 
-  console.log(`Sending booking alert email to ${notificationEmail}...`);
-  return transporter.sendMail(mailOptions);
+  const mailPromises = [];
+  
+  // 1. Send confirmation ticket to customer
+  if (data.customerEmail && data.customerEmail !== "N/A" && data.customerEmail.includes('@')) {
+    console.log(`Sending customer booking ticket to ${data.customerEmail}...`);
+    mailPromises.push(transporter.sendMail(customerMailOptions).catch(err => console.error("Error sending email to customer:", err)));
+  }
+
+  // 2. Send booking alert to admin
+  console.log(`Sending admin booking alert to ${notificationEmail}...`);
+  mailPromises.push(transporter.sendMail(adminMailOptions).catch(err => console.error("Error sending email to admin:", err)));
+
+  return Promise.all(mailPromises);
 }
