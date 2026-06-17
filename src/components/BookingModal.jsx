@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Users, Clock, ShieldCheck, CreditCard, MessageSquare } from 'lucide-react';
 
-export default function BookingModal({ isOpen, onClose, activity, onAddToCart }) {
+export default function BookingModal({ isOpen, onClose, activity, onAddToCart, initialDate, initialGuests }) {
   if (!activity) return null;
 
   const [date, setDate] = useState('');
@@ -24,9 +24,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart })
     if (activity) {
       const today = new Date();
       today.setDate(today.getDate() + 1); // default to tomorrow
-      setDate(today.toISOString().split('T')[0]);
+      setDate(initialDate || today.toISOString().split('T')[0]);
       setSlot(slots[0]);
-      setGuests(1);
+      setGuests(initialGuests || 1);
       setHasVideoOption(activity.category === 'rafting' || (activity.category === 'bungee' && activity.videoIncluded));
       setError('');
 
@@ -40,7 +40,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart })
       setEmail(userEmail);
       setPhone(userPhone);
     }
-  }, [activity]);
+  }, [activity, initialDate, initialGuests]);
 
   // Calculate pricing
   const basePrice = activity.price || 0;

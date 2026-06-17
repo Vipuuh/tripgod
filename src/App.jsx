@@ -37,6 +37,8 @@ export default function App() {
   // Booking Modal State
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [bookingActivity, setBookingActivity] = useState(null);
+  const [initialBookingDate, setInitialBookingDate] = useState('');
+  const [initialBookingGuests, setInitialBookingGuests] = useState(1);
 
   // Search Drawer State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -128,8 +130,10 @@ export default function App() {
     setCart((prev) => prev.filter((item) => item.cartId !== cartId));
   };
 
-  const openBookingModal = (activity) => {
+  const openBookingModal = (activity, customDate = '', customGuests = 1) => {
     setBookingActivity(activity);
+    setInitialBookingDate(customDate);
+    setInitialBookingGuests(customGuests);
     setIsBookingModalOpen(true);
   };
 
@@ -345,6 +349,8 @@ export default function App() {
         onClose={() => setIsBookingModalOpen(false)}
         activity={bookingActivity}
         onAddToCart={handleAddToCart}
+        initialDate={initialBookingDate}
+        initialGuests={initialBookingGuests}
       />
 
       {/* 7. Unified Cart Sidebar Drawer */}

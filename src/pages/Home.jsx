@@ -3,7 +3,8 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { 
   Waves, Zap, Compass, Milestone, 
   ArrowRight, ShieldCheck, CreditCard, 
-  Star, MessageSquare, Lock, PhoneCall, ChevronDown
+  Star, MessageSquare, Lock, PhoneCall, ChevronDown,
+  Calendar, Users, Clock, Activity, MapPin
 } from 'lucide-react';
 import CountUp from '../components/CountUp';
 
@@ -109,6 +110,91 @@ const heroSlides = [
 export default function Home({ setRoute, openBookingModal }) {
   // Slideshow state
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+
+  // Quick Booking Selector States & Data
+  const bookingActivitiesList = [
+    {
+      id: 'rafting-16',
+      name: 'River Rafting (16 KM)',
+      price: 1290,
+      category: 'rafting',
+      stretch: '16 KM (Shivpuri to Nim Beach)',
+      icon: Waves
+    },
+    {
+      id: 'bungee',
+      name: 'Bungee Jumping (117M)',
+      price: 3500,
+      category: 'bungee',
+      icon: Zap
+    },
+    {
+      id: 'zipline',
+      name: 'Ganga Zipline Crossings',
+      price: 2000,
+      category: 'zipline',
+      icon: Milestone
+    },
+    {
+      id: 'paragliding',
+      name: 'Tandem Paragliding',
+      price: 4500,
+      category: 'paragliding',
+      icon: Compass
+    },
+    {
+      id: 'swing',
+      name: 'Giant Swing (113M)',
+      price: 3600,
+      category: 'swing',
+      icon: Zap
+    },
+    {
+      id: 'camping',
+      name: 'Riverside Camping',
+      price: 1800,
+      category: 'camping',
+      icon: Compass
+    },
+    {
+      id: 'bikerent',
+      name: 'Bike & Scooty Rentals',
+      price: 500,
+      category: 'bikerent',
+      slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
+      icon: Milestone
+    },
+    {
+      id: 'pickup',
+      name: 'Railway Station Pickup',
+      price: 0,
+      category: 'pickup',
+      slots: ['Morning Slot', 'Afternoon Slot', 'Evening Slot'],
+      icon: PhoneCall
+    }
+  ];
+
+  const [selectedActivityIdx, setSelectedActivityIdx] = useState(0);
+  const [isActivityDropdownOpen, setIsActivityDropdownOpen] = useState(false);
+  const [bookingDate, setBookingDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [bookingGuests, setBookingGuests] = useState(2);
+  
+  const dateInputRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsActivityDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -476,25 +562,141 @@ export default function Home({ setRoute, openBookingModal }) {
           </motion.p>
 
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="w-full max-w-4xl mx-auto mt-8 bg-black/45 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-[0_24px_50px_rgba(0,0,0,0.6)] relative text-left"
           >
-            <button 
-              onClick={() => setRoute('rafting')}
-              className="w-full sm:w-auto py-4 px-8 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-sm uppercase tracking-wider rounded-xl shadow-[0_8px_30px_rgba(255,95,0,0.4)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.6)] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-300 border-none cursor-pointer text-center"
-            >
-              Book Now
-            </button>
-            <button 
-              onClick={() => {
-                document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="w-full sm:w-auto py-4 px-8 border border-white/20 text-white font-black text-sm uppercase tracking-wider rounded-xl bg-white/5 backdrop-blur-sm hover:border-[#FF5F00]/50 hover:bg-[#FF5F00]/10 hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-300 text-center cursor-pointer shadow-lg"
-            >
-              View All Adventures
-            </button>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch">
+              {/* Col 1: Select Thrill (Activity) */}
+              <div className="relative" ref={dropdownRef}>
+                <div 
+                  onClick={() => setIsActivityDropdownOpen(!isActivityDropdownOpen)}
+                  className="h-full relative cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-200"
+                >
+                  <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg shrink-0">
+                    {React.createElement(bookingActivitiesList[selectedActivityIdx].icon, { className: "w-5 h-5 text-[#FF6B00]" })}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider cursor-pointer">Select Thrill</label>
+                    <span className="block text-white text-sm font-bold truncate pr-4 mt-0.5">
+                      {bookingActivitiesList[selectedActivityIdx].name}
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 transition-transform duration-300 ${isActivityDropdownOpen ? 'rotate-180' : ''}`} />
+                </div>
+
+                <AnimatePresence>
+                  {isActivityDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 right-0 mt-2 bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 max-h-60 overflow-y-auto"
+                    >
+                      {bookingActivitiesList.map((item, idx) => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setSelectedActivityIdx(idx);
+                            setIsActivityDropdownOpen(false);
+                          }}
+                          className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors duration-150 ${selectedActivityIdx === idx ? 'bg-[#FF6B00]/20 text-white' : 'hover:bg-white/5 text-gray-300 hover:text-white'}`}
+                        >
+                          {React.createElement(item.icon, { className: `w-4 h-4 shrink-0 ${selectedActivityIdx === idx ? 'text-[#FF6B00]' : 'text-gray-400'}` })}
+                          <div className="flex-1 min-w-0">
+                            <span className="block text-xs font-bold truncate">{item.name}</span>
+                            <span className="block text-[9px] text-gray-500 font-medium">
+                              {item.price === 0 ? 'Price on Call' : `Starts from ₹${item.price}`}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Col 2: Date Selector */}
+              <div 
+                onClick={() => dateInputRef.current && dateInputRef.current.showPicker()}
+                className="h-full relative cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-200"
+              >
+                <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg shrink-0">
+                  <Calendar className="w-5 h-5 text-[#FF6B00]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider cursor-pointer">Choose Date</label>
+                  <input 
+                    type="date"
+                    ref={dateInputRef}
+                    min={new Date().toISOString().split('T')[0]}
+                    value={bookingDate}
+                    onChange={(e) => setBookingDate(e.target.value)}
+                    className="block w-full bg-transparent border-none text-white text-sm font-bold focus:outline-none focus:ring-0 cursor-pointer p-0 mt-0.5"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              </div>
+
+              {/* Col 3: Guest Selector */}
+              <div className="h-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-200">
+                <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg shrink-0">
+                  <Users className="w-5 h-5 text-[#FF6B00]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">No. of Guests</label>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-white text-sm font-bold">
+                      {bookingGuests} {bookingGuests === 1 ? 'Guest' : 'Guests'}
+                    </span>
+                    <div className="flex items-center gap-1.5 ml-auto">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBookingGuests(prev => Math.max(1, prev - 1));
+                        }}
+                        className="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer font-black text-sm transition-colors"
+                      >
+                        -
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBookingGuests(prev => Math.min(20, prev + 1));
+                        }}
+                        className="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer font-black text-sm transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Col 4: Submit Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const act = bookingActivitiesList[selectedActivityIdx];
+                  openBookingModal({
+                    id: act.id,
+                    name: act.name,
+                    price: act.price,
+                    category: act.category,
+                    stretch: act.stretch,
+                    slots: act.slots
+                  }, bookingDate, bookingGuests);
+                }}
+                className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-[0_8px_30px_rgba(255,95,0,0.3)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.5)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer flex items-center justify-center gap-2 font-display"
+              >
+                <span>Check Availability</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </motion.div>
         </div>
 
