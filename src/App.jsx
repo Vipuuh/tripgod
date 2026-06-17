@@ -67,51 +67,53 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Sync hash routing if user uses back/forward buttons
+  // Sync path routing if user uses back/forward buttons (HTML5 History API)
   useEffect(() => {
-    const handleHashChange = () => {
-      let hash = window.location.hash;
-      if (hash.startsWith('#/')) {
-        hash = hash.substring(2);
-      } else if (hash.startsWith('#')) {
-        hash = hash.substring(1);
+    const handlePathChange = () => {
+      let path = window.location.pathname;
+      if (path.startsWith('/')) {
+        path = path.substring(1);
+      }
+      if (path === '') {
+        path = 'home';
       }
 
+      const hash = window.location.hash;
       const validRoutes = ['home', 'rafting', 'bungee', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'privacy', 'terms', 'refund'];
 
-      if (validRoutes.includes(hash)) {
-        setRoute(hash);
-        window.scrollTo(0, 0);
-      } else if (hash === 'adventures') {
-        setRoute('home');
-        setTimeout(() => {
-          document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
-        }, 150);
+      if (validRoutes.includes(path)) {
+        setRoute(path);
+        if (hash === '#adventures' && path === 'home') {
+          setTimeout(() => {
+            document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        } else {
+          window.scrollTo(0, 0);
+        }
       } else {
         setRoute('home');
         window.scrollTo(0, 0);
       }
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    // Initialize if hash exists on load
-    if (window.location.hash) {
-      handleHashChange();
-    }
+    window.addEventListener('popstate', handlePathChange);
+    // Initialize if pathname exists on load
+    handlePathChange();
 
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('popstate', handlePathChange);
   }, []);
 
-  // Update URL hash when route changes
+  // Update URL path when route changes
   const navigateTo = (newRoute) => {
     if (newRoute === 'adventures') {
-      window.location.hash = '#adventures';
+      window.history.pushState(null, '', '/#adventures');
       setRoute('home');
       setTimeout(() => {
         document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
       }, 150);
     } else {
-      window.location.hash = `#/${newRoute}`;
+      const targetPath = newRoute === 'home' ? '/' : `/${newRoute}`;
+      window.history.pushState(null, '', targetPath);
       setRoute(newRoute);
       window.scrollTo(0, 0);
     }
