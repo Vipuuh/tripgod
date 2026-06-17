@@ -39,6 +39,8 @@ export default function App() {
   const [bookingActivity, setBookingActivity] = useState(null);
   const [initialBookingDate, setInitialBookingDate] = useState('');
   const [initialBookingGuests, setInitialBookingGuests] = useState(1);
+  const [prefDate, setPrefDate] = useState('');
+  const [prefGuests, setPrefGuests] = useState(1);
 
   // Search Drawer State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -132,8 +134,8 @@ export default function App() {
 
   const openBookingModal = (activity, customDate = '', customGuests = 1) => {
     setBookingActivity(activity);
-    setInitialBookingDate(customDate);
-    setInitialBookingGuests(customGuests);
+    setInitialBookingDate(customDate || prefDate || '');
+    setInitialBookingGuests(customGuests !== 1 ? customGuests : (prefGuests || 1));
     setIsBookingModalOpen(true);
   };
 
@@ -234,7 +236,16 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
           >
-            {route === 'home' && <Home setRoute={navigateTo} openBookingModal={openBookingModal} />}
+            {route === 'home' && (
+              <Home 
+                setRoute={navigateTo} 
+                openBookingModal={openBookingModal} 
+                prefDate={prefDate}
+                setPrefDate={setPrefDate}
+                prefGuests={prefGuests}
+                setPrefGuests={setPrefGuests}
+              />
+            )}
             {route === 'rafting' && <Rafting openBookingModal={openBookingModal} />}
             {route === 'bungee' && <Bungee openBookingModal={openBookingModal} />}
             {route === 'zipline' && <Zipline openBookingModal={openBookingModal} />}

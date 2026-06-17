@@ -107,7 +107,7 @@ const heroSlides = [
   }
 ];
 
-export default function Home({ setRoute, openBookingModal }) {
+export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate, prefGuests, setPrefGuests }) {
   // Slideshow state
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
 
@@ -119,42 +119,48 @@ export default function Home({ setRoute, openBookingModal }) {
       price: 1290,
       category: 'rafting',
       stretch: '16 KM (Shivpuri to Nim Beach)',
-      icon: Waves
+      icon: Waves,
+      route: 'rafting'
     },
     {
       id: 'bungee',
       name: 'Bungee Jumping (117M)',
       price: 3500,
       category: 'bungee',
-      icon: Zap
+      icon: Zap,
+      route: 'bungee'
     },
     {
       id: 'zipline',
       name: 'Ganga Zipline Crossings',
       price: 2000,
       category: 'zipline',
-      icon: Milestone
+      icon: Milestone,
+      route: 'zipline'
     },
     {
       id: 'paragliding',
       name: 'Tandem Paragliding',
       price: 4500,
       category: 'paragliding',
-      icon: Compass
+      icon: Compass,
+      route: 'paragliding'
     },
     {
       id: 'swing',
       name: 'Giant Swing (113M)',
       price: 3600,
       category: 'swing',
-      icon: Zap
+      icon: Zap,
+      route: 'swing'
     },
     {
       id: 'camping',
       name: 'Riverside Camping',
       price: 1800,
       category: 'camping',
-      icon: Compass
+      icon: Compass,
+      route: 'camping'
     },
     {
       id: 'bikerent',
@@ -162,7 +168,8 @@ export default function Home({ setRoute, openBookingModal }) {
       price: 500,
       category: 'bikerent',
       slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
-      icon: Milestone
+      icon: Milestone,
+      route: 'bikerent'
     },
     {
       id: 'pickup',
@@ -170,18 +177,28 @@ export default function Home({ setRoute, openBookingModal }) {
       price: 0,
       category: 'pickup',
       slots: ['Morning Slot', 'Afternoon Slot', 'Evening Slot'],
-      icon: PhoneCall
+      icon: PhoneCall,
+      route: 'pickup'
+    },
+    {
+      id: 'hotels',
+      name: 'Resort & Hotel Stays',
+      price: 2200,
+      category: 'hotels',
+      icon: Star,
+      route: 'hotels'
     }
   ];
 
   const [selectedActivityIdx, setSelectedActivityIdx] = useState(0);
   const [isActivityDropdownOpen, setIsActivityDropdownOpen] = useState(false);
   const [bookingDate, setBookingDate] = useState(() => {
+    if (prefDate) return prefDate;
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
   });
-  const [bookingGuests, setBookingGuests] = useState(2);
+  const [bookingGuests, setBookingGuests] = useState(prefGuests || 2);
   
   const dateInputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -682,18 +699,13 @@ export default function Home({ setRoute, openBookingModal }) {
                 type="button"
                 onClick={() => {
                   const act = bookingActivitiesList[selectedActivityIdx];
-                  openBookingModal({
-                    id: act.id,
-                    name: act.name,
-                    price: act.price,
-                    category: act.category,
-                    stretch: act.stretch,
-                    slots: act.slots
-                  }, bookingDate, bookingGuests);
+                  setPrefDate(bookingDate);
+                  setPrefGuests(bookingGuests);
+                  setRoute(act.route);
                 }}
                 className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-[0_8px_30px_rgba(255,95,0,0.3)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.5)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer flex items-center justify-center gap-2 font-display"
               >
-                <span>Check Availability</span>
+                <span>Find Adventure</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
