@@ -207,24 +207,30 @@ New booking completed successfully:
   }
 }
 
-// Helper to send email notifications using Gmail SMTP via Nodemailer
+// Helper to send email notifications using SMTP (Gmail or Hostinger) via Nodemailer
 async function sendEmailAlert(data) {
-  const gmailUser = process.env.GMAIL_USER;
-  const gmailPass = process.env.GMAIL_PASS;
+  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_PASS;
   
-  if (!gmailUser || !gmailPass) {
-    console.log("Gmail credentials (GMAIL_USER / GMAIL_PASS) not set. Skipping email notifications.");
+  if (!smtpUser || !smtpPass) {
+    console.log("SMTP credentials (SMTP_USER / SMTP_PASS) not set. Skipping email notifications.");
     return null;
   }
 
-  const notificationEmail = process.env.NOTIFICATION_EMAIL || gmailUser;
+  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+  const smtpPort = parseInt(process.env.SMTP_PORT || "465");
+  const smtpSecure = smtpPort === 465; // true for 465 (SSL), false for 587 (TLS)
+
+  const notificationEmail = process.env.NOTIFICATION_EMAIL || smtpUser;
 
   // Create transporter
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
     auth: {
-      user: gmailUser,
-      pass: gmailPass
+      user: smtpUser,
+      pass: smtpPass
     }
   });
 
@@ -233,7 +239,7 @@ async function sendEmailAlert(data) {
 
   // --- Email 1: To Customer (Booking Confirmation / Ticket) ---
   const customerMailOptions = {
-    from: `"TripGod" <${gmailUser}>`,
+    from: `"TripGod" <${smtpUser}>`,
     to: data.customerEmail,
     subject: `🎟️ TripGod Booking Confirmed! - ${data.activityName}`,
     html: `
@@ -306,7 +312,7 @@ async function sendEmailAlert(data) {
 
   // --- Email 2: To Admin (Booking Alert) ---
   const adminMailOptions = {
-    from: `"TripGod Alert" <${gmailUser}>`,
+    from: `"TripGod Alert" <${smtpUser}>`,
     to: notificationEmail,
     subject: `🔔 New Booking Alert: ${data.activityName} - ${data.customerName}`,
     html: `
