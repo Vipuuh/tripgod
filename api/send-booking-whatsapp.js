@@ -1,5 +1,6 @@
 // api/send-booking-whatsapp.js
-// Vercel Serverless Function to send WhatsApp notifications via UltraMsg
+// Vercel Serverless Function to send WhatsApp notifications and Gmail Alerts
+import nodemailer from 'nodemailer';
 
 const ULTRAMSG_INSTANCE = "instance180883";
 const ULTRAMSG_TOKEN = "dl5l1lya95t54rtt";
@@ -177,6 +178,23 @@ New booking completed successfully:
       promises.push(sendWhatsApp(agencyPhone, agencyMsg).catch(err => console.error("Error sending to agency:", err)));
     }
 
+    // 4. Send Gmail Alert to Admin/Vendor via Nodemailer
+    promises.push(sendEmailAlert({
+      activityName,
+      stretch,
+      customerName,
+      customerEmail,
+      customerPhone,
+      date,
+      slot,
+      guests,
+      category,
+      totalPrice,
+      advancePaid,
+      remainingPaid,
+      paymentId
+    }).catch(err => console.error("Error sending booking alert email:", err)));
+
     await Promise.all(promises);
 
     return res.status(200).json({ success: true, message: 'Notifications sent successfully' });
@@ -185,4 +203,99 @@ New booking completed successfully:
     console.error('WhatsApp Notification API Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
+}
+
+// Helper to send email notification using Gmail SMTP via Nodemailer
+async function sendEmailAlert(data) {
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailPass = process.env.GMAIL_PASS;
+  
+  if (!gmailUser || !gmailPass) {
+    console.log("Gmail credentials (GMAIL_USER / GMAIL_PASS) not set. Skipping email notification.");
+    return null;
+  }
+
+  const notificationEmail = process.env.NOTIFICATION_EMAIL || gmailUser;
+
+  // Create transporter
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: gmailUser,
+      pass: gmailPass
+    }
+  });
+
+  const isBikeRent = data.category === 'bikerent';
+  const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
+
+  const mailOptions = {
+    from: `"TripGod Booking Alert" <${gmailUser}>`,
+    to: notificationEmail,
+    subject: `🔔 New TripGod Booking: ${data.activityName} - ${data.customerName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff; color: #333333;">
+        <h2 style="color: #FF6B00; margin-top: 0; border-bottom: 2px solid #FF6B00; padding-bottom: 10px;">New Booking Confirmed! 🏔️</h2>
+        <p>A new customer booking has been completed successfully via TripGod. Here are the details:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Activity:</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.activityName} ${data.stretch ? `(${data.stretch})` : ''}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Customer Name:</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.customerName}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Customer Email:</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.customerEmail}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Customer Phone:</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">+${data.customerPhone}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Arrival Date:</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.date}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Arrival Time/Slot:</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.slot}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Total Booked:</td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.guests} ${unitLabel}</td>
+          </tr>
+        </table>
+        
+        <h3 style="color: #111; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 25px;">Payment Details</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Total Amount:</td>
+            <td style="padding: 10px; font-weight: bold; color: #111; border-bottom: 1px solid #eee;">₹${data.totalPrice.toLocaleString('en-IN')}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">Paid Advance (10%):</td>
+            <td style="padding: 10px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">₹${data.advancePaid.toLocaleString('en-IN')}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">Remaining Balance (90%):</td>
+            <td style="padding: 10px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">₹${data.remainingPaid.toLocaleString('en-IN')}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; font-weight: bold;">Razorpay Payment ID:</td>
+            <td style="padding: 10px; font-family: monospace; font-size: 13px;">${data.paymentId}</td>
+          </tr>
+        </table>
+        
+        <div style="margin-top: 30px; padding: 15px; background-color: #FFF0E5; border-left: 4px solid #FF6B00; border-radius: 4px; font-size: 12px; color: #555;">
+          <strong>TipGod Operator Helpdesk Alert:</strong> Please ensure the client slot is reserved with the local guide/agency.
+        </div>
+      </div>
+    `
+  };
+
+  console.log(`Sending booking alert email to ${notificationEmail}...`);
+  return transporter.sendMail(mailOptions);
 }
