@@ -215,22 +215,22 @@ export default function App() {
 
       {/* 2. Sticky Header */}
       <header className="sticky top-0 z-40 bg-white/80 border-b border-black/5 backdrop-blur-md shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           {/* Left Header Group */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Logo */}
             <div 
               onClick={() => navigateTo('home')}
               className="flex items-center cursor-pointer select-none"
             >
-              <span className="font-black text-2xl tracking-tighter text-black">TRIP</span>
-              <span className="font-black text-2xl tracking-tighter text-accent bg-black px-1.5 py-0.5 rounded ml-0.5">GOD</span>
+              <span className="font-black text-lg sm:text-2xl tracking-tighter text-black">TRIP</span>
+              <span className="font-black text-lg sm:text-2xl tracking-tighter text-accent bg-black px-1.5 py-0.5 rounded ml-0.5">GOD</span>
             </div>
 
             {/* City Selector (Vercel Multi-city dynamic integration) */}
             {citiesList.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-black/5 rounded-full px-3 py-1.5 transition-colors">
-                <MapPin size={13} className="text-[#FF5F00] shrink-0" />
+              <div className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 border border-black/5 rounded-full px-2 py-1 sm:px-3 sm:py-1.5 transition-colors">
+                <MapPin size={11} className="text-[#FF5F00] shrink-0" />
                 <select
                   value={currentCity?.id || ''}
                   onChange={(e) => {
@@ -240,12 +240,12 @@ export default function App() {
                       localStorage.setItem('tripgod_selected_city', JSON.stringify(selected));
                     }
                   }}
-                  className="bg-transparent border-none text-[11px] font-black uppercase text-black focus:outline-none focus:ring-0 cursor-pointer p-0 pr-4 appearance-none"
+                  className="bg-transparent border-none text-[10px] sm:text-[11px] font-black uppercase text-black focus:outline-none focus:ring-0 cursor-pointer p-0 pr-3 sm:pr-4 appearance-none"
                   style={{ 
                     backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FF5F00'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg>")`,
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right center',
-                    backgroundSize: '10px'
+                    backgroundSize: '8px sm:10px'
                   }}
                 >
                   {citiesList.map(city => (
@@ -259,23 +259,23 @@ export default function App() {
           </div>
 
           {/* Right Action Items */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-1.5 sm:gap-4 md:gap-6">
             {/* Search Trigger */}
             <button 
               onClick={() => setIsSearchOpen(true)}
-              className="p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
+              className="p-1.5 sm:p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
             >
-              <Search size={20} />
+              <Search size={18} className="sm:w-[20px] sm:h-[20px]" />
             </button>
 
             {/* Cart Trigger */}
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
+              className="p-1.5 sm:p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
             >
-              <ShoppingBag size={20} />
+              <ShoppingBag size={18} className="sm:w-[20px] sm:h-[20px]" />
               {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-black text-accent border border-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-black text-accent border border-white text-[8px] sm:text-[10px] font-black rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center">
                   {cart.length}
                 </span>
               )}
@@ -285,14 +285,14 @@ export default function App() {
             {userLoggedIn ? (
               <button 
                 onClick={() => setIsAccountOpen(true)}
-                className="py-2 px-4 bg-[#FF5F00]/10 border border-[#FF5F00]/30 text-[#FF5F00] rounded-full font-bold text-xs uppercase flex items-center gap-1.5 transition-all hover:scale-105 hover:bg-[#FF5F00]/20 cursor-pointer"
+                className="py-1.5 px-3 sm:py-2 sm:px-4 bg-[#FF5F00]/10 border border-[#FF5F00]/30 text-[#FF5F00] rounded-full font-bold text-[10px] sm:text-xs uppercase flex items-center gap-1 sm:gap-1.5 transition-all hover:scale-105 hover:bg-[#FF5F00]/20 cursor-pointer"
               >
-                <User size={14} /> <span>{userName || 'Esha'}</span>
+                <User size={12} className="sm:w-[14px] sm:h-[14px]" /> <span>{userName || 'Esha'}</span>
               </button>
             ) : (
               <button 
                 onClick={() => setIsLoginOpen(true)}
-                className="py-2 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white rounded-full font-black text-xs uppercase tracking-wider shadow-md hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] transition-all hover:scale-105 border-none cursor-pointer font-display"
+                className="py-1.5 px-3.5 sm:py-2 sm:px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white rounded-full font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-md hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] transition-all hover:scale-105 border-none cursor-pointer font-display"
               >
                 Login
               </button>

@@ -713,7 +713,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         </div>
 
         {/* Bungee Jumping Platform & Jumper Group (positioned relative to screen viewport width) */}
-        <div className="absolute top-6 right-2 sm:right-12 md:right-24 z-20 pointer-events-none select-none">
+        <div className="hidden sm:block absolute top-6 right-2 sm:right-12 md:right-24 z-20 pointer-events-none select-none">
           {/* Platform Structure */}
           <div className="w-24 md:w-32 h-4 bg-neutral-800 border-2 border-black rounded-l-xl shadow-lg relative">
             {/* Flashing light on the tip */}
