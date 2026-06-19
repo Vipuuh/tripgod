@@ -4,8 +4,9 @@ import {
   ChevronLeft, Star, Calendar, Clock, MapPin, 
   Check, X, ChevronDown, ShieldCheck, HeartCrack, Info, Play
 } from 'lucide-react';
+import { supabase } from '../supabase';
 
-const stretchesData = [
+const defaultStretches = [
   {
     id: 'rafting-12km',
     name: '12 KM Rafting Stretch',
@@ -72,11 +73,48 @@ const faqs = [
   { q: "Where do we change clothes after rafting?", a: "There are changing rooms available at our booking office near Laxman Jhula and at the final rafting endpoint (Nim Beach/Laxman Jhula)." }
 ];
 
-export default function Rafting({ openBookingModal }) {
+export default function Rafting({ currentCity, openBookingModal }) {
+  const [stretchesData, setStretchesData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedStretch, setSelectedStretch] = useState(null);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [activeFaq, setActiveFaq] = useState(null);
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
+
+  useEffect(() => {
+    const fetchRafting = async () => {
+      setLoading(true);
+      try {
+        let query = supabase.from('rafting').select('*');
+        if (currentCity && currentCity.id !== 'default') {
+          query = query.eq('city_id', currentCity.id);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const mapped = data.map(item => ({
+            ...item,
+            stretch: item.route,
+            difficulty: item.age_limit > 14 ? 'Advanced' : 'Moderate',
+            difficultyColor: item.age_limit > 14 ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800',
+            img: item.images && item.images.length > 0 ? item.images[0] : '/rafting-4.jpg',
+            rapids: 'Grade II & III rapids',
+            weightLimit: 'Weight 40-100 kg',
+            desc: item.description
+          }));
+          setStretchesData(mapped);
+        } else {
+          setStretchesData(defaultStretches);
+        }
+      } catch (err) {
+        console.error('Error fetching rafting packages:', err);
+        setStretchesData(defaultStretches);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRafting();
+  }, [currentCity]);
 
   const reviews = [
     { name: 'Amit Sharma', stars: 5, text: 'The 12km stretch was perfect! We did body surfing in the Ganga. Absolutely thrilling and safe.' },
@@ -463,7 +501,9 @@ export default function Rafting({ openBookingModal }) {
                     name: selectedStretch.name,
                     stretch: selectedStretch.stretch,
                     price: selectedStretch.price,
-                    category: 'rafting'
+                    category: 'rafting',
+                    city_id: selectedStretch.city_id,
+                    vendor_id: selectedStretch.vendor_id
                   })}
                   className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
                 >
@@ -511,7 +551,9 @@ export default function Rafting({ openBookingModal }) {
                   name: selectedStretch.name,
                   stretch: selectedStretch.stretch,
                   price: selectedStretch.price,
-                  category: 'rafting'
+                  category: 'rafting',
+                  city_id: selectedStretch.city_id,
+                  vendor_id: selectedStretch.vendor_id
                 })}
                 className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
               >

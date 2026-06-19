@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Bike, Calendar, MapPin, FileText, 
   ShieldCheck, ArrowRight, Gauge, Shield, Milestone
 } from 'lucide-react';
+import { supabase } from '../supabase';
 
-const vehicles = [
+const defaultVehicles = [
   {
     id: 'bike-activa',
     name: 'Activa or Similar',
@@ -80,7 +81,45 @@ const pickupPoints = [
   'Rishikesh Railway Station'
 ];
 
-export default function BikeRent({ openBookingModal }) {
+export default function BikeRent({ currentCity, openBookingModal }) {
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBikes = async () => {
+      setLoading(true);
+      try {
+        let query = supabase.from('bikes').select('*');
+        if (currentCity && currentCity.id !== 'default') {
+          query = query.eq('city_id', currentCity.id);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const mapped = data.map(item => ({
+            ...item,
+            type: item.name.toLowerCase().includes('scooty') || item.name.toLowerCase().includes('activa') ? 'Automatic Scooter' : 'Cruiser Motorcycle',
+            spec: item.description,
+            img: item.images && item.images.length > 0 ? item.images[0] : '/scooty-rent.jpg',
+            details: [
+              { label: 'Deposit', value: `₹${item.deposit}` },
+              { label: 'Required', value: item.documents && item.documents.length > 0 ? item.documents[0] : 'License' },
+              { label: 'Pickup', value: item.pickup_location || 'Local Stand' }
+            ]
+          }));
+          setVehicles(mapped);
+        } else {
+          setVehicles(defaultVehicles);
+        }
+      } catch (err) {
+        console.error('Error fetching bikes:', err);
+        setVehicles(defaultVehicles);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBikes();
+  }, [currentCity]);
   const staggerContainer = {
     hidden: { opacity: 0 },
     show: {
@@ -184,6 +223,8 @@ export default function BikeRent({ openBookingModal }) {
                         name: `${v.name} Rental`,
                         price: v.price,
                         category: 'bikerent',
+                        city_id: v.city_id,
+                        vendor_id: v.vendor_id,
                         slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent']
                       })}
                       className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"

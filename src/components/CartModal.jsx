@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Calendar, Clock, Users, ShieldAlert, CheckCircle, CreditCard } from 'lucide-react';
+import { supabase } from '../supabase';
 
 export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
   const [name, setName] = useState('');
@@ -107,7 +108,33 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
           storedBookings.push(newBooking);
           localStorage.setItem(`tripgod_bookings_${email}`, JSON.stringify(storedBookings));
         } catch (err) {
-          console.error('Failed to save booking:', err);
+          console.error('Failed to save booking locally:', err);
+        }
+
+        // Save bookings to Supabase SQL Database
+        try {
+          const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+          cart.forEach(async (item) => {
+            const bookingInsertData = {
+              city_id: item.city_id && isValidUUID(item.city_id) ? item.city_id : null,
+              vendor_id: item.vendor_id && isValidUUID(item.vendor_id) ? item.vendor_id : null,
+              customer_name: name,
+              customer_phone: phone,
+              customer_email: email,
+              service_type: item.category === 'hotels' ? 'Hotel' : item.category === 'rafting' ? 'Rafting' : item.category === 'bikerent' ? 'Bike Rental' : item.category === 'tour' ? 'Tour' : item.category === 'camping' ? 'Camping' : 'Rafting',
+              service_id: item.id && isValidUUID(item.id) ? item.id : '00000000-0000-0000-0000-000000000000',
+              travel_date: item.date,
+              status: 'pending',
+              payment_type: 'advance_10',
+              amount_paid: item.advancePayment,
+              remaining_amount: item.remainingPayment,
+              commission_earned: Math.round(item.totalPrice * 0.1) // Default commission (10%)
+            };
+            const { error } = await supabase.from('bookings').insert([bookingInsertData]);
+            if (error) console.error('Error inserting booking to Supabase from cart:', error);
+          });
+        } catch (err) {
+          console.error('Supabase cart bookings insertion failed:', err);
         }
 
         // Trigger background automated WhatsApp notifications for each cart item

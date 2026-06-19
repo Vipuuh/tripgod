@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Search, LogIn, MessageSquare, X, 
-  MapPin, Phone, Mail, ChevronRight, Waves, Bike, Car, Building2, User
+  MapPin, Phone, Mail, ChevronRight, Waves, Bike, Car, Building2, User,
+  MapPinned, ShieldCheck
 } from 'lucide-react';
+import { supabase } from './supabase';
 
 // Pages
 import Home from './pages/Home';
@@ -16,6 +18,7 @@ import Camping from './pages/Camping';
 import BikeRent from './pages/BikeRent';
 import Pickup from './pages/Pickup';
 import Hotels from './pages/Hotels';
+import Tours from './pages/Tours';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import RefundPolicy from './pages/RefundPolicy';
@@ -23,6 +26,7 @@ import RefundPolicy from './pages/RefundPolicy';
 // Components
 import BookingModal from './components/BookingModal';
 import CartModal from './components/CartModal';
+import AdminDashboard from './components/AdminDashboard';
 import LoginModal from './components/LoginModal';
 import AccountModal from './components/AccountModal';
 
@@ -30,6 +34,42 @@ export default function App() {
   // Navigation State
   const [route, setRoute] = useState('home');
   
+  // City states (Supabase dynamic multi-city support)
+  const [citiesList, setCitiesList] = useState([]);
+  const [currentCity, setCurrentCity] = useState(null);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const { data, error } = await supabase.from('cities').select('*').order('name');
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setCitiesList(data);
+          // Restore selected city from localStorage if available
+          const savedCity = localStorage.getItem('tripgod_selected_city');
+          if (savedCity) {
+            setCurrentCity(JSON.parse(savedCity));
+          } else {
+            // Default to Rishikesh or first city
+            const rishikesh = data.find(c => c.slug === 'rishikesh');
+            setCurrentCity(rishikesh || data[0]);
+          }
+        } else {
+          // Fallback cities
+          const fallback = [{ id: 'default', name: 'Rishikesh', slug: 'rishikesh' }];
+          setCitiesList(fallback);
+          setCurrentCity(fallback[0]);
+        }
+      } catch (err) {
+        console.error('Error fetching cities:', err);
+        const fallback = [{ id: 'default', name: 'Rishikesh', slug: 'rishikesh' }];
+        setCitiesList(fallback);
+        setCurrentCity(fallback[0]);
+      }
+    };
+    fetchCities();
+  }, []);
+
   // Cart State
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -83,7 +123,7 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'bungee', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'privacy', 'terms', 'refund'];
+      const validRoutes = ['home', 'rafting', 'bungee', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund'];
 
       if (validRoutes.includes(path)) {
         setRoute(path);
@@ -156,7 +196,9 @@ export default function App() {
     { name: 'Himalayan 450 CC Rent', route: 'bikerent' },
     { name: 'Haridwar Railway Station Cabs', route: 'pickup' },
     { name: 'Dehradun Airport Transfers', route: 'pickup' },
-    { name: 'Ashram Stays & Resorts', route: 'hotels' }
+    { name: 'Ashram Stays & Resorts', route: 'hotels' },
+    { name: 'Tour & Pilgrimage Packages', route: 'tours' },
+    { name: 'Admin Control Panel Dashboard', route: 'admin' }
   ];
 
   const filteredAdventures = searchQuery
@@ -174,13 +216,46 @@ export default function App() {
       {/* 2. Sticky Header */}
       <header className="sticky top-0 z-40 bg-white/80 border-b border-black/5 backdrop-blur-md shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <div 
-            onClick={() => navigateTo('home')}
-            className="flex items-center cursor-pointer select-none"
-          >
-            <span className="font-black text-2xl tracking-tighter text-black">TRIP</span>
-            <span className="font-black text-2xl tracking-tighter text-accent bg-black px-1.5 py-0.5 rounded ml-0.5">GOD</span>
+          {/* Left Header Group */}
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <div 
+              onClick={() => navigateTo('home')}
+              className="flex items-center cursor-pointer select-none"
+            >
+              <span className="font-black text-2xl tracking-tighter text-black">TRIP</span>
+              <span className="font-black text-2xl tracking-tighter text-accent bg-black px-1.5 py-0.5 rounded ml-0.5">GOD</span>
+            </div>
+
+            {/* City Selector (Vercel Multi-city dynamic integration) */}
+            {citiesList.length > 0 && (
+              <div className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-black/5 rounded-full px-3 py-1.5 transition-colors">
+                <MapPin size={13} className="text-[#FF5F00] shrink-0" />
+                <select
+                  value={currentCity?.id || ''}
+                  onChange={(e) => {
+                    const selected = citiesList.find(c => c.id === e.target.value);
+                    if (selected) {
+                      setCurrentCity(selected);
+                      localStorage.setItem('tripgod_selected_city', JSON.stringify(selected));
+                    }
+                  }}
+                  className="bg-transparent border-none text-[11px] font-black uppercase text-black focus:outline-none focus:ring-0 cursor-pointer p-0 pr-4 appearance-none"
+                  style={{ 
+                    backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FF5F00'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg>")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right center',
+                    backgroundSize: '10px'
+                  }}
+                >
+                  {citiesList.map(city => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Right Action Items */}
@@ -246,15 +321,17 @@ export default function App() {
                 setPrefGuests={setPrefGuests}
               />
             )}
-            {route === 'rafting' && <Rafting openBookingModal={openBookingModal} />}
+            {route === 'rafting' && <Rafting currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'bungee' && <Bungee openBookingModal={openBookingModal} />}
             {route === 'zipline' && <Zipline openBookingModal={openBookingModal} />}
             {route === 'paragliding' && <Paragliding openBookingModal={openBookingModal} />}
             {route === 'swing' && <Swing openBookingModal={openBookingModal} />}
             {route === 'camping' && <Camping openBookingModal={openBookingModal} />}
-            {route === 'bikerent' && <BikeRent openBookingModal={openBookingModal} />}
+            {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
-            {route === 'hotels' && <Hotels />}
+            {route === 'hotels' && <Hotels currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'tours' && <Tours currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'admin' && <AdminDashboard setRoute={navigateTo} />}
             {route === 'privacy' && <Privacy />}
             {route === 'terms' && <Terms />}
             {route === 'refund' && <RefundPolicy />}

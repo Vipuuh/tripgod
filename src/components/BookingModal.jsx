@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Users, Clock, ShieldCheck, CreditCard, MessageSquare } from 'lucide-react';
+import { supabase } from '../supabase';
 
 export default function BookingModal({ isOpen, onClose, activity, onAddToCart, initialDate, initialGuests }) {
   if (!activity) return null;
@@ -132,7 +133,32 @@ My payment ID is verified. Please confirm my slots.`;
           storedBookings.push(newBooking);
           localStorage.setItem(`tripgod_bookings_${email}`, JSON.stringify(storedBookings));
         } catch (err) {
-          console.error('Failed to save booking:', err);
+          console.error('Failed to save booking locally:', err);
+        }
+
+        // Save booking to Supabase SQL Database
+        try {
+          const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+          const bookingInsertData = {
+            city_id: activity.city_id && isValidUUID(activity.city_id) ? activity.city_id : null,
+            vendor_id: activity.vendor_id && isValidUUID(activity.vendor_id) ? activity.vendor_id : null,
+            customer_name: name,
+            customer_phone: phone,
+            customer_email: email,
+            service_type: activity.category === 'hotels' ? 'Hotel' : activity.category === 'rafting' ? 'Rafting' : activity.category === 'bikerent' ? 'Bike Rental' : activity.category === 'tour' ? 'Tour' : activity.category === 'camping' ? 'Camping' : 'Rafting',
+            service_id: activity.id && isValidUUID(activity.id) ? activity.id : '00000000-0000-0000-0000-000000000000',
+            travel_date: date,
+            status: 'pending',
+            payment_type: 'advance_10',
+            amount_paid: advancePayment,
+            remaining_amount: remainingPayment,
+            commission_earned: Math.round(totalPrice * 0.1) // Default commission (10%)
+          };
+          supabase.from('bookings').insert([bookingInsertData]).then(({ error }) => {
+            if (error) console.error('Error inserting booking to Supabase:', error);
+          });
+        } catch (err) {
+          console.error('Supabase booking insertion failed:', err);
         }
 
         // Trigger background automated WhatsApp notifications
@@ -207,7 +233,9 @@ My payment ID is verified. Please confirm my slots.`;
       totalPrice,
       advancePayment,
       remainingPayment,
-      category: activity.category
+      category: activity.category,
+      city_id: activity.city_id,
+      vendor_id: activity.vendor_id
     };
 
     onAddToCart(item);
