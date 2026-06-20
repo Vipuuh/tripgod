@@ -116,9 +116,6 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       alt={hotel.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
-                    <div className="absolute top-4 right-4 bg-black text-[#FF6B00] text-xs font-black py-1 px-3 rounded-md shadow-md border border-white/5">
-                      ₹{hotel.price}/night
-                    </div>
                   </div>
 
                   {/* Info details */}
@@ -134,13 +131,29 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       )}
                     </div>
                     
-                    <p className="text-xs text-gray-500 font-semibold flex items-center gap-1">
-                      <MapPin size={12} className="text-[#FF5F00]" /> {hotel.address}
-                    </p>
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                      <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5">
+                        <MapPin size={12} className="text-[#FF5F00]" /> {hotel.address}
+                      </p>
+                      <span className="text-sm font-black text-[#FF5F00] shrink-0">
+                        ₹{hotel.price}/night
+                      </span>
+                    </div>
 
                     <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">
                       {hotel.description}
                     </p>
+
+                    {/* Landmarks list preview */}
+                    {hotel.landmarks && hotel.landmarks.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {hotel.landmarks.slice(0, 2).map((landmark, idx) => (
+                          <span key={idx} className="text-[9px] bg-gray-50 border border-black/5 text-gray-500 font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
+                            <MapPin size={10} className="text-gray-400" /> {landmark}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Amenities list */}
                     <div className="flex flex-wrap gap-1.5 pt-1">
@@ -153,24 +166,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   </div>
                 </div>
 
-                {/* Book Action */}
+                {/* View Details Action */}
                 <div className="px-5 pb-5 pt-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      openBookingModal({
-                        id: hotel.id,
-                        name: hotel.name,
-                        price: hotel.price,
-                        category: 'hotels',
-                        city_id: hotel.city_id,
-                        vendor_id: hotel.vendor_id,
-                        slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
-                      });
+                      setSelectedHotel(hotel);
                     }}
                     className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
                   >
-                    Book Hotel Room
+                    View Stay Details
                   </button>
                 </div>
               </motion.div>

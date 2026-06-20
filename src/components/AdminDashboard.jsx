@@ -1447,6 +1447,23 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               ))}
             </div>
           </div>
+
+          {/* Landmarks array input */}
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+              Nearby Landmarks (Comma separated)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Ram Jhula - 1.2 KM, Triveni Ghat - 3 KM, Laxman Jhula - 500m"
+              value={(formData.landmarks || []).join(', ')}
+              onChange={(e) => {
+                const arr = e.target.value.split(',').map(item => item.trim());
+                setFormData(prev => ({ ...prev, landmarks: arr }));
+              }}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none placeholder-gray-600"
+            />
+          </div>
         </div>
       )}
 
