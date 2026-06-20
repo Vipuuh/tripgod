@@ -624,7 +624,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-medium"
           >
             Rishikesh's #1 adventure booking platform. Book bungee jumps, river rafting, paragliding & camps at just <strong className="text-accent">10% advance</strong> with <strong className="text-white">100% refund guarantee</strong>.
-               <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-center">
+          </motion.p>
+
+          <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-center">
             {/* Tab selection menu */}
             <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-6 py-3 rounded-t-3xl border-t border-x border-white/10 overflow-x-auto no-scrollbar max-w-full">
               {[
