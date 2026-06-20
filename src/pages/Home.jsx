@@ -881,15 +881,15 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             }}
             className="flex items-center gap-12 pr-12 text-xs sm:text-sm font-black tracking-widest uppercase"
           >
-            {[1, 2, 3].map((setIdx) => (
+             {[1, 2, 3].map((setIdx) => (
               <React.Fragment key={setIdx}>
-                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">500+</strong> HAPPY CUSTOMERS</span>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">12,000+</strong> HAPPY CUSTOMERS</span>
                 <span className="text-white/20 text-lg">•</span>
-                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">4</strong> ADVENTURE TYPES</span>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">50+</strong> PARTNER VENDORS</span>
+                <span className="text-white/20 text-lg">•</span>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">15+</strong> ADVENTURE TYPES</span>
                 <span className="text-white/20 text-lg">•</span>
                 <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">100%</strong> REFUND GUARANTEE</span>
-                <span className="text-white/20 text-lg">•</span>
-                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">24/7</strong> WHATSAPP SUPPORT</span>
                 <span className="text-white/20 text-lg">•</span>
               </React.Fragment>
             ))}

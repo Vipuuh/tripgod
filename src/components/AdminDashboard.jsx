@@ -2972,3 +2972,68 @@ const groupBikesByName = (list) => {
   });
   return Object.values(grouped);
 };
+
+// Utility: Group activities by name
+const groupActivitiesByName = (list) => {
+  const grouped = {};
+  list.forEach(item => {
+    const key = item.name;
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: item.id,
+        name: item.name,
+        activity_type: item.activity_type || 'rafting',
+        route: item.route,
+        distance_km: item.distance_km,
+        description: item.description,
+        duration: item.duration,
+        pickup_included: item.pickup_included,
+        drop_included: item.drop_included,
+        age_limit: item.age_limit,
+        images: item.images,
+        inclusions: item.inclusions,
+        exclusions: item.exclusions,
+        cancellation_policy: item.cancellation_policy,
+        city_id: item.city_id,
+        price: item.price,
+        operators: []
+      };
+    }
+    grouped[key].operators.push(item);
+    if (Number(item.price) < Number(grouped[key].price)) {
+      grouped[key].price = item.price;
+    }
+  });
+  return Object.values(grouped);
+};
+
+// Utility: Group tours by name
+const groupToursByName = (list) => {
+  const grouped = {};
+  list.forEach(item => {
+    const key = item.name;
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        duration: item.duration,
+        itinerary: item.itinerary,
+        inclusions: item.inclusions,
+        exclusions: item.exclusions,
+        cancellation_policy: item.cancellation_policy,
+        contact_number: item.contact_number,
+        city_id: item.city_id,
+        price: item.price,
+        images: item.images,
+        operators: []
+      };
+    }
+    grouped[key].operators.push(item);
+    if (Number(item.price) < Number(grouped[key].price)) {
+      grouped[key].price = item.price;
+    }
+  });
+  return Object.values(grouped);
+};
+
