@@ -1151,11 +1151,17 @@ export default function AdminDashboard({ setRoute }) {
 function ListingForm({ type, data, cities, vendors, onClose }) {
   const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({});
+  const [landmarksText, setLandmarksText] = useState('');
 
   // Initialize form fields based on type
   useEffect(() => {
     if (data) {
       setFormData({ ...data });
+      if (data.landmarks && Array.isArray(data.landmarks)) {
+        setLandmarksText(data.landmarks.join(', '));
+      } else {
+        setLandmarksText('');
+      }
     } else {
       // Set defaults for empty forms
       const defaults = {
@@ -1198,6 +1204,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.contact_number = '';
       }
 
+      setLandmarksText('');
       setFormData(defaults);
     }
   }, [type, data, cities, vendors]);
@@ -1456,9 +1463,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             <input
               type="text"
               placeholder="e.g. Ram Jhula - 1.2 KM, Triveni Ghat - 3 KM, Laxman Jhula - 500m"
-              value={(formData.landmarks || []).join(', ')}
+              value={landmarksText}
               onChange={(e) => {
-                const arr = e.target.value.split(',').map(item => item.trim());
+                const val = e.target.value;
+                setLandmarksText(val);
+                const arr = val.split(',').map(item => item.trim()).filter(item => item !== '');
                 setFormData(prev => ({ ...prev, landmarks: arr }));
               }}
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none placeholder-gray-600"
