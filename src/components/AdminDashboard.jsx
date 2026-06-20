@@ -1151,17 +1151,11 @@ export default function AdminDashboard({ setRoute }) {
 function ListingForm({ type, data, cities, vendors, onClose }) {
   const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({});
-  const [landmarksText, setLandmarksText] = useState('');
 
   // Initialize form fields based on type
   useEffect(() => {
     if (data) {
       setFormData({ ...data });
-      if (data.landmarks && Array.isArray(data.landmarks)) {
-        setLandmarksText(data.landmarks.join(', '));
-      } else {
-        setLandmarksText('');
-      }
     } else {
       // Set defaults for empty forms
       const defaults = {
@@ -1204,7 +1198,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.contact_number = '';
       }
 
-      setLandmarksText('');
       setFormData(defaults);
     }
   }, [type, data, cities, vendors]);
@@ -1455,23 +1448,57 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </div>
 
-          {/* Landmarks array input */}
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-              Nearby Landmarks (Comma separated)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Ram Jhula - 1.2 KM, Triveni Ghat - 3 KM, Laxman Jhula - 500m"
-              value={landmarksText}
-              onChange={(e) => {
-                const val = e.target.value;
-                setLandmarksText(val);
-                const arr = val.split(',').map(item => item.trim()).filter(item => item !== '');
-                setFormData(prev => ({ ...prev, landmarks: arr }));
-              }}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none placeholder-gray-600"
-            />
+          {/* Landmarks Dynamic List */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Nearby Landmarks</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentList = formData.landmarks || [];
+                  setFormData(prev => ({
+                    ...prev,
+                    landmarks: [...currentList, '']
+                  }));
+                }}
+                className="py-1 px-2.5 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/25 text-[#FF5F00] font-black text-[9px] uppercase tracking-wider rounded-lg border border-[#FF5F00]/20 cursor-pointer transition-all"
+              >
+                + Add Landmark
+              </button>
+            </div>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {(formData.landmarks || []).map((landmark, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ram Jhula - 1.2 KM"
+                    value={landmark}
+                    onChange={(e) => {
+                      const updated = [...(formData.landmarks || [])];
+                      updated[idx] = e.target.value;
+                      setFormData(prev => ({ ...prev, landmarks: updated }));
+                    }}
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = (formData.landmarks || []).filter((_, i) => i !== idx);
+                      setFormData(prev => ({ ...prev, landmarks: updated }));
+                    }}
+                    className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl cursor-pointer transition-colors flex items-center justify-center"
+                    title="Remove Landmark"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              {(formData.landmarks || []).length === 0 && (
+                <p className="text-[10px] text-gray-500 font-medium italic">No landmarks added yet. Click "+ Add Landmark" above.</p>
+              )}
+            </div>
           </div>
         </div>
       )}
