@@ -176,6 +176,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
               remainingPaid: paymentOption === 'full' ? 0 : item.remainingPayment,
               paymentId: paymentId,
               category: item.category || 'rafting'
+            })
           }).catch(err => console.error('Error triggering WhatsApp notification for cart item:', err));
         });
 
