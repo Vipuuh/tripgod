@@ -11,6 +11,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [guests, setGuests] = useState(1);
   const [hasVideoOption, setHasVideoOption] = useState(false);
   const [error, setError] = useState('');
+  const [paymentOption, setPaymentOption] = useState('advance');
 
   // Contact States for direct Razorpay prefilling
   const [name, setName] = useState('');
@@ -43,14 +44,23 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     }
   }, [activity, initialDate, initialGuests]);
 
+  // Determine Commission %
+  const commissionPercentage = activity.commission_percentage !== undefined && activity.commission_percentage !== null
+    ? Number(activity.commission_percentage)
+    : (activity.vendors?.commission_percentage !== undefined && activity.vendors?.commission_percentage !== null
+        ? Number(activity.vendors.commission_percentage)
+        : 10.0);
+
   // Calculate pricing
   const basePrice = activity.price || 0;
   const hasPaidVideoOption = activity.category === 'bungee' && !activity.videoIncluded;
   const videoPrice = hasPaidVideoOption ? 400 : 0;
   const pricePerPerson = basePrice + (hasPaidVideoOption && hasVideoOption ? videoPrice : 0);
   const totalPrice = pricePerPerson * guests;
-  const advancePayment = Math.round(totalPrice * 0.1);
-  const remainingPayment = totalPrice - advancePayment;
+  
+  const calculatedAdvance = Math.round(totalPrice * (commissionPercentage / 100));
+  const amountToPayNow = paymentOption === 'full' ? totalPrice : calculatedAdvance;
+  const remainingPayment = totalPrice - amountToPayNow;
 
   const minDate = new Date().toISOString().split('T')[0];
   const isBikeRent = activity.category === 'bikerent';
@@ -81,10 +91,12 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
     const options = {
       key: "rzp_live_SwElxrZFXDUFIx",
-      amount: advancePayment * 100, // paise
+      amount: amountToPayNow * 100, // paise
       currency: "INR",
       name: "TripGod Rishikesh",
-      description: `${activity.name} - 10% Advance`,
+      description: paymentOption === 'full' 
+        ? `${activity.name} - 100% Full Payment` 
+        : `${activity.name} - ${commissionPercentage}% Advance`,
       image: "/tripgod-logo.png",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
@@ -92,7 +104,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
         const message = `*BOOKING SUCCESSFUL & PAID - TRIPGOD*
 ----------------------------------
 *Payment Confirmation ID:* ${paymentId}
-*Status:* Paid 10% Advance Booking
+*Status:* ${paymentOption === 'full' ? 'Paid 100% Full Payment Online' : `Paid ${commissionPercentage}% Advance Booking`}
 ----------------------------------
 *Customer Name:* ${name}
 *Customer Email:* ${email}
@@ -105,8 +117,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 ${hasVideoOption ? `*Add-ons:* DSLR Video Included\n` : ''}
 *Price Summary:*
 - Total Price: ₹${totalPrice.toLocaleString('en-IN')}
-- *10% Paid Advance:* ₹${advancePayment.toLocaleString('en-IN')}
-- Pay at Rishikesh (90%): ₹${remainingPayment.toLocaleString('en-IN')}
+- *${paymentOption === 'full' ? 'Paid 100% Online' : `Paid ${commissionPercentage}% Advance`}:* ₹${amountToPayNow.toLocaleString('en-IN')}
+- ${paymentOption === 'full' ? 'Remaining Balance: ₹0 (Paid in Full)' : `Pay at Rishikesh (${100 - commissionPercentage}%): ₹${remainingPayment.toLocaleString('en-IN')}`}
 ----------------------------------
 My payment ID is verified. Please confirm my slots.`;
 
@@ -127,7 +139,7 @@ My payment ID is verified. Please confirm my slots.`;
               subtotal: totalPrice
             }],
             totalPrice: totalPrice,
-            advancePaid: advancePayment,
+            advancePaid: amountToPayNow,
             remainingPaid: remainingPayment
           };
           storedBookings.push(newBooking);
@@ -149,10 +161,10 @@ My payment ID is verified. Please confirm my slots.`;
             service_id: activity.id && isValidUUID(activity.id) ? activity.id : '00000000-0000-0000-0000-000000000000',
             travel_date: date,
             status: 'pending',
-            payment_type: 'advance_10',
-            amount_paid: advancePayment,
+            payment_type: paymentOption === 'full' ? 'full_online' : 'advance_custom',
+            amount_paid: amountToPayNow,
             remaining_amount: remainingPayment,
-            commission_earned: Math.round(totalPrice * 0.1) // Default commission (10%)
+            commission_earned: Math.round(totalPrice * (commissionPercentage / 100))
           };
           supabase.from('bookings').insert([bookingInsertData]).then(({ error }) => {
             if (error) console.error('Error inserting booking to Supabase:', error);
@@ -177,7 +189,7 @@ My payment ID is verified. Please confirm my slots.`;
             slot: slot,
             guests: guests,
             totalPrice: totalPrice,
-            advancePaid: advancePayment,
+            advancePaid: amountToPayNow,
             remainingPaid: remainingPayment,
             paymentId: paymentId,
             category: activity.category
@@ -231,8 +243,9 @@ My payment ID is verified. Please confirm my slots.`;
       guests,
       hasVideoOption,
       totalPrice,
-      advancePayment,
-      remainingPayment,
+      advancePayment: calculatedAdvance,
+      remainingPayment: totalPrice - calculatedAdvance,
+      commission_percentage: commissionPercentage,
       category: activity.category,
       city_id: activity.city_id,
       vendor_id: activity.vendor_id
@@ -449,7 +462,61 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
                 <div className="flex items-center gap-2 p-2.5 bg-black/5 text-black rounded-xl text-[10px] font-bold border border-black/10">
                   <CreditCard size={14} className="flex-shrink-0 text-gray-400" />
-                  <span>PAY ONLY 10% ADVANCE</span>
+                  <span>PAY ONLY {commissionPercentage}% ADVANCE</span>
+                </div>
+              </div>
+
+              {/* Payment Option Choices */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                  <CreditCard size={14} className="text-[#FF5F00]" /> Select Payment Option
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentOption('advance')}
+                    className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                      paymentOption === 'advance'
+                        ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black shadow-md shadow-[#FF5F00]/5'
+                        : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
+                    }`}
+                  >
+                    {paymentOption === 'advance' && (
+                      <div className="absolute top-2.5 right-2.5 w-4.5 h-4.5 rounded-full bg-[#FF5F00] flex items-center justify-center text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                    <div>
+                      <span className="block text-xs font-black">Pay Advance</span>
+                      <span className="block text-[10px] text-gray-500 mt-0.5 font-medium">Pay {commissionPercentage}% online now</span>
+                    </div>
+                    <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{calculatedAdvance.toLocaleString('en-IN')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentOption('full')}
+                    className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                      paymentOption === 'full'
+                        ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black shadow-md shadow-[#FF5F00]/5'
+                        : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
+                    }`}
+                  >
+                    {paymentOption === 'full' && (
+                      <div className="absolute top-2.5 right-2.5 w-4.5 h-4.5 rounded-full bg-[#FF5F00] flex items-center justify-center text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                    <div>
+                      <span className="block text-xs font-black">Pay 100% Full</span>
+                      <span className="block text-[10px] text-gray-500 mt-0.5 font-medium">Pay full amount online now</span>
+                    </div>
+                    <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{totalPrice.toLocaleString('en-IN')}</span>
+                  </button>
                 </div>
               </div>
 
@@ -467,13 +534,13 @@ My payment ID is verified. Please confirm my slots.`;
                 
                 <div className="flex justify-between items-center text-sm font-black text-[#FF5F00]">
                   <span className="flex items-center gap-1.5">
-                    Pay 10% Advance Now
+                    {paymentOption === 'full' ? 'Pay 100% Online Now' : `Pay ${commissionPercentage}% Advance Now`}
                   </span>
-                  <span>₹{advancePayment.toLocaleString('en-IN')}</span>
+                  <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-gray-600">
-                  <span>Remaining Payment (Pay at Rishikesh)</span>
-                  <span>₹{remainingPayment.toLocaleString('en-IN')}</span>
+                  <span>{paymentOption === 'full' ? 'Remaining Balance' : 'Remaining Balance (Pay at venue)'}</span>
+                  <span>{paymentOption === 'full' ? '₹0 (Paid in Full)' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
                 </div>
               </div>
             </div>
@@ -491,7 +558,7 @@ My payment ID is verified. Please confirm my slots.`;
                 className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
               >
                 <CreditCard size={16} />
-                <span>Pay 10% & Book</span>
+                <span>{paymentOption === 'full' ? 'Pay Full & Book' : `Pay ${commissionPercentage}% & Book`}</span>
               </button>
             </div>
           </motion.div>

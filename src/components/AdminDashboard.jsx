@@ -1155,7 +1155,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
   // Initialize form fields based on type
   useEffect(() => {
     if (data) {
-      setFormData({ ...data });
+      setFormData({ 
+        ...data,
+        original_price: data.original_price !== null && data.original_price !== undefined ? data.original_price : '',
+        commission_percentage: data.commission_percentage !== null && data.commission_percentage !== undefined ? data.commission_percentage : '',
+        is_limited_offer: !!data.is_limited_offer
+      });
     } else {
       // Set defaults for empty forms
       const defaults = {
@@ -1164,6 +1169,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         name: '',
         description: '',
         price: 0,
+        original_price: '',
+        commission_percentage: '',
+        is_limited_offer: false,
         images: [],
         whatsapp_number: '',
         cancellation_policy: '100% refund up to 24 hours prior to arrival.'
@@ -1206,13 +1214,19 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     e.preventDefault();
     setFormLoading(true);
     try {
+      const submitData = {
+        ...formData,
+        original_price: formData.original_price === '' || formData.original_price === null || formData.original_price === undefined ? null : Number(formData.original_price),
+        commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null || formData.commission_percentage === undefined ? null : Number(formData.commission_percentage),
+        is_limited_offer: !!formData.is_limited_offer
+      };
       if (data) {
         // Edit Row
-        const { error } = await supabase.from(type).update(formData).eq('id', data.id);
+        const { error } = await supabase.from(type).update(submitData).eq('id', data.id);
         if (error) throw error;
       } else {
         // Insert Row
-        const { error } = await supabase.from(type).insert(formData);
+        const { error } = await supabase.from(type).insert(submitData);
         if (error) throw error;
       }
       onClose();
@@ -1296,6 +1310,17 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         </div>
 
         <div className="space-y-1">
+          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Original Price (₹ - Strikethrough)</label>
+          <input
+            type="number"
+            value={formData.original_price !== null && formData.original_price !== undefined ? formData.original_price : ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value }))}
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+            placeholder="e.g. 2999 (Leave blank if no discount)"
+          />
+        </div>
+
+        <div className="space-y-1">
           <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">WhatsApp Number</label>
           <input
             type="text"
@@ -1304,6 +1329,29 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
             placeholder="e.g. 9837371137"
           />
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Override (%)</label>
+          <input
+            type="number"
+            value={formData.commission_percentage !== null && formData.commission_percentage !== undefined ? formData.commission_percentage : ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, commission_percentage: e.target.value }))}
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+            placeholder="e.g. 15 (Overrides vendor commission)"
+          />
+        </div>
+
+        <div className="space-y-1 flex items-center pt-5">
+          <label className="flex items-center gap-2 cursor-pointer text-slate-300">
+            <input
+              type="checkbox"
+              checked={!!formData.is_limited_offer}
+              onChange={(e) => setFormData(prev => ({ ...prev, is_limited_offer: e.target.checked }))}
+              className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4"
+            />
+            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Limited Time Offer Badge</span>
+          </label>
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import {
   Waves, Zap, Compass, Milestone, 
   ArrowRight, ShieldCheck, CreditCard, 
   Star, MessageSquare, Lock, PhoneCall, ChevronDown,
-  Calendar, Users, Clock, Activity, MapPin
+  Calendar, Users, Clock, Activity, MapPin, Building2, Bike, Car, MapPinned
 } from 'lucide-react';
 import CountUp from '../components/CountUp';
 
@@ -199,6 +199,54 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     return tomorrow.toISOString().split('T')[0];
   });
   const [bookingGuests, setBookingGuests] = useState(prefGuests || 2);
+
+  // MakeMyTrip style Search Tab States
+  const [activeSearchTab, setActiveSearchTab] = useState('hotels');
+  
+  // Stays / Hotels search states
+  const [hotelCheckIn, setHotelCheckIn] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [hotelCheckOut, setHotelCheckOut] = useState(() => {
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+    return dayAfter.toISOString().split('T')[0];
+  });
+  const [hotelGuests, setHotelGuests] = useState(2);
+
+  // Rafting search states
+  const [raftingDate, setRaftingDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [raftingGuests, setRaftingGuests] = useState(2);
+
+  // Bike Rental search states
+  const [bikeDate, setBikeDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [bikeDays, setBikeDays] = useState(1);
+
+  // Tours search states
+  const [tourDate, setTourDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [tourGuests, setTourGuests] = useState(2);
+
+  // Cabs / Pickup search states
+  const [cabDate, setCabDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [cabSlot, setCabSlot] = useState('Morning Slot');
   
   const dateInputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -576,143 +624,242 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-medium"
           >
             Rishikesh's #1 adventure booking platform. Book bungee jumps, river rafting, paragliding & camps at just <strong className="text-accent">10% advance</strong> with <strong className="text-white">100% refund guarantee</strong>.
-          </motion.p>
+               <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-center">
+            {/* Tab selection menu */}
+            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-6 py-3 rounded-t-3xl border-t border-x border-white/10 overflow-x-auto no-scrollbar max-w-full">
+              {[
+                { id: 'hotels', label: 'Hotels', icon: Building2 },
+                { id: 'rafting', label: 'Rafting', icon: Waves },
+                { id: 'bikerent', label: 'Bike Rental', icon: Bike },
+                { id: 'tours', label: 'Tours', icon: MapPinned },
+                { id: 'pickup', label: 'Cabs', icon: Car }
+              ].map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeSearchTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveSearchTab(tab.id)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 border-none cursor-pointer ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white shadow-[0_4px_15px_rgba(255,95,0,0.35)] scale-105' 
+                        : 'text-gray-400 hover:text-white bg-transparent hover:bg-white/5'
+                    }`}
+                  >
+                    <Icon size={14} className={isActive ? 'text-white' : 'text-gray-400'} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="w-full max-w-4xl mx-auto mt-8 bg-black/45 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-[0_24px_50px_rgba(0,0,0,0.6)] relative text-left"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch">
-              {/* Col 1: Select Thrill (Activity) */}
-              <div className="relative" ref={dropdownRef}>
-                <div 
-                  onClick={() => setIsActivityDropdownOpen(!isActivityDropdownOpen)}
-                  className="h-full relative cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-200"
-                >
-                  <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg shrink-0">
-                    {React.createElement(bookingActivitiesList[selectedActivityIdx].icon, { className: "w-5 h-5 text-[#FF6B00]" })}
+            {/* Tab contents (Glassmorphic box) */}
+            <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl rounded-tr-none p-6 md:p-8 shadow-[0_24px_50px_rgba(0,0,0,0.3)] border border-white/10 relative text-left">
+              
+              {activeSearchTab === 'hotels' && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center pb-4 md:pb-0">
+                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">City / Destination</span>
+                    <span className="text-sm font-extrabold text-black mt-1">Rishikesh, India</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider cursor-pointer">Select Thrill</label>
-                    <span className="block text-white text-sm font-bold truncate pr-4 mt-0.5">
-                      {bookingActivitiesList[selectedActivityIdx].name}
-                    </span>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('hotel-checkin')?.showPicker()}>
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Check-in Date</span>
+                    <input 
+                      type="date" 
+                      id="hotel-checkin"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={hotelCheckIn}
+                      onChange={(e) => {
+                        setHotelCheckIn(e.target.value);
+                        const checkInDate = new Date(e.target.value);
+                        checkInDate.setDate(checkInDate.getDate() + 1);
+                        setHotelCheckOut(checkInDate.toISOString().split('T')[0]);
+                      }}
+                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                    />
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 transition-transform duration-300 ${isActivityDropdownOpen ? 'rotate-180' : ''}`} />
-                </div>
-
-                <AnimatePresence>
-                  {isActivityDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute left-0 right-0 mt-2 bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 max-h-60 overflow-y-auto"
-                    >
-                      {bookingActivitiesList.map((item, idx) => (
-                        <div
-                          key={item.id}
-                          onClick={() => {
-                            setSelectedActivityIdx(idx);
-                            setIsActivityDropdownOpen(false);
-                            setPrefDate(bookingDate);
-                            setPrefGuests(bookingGuests);
-                            setRoute(item.route);
-                          }}
-                          className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors duration-150 ${selectedActivityIdx === idx ? 'bg-[#FF6B00]/20 text-white' : 'hover:bg-white/5 text-gray-300 hover:text-white'}`}
-                        >
-                          {React.createElement(item.icon, { className: `w-4 h-4 shrink-0 ${selectedActivityIdx === idx ? 'text-[#FF6B00]' : 'text-gray-400'}` })}
-                          <div className="flex-1 min-w-0">
-                            <span className="block text-xs font-bold truncate">{item.name}</span>
-                            <span className="block text-[9px] text-gray-500 font-medium">
-                              {item.price === 0 ? 'Price on Call' : `Starts from ₹${item.price}`}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Col 2: Date Selector */}
-              <div 
-                onClick={() => dateInputRef.current && dateInputRef.current.showPicker()}
-                className="h-full relative cursor-pointer bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-200"
-              >
-                <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg shrink-0">
-                  <Calendar className="w-5 h-5 text-[#FF6B00]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider cursor-pointer">Choose Date</label>
-                  <input 
-                    type="date"
-                    ref={dateInputRef}
-                    min={new Date().toISOString().split('T')[0]}
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    className="block w-full bg-transparent border-none text-white text-sm font-bold focus:outline-none focus:ring-0 cursor-pointer p-0 mt-0.5"
-                    style={{ colorScheme: 'dark' }}
-                  />
-                </div>
-              </div>
-
-              {/* Col 3: Guest Selector */}
-              <div className="h-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 transition-colors duration-200">
-                <div className="p-1.5 bg-[#FF6B00]/10 rounded-lg shrink-0">
-                  <Users className="w-5 h-5 text-[#FF6B00]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">No. of Guests</label>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-white text-sm font-bold">
-                      {bookingGuests} {bookingGuests === 1 ? 'Guest' : 'Guests'}
-                    </span>
-                    <div className="flex items-center gap-1.5 ml-auto">
-                      <button 
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBookingGuests(prev => Math.max(1, prev - 1));
-                        }}
-                        className="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer font-black text-sm transition-colors"
-                      >
-                        -
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBookingGuests(prev => Math.min(20, prev + 1));
-                        }}
-                        className="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border-none cursor-pointer font-black text-sm transition-colors"
-                      >
-                        +
-                      </button>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('hotel-checkout')?.showPicker()}>
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Check-out Date</span>
+                    <input 
+                      type="date" 
+                      id="hotel-checkout"
+                      min={hotelCheckIn}
+                      value={hotelCheckOut}
+                      onChange={(e) => setHotelCheckOut(e.target.value)}
+                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                    />
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Guests</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm font-extrabold text-black">{hotelGuests} Guest{hotelGuests > 1 ? 's' : ''}</span>
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => setHotelGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
+                        <button type="button" onClick={() => setHotelGuests(g => Math.min(20, g + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                      </div>
                     </div>
                   </div>
                 </div>
+              )}
+
+              {activeSearchTab === 'rafting' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
+                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">Activity Route</span>
+                    <span className="text-sm font-extrabold text-black mt-1">Rishikesh Stretches</span>
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('rafting-date')?.showPicker()}>
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Travel Date</span>
+                    <input 
+                      type="date" 
+                      id="rafting-date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={raftingDate}
+                      onChange={(e) => setRaftingDate(e.target.value)}
+                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                    />
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Total Rafters</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm font-extrabold text-black">{raftingGuests} Person{raftingGuests > 1 ? 's' : ''}</span>
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => setRaftingGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
+                        <button type="button" onClick={() => setRaftingGuests(g => Math.min(30, g + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSearchTab === 'bikerent' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
+                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">Pickup Location</span>
+                    <span className="text-sm font-extrabold text-black mt-1">Rishikesh Office</span>
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('bike-date')?.showPicker()}>
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Start Date</span>
+                    <input 
+                      type="date" 
+                      id="bike-date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={bikeDate}
+                      onChange={(e) => setBikeDate(e.target.value)}
+                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                    />
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Rental Duration</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm font-extrabold text-black">{bikeDays} Day{bikeDays > 1 ? 's' : ''}</span>
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => setBikeDays(d => Math.max(1, d - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
+                        <button type="button" onClick={() => setBikeDays(d => Math.min(30, d + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSearchTab === 'tours' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
+                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">Destination</span>
+                    <span className="text-sm font-extrabold text-black mt-1">Char Dham / Local Rishikesh</span>
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('tour-date')?.showPicker()}>
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Travel Date</span>
+                    <input 
+                      type="date" 
+                      id="tour-date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={tourDate}
+                      onChange={(e) => setTourDate(e.target.value)}
+                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                    />
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Travellers</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-sm font-extrabold text-black">{tourGuests} Person{tourGuests > 1 ? 's' : ''}</span>
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => setTourGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
+                        <button type="button" onClick={() => setTourGuests(g => Math.min(50, g + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeSearchTab === 'pickup' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
+                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">Airport/Station route</span>
+                    <span className="text-sm font-extrabold text-black mt-1">Dehradun Airport / Haridwar Station</span>
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('cab-date')?.showPicker()}>
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Pickup Date</span>
+                    <input 
+                      type="date" 
+                      id="cab-date"
+                      min={new Date().toISOString().split('T')[0]}
+                      value={cabDate}
+                      onChange={(e) => setCabDate(e.target.value)}
+                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                    />
+                  </div>
+                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Preferred Slot</span>
+                    <select 
+                      value={cabSlot} 
+                      onChange={(e) => setCabSlot(e.target.value)}
+                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-1"
+                    >
+                      <option value="Morning Slot" className="text-black">Morning Slot (06:00 AM - 12:00 PM)</option>
+                      <option value="Afternoon Slot" className="text-black">Afternoon Slot (12:00 PM - 05:00 PM)</option>
+                      <option value="Evening Slot" className="text-black">Evening Slot (05:00 PM - 11:00 PM)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Centered hanging search button */}
+              <div className="absolute left-1/2 -bottom-6 -translate-x-1/2 z-20">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (activeSearchTab === 'hotels') {
+                      setPrefDate(hotelCheckIn);
+                      setPrefGuests(hotelGuests);
+                      setRoute('hotels');
+                    } else if (activeSearchTab === 'rafting') {
+                      setPrefDate(raftingDate);
+                      setPrefGuests(raftingGuests);
+                      setRoute('rafting');
+                    } else if (activeSearchTab === 'bikerent') {
+                      setPrefDate(bikeDate);
+                      setPrefGuests(1);
+                      setRoute('bikerent');
+                    } else if (activeSearchTab === 'tours') {
+                      setPrefDate(tourDate);
+                      setPrefGuests(tourGuests);
+                      setRoute('tours');
+                    } else if (activeSearchTab === 'pickup') {
+                      setPrefDate(cabDate);
+                      setPrefGuests(1);
+                      setRoute('pickup');
+                    }
+                  }}
+                  className="px-10 py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs sm:text-sm uppercase tracking-widest rounded-full shadow-[0_8px_30px_rgba(255,95,0,0.4)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.6)] hover:scale-105 transition-all duration-300 border-none cursor-pointer flex items-center gap-2 font-display"
+                >
+                  <span>Search</span>
+                  <ArrowRight size={16} />
+                </button>
               </div>
 
-              {/* Col 4: Submit Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  const act = bookingActivitiesList[selectedActivityIdx];
-                  setPrefDate(bookingDate);
-                  setPrefGuests(bookingGuests);
-                  setRoute(act.route);
-                }}
-                className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-[0_8px_30px_rgba(255,95,0,0.3)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.5)] hover:scale-[1.02] transition-all duration-300 border-none cursor-pointer flex items-center justify-center gap-2 font-display"
-              >
-                <span>Find Adventure</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Bungee Jumping Platform & Jumper Group (positioned relative to screen viewport width) */}

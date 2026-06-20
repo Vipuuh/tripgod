@@ -89,7 +89,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
     const fetchBikes = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('bikes').select('*, vendors(name)');
+        let query = supabase.from('bikes').select('*, vendors(*)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
@@ -187,8 +187,18 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               >
                 <div className="h-36 sm:h-40 bg-gray-100 overflow-hidden relative border-b border-black/5">
                   <img src={v.img} alt={v.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute top-4 right-4 bg-black text-[#FF6B00] text-xs font-bold px-2 py-0.5 rounded z-10">
-                    ₹{v.price}/day
+                  {v.is_limited_offer && (
+                    <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider z-10">
+                      LIMITED TIME OFFER
+                    </span>
+                  )}
+                  <div className="absolute top-4 right-4 bg-black text-white text-xs font-bold px-2.5 py-1 rounded flex items-center gap-1.5 z-10">
+                    {v.original_price && Number(v.original_price) > Number(v.price) && (
+                      <span className="text-[10px] text-gray-400 line-through">
+                        ₹{Number(v.original_price)}
+                      </span>
+                    )}
+                    <span className="text-[#FF6B00]">₹{v.price}/day</span>
                   </div>
                 </div>
  
@@ -231,6 +241,8 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                         category: 'bikerent',
                         city_id: v.city_id,
                         vendor_id: v.vendor_id,
+                        commission_percentage: v.commission_percentage,
+                        vendors: v.vendors,
                         slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent']
                       })}
                       className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"

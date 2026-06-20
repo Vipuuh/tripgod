@@ -67,7 +67,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
     const fetchHotels = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('hotels').select('*, vendors(name)');
+        let query = supabase.from('hotels').select('*, vendors(*)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
@@ -141,6 +141,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       alt={hotel.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
+                    {hotel.is_limited_offer && (
+                      <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider">
+                        LIMITED TIME OFFER
+                      </span>
+                    )}
                   </div>
 
                   {/* Info details */}
@@ -160,9 +165,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5">
                         <MapPin size={12} className="text-[#FF5F00]" /> {hotel.address}
                       </p>
-                      <span className="text-sm font-black text-[#FF5F00] shrink-0">
-                        ₹{hotel.price}/night
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
+                          <span className="text-xs text-gray-400 line-through">
+                            ₹{Number(hotel.original_price).toLocaleString('en-IN')}
+                          </span>
+                        )}
+                        <span className="text-sm font-black text-[#FF5F00]">
+                          ₹{Number(hotel.price).toLocaleString('en-IN')}/night
+                        </span>
+                      </div>
                     </div>
 
                     <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">
@@ -256,6 +268,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] text-[9px] font-black uppercase tracking-wider rounded-md border border-[#FF5F00]/20">
                       Stay Details
                     </span>
+                    {selectedHotel.is_limited_offer && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider rounded-md">
+                        Limited Time Offer
+                      </span>
+                    )}
                     {selectedHotel.vendors?.name && (
                       <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded">
                         Operator: {selectedHotel.vendors.name}
@@ -334,7 +351,14 @@ export default function Hotels({ currentCity, openBookingModal }) {
               <div className="grid grid-cols-3 gap-2.5 border-b border-gray-100 pb-4 text-[10px] sm:text-xs font-semibold">
                 <div className="p-3 bg-orange-50/40 border border-orange-100 rounded-2xl flex flex-col items-center justify-center text-center">
                   <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Price / Night</span>
-                  <span className="text-sm sm:text-base font-black text-[#FF5F00]">₹{selectedHotel.price}</span>
+                  <div className="flex items-center gap-1.5 justify-center">
+                    {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                      <span className="text-[10px] sm:text-xs text-gray-400 line-through">
+                        ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
+                      </span>
+                    )}
+                    <span className="text-sm sm:text-base font-black text-[#FF5F00]">₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
+                  </div>
                 </div>
                 <div className="p-3 bg-gray-50/50 border border-black/5 rounded-2xl flex flex-col items-center justify-center text-center">
                   <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Check-in</span>

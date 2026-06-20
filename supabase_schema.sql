@@ -171,3 +171,23 @@ CREATE POLICY "Allow public select on media" ON storage.objects FOR SELECT TO pu
 CREATE POLICY "Allow admin insert on media" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'media');
 CREATE POLICY "Allow admin update on media" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'media');
 CREATE POLICY "Allow admin delete on media" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'media');
+
+-- =========================================================================
+-- Schema Extensions (June 2026 Redesign)
+-- =========================================================================
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS original_price NUMERIC;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_limited_offer BOOLEAN DEFAULT false;
+
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS original_price NUMERIC;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS is_limited_offer BOOLEAN DEFAULT false;
+
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS original_price NUMERIC;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS is_limited_offer BOOLEAN DEFAULT false;
+
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS original_price NUMERIC;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS is_limited_offer BOOLEAN DEFAULT false;
+

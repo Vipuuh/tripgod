@@ -8,6 +8,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [paymentOption, setPaymentOption] = useState('advance');
 
   useEffect(() => {
     if (isOpen) {
@@ -26,6 +27,9 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
   const totalCost = cart.reduce((acc, item) => acc + item.totalPrice, 0);
   const totalAdvance = cart.reduce((acc, item) => acc + item.advancePayment, 0);
   const totalRemaining = totalCost - totalAdvance;
+
+  const amountToPayNow = paymentOption === 'full' ? totalCost : totalAdvance;
+  const remainingPayment = totalCost - amountToPayNow;
 
   const handleRazorpayCheckout = () => {
     if (cart.length === 0) return;
@@ -50,17 +54,17 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
 
     const options = {
       key: "rzp_live_SwElxrZFXDUFIx",
-      amount: totalAdvance * 100, // paise
+      amount: amountToPayNow * 100, // paise
       currency: "INR",
       name: "TripGod Rishikesh",
-      description: `Cart Checkout (${cart.length} Activities) - 10% Advance`,
+      description: `Cart Checkout (${cart.length} Activities) - ${paymentOption === 'full' ? '100% Full Payment' : 'Advances'}`,
       image: "/tripgod-logo.png",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
 
         let message = `*BOOKING CART SUCCESSFUL & PAID - TRIPGOD*\n`;
         message += `*Payment Confirmation ID:* ${paymentId}\n`;
-        message += `*Status:* Paid 10% Advance Booking\n`;
+        message += `*Status:* ${paymentOption === 'full' ? 'Paid 100% Full Payment Online' : 'Paid Advance Booking'}\n`;
         message += `----------------------------------\n`;
         message += `*Customer Name:* ${name}\n`;
         message += `*Customer Email:* ${email}\n`;
@@ -68,6 +72,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
         message += `----------------------------------\n`;
         
         cart.forEach((item, index) => {
+          const itemPct = item.commission_percentage || 10.0;
           message += `*${index + 1}. ${item.name}*\n`;
           if (item.stretch) message += `   Route: ${item.stretch}\n`;
           message += `   Date: ${item.date.split('-').reverse().join('/')}\n`;
@@ -75,13 +80,24 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
           message += `   Guests: ${item.guests} Person(s)\n`;
           if (item.hasVideoOption) message += `   Add-ons: DSLR Video Included\n`;
           message += `   Subtotal: ₹${item.totalPrice.toLocaleString('en-IN')}\n`;
+          if (paymentOption === 'advance') {
+            message += `   Advance Paid (${itemPct}%): ₹${item.advancePayment.toLocaleString('en-IN')}\n`;
+            message += `   Remaining Balance (${100 - itemPct}%): ₹${item.remainingPayment.toLocaleString('en-IN')}\n`;
+          } else {
+            message += `   Paid Online (100%): ₹${item.totalPrice.toLocaleString('en-IN')}\n`;
+          }
           message += `----------------------------------\n`;
         });
 
         message += `*CART TOTALS:*\n`;
         message += `- Grand Total Price: ₹${totalCost.toLocaleString('en-IN')}\n`;
-        message += `- *Total 10% Paid Advance:* ₹${totalAdvance.toLocaleString('en-IN')}\n`;
-        message += `- Pay at Rishikesh (90%): ₹${totalRemaining.toLocaleString('en-IN')}\n`;
+        if (paymentOption === 'full') {
+          message += `- *Paid Online (100%):* ₹${totalCost.toLocaleString('en-IN')}\n`;
+          message += `- Remaining Balance: ₹0 (Paid in Full)\n`;
+        } else {
+          message += `- *Total Paid Advance:* ₹${totalAdvance.toLocaleString('en-IN')}\n`;
+          message += `- Pay at Rishikesh: ₹${totalRemaining.toLocaleString('en-IN')}\n`;
+        }
         message += `----------------------------------\n`;
         message += `My payment ID is verified. Please confirm my slots.`;
 
@@ -102,8 +118,8 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
               subtotal: item.totalPrice
             })),
             totalPrice: totalCost,
-            advancePaid: totalAdvance,
-            remainingPaid: totalRemaining
+            advancePaid: amountToPayNow,
+            remainingPaid: remainingPayment
           };
           storedBookings.push(newBooking);
           localStorage.setItem(`tripgod_bookings_${email}`, JSON.stringify(storedBookings));
@@ -115,6 +131,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
         try {
           const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
           cart.forEach(async (item) => {
+            const itemPct = item.commission_percentage || 10.0;
             const bookingInsertData = {
               city_id: item.city_id && isValidUUID(item.city_id) ? item.city_id : null,
               vendor_id: item.vendor_id && isValidUUID(item.vendor_id) ? item.vendor_id : null,
@@ -125,10 +142,10 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
               service_id: item.id && isValidUUID(item.id) ? item.id : '00000000-0000-0000-0000-000000000000',
               travel_date: item.date,
               status: 'pending',
-              payment_type: 'advance_10',
-              amount_paid: item.advancePayment,
-              remaining_amount: item.remainingPayment,
-              commission_earned: Math.round(item.totalPrice * 0.1) // Default commission (10%)
+              payment_type: paymentOption === 'full' ? 'full_online' : 'advance_custom',
+              amount_paid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
+              remaining_amount: paymentOption === 'full' ? 0 : item.remainingPayment,
+              commission_earned: Math.round(item.totalPrice * (itemPct / 100))
             };
             const { error } = await supabase.from('bookings').insert([bookingInsertData]);
             if (error) console.error('Error inserting booking to Supabase from cart:', error);
@@ -139,6 +156,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
 
         // Trigger background automated WhatsApp notifications for each cart item
         cart.forEach((item) => {
+          const itemPct = item.commission_percentage || 10.0;
           fetch('/api/send-booking-whatsapp', {
             method: 'POST',
             headers: {
@@ -154,11 +172,10 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
               slot: item.slot,
               guests: item.guests,
               totalPrice: item.totalPrice,
-              advancePaid: Math.round(item.totalPrice * 0.1),
-              remainingPaid: item.totalPrice - Math.round(item.totalPrice * 0.1),
+              advancePaid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
+              remainingPaid: paymentOption === 'full' ? 0 : item.remainingPayment,
               paymentId: paymentId,
               category: item.category || 'rafting'
-            })
           }).catch(err => console.error('Error triggering WhatsApp notification for cart item:', err));
         });
 
@@ -364,7 +381,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                       </div>
 
                       <div className="flex justify-between items-center text-xs text-gray-700 bg-[#FF5F00]/10 p-2 rounded-lg border border-[#FF5F00]/20">
-                        <span>10% booking advance</span>
+                        <span>{item.commission_percentage || 10}% booking advance</span>
                         <span className="font-bold text-black">
                           ₹{item.advancePayment.toLocaleString('en-IN')}
                         </span>
@@ -378,27 +395,60 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
             {/* Sticky summary & checkout */}
             {cart.length > 0 && (
               <div className="p-6 bg-transparent border-t border-black/5 space-y-4">
+                {/* Payment Option Selector */}
+                <div className="space-y-2 pb-2">
+                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Payment Choice</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentOption('advance')}
+                      className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 relative cursor-pointer ${
+                        paymentOption === 'advance'
+                          ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black'
+                          : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
+                      }`}
+                    >
+                      <span className="block text-[10px] font-bold">Pay Advances</span>
+                      <span className="block text-xs font-black text-[#FF5F00] mt-1.5">₹{totalAdvance.toLocaleString('en-IN')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentOption('full')}
+                      className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 relative cursor-pointer ${
+                        paymentOption === 'full'
+                          ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black'
+                          : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
+                      }`}
+                    >
+                      <span className="block text-[10px] font-bold">Pay 100% Full</span>
+                      <span className="block text-xs font-black text-[#FF5F00] mt-1.5">₹{totalCost.toLocaleString('en-IN')}</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Subtotal</span>
+                    <span>Total Cost ({cart.length} adventure{cart.length > 1 ? 's' : ''})</span>
                     <span>₹{totalCost.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between items-center font-bold text-base text-[#FF5F00]">
                     <span className="flex items-center gap-1">
-                      Pay 10% Advance Now
+                      {paymentOption === 'full' ? 'Pay 100% Online Now' : 'Pay Total Advance Now'}
                     </span>
-                    <span className="text-lg font-black text-black">₹{totalAdvance.toLocaleString('en-IN')}</span>
+                    <span className="text-lg font-black text-black">₹{amountToPayNow.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>Pay at Rishikesh (90%)</span>
-                    <span>₹{totalRemaining.toLocaleString('en-IN')}</span>
+                    <span>{paymentOption === 'full' ? 'Remaining Balance' : 'Pay at Rishikesh (Offline)'}</span>
+                    <span>{paymentOption === 'full' ? '₹0' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
                   </div>
                 </div>
 
                 <div className="flex gap-2 p-3 bg-yellow-500/10 text-yellow-800 rounded-xl text-xs font-semibold leading-relaxed border border-yellow-500/20">
                   <ShieldAlert size={16} className="flex-shrink-0 mt-0.5" />
                   <span>
-                    Pay 10% advance via UPI to verify slot. Balance at activity point. Full refund if canceled 24h prior.
+                    {paymentOption === 'full' 
+                      ? 'Secure full checkout online. Free cancellation up to 24h prior to slot.' 
+                      : 'Pay only advances online. Remaining balance is payable at respective venues.'}
                   </span>
                 </div>
 
@@ -407,7 +457,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                   className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
                 >
                   <CreditCard size={18} />
-                  <span>Pay 10% & Book All</span>
+                  <span>{paymentOption === 'full' ? 'Pay Full & Book All' : 'Pay Advances & Book All'}</span>
                 </button>
               </div>
             )}

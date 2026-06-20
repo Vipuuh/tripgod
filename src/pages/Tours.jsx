@@ -11,7 +11,7 @@ export default function Tours({ currentCity, openBookingModal }) {
     const fetchTours = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('tours').select('*, vendors(name)');
+        let query = supabase.from('tours').select('*, vendors(*)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
@@ -97,8 +97,18 @@ export default function Tours({ currentCity, openBookingModal }) {
                       alt={tour.name} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
-                    <div className="absolute top-4 right-4 bg-[#FF5F00] text-white text-xs font-black py-1 px-3 rounded-full shadow-md">
-                      ₹{tour.price}
+                    {tour.is_limited_offer && (
+                      <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider z-10">
+                        LIMITED TIME OFFER
+                      </span>
+                    )}
+                    <div className="absolute top-4 right-4 bg-black text-white text-xs font-black py-1.5 px-3 rounded-full shadow-md flex items-center gap-1.5 z-10">
+                      {tour.original_price && Number(tour.original_price) > Number(tour.price) && (
+                        <span className="text-[10px] text-gray-400 line-through">
+                          ₹{Number(tour.original_price).toLocaleString('en-IN')}
+                        </span>
+                      )}
+                      <span className="text-[#FF6B00]">₹{Number(tour.price).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
@@ -136,6 +146,8 @@ export default function Tours({ currentCity, openBookingModal }) {
                       category: 'tour',
                       city_id: tour.city_id,
                       vendor_id: tour.vendor_id,
+                      commission_percentage: tour.commission_percentage,
+                      vendors: tour.vendors,
                       slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
                     })}
                     className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] transition-all border-none cursor-pointer text-center font-display"

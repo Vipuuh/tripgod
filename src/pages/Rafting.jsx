@@ -11,7 +11,7 @@ const defaultStretches = [
     id: 'rafting-12km',
     name: '12 KM Rafting Stretch',
     stretch: 'Shivpuri → Laxman Jhula',
-    price: 10,
+    price: 1090,
     difficulty: 'Moderate',
     difficultyColor: 'bg-green-100 text-green-800',
     duration: '2-3 Hours',
@@ -24,7 +24,11 @@ const defaultStretches = [
       '/rafting-1.jpg',
       '/rafting-2.jpg'
     ],
-    desc: 'The most popular rafting stretch in Rishikesh. Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch, ending near the iconic Laxman Jhula.'
+    desc: 'The most popular rafting stretch in Rishikesh. Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch, ending near the iconic Laxman Jhula.',
+    operators: [
+      { id: 'rafting-12km-op1', name: 'River Runners Crew', price: 1090, original_price: 1290, is_limited_offer: true, commission_percentage: 12 },
+      { id: 'rafting-12km-op2', name: 'Himalayan Rapids Adventure', price: 1250, original_price: 1400, commission_percentage: 10 }
+    ]
   },
   {
     id: 'rafting-16km',
@@ -43,7 +47,11 @@ const defaultStretches = [
       '/rafting-3.jpg',
       '/rafting-1.jpg'
     ],
-    desc: 'An extended version of the Shivpuri stretch. It covers additional rapids and terminates at Nim Beach. Designed for adventure lovers seeking extra thrill and longer river time.'
+    desc: 'An extended version of the Shivpuri stretch. It covers additional rapids and terminates at Nim Beach. Designed for adventure lovers seeking extra thrill and longer river time.',
+    operators: [
+      { id: 'rafting-16km-op1', name: 'White Water Legends', price: 1590, original_price: 1790, is_limited_offer: true, commission_percentage: 15 },
+      { id: 'rafting-16km-op2', name: 'Apex Adventure Rishikesh', price: 1690, commission_percentage: 10 }
+    ]
   },
   {
     id: 'rafting-26km',
@@ -62,7 +70,11 @@ const defaultStretches = [
       '/rafting-2.jpg',
       '/rafting-3.jpg'
     ],
-    desc: 'The ultimate white water rafting test in Rishikesh. Massive rapids, heavy currents, and extreme body-surfing options. Requires high stamina and prior basic rafting experience.'
+    desc: 'The ultimate white water rafting test in Rishikesh. Massive rapids, heavy currents, and extreme body-surfing options. Requires high stamina and prior basic rafting experience.',
+    operators: [
+      { id: 'rafting-26km-op1', name: 'Ganga Extreme Outfitters', price: 2490, original_price: 2990, commission_percentage: 10 },
+      { id: 'rafting-26km-op2', name: 'Bull Adventure Crew', price: 2790, commission_percentage: 12 }
+    ]
   }
 ];
 
@@ -110,23 +122,47 @@ export default function Rafting({ currentCity, openBookingModal }) {
     const fetchRafting = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('rafting').select('*, vendors(name)');
+        let query = supabase.from('rafting').select('*, vendors(*)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
         const { data, error } = await query;
         if (error) throw error;
         if (data && data.length > 0) {
-          const mapped = data.map(item => ({
-            ...item,
-            stretch: item.route,
-            difficulty: item.age_limit > 14 ? 'Advanced' : 'Moderate',
-            difficultyColor: item.age_limit > 14 ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800',
-            img: item.images && item.images.length > 0 ? item.images[0] : '/rafting-4.jpg',
-            rapids: 'Grade II & III rapids',
-            weightLimit: 'Weight 40-100 kg',
-            desc: item.description
-          }));
+          const grouped = {};
+          data.forEach(item => {
+            const key = item.route || 'Rafting Stretch';
+            if (!grouped[key]) {
+              grouped[key] = {
+                id: item.id,
+                name: `${item.distance_km || 12} KM Rafting Stretch`,
+                stretch: key,
+                difficulty: item.age_limit > 14 ? 'Advanced' : 'Moderate',
+                difficultyColor: item.age_limit > 14 ? 'bg-orange-100 text-orange-850' : 'bg-green-100 text-green-850',
+                price: Number(item.price),
+                img: item.images && item.images.length > 0 ? item.images[0] : '/rafting-4.jpg',
+                images: item.images || ['/rafting-4.jpg'],
+                duration: item.duration || '2-3 Hours',
+                rapids: item.age_limit > 14 ? 'Grade III & IV rapids' : 'Grade II & III rapids',
+                ageLimit: `Age ${item.age_limit}+ yrs`,
+                weightLimit: 'Weight 40-100 kg',
+                desc: item.description,
+                inclusions: item.inclusions || [],
+                exclusions: item.exclusions || [],
+                cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior.',
+                operators: []
+              };
+            }
+            grouped[key].operators.push(item);
+            if (Number(item.price) < grouped[key].price) {
+              grouped[key].price = Number(item.price);
+            }
+            if (item.images && item.images.length > grouped[key].images.length) {
+              grouped[key].images = item.images;
+              grouped[key].img = item.images[0];
+            }
+          });
+          const mapped = Object.values(grouped);
           setStretchesData(mapped);
         } else {
           setStretchesData(defaultStretches);
@@ -333,8 +369,8 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 
                 <div className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col">
                   <span className="text-[10px] font-bold text-gray-600 uppercase">Price per person</span>
-                  <span className="text-2xl font-black text-black">₹{selectedStretch.price.toLocaleString('en-IN')}</span>
-                  <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Pay only 10% (₹{Math.round(selectedStretch.price * 0.1)}) to book!</span>
+                  <span className="text-2xl font-black text-black">Starts from ₹{selectedStretch.price.toLocaleString('en-IN')}</span>
+                  <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Compare operators below and book!</span>
                 </div>
               </div>
 
@@ -476,6 +512,101 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
+              {/* Compare Operators Section */}
+              <div id="compare-operators-section" className="space-y-4 pt-6 border-t border-black/5">
+                <h3 className="text-lg font-bold font-display text-black uppercase tracking-tight">Compare Operators & Rates</h3>
+                <div className="space-y-3">
+                  {(selectedStretch.operators || []).map((op, opIdx) => {
+                    const opPrice = Number(op.price || selectedStretch.price);
+                    const opOriginalPrice = op.original_price ? Number(op.original_price) : null;
+                    const opVendorName = op.vendors?.name || op.name || 'Local Operator';
+                    const hasDiscount = opOriginalPrice && opOriginalPrice > opPrice;
+                    const advancePercentage = op.commission_percentage !== null && op.commission_percentage !== undefined && op.commission_percentage !== '' 
+                      ? Number(op.commission_percentage) 
+                      : (op.vendors?.commission_percentage !== undefined ? Number(op.vendors.commission_percentage) : 10.0);
+                    const opAdvance = Math.round(opPrice * (advancePercentage / 100));
+
+                    return (
+                      <div 
+                        key={op.id || opIdx}
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 border border-black/10 rounded-2xl bg-gray-50 hover:bg-white hover:border-[#FF5F00]/40 hover:shadow-lg transition-all duration-350 gap-4"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-extrabold text-sm text-black">{opVendorName}</span>
+                            {op.is_limited_offer && (
+                              <span className="bg-[#FF5F00] text-white text-[8px] font-black py-0.5 px-2 rounded">
+                                LIMITED OFFER
+                              </span>
+                            )}
+                          </div>
+                          <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                            Certified Safety Crew • High Quality Gear Included
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                          <div className="text-left sm:text-right">
+                            <div className="flex items-center gap-1.5 sm:justify-end">
+                              {hasDiscount && (
+                                <span className="text-xs text-gray-400 line-through">
+                                  ₹{opOriginalPrice.toLocaleString('en-IN')}
+                                </span>
+                              )}
+                              <span className="text-xl font-black text-black">
+                                ₹{opPrice.toLocaleString('en-IN')}
+                              </span>
+                            </div>
+                            <span className="block text-[9px] text-[#FF5F00] font-black uppercase mt-0.5">
+                              Pay ₹{opAdvance.toLocaleString('en-IN')} ({advancePercentage}% Advance) to book!
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => openBookingModal({
+                              id: op.id || selectedStretch.id,
+                              name: `${selectedStretch.name} - ${opVendorName}`,
+                              stretch: selectedStretch.stretch,
+                              price: opPrice,
+                              category: 'rafting',
+                              city_id: op.city_id,
+                              vendor_id: op.vendor_id,
+                              commission_percentage: op.commission_percentage,
+                              vendors: op.vendors
+                            })}
+                            className="w-full sm:w-auto py-2.5 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-105 transition-all duration-200 border-none cursor-pointer text-center font-display"
+                          >
+                            Book with Operator
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(!selectedStretch.operators || selectedStretch.operators.length === 0) && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-5 border border-black/10 rounded-2xl bg-gray-50 gap-4 w-full">
+                      <div>
+                        <span className="font-extrabold text-sm text-black">Local Rishikesh Crew</span>
+                        <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Equipment & Safety guides included</span>
+                      </div>
+                      <button
+                        onClick={() => openBookingModal({
+                          id: selectedStretch.id,
+                          name: selectedStretch.name,
+                          stretch: selectedStretch.stretch,
+                          price: selectedStretch.price,
+                          category: 'rafting',
+                          city_id: selectedStretch.city_id,
+                          vendor_id: selectedStretch.vendor_id
+                        })}
+                        className="w-full sm:w-auto py-2.5 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:scale-105 transition-all border-none cursor-pointer font-display"
+                      >
+                        Book Now
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Logistics Section */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-black/5">
                 <div className="space-y-2">
@@ -583,22 +714,16 @@ export default function Rafting({ currentCity, openBookingModal }) {
               <div>
                 <span className="block text-[10px] text-gray-500 uppercase font-bold">{selectedStretch.name}</span>
                 <span className="text-lg font-black text-black">
-                  ₹{selectedStretch.price.toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/person</span>
+                  Starts from ₹{selectedStretch.price.toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/person</span>
                 </span>
               </div>
               <button
-                onClick={() => openBookingModal({
-                  id: selectedStretch.id,
-                  name: selectedStretch.name,
-                  stretch: selectedStretch.stretch,
-                  price: selectedStretch.price,
-                  category: 'rafting',
-                  city_id: selectedStretch.city_id,
-                  vendor_id: selectedStretch.vendor_id
-                })}
+                onClick={() => {
+                  document.getElementById('compare-operators-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
               >
-                Book Now
+                Choose Operator
               </button>
             </div>
           </motion.div>
