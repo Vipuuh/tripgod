@@ -314,11 +314,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   };
 
   const quickAccess = [
-    { label: 'Bungee', icon: BungeeIcon, route: 'bungee' },
-    { label: 'Rafting', icon: RaftingIcon, route: 'rafting' },
-    { label: 'Paragliding', icon: ParaglidingIcon, route: 'paragliding' },
-    { label: 'Zipline', icon: ZiplineIcon, route: 'zipline' },
-    { label: 'Bike Rent', icon: BikeIcon, route: 'bikerent' }
+    { label: 'Hotels', icon: Building2, route: 'hotels' },
+    { label: 'Char Dham', icon: MapPinned, route: 'tours' },
+    { label: 'Rafting', icon: Waves, route: 'rafting' },
+    { label: 'Bike Rent', icon: Bike, route: 'bikerent' },
+    { label: 'Cabs', icon: Car, route: 'pickup' }
   ];
 
   const activities = [
@@ -626,14 +626,14 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             Rishikesh's #1 adventure booking platform. Book bungee jumps, river rafting, paragliding & camps at just <strong className="text-accent">10% advance</strong> with <strong className="text-white">100% refund guarantee</strong>.
           </motion.p>
 
-          <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-center">
+          <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-center px-4">
             {/* Tab selection menu */}
-            <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-6 py-3 rounded-t-3xl border-t border-x border-white/10 overflow-x-auto no-scrollbar max-w-full">
+            <div className="w-full md:w-auto flex items-center gap-2 bg-black/60 backdrop-blur-md px-6 py-3 rounded-t-3xl border-t border-x border-white/10 overflow-x-auto no-scrollbar flex-nowrap">
               {[
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
+                { id: 'tours', label: 'Tours', icon: MapPinned },
                 { id: 'rafting', label: 'Rafting', icon: Waves },
                 { id: 'bikerent', label: 'Bike Rental', icon: Bike },
-                { id: 'tours', label: 'Tours', icon: MapPinned },
                 { id: 'pickup', label: 'Cabs', icon: Car }
               ].map(tab => {
                 const Icon = tab.icon;
@@ -642,7 +642,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   <button
                     key={tab.id}
                     onClick={() => setActiveSearchTab(tab.id)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 border-none cursor-pointer ${
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 border-none cursor-pointer flex-shrink-0 ${
                       isActive 
                         ? 'bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white shadow-[0_4px_15px_rgba(255,95,0,0.35)] scale-105' 
                         : 'text-gray-400 hover:text-white bg-transparent hover:bg-white/5'
@@ -938,24 +938,28 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="bg-white/40 backdrop-blur-md border-y border-black/5 py-6 shadow-sm"
+        className="bg-white/60 backdrop-blur-xl border-y border-black/5 py-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)] relative z-20"
       >
-        <div className="max-w-6xl mx-auto px-4 grid grid-cols-5 gap-2 text-center">
-          {quickAccess.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <button 
-                key={index} 
-                onClick={() => setRoute(item.route)}
-                className="flex flex-col items-center gap-1 cursor-pointer group"
-              >
-                <div className="text-accent group-hover:scale-110 transition-transform duration-300 flex items-center justify-center h-10">
-                  <Icon className="w-10 h-10" />
-                </div>
-                <span className="font-bold text-xs text-black tracking-tight mt-1 group-hover:text-accent transition-colors">{item.label}</span>
-              </button>
-            );
-          })}
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto no-scrollbar pb-2 md:pb-0 px-2 md:px-0">
+            {quickAccess.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <button 
+                  key={index} 
+                  onClick={() => setRoute(item.route)}
+                  className="flex-shrink-0 w-[100px] md:w-auto flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-white/80 border border-black/5 shadow-xs hover:border-[#FF5F00]/30 hover:bg-[#FF5F00]/5 transition-all duration-300 hover:scale-[1.03] group cursor-pointer"
+                >
+                  <div className="text-[#FF5F00] group-hover:scale-110 transition-all duration-300 flex items-center justify-center h-12 w-12 rounded-2xl bg-orange-50/50 group-hover:bg-[#FF5F00]/10 border border-[#FF5F00]/5">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span className="font-black text-[10px] md:text-xs text-neutral-800 tracking-wider uppercase group-hover:text-[#FF5F00] transition-colors text-center font-display">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </motion.div>
 
