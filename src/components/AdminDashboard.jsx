@@ -227,6 +227,20 @@ export default function AdminDashboard({ setRoute }) {
     }
   };
 
+  // Delete Rafting Stretch Handler (Deletes all operator rows for a stretch)
+  const handleDeleteRaftingStretch = async (groupedItem) => {
+    const confirmMsg = `Are you sure you want to delete the ${groupedItem.name} and all its ${groupedItem.operators.length} operators?`;
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      const idsToDelete = groupedItem.operators.map(op => op.id);
+      const { error } = await supabase.from('rafting').delete().in('id', idsToDelete);
+      if (error) throw error;
+      fetchAllData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   // Add/Edit Vendor Handler
   const handleSaveVendor = async (e) => {
     e.preventDefault();
@@ -705,7 +719,7 @@ export default function AdminDashboard({ setRoute }) {
               {(() => {
                 const list = 
                   activeTab === 'hotels' ? hotels :
-                  activeTab === 'rafting' ? raftingList :
+                  activeTab === 'rafting' ? groupRaftingByDistance(raftingList) :
                   activeTab === 'bikes' ? bikesList : toursList;
 
                 if (list.length === 0) {
@@ -728,7 +742,7 @@ export default function AdminDashboard({ setRoute }) {
                         <div className="h-44 bg-slate-900 relative">
                           <img src={thumbnail} alt={item.name} className="w-full h-full object-cover" />
                           <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-xs text-accent text-xs font-black py-0.5 px-2.5 rounded border border-accent/25">
-                            {item.price === 0 ? 'Free' : `₹${item.price}`}
+                            {activeTab === 'rafting' ? `From ₹${item.price}` : (item.price === 0 ? 'Free' : `₹${item.price}`)}
                           </div>
                         </div>
 
@@ -740,11 +754,32 @@ export default function AdminDashboard({ setRoute }) {
                             <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded">
                               <MapPin size={10} /> {city?.name || 'No City'}
                             </span>
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
-                              <Users size={10} /> {vendor?.name || 'No Vendor'}
-                            </span>
+                            {activeTab === 'rafting' ? (
+                              <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
+                                <Users size={10} /> {item.operators.length} Operators
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
+                                <Users size={10} /> {vendor?.name || 'No Vendor'}
+                              </span>
+                            )}
                           </div>
                           
+                          {activeTab === 'rafting' && item.operators && (
+                            <div className="text-[9px] text-slate-500 font-medium pt-1 max-h-16 overflow-y-auto">
+                              <span className="font-bold text-slate-400">Crews: </span>
+                              {item.operators.map((op, idx) => {
+                                const v = vendors.find(ven => ven.id === op.vendor_id);
+                                return (
+                                  <span key={op.id}>
+                                    {v?.name || 'Local'} (₹{op.price})
+                                    {idx < item.operators.length - 1 ? ', ' : ''}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+
                           <p className="text-[11px] text-slate-400 leading-relaxed font-medium line-clamp-3 pt-2">
                             {item.description}
                           </p>
@@ -762,12 +797,21 @@ export default function AdminDashboard({ setRoute }) {
                         >
                           <Edit size={14} />
                         </button>
-                        <button
-                          onClick={() => handleDeleteResource(activeTab, item.id)}
-                          className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {activeTab === 'rafting' ? (
+                          <button
+                            onClick={() => handleDeleteRaftingStretch(item)}
+                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleDeleteResource(activeTab, item.id)}
+                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -1223,6 +1267,42 @@ export default function AdminDashboard({ setRoute }) {
 function ListingForm({ type, data, cities, vendors, onClose }) {
   const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({});
+  const [raftingOperators, setRaftingOperators] = useState({});
+
+  // Initialize rafting operators state
+  useEffect(() => {
+    if (type === 'rafting') {
+      const initialOps = {};
+      
+      // Initialize all vendors
+      vendors.forEach(v => {
+        initialOps[v.id] = {
+          enabled: false,
+          price: '',
+          original_price: '',
+          commission_percentage: '',
+          whatsapp_number: v.whatsapp || '',
+          id: null
+        };
+      });
+
+      // If editing, populate from existing operators
+      if (data && data.operators) {
+        data.operators.forEach(op => {
+          initialOps[op.vendor_id] = {
+            enabled: true,
+            price: op.price || '',
+            original_price: op.original_price !== null && op.original_price !== undefined ? op.original_price : '',
+            commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
+            whatsapp_number: op.whatsapp_number || op.vendors?.whatsapp || '',
+            id: op.id
+          };
+        });
+      }
+      
+      setRaftingOperators(initialOps);
+    }
+  }, [type, data, vendors]);
 
   // Initialize form fields based on type
   useEffect(() => {
@@ -1286,6 +1366,112 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     e.preventDefault();
     setFormLoading(true);
     try {
+      if (type === 'rafting') {
+        const enabledOps = Object.entries(raftingOperators)
+          .filter(([_, op]) => op.enabled)
+          .map(([vendorId, op]) => ({
+            vendorId,
+            price: Number(op.price),
+            originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
+            commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
+            whatsappNumber: op.whatsapp_number || null,
+            id: op.id
+          }));
+
+        if (enabledOps.length === 0) {
+          throw new Error('Please enable at least one operator for this rafting stretch.');
+        }
+
+        const commonProps = {
+          city_id: formData.city_id,
+          name: formData.name || `${formData.distance_km} KM Rafting Stretch`,
+          description: formData.description || '',
+          route: formData.route || '',
+          distance_km: Number(formData.distance_km) || 12,
+          duration: formData.duration || '2 Hours',
+          pickup_included: !!formData.pickup_included,
+          drop_included: !!formData.drop_included,
+          age_limit: Number(formData.age_limit) || 12,
+          images: formData.images || [],
+          inclusions: formData.inclusions || [],
+          exclusions: formData.exclusions || [],
+          cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.'
+        };
+
+        if (data) {
+          // Editing existing stretch
+          const existingOpsMap = {};
+          data.operators.forEach(op => {
+            existingOpsMap[op.vendor_id] = op.id;
+          });
+
+          const opsToInsert = [];
+          const opsToUpdate = [];
+          const opsToDelete = [];
+
+          enabledOps.forEach(op => {
+            const existingId = existingOpsMap[op.vendorId];
+            if (existingId) {
+              opsToUpdate.push({
+                id: existingId,
+                ...commonProps,
+                vendor_id: op.vendorId,
+                price: op.price,
+                original_price: op.originalPrice,
+                commission_percentage: op.commissionPercentage,
+                whatsapp_number: op.whatsappNumber
+              });
+              delete existingOpsMap[op.vendorId];
+            } else {
+              opsToInsert.push({
+                ...commonProps,
+                vendor_id: op.vendorId,
+                price: op.price,
+                original_price: op.originalPrice,
+                commission_percentage: op.commissionPercentage,
+                whatsapp_number: op.whatsappNumber
+              });
+            }
+          });
+
+          Object.values(existingOpsMap).forEach(id => {
+            opsToDelete.push(id);
+          });
+
+          if (opsToDelete.length > 0) {
+            const { error: deleteError } = await supabase.from('rafting').delete().in('id', opsToDelete);
+            if (deleteError) throw deleteError;
+          }
+
+          if (opsToUpdate.length > 0) {
+            const { error: updateError } = await supabase.from('rafting').upsert(opsToUpdate);
+            if (updateError) throw updateError;
+          }
+
+          if (opsToInsert.length > 0) {
+            const { error: insertError } = await supabase.from('rafting').insert(opsToInsert);
+            if (insertError) throw insertError;
+          }
+        } else {
+          // Creating new stretch
+          const recordsToInsert = enabledOps.map(op => ({
+            ...commonProps,
+            vendor_id: op.vendorId,
+            price: op.price,
+            original_price: op.originalPrice,
+            commission_percentage: op.commissionPercentage,
+            whatsapp_number: op.whatsappNumber
+          }));
+
+          const { error: insertError } = await supabase.from('rafting').insert(recordsToInsert);
+          if (insertError) throw insertError;
+        }
+
+        onClose();
+        return;
+      }
+
+      // Default submit for hotels, bikes, tours
       const submitData = {
         ...formData,
         original_price: formData.original_price === '' || formData.original_price === null || formData.original_price === undefined ? null : Number(formData.original_price),
@@ -1330,7 +1516,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     <form onSubmit={handleSubmit} className="space-y-6 text-xs text-left">
       {/* 1. Meta Details (City and Vendor selection) */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1">
+        <div className={`space-y-1 ${type === 'rafting' ? 'col-span-2' : ''}`}>
           <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Target City</label>
           <select
             value={formData.city_id}
@@ -1343,18 +1529,20 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </select>
         </div>
 
-        <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Partner Vendor</label>
-          <select
-            value={formData.vendor_id}
-            onChange={(e) => setFormData(prev => ({ ...prev, vendor_id: e.target.value }))}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none"
-          >
-            {vendors.map(v => (
-              <option key={v.id} value={v.id}>{v.name} ({v.category})</option>
-            ))}
-          </select>
-        </div>
+        {type !== 'rafting' && (
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Partner Vendor</label>
+            <select
+              value={formData.vendor_id}
+              onChange={(e) => setFormData(prev => ({ ...prev, vendor_id: e.target.value }))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none"
+            >
+              {vendors.map(v => (
+                <option key={v.id} value={v.id}>{v.name} ({v.category})</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* 2. Basic details */}
@@ -1370,61 +1558,65 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           />
         </div>
 
-        <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Price (₹)</label>
-          <input
-            type="number"
-            required
-            value={formData.price}
-            onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-          />
-        </div>
+        {type !== 'rafting' && (
+          <>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Price (₹)</label>
+              <input
+                type="number"
+                required
+                value={formData.price}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
 
-        <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Original Price (₹ - Strikethrough)</label>
-          <input
-            type="number"
-            value={formData.original_price !== null && formData.original_price !== undefined ? formData.original_price : ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value }))}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-            placeholder="e.g. 2999 (Leave blank if no discount)"
-          />
-        </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Original Price (₹ - Strikethrough)</label>
+              <input
+                type="number"
+                value={formData.original_price !== null && formData.original_price !== undefined ? formData.original_price : ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                placeholder="e.g. 2999 (Leave blank if no discount)"
+              />
+            </div>
 
-        <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">WhatsApp Number</label>
-          <input
-            type="text"
-            value={formData.whatsapp_number || ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-            placeholder="e.g. 9837371137"
-          />
-        </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">WhatsApp Number</label>
+              <input
+                type="text"
+                value={formData.whatsapp_number || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                placeholder="e.g. 9837371137"
+              />
+            </div>
 
-        <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Override (%)</label>
-          <input
-            type="number"
-            value={formData.commission_percentage !== null && formData.commission_percentage !== undefined ? formData.commission_percentage : ''}
-            onChange={(e) => setFormData(prev => ({ ...prev, commission_percentage: e.target.value }))}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-            placeholder="e.g. 15 (Overrides vendor commission)"
-          />
-        </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Override (%)</label>
+              <input
+                type="number"
+                value={formData.commission_percentage !== null && formData.commission_percentage !== undefined ? formData.commission_percentage : ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, commission_percentage: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                placeholder="e.g. 15 (Overrides vendor commission)"
+              />
+            </div>
 
-        <div className="space-y-1 flex items-center pt-5">
-          <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-            <input
-              type="checkbox"
-              checked={!!formData.is_limited_offer}
-              onChange={(e) => setFormData(prev => ({ ...prev, is_limited_offer: e.target.checked }))}
-              className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4"
-            />
-            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Limited Time Offer Badge</span>
-          </label>
-        </div>
+            <div className="space-y-1 flex items-center pt-5">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={!!formData.is_limited_offer}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_limited_offer: e.target.checked }))}
+                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4"
+                />
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Limited Time Offer Badge</span>
+              </label>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="space-y-1">
@@ -1698,6 +1890,133 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               />
             </div>
           </div>
+
+          {/* Operators & Pricing */}
+          <div className="space-y-3 pt-4 border-t border-slate-900">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Operators & Pricing</label>
+              <p className="text-[10px] text-gray-500">Enable/disable operators and set their custom prices for this stretch.</p>
+            </div>
+            
+            <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
+              {vendors.map(vendor => {
+                const opState = raftingOperators[vendor.id] || { enabled: false, price: '', original_price: '', commission_percentage: '', whatsapp_number: '' };
+                return (
+                  <div key={vendor.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950 hover:bg-slate-900/50 transition-colors">
+                    {/* Left: Checkbox and Vendor Name */}
+                    <div className="flex items-center gap-3 min-w-[200px]">
+                      <input
+                        type="checkbox"
+                        checked={opState.enabled}
+                        onChange={(e) => {
+                          setRaftingOperators(prev => ({
+                            ...prev,
+                            [vendor.id]: {
+                              ...prev[vendor.id],
+                              enabled: e.target.checked,
+                              price: prev[vendor.id]?.price || '',
+                              whatsapp_number: prev[vendor.id]?.whatsapp_number || vendor.whatsapp || ''
+                            }
+                          }));
+                        }}
+                        className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                      />
+                      <div>
+                        <span className="font-bold text-xs text-white block">{vendor.name}</span>
+                        <span className="text-[9px] text-slate-500 font-semibold">{vendor.landmark || 'Rishikesh'}</span>
+                      </div>
+                    </div>
+
+                    {/* Right: Price inputs (only editable if enabled) */}
+                    {opState.enabled ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-grow">
+                        <div className="space-y-1">
+                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹)</label>
+                          <input
+                            type="number"
+                            required
+                            value={opState.price}
+                            onChange={(e) => {
+                              setRaftingOperators(prev => ({
+                                ...prev,
+                                [vendor.id]: {
+                                  ...prev[vendor.id],
+                                  price: Number(e.target.value)
+                                }
+                              }));
+                            }}
+                            placeholder="Price"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Original Price (₹)</label>
+                          <input
+                            type="number"
+                            value={opState.original_price}
+                            onChange={(e) => {
+                              setRaftingOperators(prev => ({
+                                ...prev,
+                                [vendor.id]: {
+                                  ...prev[vendor.id],
+                                  original_price: e.target.value === '' ? '' : Number(e.target.value)
+                                }
+                              }));
+                            }}
+                            placeholder="Strikethrough"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
+                          <input
+                            type="number"
+                            value={opState.commission_percentage}
+                            onChange={(e) => {
+                              setRaftingOperators(prev => ({
+                                ...prev,
+                                [vendor.id]: {
+                                  ...prev[vendor.id],
+                                  commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
+                                }
+                              }));
+                            }}
+                            placeholder="e.g. 10"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">WhatsApp</label>
+                          <input
+                            type="text"
+                            value={opState.whatsapp_number}
+                            onChange={(e) => {
+                              setRaftingOperators(prev => ({
+                                ...prev,
+                                [vendor.id]: {
+                                  ...prev[vendor.id],
+                                  whatsapp_number: e.target.value
+                                }
+                              }));
+                            }}
+                            placeholder="WhatsApp Number"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-500 font-medium italic flex-grow text-right pr-4">
+                        Disabled (not offering this stretch)
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1791,3 +2110,42 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     </form>
   );
 }
+
+// Utility: Group rafting packages by distance_km
+const groupRaftingByDistance = (list) => {
+  const grouped = {};
+  list.forEach(item => {
+    const rawDist = item.distance_km;
+    let dist = 12;
+    if (rawDist) {
+      const matched = String(rawDist).match(/\d+/);
+      if (matched) {
+        dist = Number(matched[0]);
+      }
+    }
+    const key = `${dist} KM`;
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: item.id,
+        distance_km: dist,
+        name: item.name || `${dist} KM Rafting Stretch`,
+        route: item.route,
+        description: item.description,
+        duration: item.duration,
+        age_limit: item.age_limit,
+        images: item.images,
+        inclusions: item.inclusions,
+        exclusions: item.exclusions,
+        cancellation_policy: item.cancellation_policy,
+        city_id: item.city_id,
+        price: item.price,
+        operators: []
+      };
+    }
+    grouped[key].operators.push(item);
+    if (Number(item.price) < Number(grouped[key].price)) {
+      grouped[key].price = item.price;
+    }
+  });
+  return Object.values(grouped);
+};

@@ -8,6 +8,8 @@ export default function Swing({ openBookingModal }) {
       title="GIANT SWING RISHIKESH"
       category="swing"
       price={3600}
+      rating={4.9}
+      reviewsCount={312}
       heroImage={[
         '/swing-hero.png',
         '/swing-1.jpg',

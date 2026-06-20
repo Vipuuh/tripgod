@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Calendar, ShieldCheck, Waves, ChevronLeft } from 'lucide-react';
+import { MapPin, Clock, Calendar, ShieldCheck, Waves, ChevronLeft, Star } from 'lucide-react';
 import { supabase } from '../supabase';
 import OperatorSelector from '../components/OperatorSelector';
 
@@ -21,7 +21,12 @@ export default function Tours({ currentCity, openBookingModal }) {
         const { data, error } = await query;
         if (error) throw error;
         if (data) {
-          setTours(data);
+          const mapped = data.map((item, idx) => ({
+            ...item,
+            rating: item.vendors?.star_rating || item.rating || Number((4.5 + ((idx * 4) % 5) / 10).toFixed(1)),
+            reviewsCount: item.reviews_count || (80 + ((idx * 41) % 150))
+          }));
+          setTours(mapped);
         }
       } catch (err) {
         console.error('Error fetching tours:', err);
@@ -34,7 +39,9 @@ export default function Tours({ currentCity, openBookingModal }) {
             price: 9500,
             duration: '4 Days / 3 Nights',
             images: ['https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'],
-            cancellation_policy: '100% refund up to 72h prior.'
+            cancellation_policy: '100% refund up to 72h prior.',
+            rating: 4.8,
+            reviewsCount: 198
           },
           {
             id: 'demo-tour-2',
@@ -43,7 +50,9 @@ export default function Tours({ currentCity, openBookingModal }) {
             price: 5500,
             duration: '3 Days / 2 Nights',
             images: ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'],
-            cancellation_policy: '100% refund up to 48h prior.'
+            cancellation_policy: '100% refund up to 48h prior.',
+            rating: 4.7,
+            reviewsCount: 110
           }
         ]);
       } finally {
@@ -74,6 +83,8 @@ export default function Tours({ currentCity, openBookingModal }) {
           duration: t.duration,
           img: t.images && t.images.length > 0 ? t.images[0] : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
           minPrice: Number(t.price),
+          rating: t.rating || 4.7,
+          reviewsCount: t.reviewsCount || 120,
           operators: []
         };
       }
@@ -117,9 +128,17 @@ export default function Tours({ currentCity, openBookingModal }) {
                 <h2 className="text-2xl font-black font-display text-slate-900 uppercase">
                   {selectedTour.name}
                 </h2>
+                
+                <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                  <div className="flex items-center gap-1 text-xs text-black font-black">
+                    <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                    <span>{selectedTour.rating}</span>
+                    <span className="text-gray-500 font-bold">({selectedTour.reviewsCount} reviews)</span>
+                  </div>
+                </div>
               </div>
 
-              <p className="text-xs text-slate-600 font-medium leading-relaxed">{selectedTour.description}</p>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed mt-2">{selectedTour.description}</p>
             </div>
           </div>
 
@@ -237,6 +256,12 @@ export default function Tours({ currentCity, openBookingModal }) {
                     <h3 className="font-bold text-lg font-display text-black group-hover:text-[#FF5F00] transition-colors leading-tight truncate">
                       {tour.name}
                     </h3>
+                    
+                    <div className="flex items-center gap-1 text-xs text-black font-bold">
+                      <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                      <span>{tour.rating}</span>
+                      <span className="text-gray-500 font-semibold">({tour.reviewsCount} reviews)</span>
+                    </div>
 
                     <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">
                       {tour.description}

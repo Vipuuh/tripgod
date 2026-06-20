@@ -8,6 +8,8 @@ export default function Camping({ openBookingModal }) {
       title="RIVERSIDE CAMPING RISHIKESH"
       category="camping"
       price={1800}
+      rating={4.6}
+      reviewsCount={618}
       heroImage={[
         '/camping-hero.jpg',
         '/camping-1.jpg',

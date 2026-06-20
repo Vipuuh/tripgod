@@ -18,6 +18,8 @@ const bungeeOptions = [
       '/bungee-2.jpg',
       '/bungee-3.jpg'
     ],
+    rating: 4.9,
+    reviewsCount: 412,
     desc: 'The ultimate bungee jumping experience in India. Leap from a height of 117 metres above a rocky river valley. Includes high-definition DSLR video footage capturing your jump.'
   },
   {
@@ -32,6 +34,8 @@ const bungeeOptions = [
       '/bungee-2.jpg',
       '/bungee-3.jpg'
     ],
+    rating: 4.8,
+    reviewsCount: 320,
     desc: 'The classic 117-metre high bungee jump. Jump from India\'s tallest cantilever platform. Capture the memories in your heart! (DSLR Video can be bought at the counter separately).'
   },
   {
@@ -46,6 +50,8 @@ const bungeeOptions = [
       '/bungee-1.jpg',
       '/bungee-4.jpg'
     ],
+    rating: 4.8,
+    reviewsCount: 198,
     desc: 'Leap from a height of 111 metres over a gorge. Includes cinematic DSLR video. Excellent value for adrenaline junkies.'
   },
   {
@@ -61,6 +67,8 @@ const bungeeOptions = [
       '/swing-hero.png',
       '/bungee-3.jpg'
     ],
+    rating: 4.9,
+    reviewsCount: 570,
     desc: 'Get the best of both worlds! Leap off the 111M bungee platform, then take a massive swing on the 113M Giant Swing. Includes high-quality DSLR video footage for both activities.'
   },
   {
@@ -75,6 +83,8 @@ const bungeeOptions = [
       '/bungee-4.jpg',
       '/bungee-2.jpg'
     ],
+    rating: 4.7,
+    reviewsCount: 145,
     desc: 'Jump from the rooftop platform suspended 104 metres in the air. Includes high-definition DSLR video. Offers unique aerial views of the valley.'
   },
   {
@@ -91,6 +101,8 @@ const bungeeOptions = [
       '/couple-bungee-4.jpg',
       '/couple-bungee-5.jpg'
     ],
+    rating: 4.9,
+    reviewsCount: 224,
     desc: 'Jump together with your partner from the 117M platform. Securely harnessed together for a shared adrenaline rush. Includes custom couple DSLR video.'
   }
 ];
@@ -226,6 +238,12 @@ export default function Bungee({ openBookingModal }) {
                       </div>
 
                       <h3 className="font-bold text-base font-display text-black leading-snug">{opt.name}</h3>
+                      
+                      <div className="flex items-center gap-1 text-xs text-black font-bold">
+                        <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                        <span>{opt.rating}</span>
+                        <span className="text-gray-500 font-semibold">({opt.reviewsCount} reviews)</span>
+                      </div>
 
                       <p className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed line-clamp-3">
                         {opt.desc}
@@ -275,7 +293,14 @@ export default function Bungee({ openBookingModal }) {
                     </span>
                   </div>
                   <h1 className="text-xl md:text-2xl font-bold font-display text-black">{selectedBungee.name}</h1>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <div className="flex items-center gap-1 text-xs text-black font-black">
+                      <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                      <span>{selectedBungee.rating}</span>
+                      <span className="text-gray-500 font-bold">({selectedBungee.reviewsCount} reviews)</span>
+                    </div>
+                  </div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 mt-1">
                     <MapPin size={12} className="text-black" /> Tapovan Office (Pickup Point), Rishikesh
                   </p>
                 </div>

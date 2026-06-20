@@ -8,6 +8,8 @@ export default function Paragliding({ openBookingModal }) {
       title="PARAGLIDING IN RISHIKESH"
       category="paragliding"
       price={4500}
+      rating={4.8}
+      reviewsCount={520}
       heroImage={[
         '/paragliding-hero.jpg',
         '/paragliding-1.jpg',

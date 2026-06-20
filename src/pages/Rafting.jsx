@@ -221,7 +221,14 @@ export default function Rafting({ currentCity, openBookingModal }) {
 
           const grouped = {};
           data.forEach(item => {
-            const dist = Number(item.distance_km) || 12;
+            const rawDist = item.distance_km;
+            let dist = 12;
+            if (rawDist) {
+              const matched = String(rawDist).match(/\d+/);
+              if (matched) {
+                dist = Number(matched[0]);
+              }
+            }
             const key = `${dist} KM`;
             
             if (!grouped[key]) {
@@ -547,7 +554,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   <div className="w-9 h-9 rounded-full bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00] mb-1.5 shadow-sm">
                     <ShieldCheck size={18} className="stroke-[2.5]" />
                   </div>
-                  <span className="text-[10px] font-extrabold text-black uppercase tracking-tight leading-tight">Pay 10% to book</span>
+                  <span className="text-[10px] font-extrabold text-black uppercase tracking-tight leading-tight">Book with 10% Advance</span>
                 </div>
                 <div className="flex flex-col items-center text-center p-1.5">
                   <div className="w-9 h-9 rounded-full bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00] mb-1.5 shadow-sm">

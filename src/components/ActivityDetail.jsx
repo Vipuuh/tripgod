@@ -20,6 +20,8 @@ export default function ActivityDetail({
   notSuitableFor = [], 
   location = '', 
   cancellation = '100% refund 24hrs before',
+  rating = 4.8,
+  reviewsCount = 380,
   openBookingModal
 }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
@@ -69,7 +71,14 @@ export default function ActivityDetail({
               </span>
             </div>
             <h1 className="text-xl md:text-2xl font-bold font-display text-black">{title}</h1>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              <div className="flex items-center gap-1 text-xs text-black font-black">
+                <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                <span>{rating}</span>
+                <span className="text-gray-500 font-bold">({reviewsCount} reviews)</span>
+              </div>
+            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 mt-1">
               <MapPin size={12} className="text-black" /> {location}
             </p>
           </div>
@@ -78,7 +87,7 @@ export default function ActivityDetail({
             <span className="text-[10px] font-bold text-gray-600 uppercase">Package Price</span>
             <span className="text-2xl font-black text-black">₹{price.toLocaleString('en-IN')}</span>
             <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
-              Pay 10% (₹{Math.round(price * 0.1)}) to book!
+              Book with 10% Advance (₹{Math.round(price * 0.1)})
             </span>
           </div>
         </div>

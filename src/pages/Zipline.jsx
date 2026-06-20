@@ -8,6 +8,8 @@ export default function Zipline({ openBookingModal }) {
       title="ZIPLINE OVER GANGA RISHIKESH"
       category="zipline"
       price={2000}
+      rating={4.8}
+      reviewsCount={845}
       heroImage={[
         '/zipline-hero.jpg',
         '/zipline-1.jpg',
