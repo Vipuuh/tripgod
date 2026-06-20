@@ -131,30 +131,41 @@ export default function Rafting({ currentCity, openBookingModal }) {
         const { data, error } = await query;
         if (error) throw error;
         if (data && data.length > 0) {
+          const fallbackImages = {
+            9: ['/rafting-4.jpg', '/rafting-1.jpg', '/rafting-2.jpg'],
+            12: ['/rafting-4.jpg', '/rafting-1.jpg', '/rafting-2.jpg'],
+            16: ['/rafting-5.jpg', '/rafting-2.jpg', '/rafting-3.jpg'],
+            24: ['/rafting-6.jpg', '/rafting-3.jpg', '/rafting-1.jpg'],
+            36: ['/rafting-7.jpg', '/rafting-1.jpg', '/rafting-2.jpg']
+          };
+
           const grouped = {};
           data.forEach(item => {
-            const key = item.route || 'Rafting Stretch';
+            const dist = Number(item.distance_km) || 12;
+            const key = `${dist} KM`;
+            
             if (!grouped[key]) {
               grouped[key] = {
                 id: item.id,
-                name: `${item.distance_km || 12} KM Rafting Stretch`,
-                stretch: key,
-                difficulty: item.age_limit > 14 ? 'Advanced' : 'Moderate',
-                difficultyColor: item.age_limit > 14 ? 'bg-orange-100 text-orange-850' : 'bg-green-100 text-green-850',
+                name: `${dist} KM Rafting Stretch`,
+                stretch: item.route || (dist === 12 ? 'Brahmpuri to Laxman Jhula' : dist === 16 ? 'Shivpuri to Nim Beach' : dist === 24 ? 'Marine Drive to Nim Beach' : 'Kaudiyala to Nim Beach'),
+                difficulty: dist >= 24 ? 'Advanced' : 'Moderate',
+                difficultyColor: dist >= 24 ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800',
                 price: Number(item.price),
-                img: item.images && item.images.length > 0 ? item.images[0] : '/rafting-4.jpg',
-                images: item.images || ['/rafting-4.jpg'],
-                duration: item.duration || '2-3 Hours',
-                rapids: item.age_limit > 14 ? 'Grade III & IV rapids' : 'Grade II & III rapids',
-                ageLimit: `Age ${item.age_limit}+ yrs`,
+                img: item.images && item.images.length > 0 ? item.images[0] : (fallbackImages[dist] ? fallbackImages[dist][0] : '/rafting-4.jpg'),
+                images: item.images && item.images.length > 0 ? item.images : (fallbackImages[dist] || ['/rafting-4.jpg']),
+                duration: item.duration || (dist === 12 ? '1.5-2 Hours' : dist === 16 ? '2.5-3 Hours' : dist === 24 ? '3.5-4 Hours' : '5-6 Hours'),
+                rapids: item.rapids || (dist === 12 ? 'Grade I & II rapids' : dist === 16 ? 'Grade II & III (Roller Coaster, Golf Course)' : 'Grade III & IV (Wall, Three Blind Mice)'),
+                ageLimit: item.age_limit ? `Age ${item.age_limit}+ yrs` : (dist === 12 ? 'Age 14-60 yrs' : 'Age 14-55 yrs'),
                 weightLimit: 'Weight 40-100 kg',
-                desc: item.description,
-                inclusions: item.inclusions || [],
-                exclusions: item.exclusions || [],
+                desc: item.description || (dist === 12 ? 'Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch.' : dist === 16 ? 'A thrilling rafting run with multiple Grade III rapids, suitable for adventure seekers.' : 'An advanced white-water rafting trip with massive rapids and high speed flows.'),
+                inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : ['Certified Safety Crew', 'High Quality Gear Included', 'Certified Ganga River Guide'],
+                exclusions: item.exclusions && item.exclusions.length > 0 ? item.exclusions : ['Any personal expenses', 'Tips for guides'],
                 cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior.',
                 operators: []
               };
             }
+            
             grouped[key].operators.push(item);
             if (Number(item.price) < grouped[key].price) {
               grouped[key].price = Number(item.price);
