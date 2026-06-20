@@ -191,3 +191,10 @@ ALTER TABLE tours ADD COLUMN IF NOT EXISTS original_price NUMERIC;
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC;
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS is_limited_offer BOOLEAN DEFAULT false;
 
+-- =========================================================================
+-- Schema Extensions (Operator Selection Module — June 2026)
+-- =========================================================================
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS shop_image TEXT;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS star_rating NUMERIC DEFAULT 4.5;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS landmark TEXT;
+

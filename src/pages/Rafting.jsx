@@ -5,6 +5,7 @@ import {
   Check, X, ChevronDown, ShieldCheck, HeartCrack, Info, Play
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import OperatorSelector from '../components/OperatorSelector';
 
 const defaultStretches = [
   {
@@ -514,97 +515,52 @@ export default function Rafting({ currentCity, openBookingModal }) {
 
               {/* Compare Operators Section */}
               <div id="compare-operators-section" className="space-y-4 pt-6 border-t border-black/5">
-                <h3 className="text-lg font-bold font-display text-black uppercase tracking-tight">Compare Operators & Rates</h3>
-                <div className="space-y-3">
-                  {(selectedStretch.operators || []).map((op, opIdx) => {
-                    const opPrice = Number(op.price || selectedStretch.price);
-                    const opOriginalPrice = op.original_price ? Number(op.original_price) : null;
-                    const opVendorName = op.vendors?.name || op.name || 'Local Operator';
-                    const hasDiscount = opOriginalPrice && opOriginalPrice > opPrice;
-                    const advancePercentage = op.commission_percentage !== null && op.commission_percentage !== undefined && op.commission_percentage !== '' 
-                      ? Number(op.commission_percentage) 
-                      : (op.vendors?.commission_percentage !== undefined ? Number(op.vendors.commission_percentage) : 10.0);
-                    const opAdvance = Math.round(opPrice * (advancePercentage / 100));
-
-                    return (
-                      <div 
-                        key={op.id || opIdx}
-                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 border border-black/10 rounded-2xl bg-gray-50 hover:bg-white hover:border-[#FF5F00]/40 hover:shadow-lg transition-all duration-350 gap-4"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-extrabold text-sm text-black">{opVendorName}</span>
-                            {op.is_limited_offer && (
-                              <span className="bg-[#FF5F00] text-white text-[8px] font-black py-0.5 px-2 rounded">
-                                LIMITED OFFER
-                              </span>
-                            )}
-                          </div>
-                          <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                            Certified Safety Crew • High Quality Gear Included
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                          <div className="text-left sm:text-right">
-                            <div className="flex items-center gap-1.5 sm:justify-end">
-                              {hasDiscount && (
-                                <span className="text-xs text-gray-400 line-through">
-                                  ₹{opOriginalPrice.toLocaleString('en-IN')}
-                                </span>
-                              )}
-                              <span className="text-xl font-black text-black">
-                                ₹{opPrice.toLocaleString('en-IN')}
-                              </span>
-                            </div>
-                            <span className="block text-[9px] text-[#FF5F00] font-black uppercase mt-0.5">
-                              Pay ₹{opAdvance.toLocaleString('en-IN')} ({advancePercentage}% Advance) to book!
-                            </span>
-                          </div>
-
-                          <button
-                            onClick={() => openBookingModal({
-                              id: op.id || selectedStretch.id,
-                              name: `${selectedStretch.name} - ${opVendorName}`,
-                              stretch: selectedStretch.stretch,
-                              price: opPrice,
-                              category: 'rafting',
-                              city_id: op.city_id,
-                              vendor_id: op.vendor_id,
-                              commission_percentage: op.commission_percentage,
-                              vendors: op.vendors
-                            })}
-                            className="w-full sm:w-auto py-2.5 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-105 transition-all duration-200 border-none cursor-pointer text-center font-display"
-                          >
-                            Book with Operator
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {(!selectedStretch.operators || selectedStretch.operators.length === 0) && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between p-5 border border-black/10 rounded-2xl bg-gray-50 gap-4 w-full">
-                      <div>
-                        <span className="font-extrabold text-sm text-black">Local Rishikesh Crew</span>
-                        <span className="block text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Equipment & Safety guides included</span>
-                      </div>
-                      <button
-                        onClick={() => openBookingModal({
-                          id: selectedStretch.id,
-                          name: selectedStretch.name,
-                          stretch: selectedStretch.stretch,
-                          price: selectedStretch.price,
-                          category: 'rafting',
-                          city_id: selectedStretch.city_id,
-                          vendor_id: selectedStretch.vendor_id
-                        })}
-                        className="w-full sm:w-auto py-2.5 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:scale-105 transition-all border-none cursor-pointer font-display"
-                      >
-                        Book Now
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <OperatorSelector
+                  operators={
+                    selectedStretch.operators && selectedStretch.operators.length > 0
+                      ? selectedStretch.operators.map(op => ({
+                          id: op.id,
+                          vendorName: op.vendors?.name || op.name || 'Local Operator',
+                          shopImage: op.vendors?.shop_image || null,
+                          starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
+                          landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
+                          price: Number(op.price || selectedStretch.price),
+                          originalPrice: op.original_price ? Number(op.original_price) : null,
+                          isLimitedOffer: !!op.is_limited_offer,
+                          commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                          _raw: op
+                        }))
+                      : [
+                          {
+                            id: selectedStretch.id,
+                            vendorName: 'Local Rishikesh Crew',
+                            shopImage: null,
+                            starRating: 4.5,
+                            landmark: selectedStretch.stretch || 'Shivpuri, Rishikesh',
+                            price: selectedStretch.price,
+                            originalPrice: selectedStretch.original_price || null,
+                            isLimitedOffer: selectedStretch.is_limited_offer || false,
+                            commissionPercentage: selectedStretch.commission_percentage || 10,
+                            _raw: selectedStretch
+                          }
+                        ]
+                  }
+                  onBookOperator={(op) => {
+                    const raw = op._raw;
+                    openBookingModal({
+                      id: raw.id || selectedStretch.id,
+                      name: `${selectedStretch.name} - ${op.vendorName}`,
+                      stretch: selectedStretch.stretch,
+                      price: op.price,
+                      category: 'rafting',
+                      city_id: raw.city_id,
+                      vendor_id: raw.vendor_id,
+                      commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
+                      vendors: raw.vendors
+                    });
+                  }}
+                  activityName={selectedStretch.name}
+                />
               </div>
 
               {/* Logistics Section */}

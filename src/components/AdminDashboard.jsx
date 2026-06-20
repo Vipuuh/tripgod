@@ -44,7 +44,8 @@ export default function AdminDashboard({ setRoute }) {
   const [newCityName, setNewCityName] = useState('');
   const [newCitySlug, setNewCitySlug] = useState('');
   const [newVendor, setNewVendor] = useState({
-    name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active'
+    name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+    shop_image: '', star_rating: 4.5, landmark: ''
   });
 
   // Filter States for Bookings
@@ -237,7 +238,7 @@ export default function AdminDashboard({ setRoute }) {
         const { error } = await supabase.from('vendors').insert(newVendor);
         if (error) throw error;
       }
-      setNewVendor({ name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active' });
+      setNewVendor({ name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active', shop_image: '', star_rating: 4.5, landmark: '' });
       setEditingItem(null);
       fetchAllData();
     } catch (err) {
@@ -940,6 +941,56 @@ export default function AdminDashboard({ setRoute }) {
                   </div>
 
                   <div className="space-y-1">
+                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Shop Photo</label>
+                    {newVendor.shop_image && (
+                      <img src={newVendor.shop_image} alt="Shop" className="w-20 h-20 rounded-xl object-cover border border-slate-800 mb-2" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const ext = file.name.split('.').pop();
+                        const randName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
+                        const filePath = `vendors/${randName}`;
+                        const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
+                        if (uploadError) { alert('Upload failed: ' + uploadError.message); return; }
+                        const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath);
+                        setNewVendor(prev => ({ ...prev, shop_image: urlData.publicUrl }));
+                      }}
+                      className="text-slate-300 text-xs w-full file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-[#FF5F00]/10 file:text-[#FF5F00] hover:file:bg-[#FF5F00]/20 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Star Rating (1.0 - 5.0)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        step="0.1"
+                        value={newVendor.star_rating}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, star_rating: parseFloat(e.target.value) || 4.5 }))}
+                        placeholder="4.5"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Landmark / Location</label>
+                      <input
+                        type="text"
+                        value={newVendor.landmark}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, landmark: e.target.value }))}
+                        placeholder="e.g. Tapovan, Near Laxman Jhula"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
                     <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Status</label>
                     <select
                       value={newVendor.status}
@@ -963,7 +1014,7 @@ export default function AdminDashboard({ setRoute }) {
                       <button
                         type="button"
                         onClick={() => {
-                          setNewVendor({ name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active' });
+                          setNewVendor({ name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active', shop_image: '', star_rating: 4.5, landmark: '' });
                           setEditingItem(null);
                         }}
                         className="py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-black text-xs uppercase rounded-xl transition-all cursor-pointer"
@@ -984,9 +1035,12 @@ export default function AdminDashboard({ setRoute }) {
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-slate-800 text-slate-500 font-black uppercase text-[10px]">
+                        <th className="py-3 px-2">Photo</th>
                         <th className="py-3 px-2">Name</th>
                         <th className="py-3 px-2">Category</th>
+                        <th className="py-3 px-2">Landmark</th>
                         <th className="py-3 px-2">Contact</th>
+                        <th className="py-3 px-2 text-center">Rating</th>
                         <th className="py-3 px-2 text-center">Comm. %</th>
                         <th className="py-3 px-2 text-center">Status</th>
                         <th className="py-3 px-2 text-right">Actions</th>
@@ -995,11 +1049,24 @@ export default function AdminDashboard({ setRoute }) {
                     <tbody>
                       {vendors.map(v => (
                         <tr key={v.id} className="border-b border-slate-900 hover:bg-slate-900/30">
+                          <td className="py-3 px-2">
+                            {v.shop_image ? (
+                              <img src={v.shop_image} alt={v.name} className="w-8 h-8 rounded-lg object-cover border border-slate-800" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 font-black text-[9px] uppercase">No Img</div>
+                            )}
+                          </td>
                           <td className="py-3 px-2 font-bold text-slate-200">{v.name}</td>
                           <td className="py-3 px-2 font-bold text-slate-400">{v.category}</td>
+                          <td className="py-3 px-2 font-medium text-slate-400 max-w-[120px] truncate" title={v.landmark || v.address}>
+                            {v.landmark || <span className="text-slate-600">None</span>}
+                          </td>
                           <td className="py-3 px-2 font-medium text-slate-400">
                             <span className="block">{v.phone}</span>
                             <span className="block text-[10px] text-slate-500">WA: {v.whatsapp}</span>
+                          </td>
+                          <td className="py-3 px-2 text-center font-bold text-amber-500">
+                            ⭐ {v.star_rating !== null && v.star_rating !== undefined ? Number(v.star_rating).toFixed(1) : '4.5'}
                           </td>
                           <td className="py-3 px-2 text-center font-bold text-slate-300">{v.commission_percentage}%</td>
                           <td className="py-3 px-2 text-center">
@@ -1012,7 +1079,12 @@ export default function AdminDashboard({ setRoute }) {
                               <button
                                 onClick={() => {
                                   setEditingItem({ type: 'vendor', data: v });
-                                  setNewVendor({ ...v });
+                                  setNewVendor({
+                                    ...v,
+                                    shop_image: v.shop_image || '',
+                                    star_rating: v.star_rating !== null && v.star_rating !== undefined ? v.star_rating : 4.5,
+                                    landmark: v.landmark || ''
+                                  });
                                 }}
                                 className="p-1 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded"
                               >
