@@ -4,7 +4,7 @@ import {
   Waves, Zap, Compass, Milestone, 
   ArrowRight, ShieldCheck, CreditCard, 
   Star, MessageSquare, Lock, PhoneCall, ChevronDown,
-  Calendar, Users, Clock, Activity, MapPin, Building2, Bike, Car, MapPinned
+  Calendar, Users, Clock, Activity, MapPin, Building2, Bike, Car, MapPinned, Mountain, Hotel, Ship
 } from 'lucide-react';
 import CountUp from '../components/CountUp';
 
@@ -314,11 +314,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   };
 
   const quickAccess = [
-    { label: 'Hotels', icon: Building2, route: 'hotels' },
-    { label: 'Char Dham', icon: MapPinned, route: 'tours' },
-    { label: 'Rafting', icon: Waves, route: 'rafting' },
-    { label: 'Bike Rent', icon: Bike, route: 'bikerent' },
-    { label: 'Cabs', icon: Car, route: 'pickup' }
+    { label: 'Hotels', emoji: '🏨', route: 'hotels' },
+    { label: 'Char Dham', emoji: '🛕', route: 'tours' },
+    { label: 'Rafting', emoji: '🚣', route: 'rafting' },
+    { label: 'Bike Rent', emoji: '🏍️', route: 'bikerent' }
   ];
 
   const activities = [
@@ -597,7 +596,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         <div className="absolute inset-0 bg-[#0B0C10]/15 backdrop-blur-[2px] z-[2] pointer-events-none" />
 
         {/* Content Wrapper */}
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-6 pt-16 pb-12">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-5 sm:space-y-6 pt-16 pb-12 overflow-hidden">
           <motion.span 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -611,7 +610,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight font-display tracking-tight uppercase px-2"
+            className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight font-display tracking-tight uppercase"
           >
             CHASE THE WILD RUSH <br />
             IN <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF7A00] to-[#FF3E00] drop-shadow-[0_2px_10px_rgba(255,95,0,0.2)] font-black">RISHIKESH</span>
@@ -633,8 +632,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
                 { id: 'tours', label: 'Tours', icon: MapPinned },
                 { id: 'rafting', label: 'Rafting', icon: Waves },
-                { id: 'bikerent', label: 'Bike Rental', icon: Bike },
-                { id: 'pickup', label: 'Cabs', icon: Car }
+                { id: 'bikerent', label: 'Bike Rental', icon: Bike }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeSearchTab === tab.id;
@@ -940,25 +938,22 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         transition={{ duration: 0.6 }}
         className="bg-white/60 backdrop-blur-xl border-y border-black/5 py-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)] relative z-20"
       >
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto no-scrollbar pb-3 md:pb-0 px-4 md:px-0 scroll-smooth snap-x snap-mandatory">
-            {quickAccess.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <button 
-                  key={index} 
-                  onClick={() => setRoute(item.route)}
-                  className="flex-shrink-0 w-[115px] md:w-auto flex flex-col items-center justify-center gap-3 p-5 rounded-2xl bg-gradient-to-br from-white/95 to-neutral-50/80 border border-neutral-200/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-[#FF5F00]/40 hover:bg-gradient-to-br hover:from-white hover:to-orange-50/30 hover:shadow-[0_12px_30px_rgba(255,95,0,0.08)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.04] group cursor-pointer snap-align-start"
-                >
-                  <div className="text-[#FF5F00] flex items-center justify-center h-13 w-13 rounded-2xl bg-orange-50 border border-orange-100/50 group-hover:bg-gradient-to-br group-hover:from-[#FF5F00] group-hover:to-[#FF3E00] group-hover:text-white group-hover:shadow-[0_6px_15px_rgba(255,95,0,0.3)] transition-all duration-300">
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <span className="font-extrabold text-[10px] md:text-xs text-neutral-700 tracking-widest uppercase group-hover:text-[#FF5F00] transition-colors text-center font-display mt-1">
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="grid grid-cols-4 gap-3 sm:gap-5 px-2 md:px-0">
+            {quickAccess.map((item, index) => (
+              <button 
+                key={index} 
+                onClick={() => setRoute(item.route)}
+                className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-3 sm:p-5 rounded-2xl bg-gradient-to-br from-white to-neutral-50/80 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:border-[#FF5F00]/40 hover:shadow-[0_12px_30px_rgba(255,95,0,0.1)] transition-all duration-300 hover:-translate-y-1 group cursor-pointer"
+              >
+                <div className="flex items-center justify-center h-11 w-11 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200/30 group-hover:from-[#FF5F00] group-hover:to-[#FF3E00] group-hover:shadow-[0_6px_20px_rgba(255,95,0,0.35)] transition-all duration-300">
+                  <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-300">{item.emoji}</span>
+                </div>
+                <span className="font-bold text-[9px] sm:text-xs text-neutral-700 tracking-wider uppercase group-hover:text-[#FF5F00] transition-colors text-center font-display leading-tight">
+                  {item.label}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </motion.div>
