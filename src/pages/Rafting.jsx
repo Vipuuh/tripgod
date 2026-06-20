@@ -93,6 +93,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [activeFaq, setActiveFaq] = useState(null);
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
+  const [showOperatorModal, setShowOperatorModal] = useState(false);
 
   // Swipe gesture support
   const [touchStart, setTouchStart] = useState(null);
@@ -341,7 +342,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
             {/* Back Button and Title */}
             <div className="max-w-4xl mx-auto px-6 space-y-6">
               <button
-                onClick={() => setSelectedStretch(null)}
+                onClick={() => { setSelectedStretch(null); setShowOperatorModal(false); }}
                 className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-600 hover:text-black hover:border-black transition-colors"
               >
                 <ChevronLeft size={16} /> Back to Stretches
@@ -368,10 +369,13 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   </p>
                 </div>
                 
-                <div className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col">
+                <div 
+                  onClick={() => setShowOperatorModal(true)}
+                  className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col cursor-pointer hover:border-[#FF5F00]/40 transition-all active:scale-[0.98]"
+                >
                   <span className="text-[10px] font-bold text-gray-600 uppercase">Price per person</span>
                   <span className="text-2xl font-black text-black">Starts from ₹{selectedStretch.price.toLocaleString('en-IN')}</span>
-                  <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Compare operators below and book!</span>
+                  <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Compare Operators & Book</span>
                 </div>
               </div>
 
@@ -513,55 +517,91 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
-              {/* Compare Operators Section */}
-              <div id="compare-operators-section" className="space-y-4 pt-6 border-t border-black/5">
-                <OperatorSelector
-                  operators={
-                    selectedStretch.operators && selectedStretch.operators.length > 0
-                      ? selectedStretch.operators.map(op => ({
-                          id: op.id,
-                          vendorName: op.vendors?.name || op.name || 'Local Operator',
-                          shopImage: op.vendors?.shop_image || null,
-                          starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
-                          landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
-                          price: Number(op.price || selectedStretch.price),
-                          originalPrice: op.original_price ? Number(op.original_price) : null,
-                          isLimitedOffer: !!op.is_limited_offer,
-                          commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
-                          _raw: op
-                        }))
-                      : [
-                          {
-                            id: selectedStretch.id,
-                            vendorName: 'Local Rishikesh Crew',
-                            shopImage: null,
-                            starRating: 4.5,
-                            landmark: selectedStretch.stretch || 'Shivpuri, Rishikesh',
-                            price: selectedStretch.price,
-                            originalPrice: selectedStretch.original_price || null,
-                            isLimitedOffer: selectedStretch.is_limited_offer || false,
-                            commissionPercentage: selectedStretch.commission_percentage || 10,
-                            _raw: selectedStretch
+              {/* Operator Selection Modal */}
+              <AnimatePresence>
+                {showOperatorModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="bg-white border border-slate-100 rounded-3xl w-full max-w-lg p-6 md:p-8 max-h-[85vh] overflow-y-auto space-y-6 shadow-2xl relative font-sans text-black"
+                    >
+                      {/* Close Button */}
+                      <button
+                        onClick={() => setShowOperatorModal(false)}
+                        className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-800 transition-colors cursor-pointer border-none bg-transparent"
+                      >
+                        <X size={18} />
+                      </button>
+
+                      {/* Header */}
+                      <div className="space-y-1 pr-8">
+                        <span className="text-[10px] text-accent font-black uppercase tracking-wider block">
+                          Comparison Desk
+                        </span>
+                        <h3 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">
+                          Select Your Operator
+                        </h3>
+                        <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                          Choose from certified local safety crews for {selectedStretch.name}
+                        </p>
+                      </div>
+
+                      {/* Operator List Container */}
+                      <div className="pt-2">
+                        <OperatorSelector
+                          operators={
+                            selectedStretch.operators && selectedStretch.operators.length > 0
+                              ? selectedStretch.operators.map(op => ({
+                                  id: op.id,
+                                  vendorName: op.vendors?.name || op.name || 'Local Operator',
+                                  shopImage: op.vendors?.shop_image || null,
+                                  starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
+                                  landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
+                                  price: Number(op.price || selectedStretch.price),
+                                  originalPrice: op.original_price ? Number(op.original_price) : null,
+                                  isLimitedOffer: !!op.is_limited_offer,
+                                  commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                                  _raw: op
+                                }))
+                              : [
+                                  {
+                                    id: selectedStretch.id,
+                                    vendorName: 'Local Rishikesh Crew',
+                                    shopImage: null,
+                                    starRating: 4.5,
+                                    landmark: selectedStretch.stretch || 'Shivpuri, Rishikesh',
+                                    price: selectedStretch.price,
+                                    originalPrice: selectedStretch.original_price || null,
+                                    isLimitedOffer: selectedStretch.is_limited_offer || false,
+                                    commissionPercentage: selectedStretch.commission_percentage || 10,
+                                    _raw: selectedStretch
+                                  }
+                                ]
                           }
-                        ]
-                  }
-                  onBookOperator={(op) => {
-                    const raw = op._raw;
-                    openBookingModal({
-                      id: raw.id || selectedStretch.id,
-                      name: `${selectedStretch.name} - ${op.vendorName}`,
-                      stretch: selectedStretch.stretch,
-                      price: op.price,
-                      category: 'rafting',
-                      city_id: raw.city_id,
-                      vendor_id: raw.vendor_id,
-                      commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
-                      vendors: raw.vendors
-                    });
-                  }}
-                  activityName={selectedStretch.name}
-                />
-              </div>
+                          onBookOperator={(op) => {
+                            setShowOperatorModal(false);
+                            const raw = op._raw;
+                            openBookingModal({
+                              id: raw.id || selectedStretch.id,
+                              name: `${selectedStretch.name} - ${op.vendorName}`,
+                              stretch: selectedStretch.stretch,
+                              price: op.price,
+                              category: 'rafting',
+                              city_id: raw.city_id,
+                              vendor_id: raw.vendor_id,
+                              commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
+                              vendors: raw.vendors
+                            });
+                          }}
+                          activityName={selectedStretch.name}
+                        />
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
 
               {/* Logistics Section */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-black/5">
@@ -674,9 +714,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 </span>
               </div>
               <button
-                onClick={() => {
-                  document.getElementById('compare-operators-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => setShowOperatorModal(true)}
                 className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
               >
                 Choose Operator
