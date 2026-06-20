@@ -359,22 +359,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       price: '1,800',
       img: '/camping-hero.jpg',
       route: 'camping'
-    },
-    {
-      id: 'bikerent',
-      name: 'Bike & Scooty Rentals',
-      desc: 'Rent scooters and cruise bikes from ₹500/day to explore Rishikesh on your own terms.',
-      price: '500',
-      img: '/bikerent-hero.jpg',
-      route: 'bikerent'
-    },
-    {
-      id: 'hotels',
-      name: 'Resort & Hotel Stays',
-      desc: 'Book beautiful river-view resorts, cottages, and yoga ashrams.',
-      price: '2,200',
-      img: '/hotels-hero.jpg',
-      route: 'hotels'
     }
   ];
 
@@ -941,6 +925,106 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         </div>
       </motion.div>
 
+      {/* 2.5. Recommended Hotels Section */}
+      <div className="py-20 border-b border-black/5 bg-white">
+        <div className="max-w-6xl mx-auto px-6 space-y-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-2"
+          >
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Stay in Luxury</span>
+            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
+              TOP HOTELS & RESORTS IN RISHIKESH
+            </h2>
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+          </motion.div>
+
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-80px" }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
+            {[
+              {
+                id: 'aloha',
+                name: 'Aloha On The Ganges',
+                desc: 'Luxurious resort nestled in the foothills of Himalayas, offering stunning Ganges view, spa, and yoga retreats.',
+                price: 7500,
+                img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600',
+                rating: 4.8,
+                reviewsCount: 345,
+                location: 'Tapovan, Near Laxman Jhula'
+              },
+              {
+                id: 'ganga-kinare',
+                name: 'Ganga Kinare Resort',
+                desc: 'Premium riverside boutique hotel offering direct access to the private ghat, ganga aarti, and organic dining.',
+                price: 5500,
+                img: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=600',
+                rating: 4.7,
+                reviewsCount: 218,
+                location: 'Barrage Road, Rishikesh'
+              },
+              {
+                id: 'divine',
+                name: 'Divine Resort & Spa',
+                desc: 'Perched on a high cliff overlooking Laxman Jhula with breathtaking panoramic views and a multi-cuisine restaurant.',
+                price: 4800,
+                img: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=600',
+                rating: 4.6,
+                reviewsCount: 195,
+                location: 'Laxman Jhula Road, Tapovan'
+              }
+            ].map((hotel, idx) => (
+              <motion.div
+                key={idx}
+                variants={fadeInUp}
+                whileHover={{ y: -5 }}
+                onClick={() => setRoute('hotels')}
+                className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+              >
+                <div className="h-48 bg-gray-100 overflow-hidden relative border-b border-black/5">
+                  <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover" />
+                  <div className="absolute bottom-4 left-4 bg-[#FF5F00] text-white text-xs font-black py-1 px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
+                    FROM ₹{hotel.price}/NIGHT
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs text-[#FF5F00] font-black">
+                      <Star size={12} fill="#FF5F00" />
+                      <span>{hotel.rating}</span>
+                      <span className="text-gray-400 font-bold">({hotel.reviewsCount} reviews)</span>
+                    </div>
+                    <h3 className="font-bold text-lg font-display text-black">{hotel.name}</h3>
+                    <p className="text-xs text-gray-500 font-bold flex items-center gap-1"><MapPin size={11} className="text-[#FF5F00]" /> {hotel.location}</p>
+                    <p className="text-xs text-gray-600 font-medium leading-relaxed pt-1">{hotel.desc}</p>
+                  </div>
+
+                  <div className="pt-4 border-t border-black/5 mt-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRoute('hotels');
+                      }}
+                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                    >
+                      View Stays
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
       {/* 3. Activity Cards Section */}
       <div id="adventures" className="max-w-6xl mx-auto px-6 py-20 space-y-12">
         <motion.div 
@@ -1013,8 +1097,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         </motion.div>
       </div>
 
-      {/* 4. Rafting Stretches Section */}
-      <div className="py-20 border-y border-black/5 overflow-hidden">
+      {/* 4.2. Char Dham Yatra Section */}
+      <div className="py-20 border-b border-black/5 bg-[#FAF8F5]">
         <div className="max-w-6xl mx-auto px-6 space-y-12">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -1023,71 +1107,81 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Recommended Rafting Rates</span>
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Spiritual Pilgrimage</span>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
-              #1 CHOICE IN RISHIKESH - CHOOSE YOUR RAFTING STRETCH
+              SACRED CHAR DHAM YATRA PACKAGES
             </h2>
             <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
 
-          {/* Cards container with responsive horizontal scroll on mobile */}
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-80px" }}
-            className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto pt-5 pb-4 md:pb-0 no-scrollbar snap-x snap-mandatory"
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
           >
-            {raftingStretches.map((str, idx) => (
+            {[
+              {
+                id: 'dodham',
+                name: 'Do Dham Yatra (Kedarnath & Badrinath)',
+                desc: 'A complete pilgrimage package covering Yamunotri & Gangotri, or Kedarnath & Badrinath. Includes luxury transport, VIP Darshan slips, premium hotel stays, and expert local guides.',
+                price: 18500,
+                duration: '5 Days / 4 Nights',
+                img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+                rating: 4.9,
+                reviewsCount: 148
+              },
+              {
+                id: 'chardham',
+                name: 'Complete Char Dham Yatra Tour',
+                desc: 'The ultimate sacred spiritual yatra to Yamunotri, Gangotri, Kedarnath, and Badrinath. Fully managed transfers, helicopter booking options, medical assistance, and premium lodging.',
+                price: 32000,
+                duration: '10 Days / 9 Nights',
+                img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
+                rating: 4.9,
+                reviewsCount: 215
+              }
+            ].map((tour, idx) => (
               <motion.div
                 key={idx}
                 variants={fadeInUp}
                 whileHover={{ y: -5 }}
-                onClick={() => setRoute('rafting')}
-                className="flex-shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-center bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-6 space-y-6 flex flex-col justify-between relative hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+                onClick={() => setRoute('tours')}
+                className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
               >
-                {str.badge && (
-                  <span className="absolute -top-3 right-6 bg-black text-[#FF6B00] text-[10px] font-black tracking-wider py-1 px-3 rounded-full border border-[#FF6B00]/30 shadow-md">
-                    {str.badge}
-                  </span>
-                )}
-
-                <div className="space-y-4">
-                  <span className="text-3xl font-black font-display text-[#FF5F00]">{str.km}</span>
-                  <div>
-                    <h4 className="font-bold text-lg text-black font-display leading-snug">{str.stretch}</h4>
-                    <div className="flex gap-2 mt-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
-                      <span>{str.time}</span>
-                      <span>•</span>
-                      <span>{str.level}</span>
-                    </div>
+                <div className="h-56 bg-gray-100 overflow-hidden relative border-b border-black/5">
+                  <img src={tour.img} alt={tour.name} className="w-full h-full object-cover" />
+                  <div className="absolute bottom-4 left-4 bg-[#FF5F00] text-white text-xs font-black py-1 px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
+                    FROM ₹{tour.price}/PERSON
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-4 border-t border-black/5">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-xs font-bold text-gray-500">₹</span>
-                    <span className="text-3xl font-black text-black">
-                      <CountUp end={str.price} />
-                    </span>
-                    <span className="text-xs font-bold text-gray-500">/person</span>
+                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs text-[#FF5F00] font-black">
+                      <Star size={12} fill="#FF5F00" />
+                      <span>{tour.rating}</span>
+                      <span className="text-gray-400 font-bold">({tour.reviewsCount} reviews)</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-lg font-display text-black">{tour.name}</h3>
+                      <span className="text-[10px] bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded shrink-0">{tour.duration}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 font-medium leading-relaxed pt-1">{tour.desc}</p>
                   </div>
 
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openBookingModal({
-                        id: `rafting-${idx}`,
-                        name: `River Rafting - ${str.km}`,
-                        stretch: str.stretch,
-                        price: str.price,
-                        category: 'rafting'
-                      });
-                    }}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer"
-                  >
-                    Book Now
-                  </button>
+                  <div className="pt-4 border-t border-black/5 mt-4">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRoute('tours');
+                      }}
+                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                    >
+                      Explore Tours
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}

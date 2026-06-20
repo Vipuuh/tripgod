@@ -241,6 +241,20 @@ export default function AdminDashboard({ setRoute }) {
     }
   };
 
+  // Delete Bike Model Handler (Deletes all vendor listings for a bike name/model)
+  const handleDeleteBikeModel = async (groupedItem) => {
+    const confirmMsg = `Are you sure you want to delete ${groupedItem.name} and all its ${groupedItem.operators.length} vendors?`;
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      const idsToDelete = groupedItem.operators.map(op => op.id);
+      const { error } = await supabase.from('bikes').delete().in('id', idsToDelete);
+      if (error) throw error;
+      fetchAllData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   // Add/Edit Vendor Handler
   const handleSaveVendor = async (e) => {
     e.preventDefault();
@@ -720,7 +734,7 @@ export default function AdminDashboard({ setRoute }) {
                 const list = 
                   activeTab === 'hotels' ? hotels :
                   activeTab === 'rafting' ? groupRaftingByDistance(raftingList) :
-                  activeTab === 'bikes' ? bikesList : toursList;
+                  activeTab === 'bikes' ? groupBikesByName(bikesList) : toursList;
 
                 if (list.length === 0) {
                   return (
@@ -742,7 +756,7 @@ export default function AdminDashboard({ setRoute }) {
                         <div className="h-44 bg-slate-900 relative">
                           <img src={thumbnail} alt={item.name} className="w-full h-full object-cover" />
                           <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-xs text-accent text-xs font-black py-0.5 px-2.5 rounded border border-accent/25">
-                            {activeTab === 'rafting' ? `From ₹${item.price}` : (item.price === 0 ? 'Free' : `₹${item.price}`)}
+                            {['rafting', 'bikes'].includes(activeTab) ? `From ₹${item.price}` : (item.price === 0 ? 'Free' : `₹${item.price}`)}
                           </div>
                         </div>
 
@@ -754,9 +768,9 @@ export default function AdminDashboard({ setRoute }) {
                             <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded">
                               <MapPin size={10} /> {city?.name || 'No City'}
                             </span>
-                            {activeTab === 'rafting' ? (
+                            {['rafting', 'bikes'].includes(activeTab) ? (
                               <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
-                                <Users size={10} /> {item.operators.length} Operators
+                                <Users size={10} /> {item.operators?.length || 0} Vendors
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
@@ -765,9 +779,9 @@ export default function AdminDashboard({ setRoute }) {
                             )}
                           </div>
                           
-                          {activeTab === 'rafting' && item.operators && (
-                            <div className="text-[9px] text-slate-500 font-medium pt-1 max-h-16 overflow-y-auto">
-                              <span className="font-bold text-slate-400">Crews: </span>
+                          {['rafting', 'bikes'].includes(activeTab) && item.operators && (
+                            <div className="text-[9px] text-slate-500 font-medium pt-1 max-h-16 overflow-y-auto no-scrollbar">
+                              <span className="font-bold text-slate-400">Crews/Vendors: </span>
                               {item.operators.map((op, idx) => {
                                 const v = vendors.find(ven => ven.id === op.vendor_id);
                                 return (
@@ -800,6 +814,13 @@ export default function AdminDashboard({ setRoute }) {
                         {activeTab === 'rafting' ? (
                           <button
                             onClick={() => handleDeleteRaftingStretch(item)}
+                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        ) : activeTab === 'bikes' ? (
+                          <button
+                            onClick={() => handleDeleteBikeModel(item)}
                             className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
                           >
                             <Trash2 size={14} />
@@ -1268,6 +1289,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
   const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({});
   const [raftingOperators, setRaftingOperators] = useState({});
+  const [bikesOperators, setBikesOperators] = useState({});
 
   // Initialize rafting operators state
   useEffect(() => {
@@ -1301,6 +1323,39 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       }
       
       setRaftingOperators(initialOps);
+    }
+  }, [type, data, vendors]);
+
+  // Initialize bikes operators state
+  useEffect(() => {
+    if (type === 'bikes') {
+      const initialOps = {};
+      
+      // Initialize all vendors
+      vendors.forEach(v => {
+        initialOps[v.id] = {
+          enabled: false,
+          price: '',
+          deposit: 0,
+          pickup_location: v.address || 'Rishikesh',
+          id: null
+        };
+      });
+
+      // If editing, populate from existing operators
+      if (data && data.operators) {
+        data.operators.forEach(op => {
+          initialOps[op.vendor_id] = {
+            enabled: true,
+            price: op.price || '',
+            deposit: op.deposit !== undefined ? op.deposit : 0,
+            pickup_location: op.pickup_location || op.vendors?.address || 'Rishikesh',
+            id: op.id
+          };
+        });
+      }
+      
+      setBikesOperators(initialOps);
     }
   }, [type, data, vendors]);
 
@@ -1471,6 +1526,99 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         return;
       }
 
+      if (type === 'bikes') {
+        const enabledOps = Object.entries(bikesOperators)
+          .filter(([_, op]) => op.enabled)
+          .map(([vendorId, op]) => ({
+            vendorId,
+            price: Number(op.price),
+            deposit: Number(op.deposit),
+            pickupLocation: op.pickup_location || 'Rishikesh',
+            id: op.id
+          }));
+
+        if (enabledOps.length === 0) {
+          throw new Error('Please enable at least one vendor for this bike/scoty rent.');
+        }
+
+        const commonProps = {
+          city_id: formData.city_id,
+          name: formData.name,
+          description: formData.description || '',
+          documents: formData.documents || ['Driving License', 'Aadhar Card'],
+          images: formData.images || []
+        };
+
+        if (data) {
+          // Editing existing bike model
+          const existingOpsMap = {};
+          data.operators.forEach(op => {
+            existingOpsMap[op.vendor_id] = op.id;
+          });
+
+          const opsToInsert = [];
+          const opsToUpdate = [];
+          const opsToDelete = [];
+
+          enabledOps.forEach(op => {
+            const existingId = existingOpsMap[op.vendorId];
+            if (existingId) {
+              opsToUpdate.push({
+                id: existingId,
+                ...commonProps,
+                vendor_id: op.vendorId,
+                price: op.price,
+                deposit: op.deposit,
+                pickup_location: op.pickupLocation
+              });
+              delete existingOpsMap[op.vendorId];
+            } else {
+              opsToInsert.push({
+                ...commonProps,
+                vendor_id: op.vendorId,
+                price: op.price,
+                deposit: op.deposit,
+                pickup_location: op.pickupLocation
+              });
+            }
+          });
+
+          Object.values(existingOpsMap).forEach(id => {
+            opsToDelete.push(id);
+          });
+
+          if (opsToDelete.length > 0) {
+            const { error: deleteError } = await supabase.from('bikes').delete().in('id', opsToDelete);
+            if (deleteError) throw deleteError;
+          }
+
+          if (opsToUpdate.length > 0) {
+            const { error: updateError } = await supabase.from('bikes').upsert(opsToUpdate);
+            if (updateError) throw updateError;
+          }
+
+          if (opsToInsert.length > 0) {
+            const { error: insertError } = await supabase.from('bikes').insert(opsToInsert);
+            if (insertError) throw insertError;
+          }
+        } else {
+          // Creating new bike model
+          const recordsToInsert = enabledOps.map(op => ({
+            ...commonProps,
+            vendor_id: op.vendorId,
+            price: op.price,
+            deposit: op.deposit,
+            pickup_location: op.pickupLocation
+          }));
+
+          const { error: insertError } = await supabase.from('bikes').insert(recordsToInsert);
+          if (insertError) throw insertError;
+        }
+
+        onClose();
+        return;
+      }
+
       // Default submit for hotels, bikes, tours
       const submitData = {
         ...formData,
@@ -1516,7 +1664,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     <form onSubmit={handleSubmit} className="space-y-6 text-xs text-left">
       {/* 1. Meta Details (City and Vendor selection) */}
       <div className="grid grid-cols-2 gap-4">
-        <div className={`space-y-1 ${type === 'rafting' ? 'col-span-2' : ''}`}>
+        <div className={`space-y-1 ${['rafting', 'bikes'].includes(type) ? 'col-span-2' : ''}`}>
           <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Target City</label>
           <select
             value={formData.city_id}
@@ -1529,7 +1677,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </select>
         </div>
 
-        {type !== 'rafting' && (
+        {!['rafting', 'bikes'].includes(type) && (
           <div className="space-y-1">
             <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Partner Vendor</label>
             <select
@@ -1558,7 +1706,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           />
         </div>
 
-        {type !== 'rafting' && (
+        {!['rafting', 'bikes'].includes(type) && (
           <>
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Price (₹)</label>
@@ -2023,27 +2171,169 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       {/* ----------------- BIKES FIELDS ----------------- */}
       {type === 'bikes' && (
         <div className="space-y-4 border-t border-slate-900 pt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Security Deposit (₹)</label>
-              <input
-                type="number"
-                required
-                value={formData.deposit || 0}
-                onChange={(e) => setFormData(prev => ({ ...prev, deposit: Number(e.target.value) }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
+          {/* Required Documents Dynamic List */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Required Documents</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentList = formData.documents || [];
+                  setFormData(prev => ({
+                    ...prev,
+                    documents: [...currentList, '']
+                  }));
+                }}
+                className="py-1 px-2.5 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/25 text-[#FF5F00] font-black text-[9px] uppercase tracking-wider rounded-lg border border-[#FF5F00]/20 cursor-pointer transition-all"
+              >
+                + Add Document
+              </button>
             </div>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {(formData.documents || []).map((doc, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Driving License"
+                    value={doc}
+                    onChange={(e) => {
+                      const updated = [...(formData.documents || [])];
+                      updated[idx] = e.target.value;
+                      setFormData(prev => ({ ...prev, documents: updated }));
+                    }}
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = (formData.documents || []).filter((_, i) => i !== idx);
+                      setFormData(prev => ({ ...prev, documents: updated }));
+                    }}
+                    className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl cursor-pointer transition-colors flex items-center justify-center"
+                    title="Remove Document"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              {(formData.documents || []).length === 0 && (
+                <p className="text-[10px] text-gray-500 font-medium italic">No required documents added yet. Click "+ Add Document" above.</p>
+              )}
+            </div>
+          </div>
 
+          {/* Operators & Pricing */}
+          <div className="space-y-3 pt-4 border-t border-slate-900">
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Pickup Location</label>
-              <input
-                type="text"
-                required
-                value={formData.pickup_location || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, pickup_location: e.target.value }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Operators & Pricing</label>
+              <p className="text-[10px] text-gray-500">Enable/disable operators and set their custom prices, deposits, and pickup locations for this bike/scoty model.</p>
+            </div>
+            
+            <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
+              {vendors
+                .filter(v => v.category === 'Bike Rental')
+                .map(vendor => {
+                  const opState = bikesOperators[vendor.id] || { enabled: false, price: '', deposit: 0, pickup_location: '' };
+                  return (
+                    <div key={vendor.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950 hover:bg-slate-900/50 transition-colors">
+                      {/* Left: Checkbox and Vendor Name */}
+                      <div className="flex items-center gap-3 min-w-[200px]">
+                        <input
+                          type="checkbox"
+                          checked={opState.enabled}
+                          onChange={(e) => {
+                            setBikesOperators(prev => ({
+                              ...prev,
+                              [vendor.id]: {
+                                ...prev[vendor.id],
+                                enabled: e.target.checked,
+                                price: prev[vendor.id]?.price || '',
+                                deposit: prev[vendor.id]?.deposit !== undefined ? prev[vendor.id]?.deposit : 0,
+                                pickup_location: prev[vendor.id]?.pickup_location || vendor.address || 'Rishikesh'
+                              }
+                            }));
+                          }}
+                          className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                        />
+                        <div>
+                          <span className="font-bold text-xs text-white block">{vendor.name}</span>
+                          <span className="text-[9px] text-slate-500 font-semibold">{vendor.address || 'Rishikesh'}</span>
+                        </div>
+                      </div>
+
+                      {/* Right: Price, Deposit & Location inputs (only editable if enabled) */}
+                      {opState.enabled ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-grow">
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹ / day)</label>
+                            <input
+                              type="number"
+                              required
+                              value={opState.price}
+                              onChange={(e) => {
+                                setBikesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    price: Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="Price"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Security Deposit (₹)</label>
+                            <input
+                              type="number"
+                              required
+                              value={opState.deposit}
+                              onChange={(e) => {
+                                setBikesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    deposit: Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="Deposit"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Pickup Location</label>
+                            <input
+                              type="text"
+                              required
+                              value={opState.pickup_location}
+                              onChange={(e) => {
+                                setBikesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    pickup_location: e.target.value
+                                  }
+                                }));
+                              }}
+                              placeholder="e.g. Tapovan, Rishikesh"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-slate-500 font-medium italic flex-grow text-right pr-4">
+                          Disabled (not offering this model)
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -2139,6 +2429,33 @@ const groupRaftingByDistance = (list) => {
         cancellation_policy: item.cancellation_policy,
         city_id: item.city_id,
         price: item.price,
+        operators: []
+      };
+    }
+    grouped[key].operators.push(item);
+    if (Number(item.price) < Number(grouped[key].price)) {
+      grouped[key].price = item.price;
+    }
+  });
+  return Object.values(grouped);
+};
+
+// Utility: Group bikes by name
+const groupBikesByName = (list) => {
+  const grouped = {};
+  list.forEach(item => {
+    const key = item.name;
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        deposit: item.deposit,
+        documents: item.documents,
+        pickup_location: item.pickup_location,
+        city_id: item.city_id,
+        price: item.price,
+        images: item.images,
         operators: []
       };
     }
