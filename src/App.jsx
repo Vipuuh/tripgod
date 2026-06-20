@@ -381,7 +381,6 @@ export default function App() {
             <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Services</h4>
             <ul className="space-y-2 text-xs font-medium text-gray-400">
               <li><button onClick={() => navigateTo('bikerent')} className="hover:text-accent transition-colors">Bike & Scooty Rent</button></li>
-              <li><button onClick={() => navigateTo('pickup')} className="hover:text-accent transition-colors">Pickup Drop Cabs</button></li>
               <li><button onClick={() => navigateTo('hotels')} className="hover:text-accent transition-colors">Boutique Stays</button></li>
             </ul>
           </div>

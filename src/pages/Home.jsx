@@ -172,15 +172,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       route: 'bikerent'
     },
     {
-      id: 'pickup',
-      name: 'Cab / Pickup Drop',
-      price: 0,
-      category: 'pickup',
-      slots: ['Morning Slot', 'Afternoon Slot', 'Evening Slot'],
-      icon: PhoneCall,
-      route: 'pickup'
-    },
-    {
       id: 'hotels',
       name: 'Hotels',
       price: 2200,
@@ -376,14 +367,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       price: '500',
       img: '/bikerent-hero.jpg',
       route: 'bikerent'
-    },
-    {
-      id: 'pickup',
-      name: 'Pickup & Drop',
-      desc: 'Local Rishikesh transfers via Mahindra & Vikram blue autos. 100% offline bookings with zero advance.',
-      price: 'Price on Call',
-      img: '/vikram-blue.jpg',
-      route: 'pickup'
     },
     {
       id: 'hotels',

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Star, Calendar, Clock, MapPin, 
-  Check, X, ChevronDown, ShieldCheck, HeartCrack, Info, Play
+  Check, X, ChevronDown, ShieldCheck, HeartCrack, Info, Play,
+  Smartphone, Ticket
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import OperatorSelector from '../components/OperatorSelector';
@@ -11,12 +12,13 @@ const defaultStretches = [
   {
     id: 'rafting-12km',
     name: '12 KM Rafting Stretch',
-    stretch: 'Shivpuri → Laxman Jhula',
-    price: 1090,
+    stretch: 'Brahmpuri to Laxman Jhula',
+    price: 650,
+    original_price: 800,
     difficulty: 'Moderate',
-    difficultyColor: 'bg-green-100 text-green-800',
-    duration: '2-3 Hours',
-    rapids: 'Grade II & III (Return to Sender, Roller Coaster, Golf Course)',
+    difficultyColor: 'bg-green-100 text-green-850',
+    duration: '1.5-2 Hours',
+    rapids: 'Grade I & II rapids (Black Money, Sweet Sixteen)',
     ageLimit: 'Age 14-60 yrs',
     weightLimit: 'Weight 40-100 kg',
     img: '/rafting-4.jpg',
@@ -25,43 +27,71 @@ const defaultStretches = [
       '/rafting-1.jpg',
       '/rafting-2.jpg'
     ],
+    rating: 4.8,
+    reviewsCount: 570,
     desc: 'The most popular rafting stretch in Rishikesh. Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch, ending near the iconic Laxman Jhula.',
+    inclusions: [
+      'Transportation from office to rafting start point & back after finish',
+      'All rafting gear: imported life jackets, helmets, paddles',
+      'Wetsuits during winter (December–February)',
+      'Certified river guides',
+      'Safety kayaker on every trip'
+    ],
+    exclusions: [
+      'Rafting photos/videos go pro cost - Rs. 1800 - Rs. 2000 (divided by 8 people)',
+      'Personal expenses'
+    ],
     operators: [
-      { id: 'rafting-12km-op1', name: 'River Runners Crew', price: 1090, original_price: 1290, is_limited_offer: true, commission_percentage: 12 },
-      { id: 'rafting-12km-op2', name: 'Himalayan Rapids Adventure', price: 1250, original_price: 1400, commission_percentage: 10 }
+      { id: 'rafting-12km-op1', name: 'River Runners Crew', price: 650, original_price: 800, is_limited_offer: true, commission_percentage: 10 },
+      { id: 'rafting-12km-op2', name: 'Himalayan Rapids Adventure', price: 800, original_price: 1000, commission_percentage: 10 }
     ]
   },
   {
     id: 'rafting-16km',
     name: '16 KM Rafting Stretch',
-    stretch: 'Shivpuri → Nim Beach',
-    price: 1590,
+    stretch: 'Shivpuri to Nim Beach',
+    price: 800,
+    original_price: 1200,
     difficulty: 'Thrilling',
-    difficultyColor: 'bg-orange-100 text-orange-800',
-    duration: '3.5 Hours',
-    rapids: 'Grade II, III & III+ (Roller Coaster, Golf Course, Maelstrom)',
+    difficultyColor: 'bg-orange-100 text-orange-850',
+    duration: '2.5-3 Hours',
+    rapids: 'Grade II & III (Roller Coaster, Golf Course, Maelstrom)',
     ageLimit: 'Age 14-55 yrs',
     weightLimit: 'Weight 40-100 kg',
     img: '/rafting-5.jpg',
     images: [
       '/rafting-5.jpg',
-      '/rafting-3.jpg',
-      '/rafting-1.jpg'
+      '/rafting-2.jpg',
+      '/rafting-3.jpg'
     ],
-    desc: 'An extended version of the Shivpuri stretch. It covers additional rapids and terminates at Nim Beach. Designed for adventure lovers seeking extra thrill and longer river time.',
+    rating: 4.8,
+    reviewsCount: 494,
+    desc: 'The Shivpuri rafting stretch is the perfect balance of adventure and scenic beauty. It features some of the most famous Grade III rapids like Roller Coaster and Golf Course.',
+    inclusions: [
+      'Transportation from office to rafting start point & back after finish',
+      'All rafting gear: imported life jackets, helmets, paddles',
+      'Wetsuits during winter (December–February)',
+      'Certified river guides',
+      'Safety kayaker on every trip'
+    ],
+    exclusions: [
+      'Rafting photos/videos go pro cost - Rs. 1800 - Rs. 2000 (divided by 8 people)',
+      'Personal expenses'
+    ],
     operators: [
-      { id: 'rafting-16km-op1', name: 'White Water Legends', price: 1590, original_price: 1790, is_limited_offer: true, commission_percentage: 15 },
-      { id: 'rafting-16km-op2', name: 'Apex Adventure Rishikesh', price: 1690, commission_percentage: 10 }
+      { id: 'rafting-16km-op1', name: 'Shivpuri Rapids Patrol', price: 800, original_price: 1200, is_limited_offer: true, commission_percentage: 10 },
+      { id: 'rafting-16km-op2', name: 'Ganga Adventure Club', price: 950, original_price: 1300, commission_percentage: 10 }
     ]
   },
   {
-    id: 'rafting-26km',
-    name: '26 KM Rafting Stretch',
-    stretch: 'Marine Drive → Nim Beach',
-    price: 2490,
+    id: 'rafting-24km',
+    name: '24 KM Rafting Stretch',
+    stretch: 'Marine Drive to Nim Beach',
+    price: 1500,
+    original_price: 2000,
     difficulty: 'Advanced',
     difficultyColor: 'bg-red-100 text-red-800',
-    duration: '5-6 Hours',
+    duration: '3.5-4 Hours',
     rapids: 'Grade III & IV (Three Blind Mice, Crossfire, Body Surfing)',
     ageLimit: 'Age 18-50 yrs',
     weightLimit: 'Weight 45-95 kg',
@@ -71,10 +101,60 @@ const defaultStretches = [
       '/rafting-2.jpg',
       '/rafting-3.jpg'
     ],
+    rating: 4.9,
+    reviewsCount: 380,
     desc: 'The ultimate white water rafting test in Rishikesh. Massive rapids, heavy currents, and extreme body-surfing options. Requires high stamina and prior basic rafting experience.',
+    inclusions: [
+      'Transportation from office to rafting start point & back after finish',
+      'All rafting gear: imported life jackets, helmets, paddles',
+      'Wetsuits during winter (December–February)',
+      'Certified river guides',
+      'Safety kayaker on every trip'
+    ],
+    exclusions: [
+      'Rafting photos/videos go pro cost - Rs. 1800 - Rs. 2000 (divided by 8 people)',
+      'Personal expenses'
+    ],
     operators: [
-      { id: 'rafting-26km-op1', name: 'Ganga Extreme Outfitters', price: 2490, original_price: 2990, commission_percentage: 10 },
-      { id: 'rafting-26km-op2', name: 'Bull Adventure Crew', price: 2790, commission_percentage: 12 }
+      { id: 'rafting-24km-op1', name: 'Ganga Extreme Outfitters', price: 1500, original_price: 2000, commission_percentage: 10 },
+      { id: 'rafting-24km-op2', name: 'Bull Adventure Crew', price: 1650, original_price: 2200, commission_percentage: 12 }
+    ]
+  },
+  {
+    id: 'rafting-36km',
+    name: '36 KM Rafting Stretch',
+    stretch: 'Kaudiyala to Nim Beach',
+    price: 2500,
+    original_price: 3500,
+    difficulty: 'Extreme',
+    difficultyColor: 'bg-red-200 text-red-900 border border-red-300',
+    duration: '5-6 Hours',
+    rapids: 'Grade IV & IV+ (The Wall, Daniel\'s Dip, Three Blind Mice)',
+    ageLimit: 'Age 18-45 yrs',
+    weightLimit: 'Weight 50-90 kg',
+    img: '/rafting-7.jpg',
+    images: [
+      '/rafting-7.jpg',
+      '/rafting-1.jpg',
+      '/rafting-2.jpg'
+    ],
+    rating: 4.9,
+    reviewsCount: 240,
+    desc: 'Rishikesh\'s most extreme rafting stretch. Features the notorious Grade IV+ rapid "The Wall" where rafts frequently flip. Only for physically fit, brave adventurers.',
+    inclusions: [
+      'Transportation from office to rafting start point & back after finish',
+      'All rafting gear: imported life jackets, helmets, paddles',
+      'Wetsuits during winter (December–February)',
+      'Certified river guides',
+      'Safety kayaker on every trip'
+    ],
+    exclusions: [
+      'Rafting photos/videos go pro cost - Rs. 1800 - Rs. 2000 (divided by 8 people)',
+      'Personal expenses'
+    ],
+    operators: [
+      { id: 'rafting-36km-op1', name: 'Kaudiyala Extreme Team', price: 2500, original_price: 3500, commission_percentage: 10 },
+      { id: 'rafting-36km-op2', name: 'Apex River Guides', price: 2800, original_price: 3800, commission_percentage: 12 }
     ]
   }
 ];
@@ -149,18 +229,29 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 id: item.id,
                 name: `${dist} KM Rafting Stretch`,
                 stretch: item.route || (dist === 12 ? 'Brahmpuri to Laxman Jhula' : dist === 16 ? 'Shivpuri to Nim Beach' : dist === 24 ? 'Marine Drive to Nim Beach' : 'Kaudiyala to Nim Beach'),
-                difficulty: dist >= 24 ? 'Advanced' : 'Moderate',
-                difficultyColor: dist >= 24 ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800',
+                difficulty: dist >= 36 ? 'Extreme' : dist >= 24 ? 'Advanced' : dist === 16 ? 'Thrilling' : 'Moderate',
+                difficultyColor: dist >= 36 ? 'bg-red-200 text-red-900 border border-red-300' : dist >= 24 ? 'bg-red-100 text-red-800' : dist === 16 ? 'bg-orange-100 text-orange-850' : 'bg-green-100 text-green-850',
                 price: Number(item.price),
                 img: item.images && item.images.length > 0 ? item.images[0] : (fallbackImages[dist] ? fallbackImages[dist][0] : '/rafting-4.jpg'),
                 images: item.images && item.images.length > 0 ? item.images : (fallbackImages[dist] || ['/rafting-4.jpg']),
                 duration: item.duration || (dist === 12 ? '1.5-2 Hours' : dist === 16 ? '2.5-3 Hours' : dist === 24 ? '3.5-4 Hours' : '5-6 Hours'),
-                rapids: item.rapids || (dist === 12 ? 'Grade I & II rapids' : dist === 16 ? 'Grade II & III (Roller Coaster, Golf Course)' : 'Grade III & IV (Wall, Three Blind Mice)'),
-                ageLimit: item.age_limit ? `Age ${item.age_limit}+ yrs` : (dist === 12 ? 'Age 14-60 yrs' : 'Age 14-55 yrs'),
-                weightLimit: 'Weight 40-100 kg',
-                desc: item.description || (dist === 12 ? 'Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch.' : dist === 16 ? 'A thrilling rafting run with multiple Grade III rapids, suitable for adventure seekers.' : 'An advanced white-water rafting trip with massive rapids and high speed flows.'),
-                inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : ['Certified Safety Crew', 'High Quality Gear Included', 'Certified Ganga River Guide'],
-                exclusions: item.exclusions && item.exclusions.length > 0 ? item.exclusions : ['Any personal expenses', 'Tips for guides'],
+                rapids: item.rapids || (dist === 12 ? 'Grade I & II rapids (Black Money, Sweet Sixteen)' : dist === 16 ? 'Grade II & III (Roller Coaster, Golf Course, Maelstrom)' : dist === 24 ? 'Grade III & IV (Three Blind Mice, Crossfire, Body Surfing)' : 'Grade IV & IV+ (The Wall, Daniel\'s Dip, Three Blind Mice)'),
+                ageLimit: item.age_limit ? `Age ${item.age_limit}+ yrs` : (dist === 12 ? 'Age 14-60 yrs' : dist === 16 ? 'Age 14-55 yrs' : dist === 24 ? 'Age 18-50 yrs' : 'Age 18-45 yrs'),
+                weightLimit: dist >= 24 ? 'Weight 45-95 kg' : 'Weight 40-100 kg',
+                desc: item.description || (dist === 12 ? 'Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch.' : dist === 16 ? 'A thrilling rafting run with multiple Grade III rapids, suitable for adventure seekers.' : dist === 24 ? 'An advanced white-water rafting trip with massive rapids and high speed flows.' : 'Rishikesh\'s most extreme rafting stretch. Features the notorious Grade IV+ rapid "The Wall".'),
+                rating: item.rating || (dist === 12 ? 4.8 : dist === 16 ? 4.8 : 4.9),
+                reviewsCount: item.reviews_count || (dist === 12 ? 570 : dist === 16 ? 494 : dist === 24 ? 380 : dist === 36 ? 240 : 150),
+                inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : [
+                  'Transportation from office to rafting start point & back after finish',
+                  'All rafting gear: imported life jackets, helmets, paddles',
+                  'Wetsuits during winter (December–February)',
+                  'Certified river guides',
+                  'Safety kayaker on every trip'
+                ],
+                exclusions: item.exclusions && item.exclusions.length > 0 ? item.exclusions : [
+                  'Rafting photos/videos go pro cost - Rs. 1800 - Rs. 2000 (divided by 8 people)',
+                  'Personal expenses'
+                ],
                 cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior.',
                 operators: []
               };
@@ -254,7 +345,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   White Water Rafting
                 </h1>
                 <p className="text-gray-300 max-w-lg mx-auto text-sm sm:text-base font-medium">
-                  Ride the wild rapids of the sacred Ganga. Choose from 12KM, 16KM, or 26KM stretches.
+                  Ride the wild rapids of the sacred Ganga. Choose from 12KM, 16KM, 24KM, or 36KM stretches.
                 </p>
               </div>
             </div>
@@ -315,6 +406,12 @@ export default function Rafting({ currentCity, openBookingModal }) {
                             )}
                           </div>
                         </div>
+
+                        <div className="flex items-center gap-1 text-xs text-black font-bold">
+                          <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                          <span>{str.rating}</span>
+                          <span className="text-gray-500 font-semibold">({str.reviewsCount} reviews)</span>
+                        </div>
                         
                         <div className="space-y-0.5">
                           <h3 className="font-bold text-base font-display text-black leading-tight">{str.stretch}</h3>
@@ -370,12 +467,19 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     </span>
                   </div>
                   <h1 className="text-xl md:text-2xl font-bold font-display text-black">{selectedStretch.name}</h1>
-                  {selectedStretch.vendors?.name && (
-                    <p className="text-[11px] font-bold text-[#FF5F00] uppercase tracking-wider flex items-center gap-1">
-                      Operator: <span className="bg-[#FF5F00]/10 px-2 py-0.5 rounded font-black">{selectedStretch.vendors.name}</span>
-                    </p>
-                  )}
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <div className="flex items-center gap-1 text-xs text-black font-black">
+                      <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                      <span>{selectedStretch.rating}</span>
+                      <span className="text-gray-500 font-bold">({selectedStretch.reviewsCount} reviews)</span>
+                    </div>
+                    {selectedStretch.vendors?.name && (
+                      <span className="text-[9px] bg-[#FF5F00]/10 text-[#FF5F00] font-black px-2 py-0.5 rounded uppercase">
+                        Operator: {selectedStretch.vendors.name}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 mt-1">
                     <MapPin size={12} className="text-black" /> {selectedStretch.stretch}
                   </p>
                 </div>
@@ -437,9 +541,31 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
-              {/* Specs card below image */}
+              {/* Badges Row */}
+              <div className="grid grid-cols-3 gap-2 px-1 py-3 bg-gray-50/50 rounded-2xl border border-black/5">
+                <div className="flex flex-col items-center text-center p-1.5">
+                  <div className="w-9 h-9 rounded-full bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00] mb-1.5 shadow-sm">
+                    <ShieldCheck size={18} className="stroke-[2.5]" />
+                  </div>
+                  <span className="text-[10px] font-extrabold text-black uppercase tracking-tight leading-tight">Pay 10% to book</span>
+                </div>
+                <div className="flex flex-col items-center text-center p-1.5">
+                  <div className="w-9 h-9 rounded-full bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00] mb-1.5 shadow-sm">
+                    <Smartphone size={18} className="stroke-[2.5]" />
+                  </div>
+                  <span className="text-[10px] font-extrabold text-black uppercase tracking-tight leading-tight">Mobile Tickets</span>
+                </div>
+                <div className="flex flex-col items-center text-center p-1.5">
+                  <div className="w-9 h-9 rounded-full bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00] mb-1.5 shadow-sm">
+                    <Calendar size={18} className="stroke-[2.5]" />
+                  </div>
+                  <span className="text-[10px] font-extrabold text-black uppercase tracking-tight leading-tight">Free Cancellation</span>
+                </div>
+              </div>
+
+              {/* Specs card below badges */}
               <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-[11px] sm:text-xs bg-black/85 p-3.5 sm:p-4 rounded-2xl border border-white/5 shadow-sm">
-                <div className="flex gap-4 flex-wrap">
+                <div className="flex gap-6 flex-wrap">
                   <div>
                     <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Duration</span>
                     <span className="font-bold text-white">{selectedStretch.duration}</span>
@@ -448,9 +574,10 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Rapids Category</span>
                     <span className="font-bold text-white">{selectedStretch.difficulty}</span>
                   </div>
-                </div>
-                <div className="self-start xs:self-auto px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs flex-shrink-0">
-                  <Play size={12} fill="currentColor" /> Free DSLR Video
+                  <div>
+                    <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Safety Rating</span>
+                    <span className="font-bold text-white">⭐ {selectedStretch.rating} / 5.0</span>
+                  </div>
                 </div>
               </div>
 
@@ -483,11 +610,12 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     <Check size={16} className="text-green-600 stroke-[3]" /> What's Included
                   </h4>
                   <ul className="space-y-2 text-xs font-medium text-gray-600">
-                    <li className="flex items-center gap-2">• High Buoyancy Life Jacket</li>
-                    <li className="flex items-center gap-2">• Carbon Fiber / High Grade Helmet</li>
-                    <li className="flex items-center gap-2">• Balanced Oar Paddle</li>
-                    <li className="flex items-center gap-2">• Certified Ganga River Guide (Rescue Expert)</li>
-                    <li className="flex items-center gap-2">• Free DSLR Video & Cliff Jump Footage</li>
+                    {selectedStretch.inclusions?.map((inc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <Check size={14} className="text-green-600 stroke-[3] mt-0.5 flex-shrink-0" />
+                        <span>{inc}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
@@ -496,9 +624,12 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     <X size={16} className="text-red-600 stroke-[3]" /> What's Excluded
                   </h4>
                   <ul className="space-y-2 text-xs font-medium text-gray-600">
-                    <li className="flex items-center gap-2">• Personal expenses & dry bags</li>
-                    <li className="flex items-center gap-2">• Transport from endpoint back to start point</li>
-                    <li className="flex items-center gap-2">• Locker fees & heavy luggage management</li>
+                    {selectedStretch.exclusions?.map((exc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <X size={14} className="text-red-600 stroke-[3] mt-0.5 flex-shrink-0" />
+                        <span>{exc}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
