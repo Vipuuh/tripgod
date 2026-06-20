@@ -1174,8 +1174,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.maps_link = '';
         defaults.check_in = '12:00 PM';
         defaults.check_out = '11:00 AM';
-        defaults.amenities = { wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false };
-        defaults.rules = { unmarried_couples: false, pets: false, smoking: false };
+        defaults.amenities = { wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false, river_view: false, room_service: false, power_backup: false, geyser: false };
+        defaults.rules = { unmarried_couples: false, pets: false, smoking: false, id_required: false, min_age_18: false, alcohol_allowed: false, visitors_allowed: false };
         defaults.landmarks = [];
       } else if (type === 'rafting') {
         defaults.route = '';
@@ -1430,7 +1430,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               {[
                 { key: 'unmarried_couples', label: 'Unmarried Couples Allowed' },
                 { key: 'pets', label: 'Pets Allowed' },
-                { key: 'smoking', label: 'Smoking Allowed' }
+                { key: 'smoking', label: 'Smoking Allowed' },
+                { key: 'id_required', label: 'Govt ID Required' },
+                { key: 'min_age_18', label: '18+ Primary Guest' },
+                { key: 'alcohol_allowed', label: 'Alcohol Allowed' },
+                { key: 'visitors_allowed', label: 'Visitors Allowed' }
               ].map(rule => (
                 <label key={rule.key} className="flex items-center gap-2 cursor-pointer">
                   <input

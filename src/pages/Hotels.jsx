@@ -12,6 +12,31 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
+  // Swipe gesture support
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    if (isLeftSwipe && selectedHotel?.images?.length > 1) {
+      setActiveImgIdx(prev => (prev + 1) % selectedHotel.images.length);
+    } else if (isRightSwipe && selectedHotel?.images?.length > 1) {
+      setActiveImgIdx(prev => (prev - 1 + selectedHotel.images.length) % selectedHotel.images.length);
+    }
+  };
+
   // Fallback demo stays
   const demoStays = [
     {
@@ -257,11 +282,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
               {/* Image Gallery / Slider */}
               {selectedHotel.images && selectedHotel.images.length > 0 ? (
-                <div className="relative h-48 sm:h-72 w-full rounded-2xl overflow-hidden bg-gray-100 group border border-black/5">
+                <div 
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  className="relative h-48 sm:h-72 w-full rounded-2xl overflow-hidden bg-gray-100 group border border-black/5 cursor-grab active:cursor-grabbing"
+                >
                   <img
                     src={selectedHotel.images[activeImgIdx]}
                     alt={`${selectedHotel.name} view`}
-                    className="w-full h-full object-cover transition-all duration-300"
+                    className="w-full h-full object-cover transition-all duration-300 pointer-events-none select-none"
                   />
 
                   {selectedHotel.images.length > 1 && (
@@ -301,18 +331,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
               )}
 
               {/* Details Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-gray-100 pb-4 text-xs font-semibold">
-                <div className="p-3 bg-gray-50 border border-black/5 rounded-xl">
-                  <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price / Night</span>
-                  <span className="text-base font-black text-black">₹{selectedHotel.price}</span>
+              <div className="grid grid-cols-3 gap-2.5 border-b border-gray-100 pb-4 text-[10px] sm:text-xs font-semibold">
+                <div className="p-3 bg-orange-50/40 border border-orange-100 rounded-2xl flex flex-col items-center justify-center text-center">
+                  <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Price / Night</span>
+                  <span className="text-sm sm:text-base font-black text-[#FF5F00]">₹{selectedHotel.price}</span>
                 </div>
-                <div className="p-3 bg-gray-50 border border-black/5 rounded-xl">
-                  <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Check-in</span>
-                  <span className="text-black font-extrabold">{selectedHotel.check_in || '12:00 PM'}</span>
+                <div className="p-3 bg-gray-50/50 border border-black/5 rounded-2xl flex flex-col items-center justify-center text-center">
+                  <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Check-in</span>
+                  <span className="text-xs sm:text-sm text-black font-extrabold">{selectedHotel.check_in || '12:00 PM'}</span>
                 </div>
-                <div className="p-3 bg-gray-50 border border-black/5 rounded-xl">
-                  <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Check-out</span>
-                  <span className="text-black font-extrabold">{selectedHotel.check_out || '11:00 AM'}</span>
+                <div className="p-3 bg-gray-50/50 border border-black/5 rounded-2xl flex flex-col items-center justify-center text-center">
+                  <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Check-out</span>
+                  <span className="text-xs sm:text-sm text-black font-extrabold">{selectedHotel.check_out || '11:00 AM'}</span>
                 </div>
               </div>
 
@@ -360,30 +390,42 @@ export default function Hotels({ currentCity, openBookingModal }) {
               )}
 
               {/* Rules & Cancellation */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-4">
                 {selectedHotel.rules && Object.keys(selectedHotel.rules).length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <h4 className="text-xs font-black uppercase text-black tracking-wider">House Rules</h4>
-                    <div className="space-y-1.5 text-xs text-gray-600 font-semibold">
-                      {Object.entries(selectedHotel.rules).map(([key, val]) => (
-                        <div key={key} className="flex items-center gap-2">
-                          {val ? (
-                            <Check size={14} className="text-emerald-500 shrink-0" />
-                          ) : (
-                            <X size={14} className="text-rose-500 shrink-0" />
-                          )}
-                          <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 font-semibold">
+                      {Object.entries(selectedHotel.rules).map(([key, val]) => {
+                        const labelMap = {
+                          unmarried_couples: 'Couples Allowed',
+                          pets: 'Pets Allowed',
+                          smoking: 'Smoking Allowed',
+                          id_required: 'Govt ID Required',
+                          min_age_18: '18+ Age Limit',
+                          alcohol_allowed: 'Alcohol Allowed',
+                          visitors_allowed: 'Outside Visitors'
+                        };
+                        const ruleLabel = labelMap[key] || key.replace(/_/g, ' ');
+                        return (
+                          <div key={key} className="flex items-center gap-1.5 p-1.5 bg-slate-50/50 rounded-lg border border-black/5">
+                            {val ? (
+                              <Check size={12} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+                            ) : (
+                              <X size={12} className="text-rose-600 shrink-0 stroke-[2.5]" />
+                            )}
+                            <span className="truncate text-[10px] sm:text-xs">{ruleLabel}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-2 text-left">
                   <h4 className="text-xs font-black uppercase text-black tracking-wider">Cancellation Policy</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed font-semibold">
+                  <div className="p-3.5 bg-amber-50/40 border border-amber-200/50 rounded-2xl text-[11px] text-amber-800 leading-relaxed font-semibold">
                     {selectedHotel.cancellation_policy || 'No refund within 24 hours of check-in.'}
-                  </p>
+                  </div>
                 </div>
               </div>
 

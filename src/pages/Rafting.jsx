@@ -81,6 +81,31 @@ export default function Rafting({ currentCity, openBookingModal }) {
   const [activeFaq, setActiveFaq] = useState(null);
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
 
+  // Swipe gesture support
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    if (isLeftSwipe && selectedStretch?.images?.length > 1) {
+      setCurrentImgIdx(prev => (prev + 1) % selectedStretch.images.length);
+    } else if (isRightSwipe && selectedStretch?.images?.length > 1) {
+      setCurrentImgIdx(prev => (prev - 1 + selectedStretch.images.length) % selectedStretch.images.length);
+    }
+  };
+
   useEffect(() => {
     const fetchRafting = async () => {
       setLoading(true);
@@ -314,7 +339,12 @@ export default function Rafting({ currentCity, openBookingModal }) {
               </div>
 
               {/* Slider / Image Gallery */}
-              <div className="h-48 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-black/10 group">
+              <div 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className="h-48 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-black/10 group cursor-grab active:cursor-grabbing"
+              >
                 <AnimatePresence mode="wait">
                   <motion.img 
                     key={currentImgIdx}
@@ -324,7 +354,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="w-full h-full object-cover absolute inset-0"
+                    className="w-full h-full object-cover absolute inset-0 pointer-events-none select-none"
                   />
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35" />
