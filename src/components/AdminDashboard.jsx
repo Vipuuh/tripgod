@@ -7,6 +7,39 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
+const STANDARD_ADVENTURE_NAMES = {
+  rafting: [
+    "12 KM Rafting",
+    "16 KM Rafting",
+    "24 KM Rafting",
+    "36 KM Rafting"
+  ],
+  bungee: [
+    "117M Jumps with DSLR Video",
+    "117M Jumps (Without Video)",
+    "111M Bungee Jump with DSLR Video",
+    "Combo: Bungee Jump (111M) + Giant Swing (113M) with Video",
+    "Rooftop Bungee Jump (111M) (Without Video)",
+    "Couple Bungee Jump with DSLR Video"
+  ],
+  swing: [
+    "GIANT SWING RISHIKESH",
+    "GIANT SWING COUPLE RISHIKESH"
+  ],
+  paragliding: [
+    "PARAGLIDING IN RISHIKESH",
+    "PARAGLIDING 15-20 MINS TANDEM"
+  ],
+  zipline: [
+    "ZIPLINE OVER GANGA RISHIKESH",
+    "GANGA ZIPLINE SOLO"
+  ],
+  camping: [
+    "RIVERSIDE CAMPING RISHIKESH",
+    "SWISS LUXURY CAMPING SHIVPURI"
+  ]
+};
+
 export default function AdminDashboard({ setRoute }) {
   // Authentication States
   const [isAdmin, setIsAdmin] = useState(false);
@@ -18,6 +51,7 @@ export default function AdminDashboard({ setRoute }) {
 
   // Active Tab
   const [activeTab, setActiveTab] = useState('analytics');
+  const [adventureTypeFilter, setAdventureTypeFilter] = useState('all');
 
   // Database Resource States
   const [cities, setCities] = useState([]);
@@ -227,9 +261,9 @@ export default function AdminDashboard({ setRoute }) {
     }
   };
 
-  // Delete Rafting Stretch Handler (Deletes all operator rows for a stretch)
-  const handleDeleteRaftingStretch = async (groupedItem) => {
-    const confirmMsg = `Are you sure you want to delete the ${groupedItem.name} and all its ${groupedItem.operators.length} operators?`;
+  // Delete Rafting/Activity Stretch Handler (Deletes all operator rows for a stretch/activity)
+  const handleDeleteActivityModel = async (groupedItem) => {
+    const confirmMsg = `Are you sure you want to delete "${groupedItem.name}" and all its ${groupedItem.operators.length} operators?`;
     if (!window.confirm(confirmMsg)) return;
     try {
       const idsToDelete = groupedItem.operators.map(op => op.id);
@@ -241,9 +275,23 @@ export default function AdminDashboard({ setRoute }) {
     }
   };
 
+  // Delete Tour Model Handler (Deletes all operator rows for a tour)
+  const handleDeleteTourModel = async (groupedItem) => {
+    const confirmMsg = `Are you sure you want to delete the tour package "${groupedItem.name}" and all its ${groupedItem.operators.length} operators?`;
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      const idsToDelete = groupedItem.operators.map(op => op.id);
+      const { error } = await supabase.from('tours').delete().in('id', idsToDelete);
+      if (error) throw error;
+      fetchAllData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   // Delete Bike Model Handler (Deletes all vendor listings for a bike name/model)
   const handleDeleteBikeModel = async (groupedItem) => {
-    const confirmMsg = `Are you sure you want to delete ${groupedItem.name} and all its ${groupedItem.operators.length} vendors?`;
+    const confirmMsg = `Are you sure you want to delete "${groupedItem.name}" and all its ${groupedItem.operators.length} vendors?`;
     if (!window.confirm(confirmMsg)) return;
     try {
       const idsToDelete = groupedItem.operators.map(op => op.id);
@@ -417,7 +465,7 @@ export default function AdminDashboard({ setRoute }) {
               { id: 'analytics', label: 'Analytics', icon: Activity },
               { id: 'bookings', label: 'Bookings', icon: ShoppingBag },
               { id: 'hotels', label: 'Hotels', icon: Building2 },
-              { id: 'rafting', label: 'Rafting Packages', icon: Waves },
+              { id: 'adventures', label: 'Adventure Packages', icon: Waves },
               { id: 'bikes', label: 'Bike Rentals', icon: Bike },
               { id: 'tours', label: 'Tour Packages', icon: MapPinned },
               { id: 'cities', label: 'Cities List', icon: MapPin },
@@ -465,22 +513,43 @@ export default function AdminDashboard({ setRoute }) {
             <div>
               <span className="text-[10px] font-black text-accent uppercase tracking-widest">Control Panel</span>
               <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase font-display mt-1">
-                {activeTab} Management
+                {activeTab === 'adventures' ? 'Adventure Packages' : `${activeTab} Management`}
               </h1>
             </div>
 
             {/* Sub-actions based on tab */}
-            {['hotels', 'rafting', 'bikes', 'tours'].includes(activeTab) && (
-              <button
-                onClick={() => {
-                  setEditingItem({ type: activeTab, data: null });
-                  setShowFormModal(true);
-                }}
-                className="py-3 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:scale-102 transition-all border-none cursor-pointer flex items-center gap-1.5"
-              >
-                <Plus size={16} /> <span>Add Listing</span>
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {activeTab === 'adventures' && (
+                <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300">
+                  <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Type:</span>
+                  <select
+                    value={adventureTypeFilter}
+                    onChange={(e) => setAdventureTypeFilter(e.target.value)}
+                    className="bg-transparent border-none text-white text-xs font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All Adventures</option>
+                    <option value="rafting">Rafting</option>
+                    <option value="bungee">Bungee Jumping</option>
+                    <option value="swing">Giant Swing</option>
+                    <option value="paragliding">Paragliding</option>
+                    <option value="zipline">Ganga Zipline</option>
+                    <option value="camping">Camping</option>
+                  </select>
+                </div>
+              )}
+
+              {['hotels', 'adventures', 'bikes', 'tours'].includes(activeTab) && (
+                <button
+                  onClick={() => {
+                    setEditingItem({ type: activeTab, data: null });
+                    setShowFormModal(true);
+                  }}
+                  className="py-3 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:scale-102 transition-all border-none cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus size={16} /> <span>Add Listing</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* =================================================================
@@ -724,17 +793,21 @@ export default function AdminDashboard({ setRoute }) {
             </div>
           )}
 
-          {/* =================================================================
-              TAB CONTENT: LISTINGS (Hotels, Rafting, Bikes, Tours)
-              ================================================================= */}
-          {['hotels', 'rafting', 'bikes', 'tours'].includes(activeTab) && (
+          {['hotels', 'adventures', 'bikes', 'tours'].includes(activeTab) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Render items based on activeTab */}
               {(() => {
                 const list = 
                   activeTab === 'hotels' ? hotels :
-                  activeTab === 'rafting' ? groupRaftingByDistance(raftingList) :
-                  activeTab === 'bikes' ? groupBikesByName(bikesList) : toursList;
+                  activeTab === 'adventures' ? (() => {
+                    let filtered = raftingList;
+                    if (adventureTypeFilter !== 'all') {
+                      filtered = raftingList.filter(item => (item.activity_type || 'rafting') === adventureTypeFilter);
+                    }
+                    return groupActivitiesByName(filtered);
+                  })() :
+                  activeTab === 'bikes' ? groupBikesByName(bikesList) :
+                  activeTab === 'tours' ? groupToursByName(toursList) : [];
 
                 if (list.length === 0) {
                   return (
@@ -756,19 +829,26 @@ export default function AdminDashboard({ setRoute }) {
                         <div className="h-44 bg-slate-900 relative">
                           <img src={thumbnail} alt={item.name} className="w-full h-full object-cover" />
                           <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-xs text-accent text-xs font-black py-0.5 px-2.5 rounded border border-accent/25">
-                            {['rafting', 'bikes'].includes(activeTab) ? `From ₹${item.price}` : (item.price === 0 ? 'Free' : `₹${item.price}`)}
+                            {['adventures', 'bikes', 'tours'].includes(activeTab) ? `From ₹${item.price}` : (item.price === 0 ? 'Free' : `₹${item.price}`)}
                           </div>
                         </div>
 
                         {/* Text info */}
                         <div className="p-4 space-y-2">
-                          <h4 className="font-bold text-base text-white font-display truncate leading-snug pr-4">{item.name}</h4>
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="font-bold text-base text-white font-display truncate leading-snug pr-4">{item.name}</h4>
+                            {activeTab === 'adventures' && (
+                              <span className="inline-block text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-black px-2 py-0.5 rounded uppercase shrink-0">
+                                {item.activity_type || 'rafting'}
+                              </span>
+                            )}
+                          </div>
                           
                           <div className="flex flex-wrap gap-1.5 pt-1">
                             <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-slate-400 font-bold px-2 py-0.5 rounded">
                               <MapPin size={10} /> {city?.name || 'No City'}
                             </span>
-                            {['rafting', 'bikes'].includes(activeTab) ? (
+                            {['adventures', 'bikes', 'tours'].includes(activeTab) ? (
                               <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
                                 <Users size={10} /> {item.operators?.length || 0} Vendors
                               </span>
@@ -779,7 +859,7 @@ export default function AdminDashboard({ setRoute }) {
                             )}
                           </div>
                           
-                          {['rafting', 'bikes'].includes(activeTab) && item.operators && (
+                          {['adventures', 'bikes', 'tours'].includes(activeTab) && item.operators && (
                             <div className="text-[9px] text-slate-500 font-medium pt-1 max-h-16 overflow-y-auto no-scrollbar">
                               <span className="font-bold text-slate-400">Crews/Vendors: </span>
                               {item.operators.map((op, idx) => {
@@ -811,9 +891,9 @@ export default function AdminDashboard({ setRoute }) {
                         >
                           <Edit size={14} />
                         </button>
-                        {activeTab === 'rafting' ? (
+                        {activeTab === 'adventures' ? (
                           <button
-                            onClick={() => handleDeleteRaftingStretch(item)}
+                            onClick={() => handleDeleteActivityModel(item)}
                             className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
                           >
                             <Trash2 size={14} />
@@ -821,6 +901,13 @@ export default function AdminDashboard({ setRoute }) {
                         ) : activeTab === 'bikes' ? (
                           <button
                             onClick={() => handleDeleteBikeModel(item)}
+                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        ) : activeTab === 'tours' ? (
+                          <button
+                            onClick={() => handleDeleteTourModel(item)}
                             className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
                           >
                             <Trash2 size={14} />
@@ -1288,12 +1375,13 @@ export default function AdminDashboard({ setRoute }) {
 function ListingForm({ type, data, cities, vendors, onClose }) {
   const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({});
-  const [raftingOperators, setRaftingOperators] = useState({});
+  const [activitiesOperators, setActivitiesOperators] = useState({});
   const [bikesOperators, setBikesOperators] = useState({});
+  const [toursOperators, setToursOperators] = useState({});
 
-  // Initialize rafting operators state
+  // Initialize adventures/activities operators state (covers rafting, bungee, swing, paragliding, zipline, camping)
   useEffect(() => {
-    if (type === 'rafting') {
+    if (['rafting', 'adventures', 'bungee', 'swing', 'paragliding', 'zipline', 'camping'].includes(type)) {
       const initialOps = {};
       
       // Initialize all vendors
@@ -1322,7 +1410,42 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         });
       }
       
-      setRaftingOperators(initialOps);
+      setActivitiesOperators(initialOps);
+    }
+  }, [type, data, vendors]);
+
+  // Initialize tours operators state
+  useEffect(() => {
+    if (type === 'tours') {
+      const initialOps = {};
+      
+      // Initialize all vendors
+      vendors.forEach(v => {
+        initialOps[v.id] = {
+          enabled: false,
+          price: '',
+          original_price: '',
+          commission_percentage: '',
+          whatsapp_number: v.whatsapp || '',
+          id: null
+        };
+      });
+
+      // If editing, populate from existing operators
+      if (data && data.operators) {
+        data.operators.forEach(op => {
+          initialOps[op.vendor_id] = {
+            enabled: true,
+            price: op.price || '',
+            original_price: op.original_price !== null && op.original_price !== undefined ? op.original_price : '',
+            commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
+            whatsapp_number: op.whatsapp_number || op.vendors?.whatsapp || '',
+            id: op.id
+          };
+        });
+      }
+      
+      setToursOperators(initialOps);
     }
   }, [type, data, vendors]);
 
@@ -1372,7 +1495,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       // Set defaults for empty forms
       const defaults = {
         city_id: cities.length > 0 ? cities[0].id : '',
-        vendor_id: vendors.length > 0 ? vendors.filter(v => v.category === (type === 'bikes' ? 'Bike Rental' : type === 'hotels' ? 'Hotel' : type === 'rafting' ? 'Rafting' : 'Tour'))[0]?.id || vendors[0]?.id : '',
+        vendor_id: vendors.length > 0 ? vendors.filter(v => v.category === (type === 'bikes' ? 'Bike Rental' : type === 'hotels' ? 'Hotel' : ['rafting', 'adventures'].includes(type) ? 'Rafting' : 'Tour'))[0]?.id || vendors[0]?.id : '',
         name: '',
         description: '',
         price: 0,
@@ -1392,7 +1515,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.amenities = { wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false, river_view: false, room_service: false, power_backup: false, geyser: false };
         defaults.rules = { unmarried_couples: false, pets: false, smoking: false, id_required: false, min_age_18: false, alcohol_allowed: false, visitors_allowed: false };
         defaults.landmarks = [];
-      } else if (type === 'rafting') {
+      } else if (['rafting', 'adventures'].includes(type)) {
+        defaults.activity_type = 'rafting';
         defaults.route = '';
         defaults.distance_km = 12;
         defaults.duration = '2 Hours';
@@ -1421,8 +1545,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     e.preventDefault();
     setFormLoading(true);
     try {
-      if (type === 'rafting') {
-        const enabledOps = Object.entries(raftingOperators)
+      if (['rafting', 'adventures'].includes(type)) {
+        const enabledOps = Object.entries(activitiesOperators)
           .filter(([_, op]) => op.enabled)
           .map(([vendorId, op]) => ({
             vendorId,
@@ -1434,27 +1558,28 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           }));
 
         if (enabledOps.length === 0) {
-          throw new Error('Please enable at least one operator for this rafting stretch.');
+          throw new Error('Please enable at least one operator for this adventure package.');
         }
 
         const commonProps = {
           city_id: formData.city_id,
-          name: formData.name || `${formData.distance_km} KM Rafting Stretch`,
+          name: formData.name || (formData.activity_type === 'rafting' ? `${formData.distance_km} KM Rafting Stretch` : 'Adventure Spot'),
           description: formData.description || '',
           route: formData.route || '',
-          distance_km: Number(formData.distance_km) || 12,
-          duration: formData.duration || '2 Hours',
+          distance_km: Number(formData.distance_km) || 0,
+          duration: formData.duration || '',
           pickup_included: !!formData.pickup_included,
           drop_included: !!formData.drop_included,
           age_limit: Number(formData.age_limit) || 12,
           images: formData.images || [],
           inclusions: formData.inclusions || [],
           exclusions: formData.exclusions || [],
-          cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.'
+          cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
+          activity_type: formData.activity_type || 'rafting'
         };
 
         if (data) {
-          // Editing existing stretch
+          // Editing existing stretch/activity
           const existingOpsMap = {};
           data.operators.forEach(op => {
             existingOpsMap[op.vendor_id] = op.id;
@@ -1508,7 +1633,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             if (insertError) throw insertError;
           }
         } else {
-          // Creating new stretch
+          // Creating new stretch/activity
           const recordsToInsert = enabledOps.map(op => ({
             ...commonProps,
             vendor_id: op.vendorId,
@@ -1615,6 +1740,103 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           if (insertError) throw insertError;
         }
 
+      }
+
+      if (type === 'tours') {
+        const enabledOps = Object.entries(toursOperators)
+          .filter(([_, op]) => op.enabled)
+          .map(([vendorId, op]) => ({
+            vendorId,
+            price: Number(op.price),
+            originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
+            commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
+            whatsappNumber: op.whatsapp_number || null,
+            id: op.id
+          }));
+
+        if (enabledOps.length === 0) {
+          throw new Error('Please enable at least one operator for this tour package.');
+        }
+
+        const commonProps = {
+          city_id: formData.city_id,
+          name: formData.name,
+          description: formData.description || '',
+          duration: formData.duration || '3 Days / 2 Nights',
+          itinerary: formData.itinerary || [],
+          inclusions: formData.inclusions || [],
+          exclusions: formData.exclusions || [],
+          cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
+          images: formData.images || []
+        };
+
+        if (data) {
+          const existingOpsMap = {};
+          data.operators.forEach(op => {
+            existingOpsMap[op.vendor_id] = op.id;
+          });
+
+          const opsToInsert = [];
+          const opsToUpdate = [];
+          const opsToDelete = [];
+
+          enabledOps.forEach(op => {
+            const existingId = existingOpsMap[op.vendorId];
+            if (existingId) {
+              opsToUpdate.push({
+                id: existingId,
+                ...commonProps,
+                vendor_id: op.vendorId,
+                price: op.price,
+                original_price: op.originalPrice,
+                commission_percentage: op.commissionPercentage,
+                contact_number: op.whatsappNumber
+              });
+              delete existingOpsMap[op.vendorId];
+            } else {
+              opsToInsert.push({
+                ...commonProps,
+                vendor_id: op.vendorId,
+                price: op.price,
+                original_price: op.originalPrice,
+                commission_percentage: op.commissionPercentage,
+                contact_number: op.whatsappNumber
+              });
+            }
+          });
+
+          Object.values(existingOpsMap).forEach(id => {
+            opsToDelete.push(id);
+          });
+
+          if (opsToDelete.length > 0) {
+            const { error: deleteError } = await supabase.from('tours').delete().in('id', opsToDelete);
+            if (deleteError) throw deleteError;
+          }
+
+          if (opsToUpdate.length > 0) {
+            const { error: updateError } = await supabase.from('tours').upsert(opsToUpdate);
+            if (updateError) throw updateError;
+          }
+
+          if (opsToInsert.length > 0) {
+            const { error: insertError } = await supabase.from('tours').insert(opsToInsert);
+            if (insertError) throw insertError;
+          }
+        } else {
+          const recordsToInsert = enabledOps.map(op => ({
+            ...commonProps,
+            vendor_id: op.vendorId,
+            price: op.price,
+            original_price: op.originalPrice,
+            commission_percentage: op.commissionPercentage,
+            contact_number: op.whatsappNumber
+          }));
+
+          const { error: insertError } = await supabase.from('tours').insert(recordsToInsert);
+          if (insertError) throw insertError;
+        }
+
         onClose();
         return;
       }
@@ -1664,7 +1886,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     <form onSubmit={handleSubmit} className="space-y-6 text-xs text-left">
       {/* 1. Meta Details (City and Vendor selection) */}
       <div className="grid grid-cols-2 gap-4">
-        <div className={`space-y-1 ${['rafting', 'bikes'].includes(type) ? 'col-span-2' : ''}`}>
+        <div className={`space-y-1 ${['rafting', 'adventures', 'bikes', 'tours'].includes(type) ? 'col-span-2' : ''}`}>
           <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Target City</label>
           <select
             value={formData.city_id}
@@ -1677,7 +1899,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </select>
         </div>
 
-        {!['rafting', 'bikes'].includes(type) && (
+        {!['rafting', 'adventures', 'bikes', 'tours'].includes(type) && (
           <div className="space-y-1">
             <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Partner Vendor</label>
             <select
@@ -1695,18 +1917,88 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
       {/* 2. Basic details */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1 col-span-2">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Listing Title</label>
-          <input
-            type="text"
-            required
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-          />
-        </div>
+        {type === 'adventures' ? (
+          <div className="space-y-1 col-span-2">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Adventure Name</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <select
+                  value={
+                    (STANDARD_ADVENTURE_NAMES[formData.activity_type || 'rafting'] || []).includes(formData.name)
+                      ? formData.name
+                      : (formData.name ? 'custom' : '')
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'custom') {
+                      setFormData(prev => ({ ...prev, name: '' }));
+                    } else {
+                      setFormData(prev => ({ ...prev, name: val }));
+                    }
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none font-bold"
+                >
+                  <option value="" disabled>-- Select Adventure Name --</option>
+                  {(STANDARD_ADVENTURE_NAMES[formData.activity_type || 'rafting'] || []).map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                  <option value="custom">Custom (Type manually...)</option>
+                </select>
+              </div>
+              {(! (STANDARD_ADVENTURE_NAMES[formData.activity_type || 'rafting'] || []).includes(formData.name) || formData.name === '') && (
+                <div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter custom adventure name"
+                    value={formData.name || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1 col-span-2">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Listing Title</label>
+            <input
+              type="text"
+              required
+              value={formData.name || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+            />
+          </div>
+        )}
 
-        {!['rafting', 'bikes'].includes(type) && (
+        {type === 'adventures' && (
+          <div className="space-y-1 col-span-2 pb-2">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Adventure Type</label>
+            <select
+              value={formData.activity_type || 'rafting'}
+              onChange={(e) => {
+                const nextType = e.target.value;
+                const defaultName = STANDARD_ADVENTURE_NAMES[nextType]?.[0] || '';
+                setFormData(prev => ({ 
+                  ...prev, 
+                  activity_type: nextType,
+                  name: defaultName
+                }));
+              }}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none font-bold"
+            >
+              <option value="rafting">Rafting</option>
+              <option value="bungee">Bungee Jumping</option>
+              <option value="swing">Giant Swing</option>
+              <option value="paragliding">Paragliding</option>
+              <option value="zipline">Ganga Zipline</option>
+              <option value="camping">Camping</option>
+            </select>
+          </div>
+        )}
+
+        {!['rafting', 'adventures', 'bikes', 'tours'].includes(type) && (
           <>
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Price (₹)</label>
@@ -1967,28 +2259,32 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         </div>
       )}
 
-      {/* ----------------- RAFTING FIELDS ----------------- */}
-      {type === 'rafting' && (
+      {/* ----------------- ADVENTURES FIELDS ----------------- */}
+      {['rafting', 'adventures'].includes(type) && (
         <div className="space-y-4 border-t border-slate-900 pt-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Route</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                {formData.activity_type === 'rafting' ? 'Route' : 'Location/Detail'}
+              </label>
               <input
                 type="text"
                 required
                 value={formData.route || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, route: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder="e.g. Shivpuri to Nim Beach"
+                placeholder={formData.activity_type === 'rafting' ? 'e.g. Shivpuri to Nim Beach' : 'e.g. 117 Metres / Shivpuri Hills'}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Distance (KM)</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                {formData.activity_type === 'rafting' ? 'Distance (KM)' : 'Height/Distance value'}
+              </label>
               <input
                 type="number"
                 required
-                value={formData.distance_km || 12}
+                value={formData.distance_km || 0}
                 onChange={(e) => setFormData(prev => ({ ...prev, distance_km: Number(e.target.value) }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
               />
@@ -1999,9 +2295,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               <input
                 type="text"
                 required
-                value={formData.duration || '2 Hours'}
+                value={formData.duration || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                placeholder="e.g. 2 Hours / 3 Days"
               />
             </div>
           </div>
@@ -2039,16 +2336,89 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </div>
 
+          {/* Inclusions & Exclusions */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Inclusions Dynamic List */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Inclusions</label>
+                <button
+                  type="button"
+                  onClick={() => addArrayItem('inclusions')}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add
+                </button>
+              </div>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {(formData.inclusions || []).map((inc, idx) => (
+                  <div key={idx} className="flex gap-1.5">
+                    <input
+                      type="text"
+                      required
+                      value={inc}
+                      onChange={(e) => handleArrayChange('inclusions', idx, e.target.value)}
+                      className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-[11px] focus:outline-none"
+                      placeholder="Inclusion item"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem('inclusions', idx)}
+                      className="p-1 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Exclusions Dynamic List */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Exclusions</label>
+                <button
+                  type="button"
+                  onClick={() => addArrayItem('exclusions')}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add
+                </button>
+              </div>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {(formData.exclusions || []).map((exc, idx) => (
+                  <div key={idx} className="flex gap-1.5">
+                    <input
+                      type="text"
+                      required
+                      value={exc}
+                      onChange={(e) => handleArrayChange('exclusions', idx, e.target.value)}
+                      className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-[11px] focus:outline-none"
+                      placeholder="Exclusion item"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem('exclusions', idx)}
+                      className="p-1 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Operators & Pricing */}
           <div className="space-y-3 pt-4 border-t border-slate-900">
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Operators & Pricing</label>
-              <p className="text-[10px] text-gray-500">Enable/disable operators and set their custom prices for this stretch.</p>
+              <p className="text-[10px] text-gray-500">Enable/disable operators and set their custom prices for this adventure package.</p>
             </div>
             
             <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
-              {vendors.map(vendor => {
-                const opState = raftingOperators[vendor.id] || { enabled: false, price: '', original_price: '', commission_percentage: '', whatsapp_number: '' };
+              {getVendorsForType(formData.activity_type || 'rafting', vendors).map(vendor => {
+                const opState = activitiesOperators[vendor.id] || { enabled: false, price: '', original_price: '', commission_percentage: '', whatsapp_number: '' };
                 return (
                   <div key={vendor.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950 hover:bg-slate-900/50 transition-colors">
                     {/* Left: Checkbox and Vendor Name */}
@@ -2057,12 +2427,14 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                         type="checkbox"
                         checked={opState.enabled}
                         onChange={(e) => {
-                          setRaftingOperators(prev => ({
+                          setActivitiesOperators(prev => ({
                             ...prev,
                             [vendor.id]: {
                               ...prev[vendor.id],
                               enabled: e.target.checked,
                               price: prev[vendor.id]?.price || '',
+                              original_price: prev[vendor.id]?.original_price || '',
+                              commission_percentage: prev[vendor.id]?.commission_percentage || '',
                               whatsapp_number: prev[vendor.id]?.whatsapp_number || vendor.whatsapp || ''
                             }
                           }));
@@ -2085,7 +2457,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                             required
                             value={opState.price}
                             onChange={(e) => {
-                              setRaftingOperators(prev => ({
+                              setActivitiesOperators(prev => ({
                                 ...prev,
                                 [vendor.id]: {
                                   ...prev[vendor.id],
@@ -2104,7 +2476,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                             type="number"
                             value={opState.original_price}
                             onChange={(e) => {
-                              setRaftingOperators(prev => ({
+                              setActivitiesOperators(prev => ({
                                 ...prev,
                                 [vendor.id]: {
                                   ...prev[vendor.id],
@@ -2123,7 +2495,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                             type="number"
                             value={opState.commission_percentage}
                             onChange={(e) => {
-                              setRaftingOperators(prev => ({
+                              setActivitiesOperators(prev => ({
                                 ...prev,
                                 [vendor.id]: {
                                   ...prev[vendor.id],
@@ -2142,7 +2514,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                             type="text"
                             value={opState.whatsapp_number}
                             onChange={(e) => {
-                              setRaftingOperators(prev => ({
+                              setActivitiesOperators(prev => ({
                                 ...prev,
                                 [vendor.id]: {
                                   ...prev[vendor.id],
@@ -2157,7 +2529,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                       </div>
                     ) : (
                       <div className="text-[10px] text-slate-500 font-medium italic flex-grow text-right pr-4">
-                        Disabled (not offering this stretch)
+                        Disabled (not offering this package)
                       </div>
                     )}
                   </div>
@@ -2363,6 +2735,140 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
                 placeholder="e.g. 9837371137"
               />
+            </div>
+          </div>
+
+          {/* Operators & Pricing */}
+          <div className="space-y-3 pt-4 border-t border-slate-900">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Operators & Pricing</label>
+              <p className="text-[10px] text-gray-500">Enable/disable operators and set their custom prices, original prices, commission overrides, and contact overrides for this tour package.</p>
+            </div>
+            
+            <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
+              {vendors
+                .filter(v => v.category === 'Tour')
+                .map(vendor => {
+                  const opState = toursOperators[vendor.id] || { enabled: false, price: '', original_price: '', commission_percentage: '', whatsapp_number: '' };
+                  return (
+                    <div key={vendor.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950 hover:bg-slate-900/50 transition-colors">
+                      {/* Left: Checkbox and Vendor Name */}
+                      <div className="flex items-center gap-3 min-w-[200px]">
+                        <input
+                          type="checkbox"
+                          checked={opState.enabled}
+                          onChange={(e) => {
+                            setToursOperators(prev => ({
+                              ...prev,
+                              [vendor.id]: {
+                                ...prev[vendor.id],
+                                enabled: e.target.checked,
+                                price: prev[vendor.id]?.price || '',
+                                original_price: prev[vendor.id]?.original_price || '',
+                                commission_percentage: prev[vendor.id]?.commission_percentage || '',
+                                whatsapp_number: prev[vendor.id]?.whatsapp_number || vendor.whatsapp || ''
+                              }
+                            }));
+                          }}
+                          className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                        />
+                        <div>
+                          <span className="font-bold text-xs text-white block">{vendor.name}</span>
+                          <span className="text-[9px] text-slate-500 font-semibold">{vendor.landmark || vendor.address || 'Rishikesh'}</span>
+                        </div>
+                      </div>
+
+                      {/* Right: Price inputs (only editable if enabled) */}
+                      {opState.enabled ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-grow">
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹)</label>
+                            <input
+                              type="number"
+                              required
+                              value={opState.price}
+                              onChange={(e) => {
+                                setToursOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    price: Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Orig Price (₹)</label>
+                            <input
+                              type="number"
+                              placeholder="Strikethrough"
+                              value={opState.original_price}
+                              onChange={(e) => {
+                                setToursOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    original_price: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Comm Override (%)</label>
+                            <input
+                              type="number"
+                              placeholder={`Default ${vendor.commission_percentage}%`}
+                              value={opState.commission_percentage}
+                              onChange={(e) => {
+                                setToursOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">WhatsApp Contact</label>
+                            <input
+                              type="text"
+                              value={opState.whatsapp_number}
+                              onChange={(e) => {
+                                setToursOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    whatsapp_number: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-[10px] text-slate-600 font-semibold italic flex-grow text-right py-2 pr-4">
+                          Operator disabled for this tour
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              {vendors.filter(v => v.category === 'Tour').length === 0 && (
+                <div className="p-4 text-center text-xs text-slate-500">
+                  No vendors found with category "Tour Package". Please create one first.
+                </div>
+              )}
             </div>
           </div>
         </div>

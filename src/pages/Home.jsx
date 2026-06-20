@@ -388,10 +388,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   ];
 
   const stats = [
-    { label: 'Happy Customers', value: '500+' },
-    { label: 'Adventure Types', value: '4' },
-    { label: 'Refund Guarantee', value: '100%' },
-    { label: 'WhatsApp Support', value: '24/7' }
+    { label: 'Happy Customers', value: '12,000+' },
+    { label: 'Partner Vendors', value: '50+' },
+    { label: 'Adventure Types', value: '15+' },
+    { label: 'Refund Guarantee', value: '100%' }
   ];
 
   const rentalBikes = [
