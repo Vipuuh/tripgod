@@ -484,11 +484,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   const faqs = [
     {
       q: "How much advance payment is required to secure a booking?",
-      a: "You only need to pay a 10% advance online using UPI, credit cards, or net banking. The remaining 90% balance can be paid directly in cash or UPI at the venue or rental desk before starting your activity."
+      a: "You only need to pay a small partial advance online (which varies by activity) using UPI, cards, or net banking. The remaining balance can be paid directly in cash or UPI at the venue before starting your activity."
     },
     {
       q: "What is your refund and cancellation policy?",
-      a: "If you cancel 24 hours or more before your scheduled trip time, your 10% booking advance is 100% refundable, no questions asked. Cancellations made within 24 hours of the trip are non-refundable."
+      a: "If you cancel 24 hours or more before your scheduled trip time, your booking advance is 100% refundable, no questions asked. Cancellations made within 24 hours of the trip are non-refundable."
     },
     {
       q: "Is swimming mandatory for river rafting?",
@@ -611,7 +611,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-4xl sm:text-6xl md:text-7xl font-black text-white leading-tight font-display tracking-tight uppercase"
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight font-display tracking-tight uppercase px-2"
           >
             CHASE THE WILD RUSH <br />
             IN <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF7A00] to-[#FF3E00] drop-shadow-[0_2px_10px_rgba(255,95,0,0.2)] font-black">RISHIKESH</span>
@@ -621,14 +621,14 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-medium"
+            className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-medium px-4"
           >
-            Rishikesh's #1 adventure booking platform. Book bungee jumps, river rafting, paragliding & camps at just <strong className="text-accent">10% advance</strong> with <strong className="text-white">100% refund guarantee</strong>.
+            Rishikesh's #1 adventure booking platform. Book bungee jumps, river rafting, paragliding & camps with <strong className="text-[#FF6B00]">flexible advance options</strong> and <strong className="text-white">100% refund guarantee</strong>.
           </motion.p>
 
-          <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-center px-4">
+          <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-stretch md:items-center px-4">
             {/* Tab selection menu */}
-            <div className="w-full md:w-auto flex items-center gap-2 bg-black/60 backdrop-blur-md px-6 py-3 rounded-t-3xl border-t border-x border-white/10 overflow-x-auto no-scrollbar flex-nowrap">
+            <div className="w-full md:w-auto flex items-center gap-1.5 md:gap-2 bg-black/75 backdrop-blur-xl px-4 md:px-6 py-2.5 md:py-3.5 rounded-t-2xl md:rounded-t-3xl border-t border-x border-white/15 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center scroll-smooth">
               {[
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
                 { id: 'tours', label: 'Tours', icon: MapPinned },
@@ -642,7 +642,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   <button
                     key={tab.id}
                     onClick={() => setActiveSearchTab(tab.id)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 border-none cursor-pointer flex-shrink-0 ${
+                    className={`flex items-center gap-1.5 md:gap-2 px-3.5 md:px-5 py-2 md:py-2.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 border-none cursor-pointer flex-shrink-0 ${
                       isActive 
                         ? 'bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white shadow-[0_4px_15px_rgba(255,95,0,0.35)] scale-105' 
                         : 'text-gray-400 hover:text-white bg-transparent hover:bg-white/5'
@@ -656,7 +656,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             </div>
 
             {/* Tab contents (Glassmorphic box) */}
-            <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl rounded-tr-none p-6 md:p-8 shadow-[0_24px_50px_rgba(0,0,0,0.3)] border border-white/10 relative text-left">
+            <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl md:rounded-tr-none p-5 md:p-8 shadow-[0_24px_50px_rgba(0,0,0,0.3)] border border-white/10 relative text-left">
               
               {activeSearchTab === 'hotels' && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center pb-4 md:pb-0">
@@ -941,19 +941,19 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         className="bg-white/60 backdrop-blur-xl border-y border-black/5 py-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)] relative z-20"
       >
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto no-scrollbar pb-2 md:pb-0 px-2 md:px-0">
+          <div className="flex md:grid md:grid-cols-5 gap-4 overflow-x-auto no-scrollbar pb-3 md:pb-0 px-4 md:px-0 scroll-smooth snap-x snap-mandatory">
             {quickAccess.map((item, index) => {
               const Icon = item.icon;
               return (
                 <button 
                   key={index} 
                   onClick={() => setRoute(item.route)}
-                  className="flex-shrink-0 w-[100px] md:w-auto flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-white/80 border border-black/5 shadow-xs hover:border-[#FF5F00]/30 hover:bg-[#FF5F00]/5 transition-all duration-300 hover:scale-[1.03] group cursor-pointer"
+                  className="flex-shrink-0 w-[115px] md:w-auto flex flex-col items-center justify-center gap-3 p-5 rounded-2xl bg-gradient-to-br from-white/95 to-neutral-50/80 border border-neutral-200/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:border-[#FF5F00]/40 hover:bg-gradient-to-br hover:from-white hover:to-orange-50/30 hover:shadow-[0_12px_30px_rgba(255,95,0,0.08)] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.04] group cursor-pointer snap-align-start"
                 >
-                  <div className="text-[#FF5F00] group-hover:scale-110 transition-all duration-300 flex items-center justify-center h-12 w-12 rounded-2xl bg-orange-50/50 group-hover:bg-[#FF5F00]/10 border border-[#FF5F00]/5">
+                  <div className="text-[#FF5F00] flex items-center justify-center h-13 w-13 rounded-2xl bg-orange-50 border border-orange-100/50 group-hover:bg-gradient-to-br group-hover:from-[#FF5F00] group-hover:to-[#FF3E00] group-hover:text-white group-hover:shadow-[0_6px_15px_rgba(255,95,0,0.3)] transition-all duration-300">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <span className="font-black text-[10px] md:text-xs text-neutral-800 tracking-wider uppercase group-hover:text-[#FF5F00] transition-colors text-center font-display">
+                  <span className="font-extrabold text-[10px] md:text-xs text-neutral-700 tracking-widest uppercase group-hover:text-[#FF5F00] transition-colors text-center font-display mt-1">
                     {item.label}
                   </span>
                 </button>
@@ -1228,8 +1228,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     <CreditCard size={14} className="stroke-[2.5]" />
                   </div>
                   <div className="text-left font-sans">
-                    <h4 className="font-bold text-[10px] font-display tracking-wider text-black uppercase leading-tight">PAY 10% TO BOOK</h4>
-                    <p className="text-[9px] text-gray-500 font-semibold leading-none mt-0.5">Pay 90% balance at venue.</p>
+                    <h4 className="font-bold text-[10px] font-display tracking-wider text-black uppercase leading-tight">LOW ADVANCE PAYMENT</h4>
+                    <p className="text-[9px] text-gray-500 font-semibold leading-none mt-0.5">Pay dynamic advance & rest at venue.</p>
                   </div>
                 </div>
                 <span className="text-black/10 text-lg font-bold">•</span>
