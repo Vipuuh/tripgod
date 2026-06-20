@@ -3037,3 +3037,31 @@ const groupToursByName = (list) => {
   return Object.values(grouped);
 };
 
+// Utility: Filter vendors by adventure activity type
+const getVendorsForType = (activityType, vendorsList) => {
+  if (!vendorsList || vendorsList.length === 0) return [];
+  const typeLower = (activityType || '').toLowerCase();
+  
+  if (typeLower === 'rafting') {
+    return vendorsList.filter(v => v.category === 'Rafting');
+  }
+  if (typeLower === 'camping') {
+    return vendorsList.filter(v => v.category === 'Camping');
+  }
+  
+  const mappedCategory = 
+    typeLower === 'bungee' ? 'Bungee' :
+    typeLower === 'swing' ? 'Giant Swing' :
+    typeLower === 'paragliding' ? 'Paragliding' :
+    typeLower === 'zipline' ? 'Zipline' : '';
+    
+  if (mappedCategory) {
+    const filtered = vendorsList.filter(v => v.category === mappedCategory);
+    if (filtered.length > 0) return filtered;
+  }
+  
+  const fallback = vendorsList.filter(v => ['Rafting', 'Camping'].includes(v.category));
+  return fallback.length > 0 ? fallback : vendorsList;
+};
+
+
