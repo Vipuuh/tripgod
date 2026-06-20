@@ -89,7 +89,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
     const fetchBikes = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('bikes').select('*');
+        let query = supabase.from('bikes').select('*, vendors(name)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
@@ -175,8 +175,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
           <motion.div 
             variants={staggerContainer}
             initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-80px" }}
+            animate="show"
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
           >
             {vehicles.map((v) => (
@@ -196,11 +195,18 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 {/* Info */}
                 <div className="p-4 sm:p-5 space-y-3 flex-1 flex flex-col justify-between">
                   <div className="space-y-2">
-                    <div>
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
-                        {v.type}
-                      </span>
-                      <h3 className="text-base font-bold font-display text-black">{v.name}</h3>
+                    <div className="flex justify-between items-start gap-2">
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
+                          {v.type}
+                        </span>
+                        <h3 className="text-base font-bold font-display text-black">{v.name}</h3>
+                      </div>
+                      {v.vendors?.name && (
+                        <span className="text-[9px] bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] font-black px-2 py-0.5 rounded-md truncate max-w-[100px] shrink-0 mt-1">
+                          {v.vendors.name}
+                        </span>
+                      )}
                     </div>
  
                     <p className="text-xs text-gray-600 font-medium">{v.spec}</p>

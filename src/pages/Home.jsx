@@ -115,7 +115,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   const bookingActivitiesList = [
     {
       id: 'rafting-16',
-      name: 'River Rafting (16 KM)',
+      name: 'River Rafting',
       price: 1290,
       category: 'rafting',
       stretch: '16 KM (Shivpuri to Nim Beach)',
@@ -124,7 +124,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'bungee',
-      name: 'Bungee Jumping (117M)',
+      name: 'Bungee Jumping',
       price: 3500,
       category: 'bungee',
       icon: Zap,
@@ -132,7 +132,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'zipline',
-      name: 'Ganga Zipline Crossings',
+      name: 'Ganga Zipline',
       price: 2000,
       category: 'zipline',
       icon: Milestone,
@@ -140,7 +140,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'paragliding',
-      name: 'Tandem Paragliding',
+      name: 'Paragliding',
       price: 4500,
       category: 'paragliding',
       icon: Compass,
@@ -148,7 +148,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'swing',
-      name: 'Giant Swing (113M)',
+      name: 'Giant Swing',
       price: 3600,
       category: 'swing',
       icon: Zap,
@@ -156,7 +156,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'camping',
-      name: 'Riverside Camping',
+      name: 'Camping',
       price: 1800,
       category: 'camping',
       icon: Compass,
@@ -164,7 +164,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'bikerent',
-      name: 'Bike & Scooty Rentals',
+      name: 'Bike Rent',
       price: 500,
       category: 'bikerent',
       slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
@@ -173,7 +173,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'pickup',
-      name: 'Railway Station Pickup',
+      name: 'Cab / Pickup Drop',
       price: 0,
       category: 'pickup',
       slots: ['Morning Slot', 'Afternoon Slot', 'Evening Slot'],
@@ -182,7 +182,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     },
     {
       id: 'hotels',
-      name: 'Resort & Hotel Stays',
+      name: 'Hotels',
       price: 2200,
       category: 'hotels',
       icon: Star,
@@ -618,6 +618,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                           onClick={() => {
                             setSelectedActivityIdx(idx);
                             setIsActivityDropdownOpen(false);
+                            setPrefDate(bookingDate);
+                            setPrefGuests(bookingGuests);
+                            setRoute(item.route);
                           }}
                           className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition-colors duration-150 ${selectedActivityIdx === idx ? 'bg-[#FF6B00]/20 text-white' : 'hover:bg-white/5 text-gray-300 hover:text-white'}`}
                         >
@@ -824,8 +827,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         <motion.div 
           variants={staggerContainer}
           initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
+          animate="show"
           className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8"
         >
           {activities.map((act) => (

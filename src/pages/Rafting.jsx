@@ -85,7 +85,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
     const fetchRafting = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('rafting').select('*');
+        let query = supabase.from('rafting').select('*, vendors(name)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
@@ -201,8 +201,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
               <motion.div 
                 variants={staggerContainer}
                 initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: "-80px" }}
+                animate="show"
                 className="grid grid-cols-1 md:grid-cols-3 gap-8"
               >
                 {stretchesData.map((str) => (
@@ -230,10 +229,17 @@ export default function Rafting({ currentCity, openBookingModal }) {
                       
                       <div className="p-4 sm:p-5 space-y-3">
                         <div className="flex justify-between items-start">
-                          <span className="text-xl font-black font-display text-black">{str.km}</span>
-                          <span className={`text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded ${str.difficultyColor}`}>
-                            {str.difficulty}
-                          </span>
+                          <span className="text-xl font-black font-display text-black">{str.km || str.name}</span>
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={`text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded ${str.difficultyColor}`}>
+                              {str.difficulty}
+                            </span>
+                            {str.vendors?.name && (
+                              <span className="text-[9px] bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[120px]">
+                                {str.vendors.name}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         
                         <div className="space-y-0.5">
@@ -290,6 +296,11 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     </span>
                   </div>
                   <h1 className="text-xl md:text-2xl font-bold font-display text-black">{selectedStretch.name}</h1>
+                  {selectedStretch.vendors?.name && (
+                    <p className="text-[11px] font-bold text-[#FF5F00] uppercase tracking-wider flex items-center gap-1">
+                      Operator: <span className="bg-[#FF5F00]/10 px-2 py-0.5 rounded font-black">{selectedStretch.vendors.name}</span>
+                    </p>
+                  )}
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                     <MapPin size={12} className="text-black" /> {selectedStretch.stretch}
                   </p>

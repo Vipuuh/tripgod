@@ -154,3 +154,15 @@ CREATE POLICY "Allow admin write on rafting" ON rafting FOR ALL TO authenticated
 CREATE POLICY "Allow admin write on bikes" ON bikes FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Allow admin write on tours" ON tours FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Allow admin write on bookings" ON bookings FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- =========================================================================
+-- Storage Bucket and Policies (For 'media' bucket)
+-- =========================================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('media', 'media', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Allow public select on media" ON storage.objects FOR SELECT TO public USING (bucket_id = 'media');
+CREATE POLICY "Allow admin insert on media" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'media');
+CREATE POLICY "Allow admin update on media" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'media');
+CREATE POLICY "Allow admin delete on media" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'media');

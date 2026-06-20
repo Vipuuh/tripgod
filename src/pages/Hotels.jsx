@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, MessageSquare, Sparkles, MapPin, 
-  Bed, Trees, ShieldAlert, Check, X, ShieldCheck
+  Bed, Trees, ShieldAlert, Check, X, ShieldCheck, Map, Phone, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
 export default function Hotels({ currentCity, openBookingModal }) {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedHotel, setSelectedHotel] = useState(null);
+  const [activeImgIdx, setActiveImgIdx] = useState(0);
 
   // Fallback demo stays
   const demoStays = [
@@ -40,7 +42,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
     const fetchHotels = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('hotels').select('*');
+        let query = supabase.from('hotels').select('*, vendors(name)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
@@ -103,7 +105,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
               <motion.div
                 key={hotel.id}
                 whileHover={{ y: -5 }}
-                className="border border-black/5 bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 group"
+                onClick={() => setSelectedHotel(hotel)}
+                className="border border-black/5 bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 group cursor-pointer"
               >
                 <div>
                   {/* Image */}
@@ -120,9 +123,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                   {/* Info details */}
                   <div className="p-5 space-y-3.5">
-                    <h3 className="font-bold text-lg font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors truncate">
-                      {hotel.name}
-                    </h3>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="font-bold text-lg font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors truncate max-w-[70%]">
+                        {hotel.name}
+                      </h3>
+                      {hotel.vendors?.name && (
+                        <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[28%]">
+                          {hotel.vendors.name}
+                        </span>
+                      )}
+                    </div>
                     
                     <p className="text-xs text-gray-500 font-semibold flex items-center gap-1">
                       <MapPin size={12} className="text-[#FF5F00]" /> {hotel.address}
@@ -146,15 +156,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Book Action */}
                 <div className="px-5 pb-5 pt-2">
                   <button
-                    onClick={() => openBookingModal({
-                      id: hotel.id,
-                      name: hotel.name,
-                      price: hotel.price,
-                      category: 'hotels',
-                      city_id: hotel.city_id,
-                      vendor_id: hotel.vendor_id,
-                      slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
-                    })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openBookingModal({
+                        id: hotel.id,
+                        name: hotel.name,
+                        price: hotel.price,
+                        category: 'hotels',
+                        city_id: hotel.city_id,
+                        vendor_id: hotel.vendor_id,
+                        slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
+                      });
+                    }}
                     className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
                   >
                     Book Hotel Room
@@ -182,6 +195,231 @@ export default function Hotels({ currentCity, openBookingModal }) {
         </div>
 
       </div>
+
+      {/* Hotel Details Modal */}
+      <AnimatePresence>
+        {selectedHotel && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => {
+                setSelectedHotel(null);
+                setActiveImgIdx(0);
+              }}
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-10 p-6 md:p-8 space-y-6 text-left border border-black/5 scrollbar-thin"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between border-b border-gray-100 pb-4">
+                <div className="space-y-1.5 max-w-[85%]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] text-[9px] font-black uppercase tracking-wider rounded-md border border-[#FF5F00]/20">
+                      Stay Details
+                    </span>
+                    {selectedHotel.vendors?.name && (
+                      <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded">
+                        Operator: {selectedHotel.vendors.name}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-black font-display text-black uppercase leading-tight tracking-tight">
+                    {selectedHotel.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5">
+                    <MapPin size={12} className="text-[#FF5F00]" /> {selectedHotel.address}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedHotel(null);
+                    setActiveImgIdx(0);
+                  }}
+                  className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-all cursor-pointer border-none bg-transparent"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Image Gallery / Slider */}
+              {selectedHotel.images && selectedHotel.images.length > 0 ? (
+                <div className="relative h-48 sm:h-72 w-full rounded-2xl overflow-hidden bg-gray-100 group border border-black/5">
+                  <img
+                    src={selectedHotel.images[activeImgIdx]}
+                    alt={`${selectedHotel.name} view`}
+                    className="w-full h-full object-cover transition-all duration-300"
+                  />
+
+                  {selectedHotel.images.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setActiveImgIdx(prev => (prev - 1 + selectedHotel.images.length) % selectedHotel.images.length)}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button
+                        onClick={() => setActiveImgIdx(prev => (prev + 1) % selectedHotel.images.length)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+                        {selectedHotel.images.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setActiveImgIdx(idx)}
+                            className={`w-1.5 h-1.5 rounded-full border-none cursor-pointer transition-all ${
+                              activeImgIdx === idx ? 'bg-[#FF5F00] w-3' : 'bg-white/60 hover:bg-white'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="h-48 sm:h-72 w-full rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 gap-2">
+                  <Building2 size={36} />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">No images uploaded</span>
+                </div>
+              )}
+
+              {/* Details Section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-gray-100 pb-4 text-xs font-semibold">
+                <div className="p-3 bg-gray-50 border border-black/5 rounded-xl">
+                  <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Price / Night</span>
+                  <span className="text-base font-black text-black">₹{selectedHotel.price}</span>
+                </div>
+                <div className="p-3 bg-gray-50 border border-black/5 rounded-xl">
+                  <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Check-in</span>
+                  <span className="text-black font-extrabold">{selectedHotel.check_in || '12:00 PM'}</span>
+                </div>
+                <div className="p-3 bg-gray-50 border border-black/5 rounded-xl">
+                  <span className="block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Check-out</span>
+                  <span className="text-black font-extrabold">{selectedHotel.check_out || '11:00 AM'}</span>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-black uppercase text-black tracking-wider">About the Property</h4>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+                  {selectedHotel.description}
+                </p>
+              </div>
+
+              {/* Amenities */}
+              {selectedHotel.amenities && Object.keys(selectedHotel.amenities).length > 0 && (
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider">Amenities Provided</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(selectedHotel.amenities)
+                      .filter(([_, val]) => !!val)
+                      .map(([key]) => (
+                        <span
+                          key={key}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-black/5 text-gray-700 text-xs font-bold rounded-xl capitalize"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5F00]" />
+                          {key.replace('_', ' ')}
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Landmarks */}
+              {selectedHotel.landmarks && selectedHotel.landmarks.length > 0 && (
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider">Nearby Landmarks</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-gray-600">
+                    {selectedHotel.landmarks.map((landmark, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50/50 rounded-xl border border-black/5">
+                        <MapPin size={12} className="text-[#FF5F00] shrink-0" />
+                        <span>{landmark}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Rules & Cancellation */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+                {selectedHotel.rules && Object.keys(selectedHotel.rules).length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black uppercase text-black tracking-wider">House Rules</h4>
+                    <div className="space-y-1.5 text-xs text-gray-600 font-semibold">
+                      {Object.entries(selectedHotel.rules).map(([key, val]) => (
+                        <div key={key} className="flex items-center gap-2">
+                          {val ? (
+                            <Check size={14} className="text-emerald-500 shrink-0" />
+                          ) : (
+                            <X size={14} className="text-rose-500 shrink-0" />
+                          )}
+                          <span className="capitalize">{key.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2 text-left">
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider">Cancellation Policy</h4>
+                  <p className="text-xs text-gray-500 leading-relaxed font-semibold">
+                    {selectedHotel.cancellation_policy || 'No refund within 24 hours of check-in.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
+                {selectedHotel.maps_link && (
+                  <a
+                    href={selectedHotel.maps_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-3.5 border border-gray-200 rounded-xl text-xs font-black bg-white text-black hover:bg-gray-50 transition-all text-center flex items-center justify-center gap-2 text-decoration-none"
+                  >
+                    <Map size={14} />
+                    <span>View on Google Maps</span>
+                  </a>
+                )}
+                <button
+                  onClick={() => {
+                    const hotelToBook = selectedHotel;
+                    setSelectedHotel(null);
+                    setActiveImgIdx(0);
+                    openBookingModal({
+                      id: hotelToBook.id,
+                      name: hotelToBook.name,
+                      price: hotelToBook.price,
+                      category: 'hotels',
+                      city_id: hotelToBook.city_id,
+                      vendor_id: hotelToBook.vendor_id,
+                      slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
+                    });
+                  }}
+                  className="flex-1 py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display flex items-center justify-center gap-2"
+                >
+                  <ShieldCheck size={14} />
+                  <span>Book Hotel Room</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

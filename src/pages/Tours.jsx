@@ -11,7 +11,7 @@ export default function Tours({ currentCity, openBookingModal }) {
     const fetchTours = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('tours').select('*');
+        let query = supabase.from('tours').select('*, vendors(name)');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
@@ -104,9 +104,16 @@ export default function Tours({ currentCity, openBookingModal }) {
 
                   {/* Info content */}
                   <div className="p-5 space-y-3">
-                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-gray-400">
-                      <Clock size={12} className="text-[#FF5F00]" />
-                      <span>{tour.duration}</span>
+                    <div className="flex items-center justify-between gap-2 text-[10px] font-black uppercase text-gray-400">
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={12} className="text-[#FF5F00]" />
+                        <span>{tour.duration}</span>
+                      </div>
+                      {tour.vendors?.name && (
+                        <span className="text-[9px] bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[120px]">
+                          {tour.vendors.name}
+                        </span>
+                      )}
                     </div>
 
                     <h3 className="font-bold text-lg font-display text-black group-hover:text-[#FF5F00] transition-colors leading-tight truncate">

@@ -57,32 +57,28 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
     }
   }, [isOpen]);
 
-  // Generate 6-digit OTP and send via EmailJS
+  // Generate 6-digit OTP and send via backend API
   const triggerOtpSend = async (targetEmail, targetName) => {
     setLoading(true);
     setError('');
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
-      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      const response = await fetch('/api/send-otp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          service_id: 'service_heo4ylg',
-          template_id: 'template_klczx1c',
-          user_id: '4xZnfSBQiVmBt_PfZ',
-          template_params: {
-            to_name: targetName,
-            to_email: targetEmail,
-            email: targetEmail,
-            otp_code: code,
-          },
+          email: targetEmail,
+          name: targetName,
+          otp: code
         }),
       });
 
-      if (response.ok) {
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         setGeneratedOtp(code);
         setCountdown(60);
         setMode('otp');
@@ -93,9 +89,8 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
           inputRefs.current[0]?.focus();
         }, 150);
       } else {
-        const errText = await response.text();
-        console.error('EmailJS error:', errText);
-        setError(`EmailJS Error: ${errText || 'Failed to send'}`);
+        console.error('OTP send error:', result.error || 'Failed to send');
+        setError(`OTP send failed: ${result.error || 'Check backend configuration'}`);
       }
     } catch (err) {
       console.error('Email sending failed:', err);
