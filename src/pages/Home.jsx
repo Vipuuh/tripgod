@@ -570,7 +570,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.5 }}
             className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md text-[#FF6B00] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)] animate-pulse"
           >
-            Rishikesh's #1 Adventure Partner
+            3+ Years of Trusted Service in Rishikesh
           </motion.span>
 
           <motion.h1 
@@ -579,7 +579,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight font-display tracking-tight uppercase"
           >
-            CHASE THE WILD RUSH <br />
+            STAY, RIDE & EXPLORE <br />
             IN <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF7A00] to-[#FF3E00] drop-shadow-[0_2px_10px_rgba(255,95,0,0.2)] font-black">RISHIKESH</span>
           </motion.h1>
 
@@ -589,7 +589,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-medium px-4"
           >
-            Rishikesh's #1 adventure booking platform. Book bungee jumps, river rafting, paragliding & camps with <strong className="text-[#FF6B00]">flexible advance options</strong> and <strong className="text-white">100% refund guarantee</strong>.
+            Rishikesh's most trusted holiday booking platform. Book verified hotels, Char Dham tours, bike rentals, and adventure sports with <strong className="text-[#FF6B00]">token advance booking</strong> and <strong className="text-white">100% refund guarantee</strong>.
           </motion.p>
 
           <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-stretch md:items-center px-4">
@@ -955,7 +955,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 name: 'Aloha On The Ganges',
                 desc: 'Luxurious resort nestled in the foothills of Himalayas, offering stunning Ganges view, spa, and yoga retreats.',
                 price: 7500,
-                img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600',
+                img: '/aloha_resort.png',
                 rating: 4.8,
                 reviewsCount: 345,
                 location: 'Tapovan, Near Laxman Jhula'
@@ -965,7 +965,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 name: 'Ganga Kinare Resort',
                 desc: 'Premium riverside boutique hotel offering direct access to the private ghat, ganga aarti, and organic dining.',
                 price: 5500,
-                img: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=600',
+                img: '/ganga_kinare.png',
                 rating: 4.7,
                 reviewsCount: 218,
                 location: 'Barrage Road, Rishikesh'
@@ -975,7 +975,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 name: 'Divine Resort & Spa',
                 desc: 'Perched on a high cliff overlooking Laxman Jhula with breathtaking panoramic views and a multi-cuisine restaurant.',
                 price: 4800,
-                img: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=600',
+                img: '/divine_resort.png',
                 rating: 4.6,
                 reviewsCount: 195,
                 location: 'Laxman Jhula Road, Tapovan'
@@ -1128,7 +1128,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 desc: 'A complete pilgrimage package covering Yamunotri & Gangotri, or Kedarnath & Badrinath. Includes luxury transport, VIP Darshan slips, premium hotel stays, and expert local guides.',
                 price: 18500,
                 duration: '5 Days / 4 Nights',
-                img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+                img: '/badrinath_temple.png',
                 rating: 4.9,
                 reviewsCount: 148
               },
@@ -1138,7 +1138,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 desc: 'The ultimate sacred spiritual yatra to Yamunotri, Gangotri, Kedarnath, and Badrinath. Fully managed transfers, helicopter booking options, medical assistance, and premium lodging.',
                 price: 32000,
                 duration: '10 Days / 9 Nights',
-                img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
+                img: '/kedarnath_temple.png',
                 rating: 4.9,
                 reviewsCount: 215
               }

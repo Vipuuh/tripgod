@@ -27,7 +27,7 @@ export default function Terms() {
               <Info size={18} className="text-[#FF6B00]" /> 1. Booking & Advance Payment
             </h2>
             <p>
-              To confirm slots for any activity, users are required to pay a <strong>10% booking advance fee</strong> online through our secure gateway (processed by Razorpay). The remaining 90% balance must be paid directly to the local executing operator at the venue before starting the activity.
+              To confirm slots for any activity, users are required to pay a <strong>partial booking advance fee</strong> online through our secure gateway (processed by Razorpay). The remaining balance must be paid directly to the local executing operator at the venue before starting the activity.
             </p>
           </div>
 

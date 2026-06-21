@@ -308,7 +308,7 @@ export default function Bungee({ openBookingModal }) {
                 <div className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col">
                   <span className="text-[10px] font-bold text-gray-600 uppercase">Package Price</span>
                   <span className="text-2xl font-black text-black">₹{selectedBungee.price.toLocaleString('en-IN')}</span>
-                  <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Pay only 10% (₹{Math.round(selectedBungee.price * 0.1)}) to book!</span>
+                  <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Book with Token Advance</span>
                 </div>
               </div>
 
@@ -460,8 +460,8 @@ export default function Bungee({ openBookingModal }) {
                 <div className="flex items-center gap-3">
                   <ShieldCheck size={28} className="text-black flex-shrink-0" />
                   <div>
-                    <h4 className="font-bold text-sm uppercase tracking-tight">PAY 10% ADVANCE ONLINE TO SECURE SLOT</h4>
-                    <p className="text-xs text-gray-600 font-medium">Book now at just ₹{Math.round(selectedBungee.price * 0.1)} per jumper. Pay 90% balance on arrival.</p>
+                    <h4 className="font-bold text-sm uppercase tracking-tight">PAY TOKEN ADVANCE ONLINE TO SECURE SLOT</h4>
+                    <p className="text-xs text-gray-600 font-medium">Pay a partial token advance online today to reserve your slot. Pay remaining balance at the venue on arrival.</p>
                   </div>
                 </div>
                 <button

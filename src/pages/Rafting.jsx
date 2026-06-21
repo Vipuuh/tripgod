@@ -554,7 +554,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   <div className="w-9 h-9 rounded-full bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00] mb-1.5 shadow-sm">
                     <ShieldCheck size={18} className="stroke-[2.5]" />
                   </div>
-                  <span className="text-[10px] font-extrabold text-black uppercase tracking-tight leading-tight">Book with 10% Advance</span>
+                  <span className="text-[10px] font-extrabold text-black uppercase tracking-tight leading-tight">Book with Token Advance</span>
                 </div>
                 <div className="flex flex-col items-center text-center p-1.5">
                   <div className="w-9 h-9 rounded-full bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00] mb-1.5 shadow-sm">
@@ -766,7 +766,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   <p className="text-sm font-semibold text-black flex items-center gap-1">
                     <Info size={16} /> 100% Refund Guarantee
                   </p>
-                  <p className="text-xs text-gray-500">Cancel up to 24 hours before the activity schedule time to receive a full refund of your 10% deposit.</p>
+                  <p className="text-xs text-gray-500">Cancel up to 24 hours before the activity schedule time to receive a full refund of your deposit.</p>
                 </div>
               </div>
 
@@ -808,8 +808,8 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 <div className="flex items-center gap-3">
                   <ShieldCheck size={28} className="text-black flex-shrink-0" />
                   <div>
-                    <h4 className="font-bold text-sm uppercase tracking-tight">SECURE YOUR BOOKING FOR 10% ADVANCE</h4>
-                    <p className="text-xs text-gray-600 font-medium">Pay only ₹{Math.round(selectedStretch.price * 0.1)} per person online today. Cancel anytime for full refund.</p>
+                    <h4 className="font-bold text-sm uppercase tracking-tight">SECURE YOUR BOOKING WITH TOKEN ADVANCE</h4>
+                    <p className="text-xs text-gray-600 font-medium">Pay a partial token advance online today to secure your slots. Cancel anytime for full refund.</p>
                   </div>
                 </div>
                 <button

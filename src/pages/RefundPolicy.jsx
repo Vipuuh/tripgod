@@ -14,7 +14,7 @@ export default function RefundPolicy() {
 
         <div className="space-y-6 text-sm text-gray-700 leading-relaxed font-medium">
           <p>
-            At <strong>TripGod</strong>, we understand that travel plans can change. Since we collect only a <strong>10% advance booking fee</strong> online to secure your activity slots, our refund policy applies directly to this advance deposit.
+            At <strong>TripGod</strong>, we understand that travel plans can change. Since we collect only a <strong>partial advance booking fee</strong> online to secure your activity slots, our refund policy applies directly to this advance deposit.
           </p>
 
           <div className="space-y-2">
@@ -23,10 +23,10 @@ export default function RefundPolicy() {
             </h2>
             <ul className="list-disc pl-5 space-y-2">
               <li>
-                <strong>24 Hours or More Prior:</strong> If you cancel your booking 24 hours or more before your scheduled activity date/time slot, you are eligible for a <strong>100% full refund</strong> of your 10% advance booking fee.
+                <strong>24 Hours or More Prior:</strong> If you cancel your booking 24 hours or more before your scheduled activity date/time slot, you are eligible for a <strong>100% full refund</strong> of your advance booking fee.
               </li>
               <li>
-                <strong>Within 24 Hours or No-Show:</strong> If you cancel within 24 hours of your scheduled activity slot, or in case you fail to arrive at the venue (no-show), the 10% advance booking fee will be <strong>forfeited</strong> (non-refundable) to cover operator reservation expenses.
+                <strong>Within 24 Hours or No-Show:</strong> If you cancel within 24 hours of your scheduled activity slot, or in case you fail to arrive at the venue (no-show), the advance booking fee will be <strong>forfeited</strong> (non-refundable) to cover operator reservation expenses.
               </li>
             </ul>
           </div>
@@ -36,7 +36,7 @@ export default function RefundPolicy() {
               <AlertCircle size={18} className="text-[#FF6B00]" /> 2. Operator Cancellations (Force Majeure)
             </h2>
             <p>
-              Adventure activities are heavily subject to weather conditions, river flow levels (for rafting), and local administration safety regulations. In case the local executing operator cancels the activity due to safety concerns, river levels, heavy rainfall, or local laws, a <strong>100% full refund</strong> of your 10% advance booking fee will be processed immediately.
+              Adventure activities are heavily subject to weather conditions, river flow levels (for rafting), and local administration safety regulations. In case the local executing operator cancels the activity due to safety concerns, river levels, heavy rainfall, or local laws, a <strong>100% full refund</strong> of your advance booking fee will be processed immediately.
             </p>
           </div>
 

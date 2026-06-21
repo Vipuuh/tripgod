@@ -87,7 +87,7 @@ export default function ActivityDetail({
             <span className="text-[10px] font-bold text-gray-600 uppercase">Package Price</span>
             <span className="text-2xl font-black text-black">₹{price.toLocaleString('en-IN')}</span>
             <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
-              Book with 10% Advance (₹{Math.round(price * 0.1)})
+              Book with Token Advance
             </span>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function ActivityDetail({
             <p className="text-sm font-semibold text-black flex items-center gap-1">
               <MapPin size={16} /> {location}
             </p>
-            <p className="text-xs text-gray-500">Exact coordinates and booking operator contact info will be dispatched over WhatsApp upon 10% advance clearance.</p>
+            <p className="text-xs text-gray-500">Exact coordinates and booking operator contact info will be dispatched over WhatsApp upon advance clearance.</p>
           </div>
           <div className="space-y-2">
             <span className="block text-xs font-bold text-gray-500 uppercase tracking-wide">Cancellation Policy</span>
@@ -236,8 +236,8 @@ export default function ActivityDetail({
           <div className="flex items-center gap-3">
             <ShieldCheck size={28} className="text-black flex-shrink-0" />
             <div>
-              <h4 className="font-bold text-sm uppercase tracking-tight">SECURE YOUR SLOT FOR 10% ADVANCE</h4>
-              <p className="text-xs text-gray-600 font-medium">Pay only ₹{Math.round(price * 0.1)} online to reserve slot. 100% refund guarantee up to 24h prior.</p>
+              <h4 className="font-bold text-sm uppercase tracking-tight">SECURE YOUR SLOT WITH TOKEN ADVANCE</h4>
+              <p className="text-xs text-gray-600 font-medium">Pay a partial token advance online today to reserve your slot. 100% refund guarantee up to 24h prior.</p>
             </div>
           </div>
           <button
