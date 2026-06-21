@@ -1566,11 +1566,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           name: formData.name || (formData.activity_type === 'rafting' ? `${formData.distance_km} KM Rafting Stretch` : 'Adventure Spot'),
           description: formData.description || '',
           route: formData.route || '',
-          distance_km: Number(formData.distance_km) || 0,
+          distance_km: formData.activity_type === 'camping' ? 0 : (Number(formData.distance_km) || 0),
           duration: formData.duration || '',
           pickup_included: !!formData.pickup_included,
           drop_included: !!formData.drop_included,
-          age_limit: Number(formData.age_limit) || 12,
+          age_limit: formData.activity_type === 'camping' ? 18 : (Number(formData.age_limit) || 12),
           images: formData.images || [],
           inclusions: formData.inclusions || [],
           exclusions: formData.exclusions || [],
@@ -2265,7 +2265,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                {formData.activity_type === 'rafting' ? 'Route' : 'Location/Detail'}
+                {formData.activity_type === 'rafting' ? 'Route' : (formData.activity_type === 'camping' ? 'Campsite Location' : 'Location/Detail')}
               </label>
               <input
                 type="text"
@@ -2273,22 +2273,38 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 value={formData.route || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, route: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder={formData.activity_type === 'rafting' ? 'e.g. Shivpuri to Nim Beach' : 'e.g. 117 Metres / Shivpuri Hills'}
+                placeholder={
+                  formData.activity_type === 'rafting' ? 'e.g. Shivpuri to Nim Beach' : 
+                  (formData.activity_type === 'camping' ? 'e.g. Shivpuri Riverbank' : 'e.g. 117 Metres / Shivpuri Hills')
+                }
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                {formData.activity_type === 'rafting' ? 'Distance (KM)' : 'Height/Distance value'}
-              </label>
-              <input
-                type="number"
-                required
-                value={formData.distance_km || 0}
-                onChange={(e) => setFormData(prev => ({ ...prev, distance_km: Number(e.target.value) }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
-            </div>
+            {formData.activity_type !== 'camping' ? (
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  {formData.activity_type === 'rafting' ? 'Distance (KM)' : 'Height/Distance value'}
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={formData.distance_km || 0}
+                  onChange={(e) => setFormData(prev => ({ ...prev, distance_km: Number(e.target.value) }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                />
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Camp Type</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Swiss Luxury Tents"
+                  value={formData.route_details || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, route_details: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                />
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Duration</label>
@@ -2298,7 +2314,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 value={formData.duration || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder="e.g. 2 Hours / 3 Days"
+                placeholder={formData.activity_type === 'camping' ? 'e.g. 1 Night / 2 Days' : 'e.g. 2 Hours / 3 Days'}
               />
             </div>
           </div>
@@ -2325,14 +2341,22 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </label>
 
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Age Limit</label>
-              <input
-                type="number"
-                required
-                value={formData.age_limit || 12}
-                onChange={(e) => setFormData(prev => ({ ...prev, age_limit: Number(e.target.value) }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-1 text-white focus:outline-none"
-              />
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                {formData.activity_type === 'camping' ? 'Age Limit' : 'Age Limit'}
+              </label>
+              {formData.activity_type === 'camping' ? (
+                <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-400 text-xs font-semibold leading-tight">
+                  Min 18+ (Primary Guest)
+                </div>
+              ) : (
+                <input
+                  type="number"
+                  required
+                  value={formData.age_limit || 12}
+                  onChange={(e) => setFormData(prev => ({ ...prev, age_limit: Number(e.target.value) }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                />
+              )}
             </div>
           </div>
 
