@@ -18,8 +18,23 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
 
-  // Default slots based on activity
-  const slots = activity.slots || ['08:00 AM', '10:30 AM', '01:30 PM', '04:00 PM'];
+  // Default slots based on activity category
+  let defaultSlots = ['08:00 AM', '10:30 AM', '01:30 PM', '04:00 PM'];
+  if (activity) {
+    const cat = (activity.category || '').toLowerCase();
+    if (cat === 'rafting') {
+      defaultSlots = ['06:00 AM', '07:00 AM', '08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM'];
+    } else if (cat === 'bungee' || cat === 'swing') {
+      defaultSlots = ['10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'];
+    } else if (cat === 'paragliding') {
+      defaultSlots = ['08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '03:00 PM', '04:00 PM', '05:00 PM'];
+    } else if (cat === 'zipline') {
+      defaultSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '03:00 PM', '04:00 PM'];
+    } else if (cat === 'camping') {
+      defaultSlots = ['12:00 PM (Check-in)'];
+    }
+  }
+  const slots = activity.slots || defaultSlots;
   
   // Set default values when active changes
   useEffect(() => {

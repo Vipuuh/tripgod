@@ -198,3 +198,9 @@ ALTER TABLE vendors ADD COLUMN IF NOT EXISTS shop_image TEXT;
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS star_rating NUMERIC DEFAULT 4.5;
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS landmark TEXT;
 
+-- =========================================================================
+-- Schema Extensions (Adventure Packages — June 2026)
+-- =========================================================================
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS activity_type TEXT DEFAULT 'rafting';
+
+
