@@ -322,11 +322,11 @@ export default function App() {
               />
             )}
             {route === 'rafting' && <Rafting currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'bungee' && <Bungee openBookingModal={openBookingModal} />}
-            {route === 'zipline' && <Zipline openBookingModal={openBookingModal} />}
-            {route === 'paragliding' && <Paragliding openBookingModal={openBookingModal} />}
-            {route === 'swing' && <Swing openBookingModal={openBookingModal} />}
-            {route === 'camping' && <Camping openBookingModal={openBookingModal} />}
+            {route === 'bungee' && <Bungee currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'zipline' && <Zipline currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'paragliding' && <Paragliding currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'swing' && <Swing currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'camping' && <Camping currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
             {route === 'hotels' && <Hotels currentCity={currentCity} openBookingModal={openBookingModal} />}

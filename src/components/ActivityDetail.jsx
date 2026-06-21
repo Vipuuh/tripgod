@@ -4,6 +4,8 @@ import {
   Star, MapPin, Check, X, ShieldCheck, 
   HeartCrack, Info, Play, Calendar, Clock, Sparkles, ChevronLeft
 } from 'lucide-react';
+import OperatorSelector from './OperatorSelector';
+
 
 export default function ActivityDetail({ 
   id,
@@ -22,10 +24,28 @@ export default function ActivityDetail({
   cancellation = '100% refund 24hrs before',
   rating = 4.8,
   reviewsCount = 380,
-  openBookingModal
+  openBookingModal,
+  operators = []
 }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  const [showOperatorModal, setShowOperatorModal] = useState(false);
+
+  const handleBookClick = () => {
+    const isVideo = title?.toLowerCase().includes('with video') || title?.toLowerCase().includes('with dslr video') || false;
+    if (operators && operators.length > 0) {
+      setShowOperatorModal(true);
+    } else {
+      openBookingModal({
+        id,
+        name: title,
+        price,
+        category,
+        videoIncluded: isVideo
+      });
+    }
+  };
+
 
   const images = Array.isArray(heroImage) ? heroImage : [heroImage];
 
@@ -241,12 +261,7 @@ export default function ActivityDetail({
             </div>
           </div>
           <button
-            onClick={() => openBookingModal({
-              id,
-              name: title,
-              price,
-              category
-            })}
+            onClick={handleBookClick}
             className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
           >
             Book Now
@@ -288,17 +303,82 @@ export default function ActivityDetail({
           </span>
         </div>
         <button
-          onClick={() => openBookingModal({
-            id,
-            name: title,
-            price,
-            category
-          })}
+          onClick={handleBookClick}
           className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
         >
           Book Now
         </button>
       </div>
+
+      {/* Operator Selection Modal */}
+      <AnimatePresence>
+        {showOperatorModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-slate-100 rounded-3xl w-full max-w-lg p-6 md:p-8 max-h-[85vh] overflow-y-auto space-y-6 shadow-2xl relative font-sans text-black scrollbar-thin"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowOperatorModal(false)}
+                className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-800 transition-colors cursor-pointer border-none bg-transparent"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Header */}
+              <div className="space-y-1 pr-8 text-left">
+                <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] font-black tracking-widest px-2 py-0.5 rounded-full uppercase border border-[#FF5F00]/20">
+                  Comparison Desk
+                </span>
+                <h3 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">
+                  Select Your Operator
+                </h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Choose from certified local safety crews for {title}
+                </p>
+              </div>
+
+              {/* Operator List Container */}
+              <div className="pt-2 text-left">
+                <OperatorSelector
+                  operators={operators.map(op => ({
+                    id: op.id,
+                    vendorName: op.vendors?.name || op.name || 'Local Operator',
+                    shopImage: op.vendors?.shop_image || null,
+                    starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
+                    landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
+                    price: Number(op.price || price),
+                    originalPrice: op.original_price ? Number(op.original_price) : null,
+                    isLimitedOffer: !!op.is_limited_offer,
+                    commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                    _raw: op
+                  }))}
+                  onBookOperator={(op) => {
+                    setShowOperatorModal(false);
+                    const raw = op._raw;
+                    const isVideo = title?.toLowerCase().includes('with video') || title?.toLowerCase().includes('with dslr video') || raw.name?.toLowerCase().includes('with video') || false;
+                    openBookingModal({
+                      id: raw.id || id,
+                      name: `${title} - ${op.vendorName}`,
+                      price: op.price,
+                      category: category,
+                      city_id: raw.city_id,
+                      vendor_id: raw.vendor_id,
+                      commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
+                      vendors: raw.vendors,
+                      videoIncluded: isVideo
+                    });
+                  }}
+                  activityName={title}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

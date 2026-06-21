@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, MapPin, Tag } from 'lucide-react';
+import { Star, MapPin, Tag, Info } from 'lucide-react';
+
 
 export default function OperatorSelector({ operators = [], onBookOperator, activityName }) {
   if (!operators || operators.length === 0) {
@@ -50,6 +51,14 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
           {operators.length} Operator{operators.length > 1 ? 's' : ''} available
         </span>
       </div>
+
+      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-slate-650 leading-relaxed flex gap-2">
+        <Info size={14} className="text-accent flex-shrink-0 mt-0.5" />
+        <p>
+          Select an operator to book. Your reporting, safety briefing, and activity pickup will begin directly at the chosen operator's offline office location shown below.
+        </p>
+      </div>
+
 
       <div className="space-y-3">
         {operators.map((op, idx) => {
@@ -106,9 +115,9 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
 
                   {/* Landmark/Location */}
                   {op.landmark && (
-                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium truncate">
-                      <MapPin size={11} className="text-slate-400 flex-shrink-0" />
-                      <span className="truncate">{op.landmark}</span>
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-bold truncate">
+                      <MapPin size={11} className="text-accent flex-shrink-0" />
+                      <span className="truncate">Office/Pickup: {op.landmark}</span>
                     </div>
                   )}
 

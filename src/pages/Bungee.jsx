@@ -1,153 +1,164 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, Star, Clock, MapPin, 
-  Check, X, ShieldCheck, HeartCrack, Info, Video, Flame
-} from 'lucide-react';
+import { ChevronLeft, Star, Clock, MapPin, Flame, Video } from 'lucide-react';
+import { supabase } from '../supabase';
+import ActivityDetail from '../components/ActivityDetail';
 
-const bungeeOptions = [
+const defaultBungeeOptions = [
   {
     id: 'bungee-117mv',
-    name: '117M Bungee Jump with Video',
-    height: '117 Metres',
+    name: '117M Bungee Jump with DSLR Video',
+    description: 'The ultimate bungee jumping experience in India. Leap from a height of 117 metres above a rocky river valley. Includes high-definition DSLR video footage capturing your jump.',
     price: 4600,
-    videoIncluded: true,
-    img: '/bungee-hero.jpg',
-    images: [
-      '/bungee-hero.jpg',
-      '/bungee-2.jpg',
-      '/bungee-3.jpg'
+    route: 'Jumpin Heights Zone, Rishikesh',
+    duration: '1.5-2 Hours',
+    images: ['/bungee-hero.jpg', '/bungee-2.jpg', '/bungee-3.jpg'],
+    inclusions: [
+      '117 Metres Bungee Jump from Cantilever Platform',
+      'Safety briefing & certified jump instructors',
+      'High-definition DSLR video footage included',
+      'Officially signed Jump Certificate'
+    ],
+    exclusions: [
+      'Transport to jump site (available as add-on)',
+      'Entry ticket to the bungee park (Rs. 100/person)'
     ],
     rating: 4.9,
     reviewsCount: 412,
-    desc: 'The ultimate bungee jumping experience in India. Leap from a height of 117 metres above a rocky river valley. Includes high-definition DSLR video footage capturing your jump.'
+    operators: [],
+    height: '117M',
+    videoIncluded: true
   },
   {
     id: 'bungee-117m',
     name: '117M Bungee Jump without Video',
-    height: '117 Metres',
+    description: 'The classic 117-metre high bungee jump. Jump from India\'s tallest cantilever platform. Capture the memories in your heart! (DSLR Video can be bought at the counter separately).',
     price: 4200,
-    videoIncluded: false,
-    img: '/bungee-4.jpg',
-    images: [
-      '/bungee-4.jpg',
-      '/bungee-2.jpg',
-      '/bungee-3.jpg'
+    route: 'Jumpin Heights Zone, Rishikesh',
+    duration: '1.5 Hours',
+    images: ['/bungee-4.jpg', '/bungee-2.jpg', '/bungee-3.jpg'],
+    inclusions: [
+      '117 Metres Bungee Jump from Cantilever Platform',
+      'Safety briefing & certified jump instructors',
+      'Officially signed Jump Certificate'
+    ],
+    exclusions: [
+      'DSLR Video footage (can buy at counter)',
+      'Transport to jump site'
     ],
     rating: 4.8,
     reviewsCount: 320,
-    desc: 'The classic 117-metre high bungee jump. Jump from India\'s tallest cantilever platform. Capture the memories in your heart! (DSLR Video can be bought at the counter separately).'
-  },
-  {
-    id: 'bungee-111mv',
-    name: '111M Bungee Jump with Video',
-    height: '111 Metres',
-    price: 3600,
-    videoIncluded: true,
-    img: '/bungee-3.jpg',
-    images: [
-      '/bungee-3.jpg',
-      '/bungee-1.jpg',
-      '/bungee-4.jpg'
-    ],
-    rating: 4.8,
-    reviewsCount: 198,
-    desc: 'Leap from a height of 111 metres over a gorge. Includes cinematic DSLR video. Excellent value for adrenaline junkies.'
+    operators: [],
+    height: '117M',
+    videoIncluded: false
   },
   {
     id: 'bungee-combo',
-    name: '111M Bungee + 113M Giant Swing Combo with Video',
-    height: '111M & 113M combo',
+    name: 'Combo: Bungee Jump (111M) + Giant Swing (113M) with Video',
+    description: 'Get the best of both worlds! Leap off the 111M bungee platform, then take a massive swing on the 113M Giant Swing. Includes high-quality DSLR video footage for both activities.',
     price: 5300,
-    videoIncluded: true,
-    badge: 'BEST VALUE',
-    img: '/bungee-5.jpg',
-    images: [
-      '/bungee-5.jpg',
-      '/swing-hero.png',
-      '/bungee-3.jpg'
+    route: 'Mohanchatti Adventure Canyon, Rishikesh',
+    duration: '3-4 Hours',
+    images: ['/bungee-5.jpg', '/swing-hero.png', '/bungee-3.jpg'],
+    inclusions: [
+      '111 Metres Bungee Jump',
+      '113 Metres Giant Swing',
+      'DSLR video footage for both activities',
+      'Safety certificates for both jumps'
+    ],
+    exclusions: [
+      'Transport to the park',
+      'Food & drinks'
     ],
     rating: 4.9,
     reviewsCount: 570,
-    desc: 'Get the best of both worlds! Leap off the 111M bungee platform, then take a massive swing on the 113M Giant Swing. Includes high-quality DSLR video footage for both activities.'
-  },
-  {
-    id: 'bungee-rooftop',
-    name: '104M Rooftop Bungee with Video',
-    height: '104 Metres',
-    price: 3500,
-    videoIncluded: true,
-    img: '/bungee-1.jpg',
-    images: [
-      '/bungee-1.jpg',
-      '/bungee-4.jpg',
-      '/bungee-2.jpg'
-    ],
-    rating: 4.7,
-    reviewsCount: 145,
-    desc: 'Jump from the rooftop platform suspended 104 metres in the air. Includes high-definition DSLR video. Offers unique aerial views of the valley.'
-  },
-  {
-    id: 'bungee-couple',
-    name: 'Couple Bungee with Video',
-    height: '117 Metres',
-    price: 5000,
-    videoIncluded: true,
-    img: '/couple-bungee-3.jpg',
-    images: [
-      '/couple-bungee-3.jpg',
-      '/couple-bungee-1.jpg',
-      '/couple-bungee-2.jpg',
-      '/couple-bungee-4.jpg',
-      '/couple-bungee-5.jpg'
-    ],
-    rating: 4.9,
-    reviewsCount: 224,
-    desc: 'Jump together with your partner from the 117M platform. Securely harnessed together for a shared adrenaline rush. Includes custom couple DSLR video.'
+    operators: [],
+    height: '111M & 113M',
+    videoIncluded: true
   }
 ];
 
-export default function Bungee({ openBookingModal }) {
+export default function Bungee({ currentCity, openBookingModal }) {
+  const [bungeeData, setBungeeData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedBungee, setSelectedBungee] = useState(null);
-  const [activeReviewIdx, setActiveReviewIdx] = useState(0);
-  const [currentImgIdx, setCurrentImgIdx] = useState(0);
-
-  const reviews = [
-    { name: 'Priya Patel', stars: 5, text: 'Leaping off the 117m platform was the craziest thing I have ever done! The crew was super supportive and the DSLR footage is amazing.' },
-    { name: 'Aditya S.', stars: 5, text: 'The Bungee + Swing combo is worth every rupee. The swing was actually scarier than the bungee! Full 10% booking online worked perfectly.' },
-    { name: 'Megha R.', stars: 5, text: 'We booked Couple Bungee for our anniversary. The harnesses are very secure, and jumping together was unforgettable!' }
-  ];
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveReviewIdx((prev) => (prev + 1) % reviews.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-play image gallery slideshow (slides every 4 seconds)
-  useEffect(() => {
-    if (!selectedBungee || !selectedBungee.images || selectedBungee.images.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentImgIdx((prev) => (prev + 1) % selectedBungee.images.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [selectedBungee, currentImgIdx]);
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.12
+    const fetchBungee = async () => {
+      setLoading(true);
+      try {
+        let query = supabase.from('rafting')
+          .select('*, vendors(*)')
+          .eq('activity_type', 'bungee');
+        
+        if (currentCity && currentCity.id !== 'default') {
+          query = query.eq('city_id', currentCity.id);
+        }
+        
+        const { data, error } = await query;
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const grouped = {};
+          data.forEach(item => {
+            const key = item.name.trim();
+            if (!grouped[key]) {
+              grouped[key] = {
+                id: item.id,
+                name: item.name,
+                description: item.description || defaultBungeeOptions[0].description,
+                price: Number(item.price),
+                route: item.route || defaultBungeeOptions[0].route,
+                duration: item.duration || defaultBungeeOptions[0].duration,
+                images: item.images && item.images.length > 0 ? item.images : defaultBungeeOptions[0].images,
+                inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : defaultBungeeOptions[0].inclusions,
+                exclusions: item.exclusions && item.exclusions.length > 0 ? item.exclusions : defaultBungeeOptions[0].exclusions,
+                rating: item.rating || 4.8,
+                reviewsCount: item.reviews_count || 320,
+                cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior.',
+                height: item.distance_km ? `${item.distance_km}M` : '117M',
+                videoIncluded: item.name.toLowerCase().includes('with video') || item.name.toLowerCase().includes('with dslr video'),
+                operators: []
+              };
+            }
+            
+            grouped[key].operators.push(item);
+            if (Number(item.price) < grouped[key].price) {
+              grouped[key].price = Number(item.price);
+            }
+            if (item.images && item.images.length > grouped[key].images.length) {
+              grouped[key].images = item.images;
+            }
+          });
+          
+          const mapped = Object.values(grouped);
+          setBungeeData(mapped);
+        } else {
+          setBungeeData(defaultBungeeOptions);
+        }
+      } catch (err) {
+        console.error('Failed to fetch bungee data:', err);
+        setBungeeData(defaultBungeeOptions);
+      } finally {
+        setLoading(false);
       }
-    }
-  };
+    };
+    
+    fetchBungee();
+  }, [currentCity]);
 
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 35 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80, damping: 15 } }
-  };
+  if (loading) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
+      </div>
+    );
+  }
+
+  // If only one option exists, show details directly
+  if (bungeeData.length === 1 && !selectedBungee) {
+    setSelectedBungee(bungeeData[0]);
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">
@@ -162,369 +173,143 @@ export default function Bungee({ openBookingModal }) {
             className="pb-20"
           >
             {/* Hero Banner */}
-            <div className="relative h-[50vh] bg-black flex items-center justify-center text-center">
+            <div className="relative h-[40vh] bg-black flex items-center justify-center text-center">
               <div 
                 className="absolute inset-0 bg-cover bg-center opacity-70"
-                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1508873535684-277a3cbcc4e8?q=80&w=1200')` }}
+                style={{ backgroundImage: `url('/bungee-hero.jpg')` }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="relative z-10 space-y-3 px-6">
-                <span className="text-xs font-black text-accent tracking-widest uppercase bg-black/40 px-3 py-1 rounded-full flex items-center gap-1.5 w-fit mx-auto">
-                  <Flame size={12} fill="currentColor" /> India's Highest Jumps
+                <span className="text-[10px] font-black text-accent tracking-widest uppercase bg-black/40 px-3 py-1 rounded-full flex items-center gap-1.5 w-fit mx-auto">
+                  <Flame size={10} fill="currentColor" /> India's Tallest Cantilevers
                 </span>
                 <h1 className="text-3xl sm:text-5xl font-black text-white font-display tracking-tight uppercase">
                   Bungee Jumping
                 </h1>
-                <p className="text-gray-300 max-w-lg mx-auto text-sm sm:text-base font-medium">
-                  Leap into space from India's highest cantilever platforms. Speeds up to 100 km/h.
+                <p className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm font-medium">
+                  Leap into space from heights up to 117 metres. Guided by professional international crews.
                 </p>
               </div>
             </div>
 
-            {/* Bungee Options Cards List */}
+            {/* Bungee Jump Options List */}
             <div className="max-w-6xl mx-auto px-6 py-16 space-y-12">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-center space-y-2"
-              >
-                <h2 className="text-2xl md:text-4xl font-black font-display text-black">SELECT JUMP OPTION</h2>
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl md:text-3xl font-black font-display text-black">SELECT JUMP PACKAGE</h2>
                 <div className="w-16 h-1 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] mx-auto" />
-              </motion.div>
+              </div>
 
-              <motion.div 
-                variants={staggerContainer}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: "-80px" }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              >
-                {bungeeOptions.map((opt) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {bungeeData.map((opt, idx) => (
                   <motion.div
-                    key={opt.id}
-                    variants={fadeInUp}
-                    whileHover={{ y: -5 }}
-                    onClick={() => {
-                      setSelectedBungee(opt);
-                      setCurrentImgIdx(0);
-                      window.scrollTo(0, 0);
-                    }}
-                    className="border border-white/60 bg-white/60 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer hover:border-accent/40 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all flex flex-col justify-between h-full relative group shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
+                    key={opt.id || idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: idx * 0.1 }}
+                    className="flex flex-col bg-white border border-black/5 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group"
                   >
-                    {opt.badge && (
-                      <span className="absolute top-4 right-4 bg-black text-accent text-[9px] font-black tracking-wider py-1 px-3 rounded-full border border-accent z-10">
-                        {opt.badge}
-                      </span>
-                    )}
-                    {/* Image box */}
-                    <div className="h-36 sm:h-40 bg-gray-100 overflow-hidden relative border-b border-black/5">
-                      <img 
-                        src={opt.img} 
+                    <div className="relative h-48 overflow-hidden bg-slate-100">
+                      <img
+                        src={opt.images[0] || '/bungee-hero.jpg'}
                         alt={opt.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
                       />
+                      <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-xs text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-md">
+                        Height: {opt.height}
+                      </div>
                     </div>
-                    <div className="p-4 sm:p-5 space-y-3 flex-1">
-                      <div className="flex justify-between items-start">
-                        <span className="text-lg font-black font-display text-black">{opt.height}</span>
-                        {opt.videoIncluded && (
-                          <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded flex items-center gap-1">
-                            <Video size={10} /> Video Inc.
-                          </span>
-                        )}
+                    
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-bold text-base font-display text-black leading-snug">{opt.name}</h3>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                          <Clock size={13} className="text-accent" />
+                          <span>{opt.duration}</span>
+                          <span className="text-slate-300">•</span>
+                          {opt.videoIncluded && (
+                            <span className="text-[10px] text-green-700 bg-green-50 border border-green-150 px-1.5 py-0.5 rounded font-black flex items-center gap-1">
+                              <Video size={10} /> Video Inc.
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                          {opt.description}
+                        </p>
                       </div>
 
-                      <h3 className="font-bold text-base font-display text-black leading-snug">{opt.name}</h3>
-                      
-                      <div className="flex items-center gap-1 text-xs text-black font-bold">
-                        <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                        <span>{opt.rating}</span>
-                        <span className="text-gray-500 font-semibold">({opt.reviewsCount} reviews)</span>
+                      <div className="pt-4 border-t border-black/5 flex items-center justify-between">
+                        <div>
+                          <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
+                          <span className="text-lg font-black text-black">₹{opt.price.toLocaleString('en-IN')}</span>
+                        </div>
+                        <button
+                          onClick={() => setSelectedBungee(opt)}
+                          className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
+                        >
+                          View Details <ChevronLeft className="rotate-180" size={14} />
+                        </button>
                       </div>
-
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed line-clamp-3">
-                        {opt.desc}
-                      </p>
-                    </div>
-
-                    <div className="p-4 sm:p-5 bg-gray-50 border-t border-black/5 flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] block font-bold text-gray-500 uppercase">From</span>
-                        <span className="text-xl font-black text-black">₹{opt.price.toLocaleString('en-IN')}</span>
-                      </div>
-                      <span className="text-xs font-black uppercase text-black flex items-center gap-1">
-                        View Details <ChevronLeft className="rotate-180" size={14} />
-                      </span>
                     </div>
                   </motion.div>
                 ))}
-              </motion.div>
+              </div>
             </div>
           </motion.div>
         ) : (
           /* SECTION B: DETAILED VIEW */
           <motion.div
             key="detail"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="pb-24 pt-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative"
           >
-            {/* Back Button and Title */}
-            <div className="max-w-4xl mx-auto px-6 space-y-6">
-              <button
-                onClick={() => setSelectedBungee(null)}
-                className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-600 hover:text-black hover:border-black transition-colors"
-              >
-                <ChevronLeft size={16} /> Back to Bungee Options
-              </button>
-
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] bg-black text-accent font-black tracking-widest px-2 py-0.5 rounded uppercase">
-                      BUNGEE JUMP
-                    </span>
-                    <span className="text-[10px] bg-red-100 text-red-800 font-black tracking-widest px-2 py-0.5 rounded uppercase">
-                      Height: {selectedBungee.height}
-                    </span>
-                  </div>
-                  <h1 className="text-xl md:text-2xl font-bold font-display text-black">{selectedBungee.name}</h1>
-                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                    <div className="flex items-center gap-1 text-xs text-black font-black">
-                      <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                      <span>{selectedBungee.rating}</span>
-                      <span className="text-gray-500 font-bold">({selectedBungee.reviewsCount} reviews)</span>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 mt-1">
-                    <MapPin size={12} className="text-black" /> Tapovan Office (Pickup Point), Rishikesh
-                  </p>
-                </div>
-
-                <div className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col">
-                  <span className="text-[10px] font-bold text-gray-600 uppercase">Package Price</span>
-                  <span className="text-2xl font-black text-black">₹{selectedBungee.price.toLocaleString('en-IN')}</span>
-                  <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Book with Token Advance</span>
-                </div>
-              </div>
-
-              {/* Slider / Image Gallery */}
-              <div className="h-48 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-black/10 group">
-                <AnimatePresence mode="wait">
-                  <motion.img 
-                    key={currentImgIdx}
-                    src={selectedBungee.images[currentImgIdx]} 
-                    alt={`${selectedBungee.name} view ${currentImgIdx + 1}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-full h-full object-cover absolute inset-0"
-                  />
-                </AnimatePresence>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35" />
-                
-                {/* Left/Right Navigation Buttons */}
-                <button 
-                  onClick={() => setCurrentImgIdx((prev) => (prev - 1 + selectedBungee.images.length) % selectedBungee.images.length)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 backdrop-blur-xs flex items-center justify-center text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md hover:bg-black/75 z-10"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button 
-                  onClick={() => setCurrentImgIdx((prev) => (prev + 1) % selectedBungee.images.length)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 backdrop-blur-xs flex items-center justify-center text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md hover:bg-black/75 z-10"
-                >
-                  <ChevronLeft size={16} className="rotate-180" />
-                </button>
-
-                {/* Bottom Slide Indicators (Dots) */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-xs">
-                  {selectedBungee.images.map((_, dotIdx) => (
-                    <button
-                      key={dotIdx}
-                      onClick={() => setCurrentImgIdx(dotIdx)}
-                      className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer border-none ${dotIdx === currentImgIdx ? 'bg-white w-3' : 'bg-white/40'}`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Specs card below image */}
-              <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-[11px] sm:text-xs bg-black/85 p-3.5 sm:p-4 rounded-2xl border border-white/5 shadow-sm">
-                <div className="flex gap-4 flex-wrap">
-                  <div>
-                    <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Timings</span>
-                    <span className="font-bold text-white">10:00 AM - 09:00 PM</span>
-                  </div>
-                  <div>
-                    <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">Activity Site</span>
-                    <span className="font-bold text-white">Shivpuri Canyon</span>
-                  </div>
-                </div>
-                {selectedBungee.videoIncluded && (
-                  <div className="self-start xs:self-auto px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs flex-shrink-0">
-                    <Video size={12} fill="currentColor" /> HD DSLR Video Included
-                  </div>
-                )}
-              </div>
-
-              {/* About and Highlights */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold font-display text-black uppercase tracking-tight">About this Jump</h3>
-                <p className="text-sm text-gray-600 leading-relaxed font-medium">
-                  {selectedBungee.desc} Rishikesh is home to India's most advanced cantilever jump platforms, built and supervised by certified experts from New Zealand and Australia. Feel the ultimate weightless drop over a stunning rocky canyon.
-                </p>
-              </div>
-
-              {/* Inclusions & Exclusions */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4 border-t border-black/5">
-                <div className="space-y-3">
-                  <h4 className="font-bold text-sm font-display text-black uppercase tracking-wider flex items-center gap-1.5">
-                    <Check size={16} className="text-green-600 stroke-[3]" /> What's Included
-                  </h4>
-                  <ul className="space-y-2 text-xs font-medium text-gray-600">
-                    <li>• International-grade Safety Harness</li>
-                    <li>• Jump Briefing by Certified Bungy Master</li>
-                    <li>• Personalized Jump Certificate of Courage</li>
-                    <li>• Transport from Tapovan Office to Jump Zone</li>
-                    {selectedBungee.videoIncluded ? (
-                      <li className="text-green-700 font-bold">• 1x HD DSLR Video Footage (Included)</li>
-                    ) : (
-                      <li>• DSLR footage available for purchase</li>
-                    )}
-                  </ul>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="font-bold text-sm font-display text-black uppercase tracking-wider flex items-center gap-1.5">
-                    <X size={16} className="text-red-600 stroke-[3]" /> What's Excluded
-                  </h4>
-                  <ul className="space-y-2 text-xs font-medium text-gray-600">
-                    <li>• Drone Footage (Extra: ₹800 at counter)</li>
-                    <li>• Viewer entry to the jump bridge zone (₹500/viewer)</li>
-                    <li>• Personal food and beverage expenses</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Safety, Eligibility and Restrictions */}
-              <div className="p-6 border border-red-100 bg-red-50/50 rounded-2xl space-y-4">
-                <h4 className="font-bold text-sm font-display text-red-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <HeartCrack size={16} className="text-red-700" /> Health & Medical Eligibility
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium text-gray-700">
-                  <div className="space-y-2">
-                    <span className="block font-bold text-red-800">Eligibility Criteria:</span>
-                    <ul className="list-disc pl-4 space-y-1">
-                      <li>Age: 14 to 70 Years</li>
-                      <li>Weight: 40 to 110 kg</li>
-                      <li>Full briefing compliance required</li>
-                    </ul>
-                  </div>
-                  <div className="space-y-2">
-                    <span className="block font-bold text-red-800">Strictly NOT Suitable For:</span>
-                    <ul className="list-disc pl-4 space-y-1 bg-red">
-                      <li>Pregnant women</li>
-                      <li>Heart conditions, high BP or breathing ailments</li>
-                      <li>Epilepsy or chronic back/neck spinal conditions</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Logistics Section */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-black/5">
-                <div className="space-y-2">
-                  <span className="block text-xs font-bold text-gray-500 uppercase tracking-wide">Pickup Point & Logistics</span>
-                  <p className="text-sm font-semibold text-black flex items-center gap-1">
-                    <MapPin size={16} /> Tapovan Main Office, Bungee Center Rishikesh
-                  </p>
-                  <p className="text-xs text-gray-500">Free shuttle departs for the activity zone every 30 minutes from our Tapovan registration desk.</p>
-                </div>
-                <div className="space-y-2">
-                  <span className="block text-xs font-bold text-gray-500 uppercase tracking-wide">Refund Policy</span>
-                  <p className="text-sm font-semibold text-black flex items-center gap-1">
-                    <Info size={16} /> 100% Refundable
-                  </p>
-                  <p className="text-xs text-gray-500">Full refund if canceled up to 24 hours prior to selected schedule. No slot transfer within 12 hours.</p>
-                </div>
-              </div>
-
-              {/* Pay 10% Banner */}
-              <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-black mt-6">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck size={28} className="text-black flex-shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-sm uppercase tracking-tight">PAY TOKEN ADVANCE ONLINE TO SECURE SLOT</h4>
-                    <p className="text-xs text-gray-600 font-medium">Pay a partial token advance online today to reserve your slot. Pay remaining balance at the venue on arrival.</p>
-                  </div>
-                </div>
+            {/* Show back button only if there are multiple options */}
+            {bungeeData.length > 1 && (
+              <div className="max-w-4xl mx-auto px-6 pt-6">
                 <button
-                  onClick={() => openBookingModal({
-                    id: selectedBungee.id,
-                    name: selectedBungee.name,
-                    price: selectedBungee.price,
-                    category: 'bungee',
-                    videoIncluded: selectedBungee.videoIncluded
-                  })}
-                  className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                  onClick={() => setSelectedBungee(null)}
+                  className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
                 >
-                  Book Now
+                  <ChevronLeft size={16} /> Back to Jump Packages
                 </button>
               </div>
+            )}
 
-              {/* Auto Sliding Reviews */}
-              <div className="border border-black/5 bg-gray-50 rounded-xl p-6 relative overflow-hidden min-h-[130px] flex items-center mt-6">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeReviewIdx}
-                    initial={{ opacity: 0, x: 40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -40 }}
-                    transition={{ duration: 0.35, ease: "easeInOut" }}
-                    className="space-y-2 w-full"
-                  >
-                    <div className="flex text-yellow-400 gap-0.5">
-                      {[...Array(reviews[activeReviewIdx].stars)].map((_, i) => (
-                        <Star key={i} size={12} fill="currentColor" />
-                      ))}
-                    </div>
-                    <p className="text-sm font-medium italic text-black pr-16 leading-relaxed">
-                      "{reviews[activeReviewIdx].text}"
-                    </p>
-                    <span className="text-xs font-bold text-gray-500">— {reviews[activeReviewIdx].name}</span>
-                  </motion.div>
-                </AnimatePresence>
-                <span className="absolute right-6 top-6 text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-bold px-2 py-0.5 rounded">Jump Guest</span>
-              </div>
-            </div>
-
-            {/* Mobile / Sticky Bottom Bar */}
-            <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-xl shadow-xl">
-              <div>
-                <span className="block text-[10px] text-gray-500 uppercase font-bold">{selectedBungee.name}</span>
-                <span className="text-lg font-black text-black">
-                  ₹{selectedBungee.price.toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold"> total</span>
-                </span>
-              </div>
-              <button
-                onClick={() => openBookingModal({
-                  id: selectedBungee.id,
-                  name: selectedBungee.name,
-                  price: selectedBungee.price,
-                  category: 'bungee',
-                  videoIncluded: selectedBungee.videoIncluded
-                })}
-                className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
-              >
-                Book Now
-              </button>
-            </div>
+            <ActivityDetail
+              id={selectedBungee.id}
+              title={selectedBungee.name}
+              category="bungee"
+              price={selectedBungee.price}
+              rating={selectedBungee.rating}
+              reviewsCount={selectedBungee.reviewsCount}
+              heroImage={selectedBungee.images}
+              tagline={`Leap from India's premium ${selectedBungee.height} cantilever platform.`}
+              description={selectedBungee.description}
+              highlights={[
+                { label: 'Platform Height', value: selectedBungee.height },
+                { label: 'Jump Duration', value: selectedBungee.duration },
+                { label: 'Location', value: selectedBungee.route }
+              ]}
+              inclusions={selectedBungee.inclusions}
+              exclusions={selectedBungee.exclusions}
+              eligibility={[
+                'Age 12 to 65 Years',
+                'Weight 35 kg to 110 kg'
+              ]}
+              notSuitableFor={[
+                'Pregnant women',
+                'Heart conditions, high BP or breathing ailments',
+                'Epilepsy or chronic back/neck spinal conditions'
+              ]}
+              location={selectedBungee.route}
+              cancellation={selectedBungee.cancellation_policy}
+              openBookingModal={openBookingModal}
+              operators={selectedBungee.operators}
+            />
           </motion.div>
         )}
       </AnimatePresence>

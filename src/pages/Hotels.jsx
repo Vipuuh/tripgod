@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Building2, MessageSquare, Sparkles, MapPin, Star,
-  Bed, Trees, ShieldAlert, Check, X, ShieldCheck, Map, Phone, ChevronLeft, ChevronRight
+  Building2, Star, MapPin, Check, X, ShieldCheck, 
+  ChevronLeft, ChevronRight, MessageSquare, ShieldAlert, Map
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -12,7 +12,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
-  // Swipe gesture support
+  // Swipe gesture support for gallery
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
@@ -26,70 +26,61 @@ export default function Hotels({ currentCity, openBookingModal }) {
   };
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (!touchStart || !touchEnd || !selectedHotel || !selectedHotel.images) return;
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-    if (isLeftSwipe && selectedHotel?.images?.length > 1) {
+    if (isLeftSwipe && selectedHotel.images.length > 1) {
       setActiveImgIdx(prev => (prev + 1) % selectedHotel.images.length);
-    } else if (isRightSwipe && selectedHotel?.images?.length > 1) {
+    } else if (isRightSwipe && selectedHotel.images.length > 1) {
       setActiveImgIdx(prev => (prev - 1 + selectedHotel.images.length) % selectedHotel.images.length);
     }
   };
-
-  // Fallback demo stays
-  const demoStays = [
-    {
-      id: 'demo-hotel-1',
-      name: 'Valley View Cottage',
-      address: 'Near Ram Jhula, Rishikesh',
-      price: 2200,
-      images: ['https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=600'],
-      description: 'A cozy property nestled in the hills of Rishikesh near Ram Jhula. Enjoy panoramic mountain views, modern amenities, free WiFi, and warm hospitality.',
-      amenities: { wifi: true, ac: true, mountain_view: true, geyser: true },
-      rules: { unmarried_couples: true, pets: false, smoking: false },
-      landmarks: ['Ram Jhula - 1.2 KM', 'Parmarth Niketan - 2 KM'],
-      rating: 4.6,
-      reviewsCount: 145
-    },
-    {
-      id: 'demo-hotel-2',
-      name: 'Ganga View Resort',
-      address: 'Near Laxman Jhula, Rishikesh',
-      price: 4500,
-      images: ['https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=600'],
-      description: 'Experience luxury on the banks of the holy Ganges. Features directly river-facing balconies, in-house yoga sessions, rooftop organic restaurant, and swimming pool.',
-      amenities: { wifi: true, ac: true, river_view: true, restaurant: true, room_service: true },
-      rules: { unmarried_couples: true, pets: true, smoking: false },
-      landmarks: ['Laxman Jhula - 500 Meters', 'Little Buddha Cafe - 400 Meters'],
-      rating: 4.8,
-      reviewsCount: 288
-    }
-  ];
 
   useEffect(() => {
     const fetchHotels = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('hotels').select('*, vendors(*)');
+        let query = supabase.from('hotels')
+          .select('*, vendors(*)');
+        
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
+        
         const { data, error } = await query;
         if (error) throw error;
-        if (data && data.length > 0) {
-          const mapped = data.map((item, idx) => ({
-            ...item,
-            rating: item.vendors?.star_rating || item.rating || Number((4.5 + ((idx * 7) % 5) / 10).toFixed(1)),
-            reviewsCount: item.reviews_count || (120 + ((idx * 83) % 250))
+
+        if (data) {
+          const mapped = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: Number(item.price),
+            original_price: item.original_price ? Number(item.original_price) : null,
+            address: item.address,
+            maps_link: item.maps_link,
+            check_in: item.check_in,
+            check_out: item.check_out,
+            cancellation_policy: item.cancellation_policy,
+            images: item.images && item.images.length > 0 ? item.images : [
+              'https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=1200',
+              'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'
+            ],
+            amenities: typeof item.amenities === 'string' ? JSON.parse(item.amenities) : (item.amenities || {}),
+            rules: typeof item.rules === 'string' ? JSON.parse(item.rules) : (item.rules || {}),
+            landmarks: item.landmarks || [],
+            city_id: item.city_id,
+            vendor_id: item.vendor_id,
+            vendors: item.vendors,
+            rating: item.rating || 4.7,
+            reviewsCount: item.reviews_count || 120,
+            is_limited_offer: !!item.is_limited_offer
           }));
           setHotels(mapped);
-        } else {
-          setHotels(demoStays);
         }
       } catch (err) {
-        console.error('Error fetching hotels from Supabase:', err);
-        setHotels(demoStays);
+        console.error('Error fetching hotels:', err);
       } finally {
         setLoading(false);
       }
@@ -113,172 +104,178 @@ export default function Hotels({ currentCity, openBookingModal }) {
   }
 
   return (
-    <div className="w-full min-h-[80vh] bg-white flex flex-col py-16 font-sans">
-      <div className="max-w-6xl mx-auto px-6 space-y-12">
-        
-        {/* Title Section */}
-        <div className="text-center space-y-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 text-xs font-black uppercase tracking-widest rounded-full">
-            <Sparkles size={12} className="stroke-[2.5]" /> Premium Stays
-          </span>
-          <h1 className="text-3xl md:text-5xl font-black font-display text-black uppercase tracking-tight">
-            RESORTS & HOTEL STAYS
-          </h1>
-          <div className="w-20 h-1 bg-[#FF5F00] mx-auto mt-4" />
-          <p className="text-gray-500 max-w-lg mx-auto text-xs sm:text-sm font-medium pt-2 leading-relaxed">
-            Choose from the finest boutique cottages, ashrams, and luxury riverside resorts in {currentCity?.name || 'Rishikesh'}.
-          </p>
-        </div>
-
-        {/* Listings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {hotels.map(hotel => {
-            const thumbnail = hotel.images && hotel.images.length > 0 ? hotel.images[0] : 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=600';
-            
-            return (
-              <motion.div
-                key={hotel.id}
-                whileHover={{ y: -5 }}
-                onClick={() => setSelectedHotel(hotel)}
-                className="border border-black/5 bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 group cursor-pointer"
-              >
-                <div>
-                  {/* Image */}
-                  <div className="h-48 bg-gray-100 overflow-hidden relative">
-                    <img 
-                      src={thumbnail} 
-                      alt={hotel.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    {hotel.is_limited_offer && (
-                      <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider">
-                        LIMITED TIME OFFER
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Info details */}
-                  <div className="p-5 space-y-3.5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="font-bold text-lg font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors truncate max-w-[70%]">
-                        {hotel.name}
-                      </h3>
-                      {hotel.vendors?.name && (
-                        <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[28%]">
-                          {hotel.vendors.name}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-1 text-xs text-black font-bold">
-                      <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                      <span>{hotel.rating}</span>
-                      <span className="text-gray-500 font-semibold">({hotel.reviewsCount} reviews)</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                      <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5">
-                        <MapPin size={12} className="text-[#FF5F00]" /> {hotel.address}
-                      </p>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
-                          <span className="text-xs text-gray-400 line-through">
-                            ₹{Number(hotel.original_price).toLocaleString('en-IN')}
-                          </span>
-                        )}
-                        <span className="text-sm font-black text-[#FF5F00]">
-                          ₹{Number(hotel.price).toLocaleString('en-IN')}/night
-                        </span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">
-                      {hotel.description}
-                    </p>
-
-                    {/* Landmarks list preview */}
-                    {hotel.landmarks && hotel.landmarks.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-0.5">
-                        {hotel.landmarks.slice(0, 2).map((landmark, idx) => (
-                          <span key={idx} className="text-[9px] bg-gray-50 border border-black/5 text-gray-500 font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
-                            <MapPin size={10} className="text-gray-400" /> {landmark}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Amenities list */}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {Object.entries(hotel.amenities || {}).filter(([_, val]) => !!val).map(([key]) => (
-                        <span key={key} className="text-[9px] bg-slate-50 border border-black/5 text-gray-600 font-bold px-2 py-0.5 rounded capitalize">
-                          {key.replace('_', ' ')}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* View Details Action */}
-                <div className="px-5 pb-5 pt-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedHotel(hotel);
-                    }}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
-                  >
-                    View Stay Details
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Offline Notice Banner */}
-        <div className="max-w-xl mx-auto p-5 border border-black/10 rounded-3xl space-y-4 bg-gray-50 text-center shadow-sm">
-          <div className="flex items-center gap-2 text-yellow-800 text-xs font-semibold leading-relaxed justify-center">
-            <ShieldAlert size={16} className="flex-shrink-0" />
-            <span>Need custom packages or direct group bookings? Our local team is available 24/7.</span>
-          </div>
-
-          <button
-            onClick={handleContactWhatsApp}
-            className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer font-display"
+    <div className="w-full min-h-screen bg-white">
+      <AnimatePresence mode="wait">
+        {!selectedHotel ? (
+          /* SECTION A: LISTING VIEW */
+          <motion.div
+            key="list"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full min-h-[80vh] bg-white flex flex-col py-16 font-sans"
           >
-            <MessageSquare size={16} />
-            <span>Enquire Stays on WhatsApp</span>
-          </button>
-        </div>
+            <div className="max-w-6xl mx-auto px-6 space-y-12">
+              {/* Title Section */}
+              <div className="text-center space-y-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 text-xs font-black uppercase tracking-widest rounded-full">
+                  Stay Premium
+                </span>
+                <h1 className="text-3xl md:text-5xl font-black font-display text-black uppercase tracking-tight">
+                  RESORTS & HOTEL STAYS
+                </h1>
+                <div className="w-20 h-1 bg-[#FF5F00] mx-auto mt-4" />
+                <p className="text-gray-500 max-w-lg mx-auto text-xs sm:text-sm font-medium pt-2 leading-relaxed">
+                  Choose from the finest boutique cottages, ashrams, and luxury resorts in {currentCity?.name || 'Rishikesh'}.
+                </p>
+              </div>
 
-      </div>
+              {/* Listings Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {hotels.map(hotel => {
+                  const thumbnail = hotel.images && hotel.images.length > 0 ? hotel.images[0] : 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=600';
+                  
+                  return (
+                    <motion.div
+                      key={hotel.id}
+                      whileHover={{ y: -5 }}
+                      onClick={() => setSelectedHotel(hotel)}
+                      className="border border-black/5 bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 group cursor-pointer"
+                    >
+                      <div>
+                        {/* Image */}
+                        <div className="h-48 bg-gray-100 overflow-hidden relative">
+                          <img 
+                            src={thumbnail} 
+                            alt={hotel.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          />
+                          {hotel.is_limited_offer && (
+                            <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider">
+                              LIMITED TIME OFFER
+                            </span>
+                          )}
+                        </div>
 
-      {/* Hotel Details Modal */}
-      <AnimatePresence>
-        {selectedHotel && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 cursor-pointer"
-              onClick={() => {
-                setSelectedHotel(null);
-                setActiveImgIdx(0);
-              }}
-            />
+                        {/* Info details */}
+                        <div className="p-5 space-y-3.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h3 className="font-bold text-lg font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors truncate max-w-[70%]">
+                              {hotel.name}
+                            </h3>
+                            {hotel.vendors?.name && (
+                              <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[28%]">
+                                {hotel.vendors.name}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center gap-1 text-xs text-black font-bold">
+                            <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                            <span>{hotel.rating}</span>
+                            <span className="text-gray-500 font-semibold">({hotel.reviewsCount} reviews)</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                            <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5">
+                              <MapPin size={12} className="text-[#FF5F00]" /> {hotel.address}
+                            </p>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
+                                <span className="text-xs text-gray-400 line-through">
+                                  ₹{Number(hotel.original_price).toLocaleString('en-IN')}
+                                </span>
+                              )}
+                              <span className="text-sm font-black text-[#FF5F00]">
+                                ₹{Number(hotel.price).toLocaleString('en-IN')}/night
+                              </span>
+                            </div>
+                          </div>
 
-            {/* Modal Card */}
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-10 p-6 md:p-8 space-y-6 text-left border border-black/5 scrollbar-thin"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between border-b border-gray-100 pb-4">
-                <div className="space-y-1.5 max-w-[85%]">
+                          <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">
+                            {hotel.description}
+                          </p>
+
+                          {/* Landmarks list preview */}
+                          {hotel.landmarks && hotel.landmarks.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-0.5">
+                              {hotel.landmarks.slice(0, 2).map((landmark, idx) => (
+                                <span key={idx} className="text-[9px] bg-gray-50 border border-black/5 text-gray-500 font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
+                                  <MapPin size={10} className="text-gray-400" /> {landmark}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Amenities list */}
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {Object.entries(hotel.amenities || {}).filter(([_, val]) => !!val).map(([key]) => (
+                              <span key={key} className="text-[9px] bg-slate-50 border border-black/5 text-gray-600 font-bold px-2 py-0.5 rounded capitalize">
+                                {key.replace('_', ' ')}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* View Details Action */}
+                      <div className="px-5 pb-5 pt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedHotel(hotel);
+                          }}
+                          className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
+                        >
+                          View Stay Details
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Offline Notice Banner */}
+              <div className="max-w-xl mx-auto p-5 border border-black/10 rounded-3xl space-y-4 bg-gray-50 text-center shadow-sm">
+                <div className="flex items-center gap-2 text-yellow-800 text-xs font-semibold leading-relaxed justify-center">
+                  <ShieldAlert size={16} className="flex-shrink-0" />
+                  <span>Need custom packages or direct group bookings? Our local team is available 24/7.</span>
+                </div>
+
+                <button
+                  onClick={handleContactWhatsApp}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer font-display"
+                >
+                  <MessageSquare size={16} />
+                  <span>Enquire Stays on WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          /* SECTION B: DETAILED VIEW */
+          <motion.div
+            key="detail"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="pb-24 pt-6 bg-white w-full"
+          >
+            <div className="max-w-4xl mx-auto px-6 space-y-6 text-left">
+              {/* Back Button */}
+              <button
+                onClick={() => {
+                  setSelectedHotel(null);
+                  setActiveImgIdx(0);
+                }}
+                className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
+              >
+                <ChevronLeft size={16} /> Back to Hotel Stays
+              </button>
+
+              {/* Title Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] text-[9px] font-black uppercase tracking-wider rounded-md border border-[#FF5F00]/20">
                       Stay Details
@@ -294,9 +291,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-xl md:text-2xl font-black font-display text-black uppercase leading-tight tracking-tight">
+                  <h1 className="text-xl md:text-2xl font-black font-display text-black uppercase leading-tight tracking-tight">
                     {selectedHotel.name}
-                  </h3>
+                  </h1>
                   <div className="flex items-center gap-2 flex-wrap mt-0.5">
                     <div className="flex items-center gap-1 text-xs text-black font-black">
                       <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
@@ -308,15 +305,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <MapPin size={12} className="text-[#FF5F00]" /> {selectedHotel.address}
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedHotel(null);
-                    setActiveImgIdx(0);
-                  }}
-                  className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-all cursor-pointer border-none bg-transparent"
-                >
-                  <X size={20} />
-                </button>
+
+                <div className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col w-fit shrink-0">
+                  <span className="text-[10px] font-bold text-gray-600 uppercase">Price / Night</span>
+                  <div className="flex items-baseline gap-1.5">
+                    {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                      <span className="text-xs text-gray-400 line-through">
+                        ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
+                      </span>
+                    )}
+                    <span className="text-xl font-black text-black">₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Image Gallery / Slider */}
@@ -325,7 +325,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
-                  className="relative h-48 sm:h-72 w-full rounded-2xl overflow-hidden bg-gray-100 group border border-black/5 cursor-grab active:cursor-grabbing"
+                  className="relative h-48 sm:h-80 w-full rounded-2xl overflow-hidden bg-gray-100 group border border-black/5 cursor-grab active:cursor-grabbing"
                 >
                   <img
                     src={selectedHotel.images[activeImgIdx]}
@@ -369,32 +369,26 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               )}
 
-              {/* Details Section */}
-              <div className="grid grid-cols-3 gap-2.5 border-b border-gray-100 pb-4 text-[10px] sm:text-xs font-semibold">
-                <div className="p-3 bg-orange-50/40 border border-orange-100 rounded-2xl flex flex-col items-center justify-center text-center">
-                  <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Price / Night</span>
-                  <div className="flex items-center gap-1.5 justify-center">
-                    {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
-                      <span className="text-[10px] sm:text-xs text-gray-400 line-through">
-                        ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
-                      </span>
-                    )}
-                    <span className="text-sm sm:text-base font-black text-[#FF5F00]">₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
+              {/* Checkin / Checkout Specs Card */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-white text-[11px] sm:text-xs bg-black/85 p-4 rounded-2xl border border-white/5 shadow-sm">
+                <div className="flex gap-8 flex-wrap">
+                  <div>
+                    <span className="block text-gray-400 text-[9px] uppercase font-bold tracking-wider mb-0.5">Check-in Time</span>
+                    <span className="font-bold text-white text-xs sm:text-sm">{selectedHotel.check_in || '12:00 PM'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-400 text-[9px] uppercase font-bold tracking-wider mb-0.5">Check-out Time</span>
+                    <span className="font-bold text-white text-xs sm:text-sm">{selectedHotel.check_out || '11:00 AM'}</span>
                   </div>
                 </div>
-                <div className="p-3 bg-gray-50/50 border border-black/5 rounded-2xl flex flex-col items-center justify-center text-center">
-                  <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Check-in</span>
-                  <span className="text-xs sm:text-sm text-black font-extrabold">{selectedHotel.check_in || '12:00 PM'}</span>
-                </div>
-                <div className="p-3 bg-gray-50/50 border border-black/5 rounded-2xl flex flex-col items-center justify-center text-center">
-                  <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider mb-1">Check-out</span>
-                  <span className="text-xs sm:text-sm text-black font-extrabold">{selectedHotel.check_out || '11:00 AM'}</span>
+                <div className="px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs flex-shrink-0">
+                  <ShieldCheck size={12} /> TripGod Verified Stay
                 </div>
               </div>
 
               {/* Description */}
               <div className="space-y-2">
-                <h4 className="text-xs font-black uppercase text-black tracking-wider">About the Property</h4>
+                <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">About the Property</h4>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
                   {selectedHotel.description}
                 </p>
@@ -403,7 +397,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* Amenities */}
               {selectedHotel.amenities && Object.keys(selectedHotel.amenities).length > 0 && (
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider">Amenities Provided</h4>
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Amenities Provided</h4>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(selectedHotel.amenities)
                       .filter(([_, val]) => !!val)
@@ -423,7 +417,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* Landmarks */}
               {selectedHotel.landmarks && selectedHotel.landmarks.length > 0 && (
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider">Nearby Landmarks</h4>
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Nearby Landmarks</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-gray-600">
                     {selectedHotel.landmarks.map((landmark, idx) => (
                       <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50/50 rounded-xl border border-black/5">
@@ -435,11 +429,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               )}
 
-              {/* Rules & Cancellation */}
+              {/* House Rules & Cancellation Policy */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-4">
                 {selectedHotel.rules && Object.keys(selectedHotel.rules).length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="text-xs font-black uppercase text-black tracking-wider">House Rules</h4>
+                    <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">House Rules</h4>
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 font-semibold">
                       {Object.entries(selectedHotel.rules).map(([key, val]) => {
                         const labelMap = {
@@ -468,14 +462,14 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 )}
 
                 <div className="space-y-2 text-left">
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider">Cancellation Policy</h4>
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Cancellation Policy</h4>
                   <div className="p-3.5 bg-amber-50/40 border border-amber-200/50 rounded-2xl text-[11px] text-amber-800 leading-relaxed font-semibold">
                     {selectedHotel.cancellation_policy || 'No refund within 24 hours of check-in.'}
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
+              {/* Maps and Book actions */}
               <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
                 {selectedHotel.maps_link && (
                   <a
@@ -491,8 +485,6 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 <button
                   onClick={() => {
                     const hotelToBook = selectedHotel;
-                    setSelectedHotel(null);
-                    setActiveImgIdx(0);
                     openBookingModal({
                       id: hotelToBook.id,
                       name: hotelToBook.name,
@@ -509,8 +501,35 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   <span>Book Hotel Room</span>
                 </button>
               </div>
-            </motion.div>
-          </div>
+            </div>
+
+            {/* Sticky Bottom Bar for booking stay */}
+            <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-xl shadow-xl">
+              <div>
+                <span className="block text-[10px] text-gray-500 uppercase font-bold">{selectedHotel.name}</span>
+                <span className="text-lg font-black text-black">
+                  ₹{Number(selectedHotel.price).toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/night</span>
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  const hotelToBook = selectedHotel;
+                  openBookingModal({
+                    id: hotelToBook.id,
+                    name: hotelToBook.name,
+                    price: hotelToBook.price,
+                    category: 'hotels',
+                    city_id: hotelToBook.city_id,
+                    vendor_id: hotelToBook.vendor_id,
+                    slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
+                  });
+                }}
+                className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+              >
+                Book Now
+              </button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

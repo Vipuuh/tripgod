@@ -204,7 +204,9 @@ export default function Rafting({ currentCity, openBookingModal }) {
     const fetchRafting = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('rafting').select('*, vendors(*)');
+        let query = supabase.from('rafting')
+          .select('*, vendors(*)')
+          .or('activity_type.eq.rafting,activity_type.is.null');
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
