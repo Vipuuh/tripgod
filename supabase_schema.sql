@@ -203,4 +203,14 @@ ALTER TABLE vendors ADD COLUMN IF NOT EXISTS landmark TEXT;
 -- =========================================================================
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS activity_type TEXT DEFAULT 'rafting';
 
+-- =========================================================================
+-- Schema Extensions (Premium Hotels Detail Page — June 2026)
+-- =========================================================================
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS rating NUMERIC DEFAULT 4.5;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS reviews_count INTEGER DEFAULT 100;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS why_guests_love TEXT[] DEFAULT '{}'::TEXT[];
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS rooms_left INTEGER DEFAULT 5;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS high_demand BOOLEAN DEFAULT false;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS attractions JSONB DEFAULT '[]'::JSONB;
+
 

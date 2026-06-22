@@ -1489,7 +1489,13 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         ...data,
         original_price: data.original_price !== null && data.original_price !== undefined ? data.original_price : '',
         commission_percentage: data.commission_percentage !== null && data.commission_percentage !== undefined ? data.commission_percentage : '',
-        is_limited_offer: !!data.is_limited_offer
+        is_limited_offer: !!data.is_limited_offer,
+        rating: data.rating !== null && data.rating !== undefined ? data.rating : 4.5,
+        reviews_count: data.reviews_count !== null && data.reviews_count !== undefined ? data.reviews_count : 100,
+        why_guests_love: data.why_guests_love || [],
+        rooms_left: data.rooms_left !== null && data.rooms_left !== undefined ? data.rooms_left : 5,
+        high_demand: !!data.high_demand,
+        attractions: data.attractions || []
       });
     } else {
       // Set defaults for empty forms
@@ -1515,6 +1521,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.amenities = { wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false, river_view: false, room_service: false, power_backup: false, geyser: false };
         defaults.rules = { unmarried_couples: false, pets: false, smoking: false, id_required: false, min_age_18: false, alcohol_allowed: false, visitors_allowed: false };
         defaults.landmarks = [];
+        defaults.rating = 4.5;
+        defaults.reviews_count = 100;
+        defaults.why_guests_love = [];
+        defaults.rooms_left = 5;
+        defaults.high_demand = false;
+        defaults.attractions = [];
       } else if (['rafting', 'adventures'].includes(type)) {
         defaults.activity_type = 'rafting';
         defaults.route = '';
@@ -2151,6 +2163,201 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 onChange={(e) => setFormData(prev => ({ ...prev, check_out: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Star Rating (1-5)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="1"
+                max="5"
+                required
+                value={formData.rating === undefined ? 4.5 : formData.rating}
+                onChange={(e) => setFormData(prev => ({ ...prev, rating: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Reviews Count</label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={formData.reviews_count === undefined ? 100 : formData.reviews_count}
+                onChange={(e) => setFormData(prev => ({ ...prev, reviews_count: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Rooms Left</label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={formData.rooms_left === undefined ? 5 : formData.rooms_left}
+                onChange={(e) => setFormData(prev => ({ ...prev, rooms_left: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col justify-end pb-3">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-350 select-none">
+                <input
+                  type="checkbox"
+                  checked={!!formData.high_demand}
+                  onChange={(e) => setFormData(prev => ({ ...prev, high_demand: e.target.checked }))}
+                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+                />
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">High Demand</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Why Guests Love - Dynamic List */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Why Guests Love This Stay Highlights</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentList = formData.why_guests_love || [];
+                  setFormData(prev => ({
+                    ...prev,
+                    why_guests_love: [...currentList, '']
+                  }));
+                }}
+                className="py-1 px-2.5 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/25 text-[#FF5F00] font-black text-[9px] uppercase tracking-wider rounded-lg border border-[#FF5F00]/20 cursor-pointer transition-all"
+              >
+                + Add Highlight
+              </button>
+            </div>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {(formData.why_guests_love || []).map((reason, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Stunning sunset views from the terrace"
+                    value={reason}
+                    onChange={(e) => {
+                      const updated = [...(formData.why_guests_love || [])];
+                      updated[idx] = e.target.value;
+                      setFormData(prev => ({ ...prev, why_guests_love: updated }));
+                    }}
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = (formData.why_guests_love || []).filter((_, i) => i !== idx);
+                      setFormData(prev => ({ ...prev, why_guests_love: updated }));
+                    }}
+                    className="p-2 bg-rose-550/10 hover:bg-rose-500/20 text-rose-550 border border-rose-500/20 rounded-xl cursor-pointer transition-colors flex items-center justify-center"
+                    title="Remove Highlight"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              {(formData.why_guests_love || []).length === 0 && (
+                <p className="text-[10px] text-gray-500 font-medium italic">No highlights added yet. Click "+ Add Highlight" above.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Nearby Attractions - Dynamic List */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Nearby Attractions</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentList = formData.attractions || [];
+                  setFormData(prev => ({
+                    ...prev,
+                    attractions: [...currentList, { name: '', distance: '', maps_url: '' }]
+                  }));
+                }}
+                className="py-1 px-2.5 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/25 text-[#FF5F00] font-black text-[9px] uppercase tracking-wider rounded-lg border border-[#FF5F00]/20 cursor-pointer transition-all"
+              >
+                + Add Attraction
+              </button>
+            </div>
+            
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+              {(formData.attractions || []).map((attraction, idx) => (
+                <div key={idx} className="p-3 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-2.5 relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = (formData.attractions || []).filter((_, i) => i !== idx);
+                      setFormData(prev => ({ ...prev, attractions: updated }));
+                    }}
+                    className="absolute top-2.5 right-2.5 p-1.5 bg-rose-550/10 hover:bg-rose-500/20 text-rose-550 border border-rose-500/20 rounded-lg cursor-pointer transition-colors"
+                    title="Remove Attraction"
+                  >
+                    <X size={12} />
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-black uppercase text-gray-500 tracking-wider">Attraction Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Laxman Jhula"
+                        value={attraction.name || ''}
+                        onChange={(e) => {
+                          const updated = [...(formData.attractions || [])];
+                          updated[idx] = { ...updated[idx], name: e.target.value };
+                          setFormData(prev => ({ ...prev, attractions: updated }));
+                        }}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-black uppercase text-gray-500 tracking-wider">Distance</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. 1.5 KM"
+                        value={attraction.distance || ''}
+                        onChange={(e) => {
+                          const updated = [...(formData.attractions || [])];
+                          updated[idx] = { ...updated[idx], distance: e.target.value };
+                          setFormData(prev => ({ ...prev, attractions: updated }));
+                        }}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black uppercase text-gray-500 tracking-wider">Google Maps URL</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. https://maps.google.com/?q=..."
+                      value={attraction.maps_url || ''}
+                      onChange={(e) => {
+                        const updated = [...(formData.attractions || [])];
+                        updated[idx] = { ...updated[idx], maps_url: e.target.value };
+                        setFormData(prev => ({ ...prev, attractions: updated }));
+                      }}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
+                    />
+                  </div>
+                </div>
+              ))}
+              {(formData.attractions || []).length === 0 && (
+                <p className="text-[10px] text-gray-500 font-medium italic">No attractions added yet. Click "+ Add Attraction" above.</p>
+              )}
             </div>
           </div>
 
