@@ -423,7 +423,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               </div>
 
               {/* Sorting Controls */}
-              <div className="flex justify-end items-center max-w-6xl mx-auto px-6 -mb-6">
+              <div className="flex justify-end items-center -mb-2 relative z-10 px-2">
                 <div className="flex items-center gap-2 bg-white border border-black/10 rounded-xl px-3.5 py-2 shadow-sm">
                   <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">Sort By:</span>
                   <select
@@ -447,6 +447,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* Listings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {hotels.map(hotel => {
+                  const taxes = Math.round(Number(hotel.price) * 0.12);
+                  const ratingLabel = hotel.rating >= 4.5 ? 'Excellent' : 
+                                      hotel.rating >= 4.0 ? 'Very Good' : 
+                                      hotel.rating >= 3.5 ? 'Good' : 'Recommended';
                   return (
                     <motion.div
                       key={hotel.id}
@@ -469,86 +473,117 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           )}
                         </div>
 
-                        {/* Info details */}
-                        <div className="p-5 space-y-3.5">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="font-bold text-lg font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-2 max-w-[70%]" title={hotel.name}>
-                              {hotel.name}
-                            </h3>
-                            {hotel.vendors?.name && (
-                              <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[28%]">
-                                {hotel.vendors.name}
-                              </span>
+                        {/* MakeMyTrip Style Card Content */}
+                        <div className="p-5 space-y-4">
+                          {/* Rating Row */}
+                          <div className="flex items-center gap-2">
+                            <span className="bg-[#FF5F00] text-white text-[10px] font-black px-1.5 py-0.5 rounded leading-none">
+                              {hotel.rating.toFixed(1)}
+                            </span>
+                            <span className="text-xs font-black text-black leading-none">
+                              {ratingLabel}
+                            </span>
+                            <span className="text-[11px] text-gray-400 font-semibold leading-none">
+                              ({hotel.reviewsCount} Ratings)
+                            </span>
+                          </div>
+
+                          {/* Title & Verification Badge */}
+                          <div className="flex items-start gap-1.5">
+                            {hotel.is_verified && (
+                              <ShieldCheck size={16} className="text-[#FF5F00] shrink-0 mt-0.5" />
                             )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-2" title={hotel.name}>
+                                {hotel.name}
+                              </h3>
+                              {hotel.vendors?.name && (
+                                <span className="inline-block mt-1 text-[9px] bg-slate-50 border border-black/5 text-gray-500 font-bold px-1.5 py-0.5 rounded">
+                                  by {hotel.vendors.name}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          
-                          <div className="flex items-center gap-1 text-xs text-black font-bold">
-                            <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                            <span>{hotel.rating}</span>
-                            <span className="text-gray-550 font-semibold">({hotel.reviewsCount} reviews)</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                            <p className="text-xs text-gray-550 font-semibold flex items-center gap-1.5 max-w-[55%] truncate">
-                              <MapPin size={12} className="text-[#FF5F00] shrink-0" /> {hotel.address}
-                            </p>
-                            <div className="flex flex-col items-end shrink-0">
-                              <div className="flex items-center gap-1.5">
+
+                          {/* Split Row for Info and Pricing */}
+                          <div className="flex justify-between items-start gap-4 pt-1 border-t border-gray-100/50">
+                            {/* Left Column: Location & Room Details */}
+                            <div className="space-y-2 flex-1 min-w-0">
+                              <p className="text-xs text-gray-500 font-semibold flex items-center gap-1">
+                                <MapPin size={12} className="text-[#FF5F00] shrink-0" />
+                                <span className="truncate">
+                                  {hotel.address.replace(', Rishikesh', '')} {hotel.landmarks && hotel.landmarks[0] ? `| ${hotel.landmarks[0]}` : ''}
+                                </span>
+                              </p>
+                              
+                              <div className="border-l-2 border-[#FF5F00]/30 pl-2 py-0.5">
+                                <p className="text-[11px] text-gray-700 font-bold leading-normal truncate">
+                                  {hotel.room_type}
+                                </p>
+                              </div>
+
+                              {/* Amenities List */}
+                              <div className="flex flex-wrap gap-1">
+                                {Object.entries(hotel.amenities || {})
+                                  .filter(([_, val]) => !!val)
+                                  .slice(0, 2)
+                                  .map(([key]) => (
+                                    <span key={key} className="text-[9px] bg-gray-50 border border-black/5 text-gray-600 font-bold px-2 py-0.5 rounded-md">
+                                      {key.replace('_', ' ')}
+                                    </span>
+                                  ))}
+                              </div>
+                            </div>
+
+                            {/* Right Column: Pricing */}
+                            <div className="text-right shrink-0">
+                              <div className="flex flex-col items-end">
                                 {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
-                                  <span className="text-xs text-gray-400 line-through">
+                                  <span className="text-xs text-gray-400 line-through font-medium">
                                     ₹{Number(hotel.original_price).toLocaleString('en-IN')}
                                   </span>
                                 )}
-                                <span className="text-sm font-black text-[#FF5F00]">
-                                  ₹{Number(hotel.price).toLocaleString('en-IN')}/night
+                                <span className="text-xl font-black text-black leading-none">
+                                  ₹{Number(hotel.price).toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-[9px] text-gray-500 font-semibold mt-1">
+                                  + ₹{taxes} taxes & fees
+                                </span>
+                                <span className="text-[8px] text-gray-400 font-medium uppercase tracking-wider">
+                                  Per Night
                                 </span>
                               </div>
-                              <span className="text-[9px] text-gray-400 font-bold mt-0.5">
-                                + taxes & fees
-                              </span>
                             </div>
                           </div>
 
-                          {/* Landmarks list preview */}
-                          {hotel.landmarks && hotel.landmarks.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 pt-0.5">
-                              {hotel.landmarks.slice(0, 2).map((landmark, idx) => (
-                                <span key={idx} className="text-[9px] bg-gray-50 border border-black/5 text-gray-500 font-bold px-2 py-0.5 rounded flex items-center gap-1.5">
-                                  <MapPin size={10} className="text-gray-400" /> {landmark}
-                                </span>
-                              ))}
+                          {/* Highlight Review Snippet */}
+                          {hotel.why_guests_love && hotel.why_guests_love[0] && (
+                            <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-3 flex items-start gap-2 text-xs text-black leading-relaxed">
+                              <Sparkles size={13} className="text-[#FF5F00] shrink-0 mt-0.5" />
+                              <p className="font-semibold text-gray-700 italic">
+                                "{hotel.why_guests_love[0]}"
+                              </p>
                             </div>
                           )}
 
-                          {/* Simplified Amenities Icons list */}
-                          <div className="flex items-center gap-2 pt-1">
-                            {Object.entries(hotel.amenities || {})
-                              .filter(([_, val]) => !!val)
-                              .slice(0, 4)
-                              .map(([key]) => {
-                                const IconComponent = AMENITY_ICONS[key] || Building2;
-                                return (
-                                  <div 
-                                    key={key} 
-                                    className="p-1.5 bg-slate-50 border border-black/5 rounded-xl text-gray-550 hover:text-[#FF5F00] transition-colors"
-                                    title={key.replace('_', ' ')}
-                                  >
-                                    <IconComponent size={13} />
-                                  </div>
-                                );
-                              })}
+                          {/* Exclusive UPI Discount Banner */}
+                          <div className="bg-black/5 border border-black/5 rounded-xl p-2.5 flex items-center justify-between text-[10px] text-gray-600 font-bold">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-4 h-4 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0 text-[#FF5F00] text-[9px] font-black">%</span>
+                              <span>Pay via UPI & get flat ₹150 instant discount</span>
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* View Details Action */}
-                      <div className="px-5 pb-5 pt-2">
+                      <div className="px-5 pb-5 pt-1">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectHotel(hotel);
                           }}
-                          className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
+                          className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
                         >
                           View Stay Details
                         </button>

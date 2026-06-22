@@ -127,10 +127,19 @@ export default function App() {
       if (validRoutes.includes(path) || path.startsWith('hotels/')) {
         const resolvedRoute = path.startsWith('hotels/') ? 'hotels' : path;
         setRoute(resolvedRoute);
-        if (hash === '#adventures' && resolvedRoute === 'home') {
-          setTimeout(() => {
-            document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
-          }, 150);
+        if (resolvedRoute === 'home') {
+          const savedScroll = sessionStorage.getItem('home_scroll_pos');
+          if (hash === '#adventures') {
+            setTimeout(() => {
+              document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
+            }, 150);
+          } else if (savedScroll) {
+            setTimeout(() => {
+              window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'auto' });
+            }, 100);
+          } else {
+            window.scrollTo(0, 0);
+          }
         } else {
           window.scrollTo(0, 0);
         }
@@ -149,6 +158,10 @@ export default function App() {
 
   // Update URL path when route changes
   const navigateTo = (newRoute) => {
+    if (route === 'home') {
+      sessionStorage.setItem('home_scroll_pos', window.scrollY);
+    }
+
     if (newRoute === 'adventures') {
       window.history.pushState(null, '', '/#adventures');
       setRoute('home');
@@ -156,6 +169,9 @@ export default function App() {
         document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
       }, 150);
     } else {
+      if (newRoute === 'home') {
+        sessionStorage.removeItem('home_scroll_pos');
+      }
       const targetPath = newRoute === 'home' ? '/' : `/${newRoute}`;
       window.history.pushState(null, '', targetPath);
       setRoute(newRoute);
