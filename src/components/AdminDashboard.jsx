@@ -1494,7 +1494,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         room_type: data.room_type || 'Deluxe Double Room',
         best_for: data.best_for || [],
         perfect_for: data.perfect_for || [],
-        social_proof: data.social_proof || { trusted_count: '10,000+', top_rated_text: 'Top Rated In Tapovan' },
         benefits: data.benefits || [],
         phone_number: data.phone_number || '+919837371137',
         featured_image: data.featured_image || '',
@@ -1545,7 +1544,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.room_type = 'Deluxe Double Room';
         defaults.best_for = ['Family Friendly', 'Couples Welcome', 'Backpackers'];
         defaults.perfect_for = ['Couples', 'Families', 'Backpackers'];
-        defaults.social_proof = { trusted_count: '10,000+', top_rated_text: 'Top Rated In Tapovan' };
         defaults.benefits = [
           { icon: 'Lock', title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gate' },
           { icon: 'CalendarCheck', title: 'Instant Booking', desc: 'Hotel room voucher sent immediately' },
@@ -2320,37 +2318,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </label>
           </div>
 
-          {/* Social Proof Stats */}
-          <div className="p-4 bg-slate-900/20 border border-slate-800 rounded-2xl space-y-4">
-            <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Social Proof Details</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase text-gray-550 tracking-wider">Trusted Guests Count (e.g. 10,000+)</label>
-                <input
-                  type="text"
-                  value={formData.social_proof?.trusted_count || '10,000+'}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    social_proof: { ...prev.social_proof, trusted_count: e.target.value }
-                  }))}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none text-xs"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[9px] font-black uppercase text-gray-550 tracking-wider">Top Rated Badging Text</label>
-                <input
-                  type="text"
-                  value={formData.social_proof?.top_rated_text || 'Top Rated In Tapovan'}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    social_proof: { ...prev.social_proof, top_rated_text: e.target.value }
-                  }))}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none text-xs"
-                />
-              </div>
-            </div>
-          </div>
 
           {/* Highlights Section (Why Guests Love) - JSON editor */}
           <div className="space-y-2">

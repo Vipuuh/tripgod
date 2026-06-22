@@ -31,11 +31,40 @@ const BENEFIT_ICONS = {
   Lock, CalendarCheck, RefreshCw, HelpCircle, ShieldCheck, CircleDollarSign, Award, Sparkles
 };
 
+const formatExternalUrl = (url) => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
+
 const getMapsEmbedUrl = (mapsLink, address) => {
-  if (mapsLink && (mapsLink.includes('google.com/maps/embed') || mapsLink.includes('maps/embed'))) {
-    return mapsLink;
+  if (!mapsLink) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   }
-  return `https://maps.google.com/maps?q=${encodeURIComponent(mapsLink || address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  
+  const cleanLink = mapsLink.trim();
+  
+  if (cleanLink.startsWith('<iframe')) {
+    const srcMatch = cleanLink.match(/src=["']([^"']+)["']/);
+    if (srcMatch && srcMatch[1]) {
+      return srcMatch[1];
+    }
+  }
+  
+  if (cleanLink.includes('google.com/maps/embed') || cleanLink.includes('maps/embed')) {
+    return cleanLink;
+  }
+  
+  if (cleanLink.includes('maps.app.goo.gl') || cleanLink.includes('goo.gl/maps')) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+  
+  if (cleanLink.startsWith('http://') || cleanLink.startsWith('https://')) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+  
+  return `https://maps.google.com/maps?q=${encodeURIComponent(cleanLink)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 };
 
 export default function Hotels({ currentCity, openBookingModal }) {
@@ -124,7 +153,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
             room_type: item.room_type || 'Deluxe Double Room',
             best_for: item.best_for || [],
             perfect_for: item.perfect_for || [],
-            social_proof: item.social_proof || { trusted_count: '10,000+', top_rated_text: 'Top Rated In Tapovan' },
+
             benefits: item.benefits || [],
             phone_number: item.phone_number || '+919837371137',
             whatsapp_number: item.whatsapp_number || '919837371137',
@@ -710,7 +739,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   </div>
                   {selectedHotel.maps_link && (
                     <a 
-                      href={selectedHotel.maps_link}
+                      href={formatExternalUrl(selectedHotel.maps_link)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="py-2 px-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 shadow-sm text-decoration-none w-fit shrink-0"
@@ -755,7 +784,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           </div>
                           {attraction.maps_url && (
                             <a 
-                              href={attraction.maps_url} 
+                              href={formatExternalUrl(attraction.maps_url)} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-[10px] font-black text-[#FF5F00] hover:text-[#FF3E00] flex items-center gap-1 bg-white border border-black/5 hover:border-[#FF5F00]/25 px-2.5 py-1.5 rounded-lg transition-colors text-decoration-none shadow-3xs"
@@ -830,7 +859,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               <div className="border-t border-gray-100 pt-6">
                 <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider font-display mb-4">TripGod Trust Benefits</h4>
                 <div 
-                  className="flex overflow-x-auto gap-3.5 pb-2 scroll-smooth no-scrollbar"
+                  className="flex flex-row overflow-x-auto gap-3.5 pb-2 scroll-smooth no-scrollbar"
                   style={{
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
@@ -861,33 +890,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
-              {/* SECTION 14: SOCIAL PROOF */}
-              <div className="p-5 bg-[#0d1b2a] text-white rounded-3xl border border-white/5 space-y-4 shadow-xl">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-orange-500/15 flex items-center justify-center text-[#FF5F00]">
-                    <Sparkles size={14} className="fill-[#FF5F00]" />
-                  </div>
-                  <h4 className="text-xs font-black uppercase tracking-wider font-display">Guest Trust & Social Proof</h4>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                    <span className="block text-lg font-black text-[#FF5F00]">⭐ {selectedHotel.rating} / 5</span>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Rated by {selectedHotel.reviewsCount}+ Guests</span>
-                  </div>
-                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                    <span className="block text-lg font-black text-[#FF5F00]">🔥 {selectedHotel.bookings_count} Bookings</span>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{selectedHotel.popular_badge_text || 'This week'}</span>
-                  </div>
-                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                    <span className="block text-lg font-black text-[#FF5F00]">🏆 Top Rated</span>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{selectedHotel.social_proof?.top_rated_text || 'Top Rated In Tapovan'}</span>
-                  </div>
-                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                    <span className="block text-lg font-black text-[#FF5F00]">👥 {selectedHotel.social_proof?.trusted_count || '10,000+'}</span>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Trusted Travelers</span>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Book Actions button */}
               <div className="pt-4 border-t border-gray-100">

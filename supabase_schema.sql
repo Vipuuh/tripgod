@@ -230,4 +230,26 @@ ALTER TABLE hotels ADD COLUMN IF NOT EXISTS benefits JSONB DEFAULT '[]'::JSONB;
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS phone_number TEXT DEFAULT '+919837371137';
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS featured_image TEXT;
 
+-- =========================================================================
+-- Schema Extensions (Dynamic 3-Tier Payments — June 2026)
+-- =========================================================================
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS payment_mode TEXT DEFAULT 'commission_advance';
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC DEFAULT 10;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS fixed_advance_amount NUMERIC DEFAULT 0;
+
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS payment_mode TEXT DEFAULT 'commission_advance';
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC DEFAULT 10;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS fixed_advance_amount NUMERIC DEFAULT 0;
+
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS payment_mode TEXT DEFAULT 'commission_advance';
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC DEFAULT 10;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS fixed_advance_amount NUMERIC DEFAULT 0;
+
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS payment_mode TEXT DEFAULT 'commission_advance';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS commission_percentage NUMERIC DEFAULT 10;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS fixed_advance_amount NUMERIC DEFAULT 0;
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
+
 
