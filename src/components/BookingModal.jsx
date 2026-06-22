@@ -375,7 +375,7 @@ My payment ID is verified. Please confirm my slots.`;
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-black/5 bg-transparent text-black">
               <div>
-                <span className="text-[9px] tracking-wider uppercase text-[#FF5F00] font-black px-2 py-0.5 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded">
+                <span className="text-[9px] tracking-wider uppercase text-[#10B981] font-black px-2 py-0.5 bg-[#10B981]/10 border border-[#10B981]/20 rounded">
                   {activity.category.toUpperCase()}
                 </span>
                 <h3 className="text-xl font-bold tracking-tight mt-1 font-display">Book {activity.name}</h3>
@@ -577,8 +577,8 @@ My payment ID is verified. Please confirm my slots.`;
               )}
 
               <div className="grid grid-cols-2 gap-2 py-1">
-                <div className="flex items-center gap-2 p-2.5 bg-[#FF5F00]/10 text-[#FF5F00] rounded-xl text-[10px] font-black border border-[#FF5F00]/20">
-                  <ShieldCheck size={14} className="flex-shrink-0 text-[#FF5F00]" />
+                <div className="flex items-center gap-2 p-2.5 bg-[#10B981]/10 text-[#10B981] rounded-xl text-[10px] font-black border border-[#10B981]/20">
+                  <ShieldCheck size={14} className="flex-shrink-0 text-[#10B981]" />
                   <span>FREE CANCELLATION UP TO 24H</span>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 bg-black/5 text-black rounded-xl text-[10px] font-bold border border-black/10">

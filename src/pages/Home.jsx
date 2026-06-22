@@ -602,7 +602,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md text-[#FF6B00] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)] animate-pulse"
+            className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md text-[#10B981] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#10B981]/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] animate-pulse"
           >
             3+ Years of Trusted Service in Rishikesh
           </motion.span>
@@ -938,9 +938,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Stay in Luxury</span>
+            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Stay in Luxury</span>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
-              TOP HOTELS & RESORTS IN RISHIKESH
+              TOP HOTELS IN RISHIKESH
             </h2>
             <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
@@ -1030,7 +1030,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           transition={{ duration: 0.6 }}
           className="text-center space-y-2"
         >
-          <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Select Your Thrill</span>
+          <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Select Your Thrill</span>
           <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">CHOOSE YOUR ADVENTURE</h2>
           <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
         </motion.div>
@@ -1097,7 +1097,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Spiritual Pilgrimage</span>
+            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Spiritual Pilgrimage</span>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
               SACRED CHAR DHAM YATRA PACKAGES
             </h2>
@@ -1183,7 +1183,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Explore Rishikesh Solo</span>
+            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Explore Rishikesh Solo</span>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
               BIKE & SCOOTY RENTALS
             </h2>
@@ -1326,7 +1326,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">GOT QUESTIONS?</span>
+            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">GOT QUESTIONS?</span>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent uppercase">
               FREQUENTLY ASKED QUESTIONS
             </h2>
@@ -1390,7 +1390,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block font-display">Testimonials</span>
+            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block font-display">Testimonials</span>
             <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight text-white uppercase">WHAT OUR CUSTOMERS SAY</h2>
             <div className="w-16 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
@@ -1444,7 +1444,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
                   {/* Bottom tag */}
                   <div>
-                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#FF6B00] px-2.5 py-1 bg-[#FF6B00]/10 rounded-lg border border-[#FF6B00]/15 inline-block font-display">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#10B981] px-2.5 py-1 bg-[#10B981]/10 rounded-lg border border-[#10B981]/20 inline-block font-display">
                       {rev.activity}
                     </span>
                   </div>
@@ -1485,7 +1485,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
                   {/* Bottom tag */}
                   <div>
-                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#FF6B00] px-2.5 py-1 bg-[#FF6B00]/10 rounded-lg border border-[#FF6B00]/15 inline-block font-display">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#10B981] px-2.5 py-1 bg-[#10B981]/10 rounded-lg border border-[#10B981]/20 inline-block font-display">
                       {rev.activity}
                     </span>
                   </div>

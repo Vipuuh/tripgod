@@ -86,7 +86,7 @@ export default function ActivityDetail({
               <span className="text-[10px] bg-black text-[#FF6B00] font-black tracking-widest px-2 py-0.5 rounded uppercase">
                 {category}
               </span>
-              <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-black tracking-widest px-2 py-0.5 rounded uppercase flex items-center gap-1">
+              <span className="text-[10px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 font-black tracking-widest px-2 py-0.5 rounded uppercase flex items-center gap-1">
                 <Sparkles size={10} /> BEST IN CLASS
               </span>
             </div>
@@ -290,7 +290,7 @@ export default function ActivityDetail({
               <span className="text-xs font-bold text-gray-500">— {reviews[activeReviewIdx].name}</span>
             </motion.div>
           </AnimatePresence>
-          <span className="absolute right-6 top-6 text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-bold px-2 py-0.5 rounded">Verified Guest</span>
+          <span className="absolute right-6 top-6 text-[10px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 font-bold px-2 py-0.5 rounded">Verified Guest</span>
         </div>
       </div>
 
@@ -330,7 +330,7 @@ export default function ActivityDetail({
 
               {/* Header */}
               <div className="space-y-1 pr-8 text-left">
-                <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] font-black tracking-widest px-2 py-0.5 rounded-full uppercase border border-[#FF5F00]/20">
+                <span className="text-[10px] bg-[#10B981]/10 text-[#10B981] font-black tracking-widest px-2 py-0.5 rounded-full uppercase border border-[#10B981]/20">
                   Comparison Desk
                 </span>
                 <h3 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">

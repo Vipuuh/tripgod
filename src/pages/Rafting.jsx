@@ -409,7 +409,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                               {str.difficulty}
                             </span>
                             {str.vendors?.name && (
-                              <span className="text-[9px] bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[120px]">
+                              <span className="text-[9px] bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] font-black px-2 py-0.5 rounded truncate max-w-[120px]">
                                 {str.vendors.name}
                               </span>
                             )}
@@ -483,7 +483,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                       <span className="text-gray-500 font-bold">({selectedStretch.reviewsCount} reviews)</span>
                     </div>
                     {selectedStretch.vendors?.name && (
-                      <span className="text-[9px] bg-[#FF5F00]/10 text-[#FF5F00] font-black px-2 py-0.5 rounded uppercase">
+                      <span className="text-[9px] bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] font-black px-2 py-0.5 rounded uppercase">
                         Operator: {selectedStretch.vendors.name}
                       </span>
                     )}
@@ -852,7 +852,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     <span className="text-xs font-bold text-gray-500">— {reviews[activeReviewIdx].name}</span>
                   </motion.div>
                 </AnimatePresence>
-                <span className="absolute right-6 top-6 text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-bold px-2 py-0.5 rounded">Rafting Guest</span>
+                <span className="absolute right-6 top-6 text-[10px] bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 font-bold px-2 py-0.5 rounded">Rafting Guest</span>
               </div>
             </div>
 
