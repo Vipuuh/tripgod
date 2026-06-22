@@ -18,7 +18,7 @@ export default function Terms() {
               <ShieldAlert size={16} /> Marketplace & Liability Disclaimer
             </h4>
             <p className="text-xs text-gray-700 font-semibold leading-relaxed">
-              <strong>TripGod</strong> (Tripgod.in) operates strictly as a booking agent/aggregator under a tie-up model. We do not own, manage, or operate any physical adventure gear, rafting boats, bungee platforms, zipline wires, paragliding setups, or camps. All activities are executed by independent, verified local operators.
+              <strong>TripGod</strong> (Tripgod.in) operates strictly as a booking agent/aggregator under a tie-up model. We do not own, manage, or operate any physical adventure gear, rafting boats, zipline wires, paragliding setups, or camps. All activities are executed by independent, verified local operators.
             </p>
           </div>
 

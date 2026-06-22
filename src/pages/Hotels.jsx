@@ -128,7 +128,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
             benefits: item.benefits || [],
             phone_number: item.phone_number || '+919837371137',
             whatsapp_number: item.whatsapp_number || '919837371137',
-            featured_image: item.featured_image || ''
+            featured_image: item.featured_image || '',
+            payment_mode: item.payment_mode || 'commission_advance',
+            commission_percentage: item.commission_percentage !== null && item.commission_percentage !== undefined ? Number(item.commission_percentage) : 10,
+            fixed_advance_amount: item.fixed_advance_amount !== null && item.fixed_advance_amount !== undefined ? Number(item.fixed_advance_amount) : 0
           }));
           setHotels(mapped);
         }
@@ -635,7 +638,17 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {selectedHotel.amenities && Object.keys(selectedHotel.amenities).length > 0 && (
                 <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
                   <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Amenities Provided</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div 
+                    className="flex overflow-x-auto gap-3 pb-2 scroll-smooth no-scrollbar"
+                    style={{
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
+                      WebkitOverflowScrolling: 'touch'
+                    }}
+                  >
+                    <style dangerouslySetInnerHTML={{__html: `
+                      .no-scrollbar::-webkit-scrollbar { display: none; }
+                    `}} />
                     {Object.entries(selectedHotel.amenities)
                       .filter(([_, val]) => !!val)
                       .map(([key]) => {
@@ -643,12 +656,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         return (
                           <div
                             key={key}
-                            className="flex flex-col items-center justify-center p-4 bg-slate-50/70 border border-black/5 rounded-2xl text-center hover:bg-white hover:border-[#FF5F00]/25 hover:shadow-md transition-all duration-300 group"
+                            className="flex flex-col items-center justify-center p-4 bg-slate-50/70 border border-black/5 rounded-2xl text-center hover:bg-white hover:border-[#FF5F00]/25 hover:shadow-md transition-all duration-300 group min-w-[100px] max-w-[100px] shrink-0"
                           >
                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-black/5 text-gray-500 group-hover:text-[#FF5F00] group-hover:bg-[#FF5F00]/5 transition-colors mb-2 shadow-sm">
                               <IconComponent size={18} />
                             </div>
-                            <span className="text-[11px] font-bold text-gray-700 capitalize tracking-tight leading-none group-hover:text-black">
+                            <span className="text-[11px] font-bold text-gray-700 capitalize tracking-tight leading-none group-hover:text-black truncate w-full">
                               {key.replace('_', ' ')}
                             </span>
                           </div>
@@ -816,18 +829,27 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* SECTION 13: TRIPGOD TRUST BENEFITS */}
               <div className="border-t border-gray-100 pt-6">
                 <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider font-display mb-4">TripGod Trust Benefits</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
+                <div 
+                  className="flex overflow-x-auto gap-3.5 pb-2 scroll-smooth no-scrollbar"
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
+                  <style dangerouslySetInnerHTML={{__html: `
+                    .no-scrollbar::-webkit-scrollbar { display: none; }
+                  `}} />
                   {(selectedHotel.benefits && selectedHotel.benefits.length > 0 ? selectedHotel.benefits : [
                     { icon: 'Lock', title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gate' },
                     { icon: 'CalendarCheck', title: 'Instant Booking', desc: 'Hotel room voucher sent immediately' },
                     { icon: 'RefreshCw', title: 'Easy Refund', desc: 'No-hassle cancellation & quick refunds' },
                     { icon: 'HelpCircle', title: '24×7 Support', desc: '24/7 on-ground assistance & guide network' },
                     { icon: 'ShieldCheck', title: 'Verified Partners', desc: 'Every stay is handpicked and verified' },
-                    { icon: 'CircleDollarSign', title: 'Best Price Guarantee', desc: 'Find it cheaper? We match the price!' }
                   ]).map((benefit, idx) => {
                     const Icon = BENEFIT_ICONS[benefit.icon] || ShieldCheck;
                     return (
-                      <div key={idx} className="p-4 bg-slate-50/50 border border-black/5 rounded-2xl flex flex-col items-center text-center shadow-3xs">
+                      <div key={idx} className="p-4 bg-slate-50/50 border border-black/5 rounded-2xl flex flex-col items-center text-center shadow-3xs min-w-[140px] max-w-[140px] shrink-0">
                         <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 shadow-3xs">
                           <Icon size={16} />
                         </div>
@@ -849,7 +871,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                    <span className="block text-lg font-black text-amber-400">⭐ {selectedHotel.rating} / 5</span>
+                    <span className="block text-lg font-black text-[#FF5F00]">⭐ {selectedHotel.rating} / 5</span>
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Rated by {selectedHotel.reviewsCount}+ Guests</span>
                   </div>
                   <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
@@ -857,11 +879,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{selectedHotel.popular_badge_text || 'This week'}</span>
                   </div>
                   <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                    <span className="block text-lg font-black text-emerald-400">🏆 Top Rated</span>
+                    <span className="block text-lg font-black text-[#FF5F00]">🏆 Top Rated</span>
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{selectedHotel.social_proof?.top_rated_text || 'Top Rated In Tapovan'}</span>
                   </div>
                   <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                    <span className="block text-lg font-black text-indigo-400">👥 {selectedHotel.social_proof?.trusted_count || '10,000+'}</span>
+                    <span className="block text-lg font-black text-[#FF5F00]">👥 {selectedHotel.social_proof?.trusted_count || '10,000+'}</span>
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Trusted Travelers</span>
                   </div>
                 </div>
@@ -879,6 +901,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       category: 'hotels',
                       city_id: hotelToBook.city_id,
                       vendor_id: hotelToBook.vendor_id,
+                      payment_mode: hotelToBook.payment_mode,
+                      commission_percentage: hotelToBook.commission_percentage,
+                      fixed_advance_amount: hotelToBook.fixed_advance_amount,
                       slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
                     });
                   }}
@@ -913,26 +938,6 @@ export default function Hotels({ currentCity, openBookingModal }) {
               </div>
               
               <div className="flex items-center gap-2 shrink-0">
-                {/* Call Button */}
-                <a
-                  href={`tel:${selectedHotel.phone_number || '+919837371137'}`}
-                  className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl cursor-pointer transition-colors flex items-center justify-center shadow-3xs border border-black/5"
-                  title="Call Property"
-                >
-                  <Phone size={14} />
-                </a>
-
-                {/* WhatsApp Button */}
-                <a
-                  href={`https://wa.me/${(selectedHotel.whatsapp_number || '919837371137').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello! I want to book a room at ${selectedHotel.name}.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl cursor-pointer transition-colors flex items-center justify-center shadow-3xs border border-emerald-250/20"
-                  title="WhatsApp Property"
-                >
-                  <MessageSquare size={14} />
-                </a>
-
                 <button
                   onClick={() => {
                     const hotelToBook = selectedHotel;
@@ -943,6 +948,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       category: 'hotels',
                       city_id: hotelToBook.city_id,
                       vendor_id: hotelToBook.vendor_id,
+                      payment_mode: hotelToBook.payment_mode,
+                      commission_percentage: hotelToBook.commission_percentage,
+                      fixed_advance_amount: hotelToBook.fixed_advance_amount,
                       slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
                     });
                   }}

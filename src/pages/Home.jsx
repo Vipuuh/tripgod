@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Waves, Zap, Compass, Milestone, 
   ArrowRight, ShieldCheck, CreditCard, 
@@ -8,17 +8,6 @@ import {
 } from 'lucide-react';
 import CountUp from '../components/CountUp';
 
-const BungeeIcon = (props) => (
-  <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M 75 15 L 90 15" strokeWidth="8" />
-    <path d="M 82 15 Q 85 30 75 40 T 80 58" strokeWidth="4" />
-    <path d="M 80 58 L 68 62" />
-    <path d="M 68 62 L 45 74" strokeWidth="8" />
-    <circle cx="37" cy="78" r="6" fill="#FF6B00" />
-    <path d="M 68 62 L 60 48" />
-    <path d="M 50 68 L 38 58 M 50 68 L 56 80" />
-  </svg>
-);
 
 const RaftingIcon = (props) => (
   <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -64,31 +53,12 @@ const BikeIcon = (props) => (
   </svg>
 );
 
-const BungeeJumperSvg = (props) => (
-  <svg viewBox="0 0 100 120" className="w-14 sm:w-20 h-auto" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    {/* Cord attachment */}
-    <line x1="50" y1="5" x2="50" y2="18" stroke="#FFD700" strokeWidth="4" />
-    {/* Legs together, diving headfirst */}
-    <path d="M 45 18 L 50 45 M 55 18 L 50 45" stroke="#000000" strokeWidth="7" />
-    {/* Torso */}
-    <path d="M 50 45 L 50 80" stroke="#FF6B00" strokeWidth="12" />
-    {/* Arms wide open */}
-    <path d="M 15 65 L 50 50 L 85 65" stroke="#FF6B00" strokeWidth="8" />
-    {/* Head */}
-    <circle cx="50" cy="92" r="9" fill="#FF6B00" />
-  </svg>
-);
 
 const heroSlides = [
   {
     image: '/rafting-hero.jpg',
     activity: 'White Water Rafting',
     accent: 'Rafting'
-  },
-  {
-    image: '/bungee-hero.jpg',
-    activity: 'Bungee Jumping',
-    accent: 'Bungee'
   },
   {
     image: '/zipline-hero.jpg',
@@ -121,14 +91,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       stretch: '16 KM (Shivpuri to Nim Beach)',
       icon: Waves,
       route: 'rafting'
-    },
-    {
-      id: 'bungee',
-      name: 'Bungee Jumping',
-      price: 3500,
-      category: 'bungee',
-      icon: Zap,
-      route: 'bungee'
     },
     {
       id: 'zipline',
@@ -283,11 +245,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     setOpenFaqIdx(openFaqIdx === idx ? null : idx);
   };
 
-  // Scroll animations for Bungee Jumper
-  const { scrollY } = useScroll();
-  const ropeHeight = useTransform(scrollY, [0, 1500], [15, 2500]);
-  const jumperRotate = useTransform(scrollY, [0, 300, 600, 900, 1200], [0, -25, 25, -15, 0]);
-  const jumperOpacity = useTransform(scrollY, [0, 1000, 1400], [1, 1, 0]);
 
   const staggerContainer = {
     hidden: { opacity: 0 },
@@ -319,14 +276,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       price: '1,290',
       img: '/rafting-hero.jpg',
       route: 'rafting'
-    },
-    {
-      id: 'bungee',
-      name: 'Bungee Jumping',
-      desc: 'Leap from India\'s highest fixed platform in Tapovan/Shivpuri.',
-      price: '3,500',
-      img: '/bungee-hero.jpg',
-      route: 'bungee'
     },
     {
       id: 'zipline',
@@ -441,7 +390,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
   const reviews = [
     { name: 'Amit Sharma', initials: 'AS', location: 'India • Rishikesh', activity: 'River Rafting', stars: 5, text: 'Rafting from Shivpuri was an incredible experience! The guides were very professional and safety-conscious.' },
-    { name: 'Priya Patel', initials: 'PP', location: 'India • Rishikesh', activity: 'Bungee Jumping', stars: 5, text: 'The 117m jump was terrifying but amazing. The DSLR video they gave was cinema quality!' },
+    { name: 'Priya Patel', initials: 'PP', location: 'India • Rishikesh', activity: 'Scenic Paragliding', stars: 5, text: 'The tandem paragliding flight was amazing. Incredible views and highly experienced pilots!' },
     { name: 'Vikram Singh', initials: 'VS', location: 'India • Rishikesh', activity: 'Ganga Zipline', stars: 5, text: 'Zipping across the Ganges was the highlight of our Rishikesh trip. Breath-taking views!' },
     { name: 'Rohan Gupta', initials: 'RG', location: 'India • Rishikesh', activity: 'Riverside Camping', stars: 5, text: 'Swiss tents were clean, food was delicious, and the bonfire night was magical. Highly recommended!' },
     { name: 'Sara Khan', initials: 'SK', location: 'India • Rishikesh', activity: 'Giant Swing', stars: 5, text: 'An absolute adrenaline rush. TripGod made booking so easy via WhatsApp!' }
@@ -829,37 +778,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           </div>
         </div>
 
-        {/* Bungee Jumping Platform & Jumper Group (positioned relative to screen viewport width) */}
-        <div className="hidden sm:block absolute top-6 right-2 sm:right-12 md:right-24 z-20 pointer-events-none select-none">
-          {/* Platform Structure */}
-          <div className="w-24 md:w-32 h-4 bg-neutral-800 border-2 border-black rounded-l-xl shadow-lg relative">
-            {/* Flashing light on the tip */}
-            <div className="absolute top-0.5 left-1.5 w-2 h-2 rounded-full bg-accent animate-pulse" />
-            
-            {/* Hanging rope anchor - attached to the bottom left of the platform */}
-            <div className="absolute top-3 left-1 flex flex-col items-center w-4">
-              {/* Pulley/Knot */}
-              <div className="w-2 h-2 bg-neutral-700 rounded-sm" />
-              
-              {/* Stretching Bungee Rope */}
-              <motion.div 
-                style={{ height: ropeHeight }} 
-                className="w-0.5 bg-[#FFD700] border-l border-black/20 origin-top shadow-sm" 
-              />
-              
-              {/* Bungee Jumper Figure */}
-              <motion.div
-                style={{ rotate: jumperRotate, opacity: jumperOpacity }}
-                className="-mt-2.5 flex flex-col items-center"
-              >
-                <BungeeJumperSvg />
-                <span className="text-[7px] md:text-[9px] font-black text-accent tracking-widest uppercase mt-2 bg-black/70 backdrop-blur-xs px-2 py-0.5 rounded border border-accent/20 whitespace-nowrap">
-                  LIVE THE LEAP
-                </span>
-              </motion.div>
-            </div>
-          </div>
-        </div>
 
         {/* Wave Separator */}
         <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">

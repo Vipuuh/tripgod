@@ -24,7 +24,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     const cat = (activity.category || '').toLowerCase();
     if (cat === 'rafting') {
       defaultSlots = ['06:00 AM', '07:00 AM', '08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM'];
-    } else if (cat === 'bungee' || cat === 'swing') {
+    } else if (cat === 'swing') {
       defaultSlots = ['10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'];
     } else if (cat === 'paragliding') {
       defaultSlots = ['08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '03:00 PM', '04:00 PM', '05:00 PM'];
@@ -44,8 +44,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       setDate(initialDate || today.toISOString().split('T')[0]);
       setSlot(slots[0]);
       setGuests(initialGuests || 1);
-      setHasVideoOption(activity.category === 'rafting' || (activity.category === 'bungee' && activity.videoIncluded));
+      setHasVideoOption(activity.category === 'rafting');
       setError('');
+      // Initialize payment option based on mode
+      const mode = activity.payment_mode || 'commission_advance';
+      setPaymentOption(mode === 'full_payment' ? 'full' : 'advance');
 
       // Prefill user details if logged in
       const userEmail = localStorage.getItem('tripgod_user_email') || '';
@@ -59,22 +62,33 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     }
   }, [activity, initialDate, initialGuests]);
 
-  // Determine Commission %
+  // Determine payment configuration
+  const paymentMode = activity.payment_mode || 'commission_advance';
   const commissionPercentage = activity.commission_percentage !== undefined && activity.commission_percentage !== null
     ? Number(activity.commission_percentage)
     : (activity.vendors?.commission_percentage !== undefined && activity.vendors?.commission_percentage !== null
         ? Number(activity.vendors.commission_percentage)
         : 10.0);
+  const fixedAdvanceAmount = activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
+    ? Number(activity.fixed_advance_amount)
+    : 0;
 
   // Calculate pricing
   const basePrice = activity.price || 0;
-  const hasPaidVideoOption = activity.category === 'bungee' && !activity.videoIncluded;
-  const videoPrice = hasPaidVideoOption ? 400 : 0;
-  const pricePerPerson = basePrice + (hasPaidVideoOption && hasVideoOption ? videoPrice : 0);
+  const pricePerPerson = basePrice;
   const totalPrice = pricePerPerson * guests;
   
-  const calculatedAdvance = Math.round(totalPrice * (commissionPercentage / 100));
-  const amountToPayNow = paymentOption === 'full' ? totalPrice : calculatedAdvance;
+  // Calculate dynamic advance amount
+  const calculatedAdvance = paymentMode === 'fixed_advance'
+    ? Math.min(fixedAdvanceAmount, totalPrice)
+    : (paymentMode === 'full_payment'
+        ? totalPrice
+        : Math.round(totalPrice * (commissionPercentage / 100)));
+
+  // If payment mode is full_payment, force paymentOption to 'full'
+  const effectivePaymentOption = paymentMode === 'full_payment' ? 'full' : paymentOption;
+
+  const amountToPayNow = effectivePaymentOption === 'full' ? totalPrice : calculatedAdvance;
   const remainingPayment = totalPrice - amountToPayNow;
 
   const minDate = new Date().toISOString().split('T')[0];
@@ -109,17 +123,23 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       amount: amountToPayNow * 100, // paise
       currency: "INR",
       name: "TripGod Rishikesh",
-      description: paymentOption === 'full' 
+      description: effectivePaymentOption === 'full' 
         ? `${activity.name} - 100% Full Payment` 
-        : `${activity.name} - ${commissionPercentage}% Advance`,
+        : (paymentMode === 'fixed_advance'
+            ? `${activity.name} - ₹${fixedAdvanceAmount} Advance`
+            : `${activity.name} - ${commissionPercentage}% Advance`),
       image: "/tripgod-logo.png",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
 
+        const advanceLabel = paymentMode === 'fixed_advance'
+          ? 'Fixed Advance Booking'
+          : `${commissionPercentage}% Advance Booking`;
+
         const message = `*BOOKING SUCCESSFUL & PAID - TRIPGOD*
 ----------------------------------
 *Payment Confirmation ID:* ${paymentId}
-*Status:* ${paymentOption === 'full' ? 'Paid 100% Full Payment Online' : `Paid ${commissionPercentage}% Advance Booking`}
+*Status:* ${effectivePaymentOption === 'full' ? 'Paid 100% Full Payment Online' : `Paid ${advanceLabel}`}
 ----------------------------------
 *Customer Name:* ${name}
 *Customer Email:* ${email}
@@ -132,8 +152,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 ${hasVideoOption ? `*Add-ons:* DSLR Video Included\n` : ''}
 *Price Summary:*
 - Total Price: ₹${totalPrice.toLocaleString('en-IN')}
-- *${paymentOption === 'full' ? 'Paid 100% Online' : `Paid ${commissionPercentage}% Advance`}:* ₹${amountToPayNow.toLocaleString('en-IN')}
-- ${paymentOption === 'full' ? 'Remaining Balance: ₹0 (Paid in Full)' : `Pay at Rishikesh (${100 - commissionPercentage}%): ₹${remainingPayment.toLocaleString('en-IN')}`}
+- *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${amountToPayNow.toLocaleString('en-IN')}
+- ${effectivePaymentOption === 'full' ? 'Remaining Balance: ₹0 (Paid in Full)' : `Pay at Venue: ₹${remainingPayment.toLocaleString('en-IN')}`}
 ----------------------------------
 My payment ID is verified. Please confirm my slots.`;
 
@@ -176,10 +196,12 @@ My payment ID is verified. Please confirm my slots.`;
             service_id: activity.id && isValidUUID(activity.id) ? activity.id : '00000000-0000-0000-0000-000000000000',
             travel_date: date,
             status: 'pending',
-            payment_type: paymentOption === 'full' ? 'full_online' : 'advance_custom',
+            payment_type: effectivePaymentOption === 'full' ? 'full_online' : 'advance_custom',
             amount_paid: amountToPayNow,
             remaining_amount: remainingPayment,
-            commission_earned: Math.round(totalPrice * (commissionPercentage / 100))
+            commission_earned: paymentMode === 'fixed_advance'
+              ? Math.min(fixedAdvanceAmount, totalPrice)
+              : Math.round(totalPrice * (commissionPercentage / 100))
           };
           supabase.from('bookings').insert([bookingInsertData]).then(({ error }) => {
             if (error) console.error('Error inserting booking to Supabase:', error);
@@ -261,6 +283,8 @@ My payment ID is verified. Please confirm my slots.`;
       advancePayment: calculatedAdvance,
       remainingPayment: totalPrice - calculatedAdvance,
       commission_percentage: commissionPercentage,
+      payment_mode: paymentMode,
+      fixed_advance_amount: fixedAdvanceAmount,
       category: activity.category,
       city_id: activity.city_id,
       vendor_id: activity.vendor_id
@@ -441,7 +465,7 @@ My payment ID is verified. Please confirm my slots.`;
               </div>
 
               {/* Optional extras depending on category */}
-              {(activity.category === 'rafting' || (activity.category === 'bungee' && activity.videoIncluded)) && (
+              {activity.category === 'rafting' && (
                 <div className="flex items-start gap-3 p-3.5 border border-green-500/20 bg-green-50/50 rounded-xl">
                   <div className="mt-0.5 text-green-600 bg-green-100 p-1 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -455,21 +479,6 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
               )}
 
-              {activity.category === 'bungee' && !activity.videoIncluded && (
-                <label className="flex items-start gap-3 p-3.5 border border-black/10 bg-white/45 rounded-2xl cursor-pointer hover:bg-black/5 transition-all duration-200">
-                  <input
-                    type="checkbox"
-                    checked={hasVideoOption}
-                    onChange={(e) => setHasVideoOption(e.target.checked)}
-                    className="mt-1 accent-[#FF5F00] w-4 h-4"
-                  />
-                  <div>
-                    <span className="block text-sm font-bold text-black">Add DSLR Video & Photos (+₹400/person)</span>
-                    <span className="block text-xs text-gray-500">Get cinematic footage of your bungee jump delivered directly via WhatsApp link.</span>
-                  </div>
-                </label>
-              )}
-
               <div className="grid grid-cols-2 gap-2 py-1">
                 <div className="flex items-center gap-2 p-2.5 bg-[#FF5F00]/10 text-[#FF5F00] rounded-xl text-[10px] font-black border border-[#FF5F00]/20">
                   <ShieldCheck size={14} className="flex-shrink-0 text-[#FF5F00]" />
@@ -477,85 +486,101 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
                 <div className="flex items-center gap-2 p-2.5 bg-black/5 text-black rounded-xl text-[10px] font-bold border border-black/10">
                   <CreditCard size={14} className="flex-shrink-0 text-gray-400" />
-                  <span>PAY ONLY {commissionPercentage}% ADVANCE</span>
+                  <span>
+                    {paymentMode === 'fixed_advance'
+                      ? `PAY ONLY ₹${fixedAdvanceAmount} ADVANCE`
+                      : (paymentMode === 'full_payment'
+                          ? '100% SECURE FULL PAYMENT'
+                          : `PAY ONLY ${commissionPercentage}% ADVANCE`)}
+                  </span>
                 </div>
               </div>
 
               {/* Payment Option Choices */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                  <CreditCard size={14} className="text-[#FF5F00]" /> Select Payment Option
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption('advance')}
-                    className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 relative overflow-hidden cursor-pointer ${
-                      paymentOption === 'advance'
-                        ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black shadow-md shadow-[#FF5F00]/5'
-                        : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
-                    }`}
-                  >
-                    {paymentOption === 'advance' && (
-                      <div className="absolute top-2.5 right-2.5 w-4.5 h-4.5 rounded-full bg-[#FF5F00] flex items-center justify-center text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
+              {paymentMode !== 'full_payment' && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                    <CreditCard size={14} className="text-[#FF5F00]" /> Select Payment Option
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentOption('advance')}
+                      className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                        effectivePaymentOption === 'advance'
+                          ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black shadow-md shadow-[#FF5F00]/5'
+                          : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
+                      }`}
+                    >
+                      {effectivePaymentOption === 'advance' && (
+                        <div className="absolute top-2.5 right-2.5 w-4.5 h-4.5 rounded-full bg-[#FF5F00] flex items-center justify-center text-white">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <div>
+                        <span className="block text-xs font-black">Pay Advance</span>
+                        <span className="block text-[10px] text-gray-500 mt-0.5 font-medium">
+                          {paymentMode === 'fixed_advance'
+                            ? `Pay ₹${fixedAdvanceAmount} flat advance`
+                            : `Pay ${commissionPercentage}% online`}
+                        </span>
                       </div>
-                    )}
-                    <div>
-                      <span className="block text-xs font-black">Pay Advance</span>
-                      <span className="block text-[10px] text-gray-500 mt-0.5 font-medium">Pay {commissionPercentage}% online now</span>
-                    </div>
-                    <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{calculatedAdvance.toLocaleString('en-IN')}</span>
-                  </button>
+                      <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{calculatedAdvance.toLocaleString('en-IN')}</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setPaymentOption('full')}
-                    className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 relative overflow-hidden cursor-pointer ${
-                      paymentOption === 'full'
-                        ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black shadow-md shadow-[#FF5F00]/5'
-                        : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
-                    }`}
-                  >
-                    {paymentOption === 'full' && (
-                      <div className="absolute top-2.5 right-2.5 w-4.5 h-4.5 rounded-full bg-[#FF5F00] flex items-center justify-center text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentOption('full')}
+                      className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                        effectivePaymentOption === 'full'
+                          ? 'border-[#FF5F00] bg-[#FF5F00]/5 text-black shadow-md shadow-[#FF5F00]/5'
+                          : 'border-black/10 bg-white/40 text-gray-700 hover:border-black/20'
+                      }`}
+                    >
+                      {effectivePaymentOption === 'full' && (
+                        <div className="absolute top-2.5 right-2.5 w-4.5 h-4.5 rounded-full bg-[#FF5F00] flex items-center justify-center text-white">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                      <div>
+                        <span className="block text-xs font-black">Pay 100% Full</span>
+                        <span className="block text-[10px] text-gray-500 mt-0.5 font-medium">Pay full amount online now</span>
                       </div>
-                    )}
-                    <div>
-                      <span className="block text-xs font-black">Pay 100% Full</span>
-                      <span className="block text-[10px] text-gray-500 mt-0.5 font-medium">Pay full amount online now</span>
-                    </div>
-                    <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{totalPrice.toLocaleString('en-IN')}</span>
-                  </button>
+                      <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{totalPrice.toLocaleString('en-IN')}</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Pricing breakdown */}
-              <div className="p-4 bg-black/5 border border-black/5 text-black rounded-2xl space-y-2.5 font-sans">
-                <div className="flex justify-between items-center text-xs text-gray-500">
+              {/* Pricing breakdown - Highlighted in Blue */}
+              <div className="p-4 bg-blue-600/10 border border-blue-500/20 text-blue-900 rounded-2xl space-y-2.5 font-sans">
+                <div className="flex justify-between items-center text-xs text-blue-900/70 font-semibold">
                   <span>{isBikeRent ? 'Price per day' : 'Price per person'}</span>
                   <span>₹{pricePerPerson.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs text-gray-500">
+                <div className="flex justify-between items-center text-xs text-blue-900/70 font-semibold">
                   <span>Total price ({guests} {isBikeRent ? `vehicle${guests > 1 ? 's' : ''}` : `guest${guests > 1 ? 's' : ''}`})</span>
                   <span>₹{totalPrice.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="h-px bg-black/10 my-1" />
+                <div className="h-px bg-blue-500/20 my-1" />
                 
-                <div className="flex justify-between items-center text-sm font-black text-[#FF5F00]">
+                <div className="flex justify-between items-center text-sm font-black text-blue-800">
                   <span className="flex items-center gap-1.5">
-                    {paymentOption === 'full' ? 'Pay 100% Online Now' : `Pay ${commissionPercentage}% Advance Now`}
+                    {effectivePaymentOption === 'full'
+                      ? 'Pay 100% Online Now'
+                      : (paymentMode === 'fixed_advance'
+                          ? 'Pay Flat Advance Now'
+                          : `Pay ${commissionPercentage}% Advance Now`)}
                   </span>
                   <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs text-gray-600">
-                  <span>{paymentOption === 'full' ? 'Remaining Balance' : 'Remaining Balance (Pay at venue)'}</span>
-                  <span>{paymentOption === 'full' ? '₹0 (Paid in Full)' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
+                <div className="flex justify-between items-center text-xs text-blue-900/80 font-bold">
+                  <span>{effectivePaymentOption === 'full' ? 'Remaining Balance' : 'Remaining Balance (Pay at venue)'}</span>
+                  <span>{effectivePaymentOption === 'full' ? '₹0 (Paid in Full)' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
                 </div>
               </div>
             </div>
@@ -573,7 +598,13 @@ My payment ID is verified. Please confirm my slots.`;
                 className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
               >
                 <CreditCard size={16} />
-                <span>{paymentOption === 'full' ? 'Pay Full & Book' : `Pay ${commissionPercentage}% & Book`}</span>
+                <span>
+                  {effectivePaymentOption === 'full'
+                    ? 'Pay Full & Book'
+                    : (paymentMode === 'fixed_advance'
+                        ? 'Pay Advance & Book'
+                        : `Pay ${commissionPercentage}% & Book`)}
+                </span>
               </button>
             </div>
           </motion.div>

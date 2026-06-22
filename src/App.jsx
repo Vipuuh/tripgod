@@ -10,7 +10,6 @@ import { supabase } from './supabase';
 // Pages
 import Home from './pages/Home';
 import Rafting from './pages/Rafting';
-import Bungee from './pages/Bungee';
 import Zipline from './pages/Zipline';
 import Paragliding from './pages/Paragliding';
 import Swing from './pages/Swing';
@@ -123,7 +122,7 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'bungee', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund'];
 
       if (validRoutes.includes(path)) {
         setRoute(path);
@@ -184,7 +183,6 @@ export default function App() {
     { name: 'River Rafting (12 KM Shivpuri)', route: 'rafting' },
     { name: 'River Rafting (16 KM Nim Beach)', route: 'rafting' },
     { name: 'River Rafting (26 KM Marine Drive)', route: 'rafting' },
-    { name: 'Bungee Jumping (117M Jumps)', route: 'bungee' },
     { name: 'Giant Swing (113M Valleys)', route: 'swing' },
     { name: 'Ganga Zipline Crossings', route: 'zipline' },
     { name: 'Tandem Paragliding', route: 'paragliding' },
@@ -322,7 +320,6 @@ export default function App() {
               />
             )}
             {route === 'rafting' && <Rafting currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'bungee' && <Bungee currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'zipline' && <Zipline currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'paragliding' && <Paragliding currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'swing' && <Swing currentCity={currentCity} openBookingModal={openBookingModal} />}
@@ -368,7 +365,6 @@ export default function App() {
             <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Adventures</h4>
             <ul className="space-y-2 text-xs font-medium text-gray-400">
               <li><button onClick={() => navigateTo('rafting')} className="hover:text-accent transition-colors">River Rafting</button></li>
-              <li><button onClick={() => navigateTo('bungee')} className="hover:text-accent transition-colors">Bungee Jumping</button></li>
               <li><button onClick={() => navigateTo('zipline')} className="hover:text-accent transition-colors">Ganga Zipline</button></li>
               <li><button onClick={() => navigateTo('paragliding')} className="hover:text-accent transition-colors">Paragliding</button></li>
               <li><button onClick={() => navigateTo('swing')} className="hover:text-accent transition-colors">Giant Swing</button></li>
@@ -487,7 +483,7 @@ export default function App() {
               <input
                 type="text"
                 autoFocus
-                placeholder="Type 'rafting', 'bungee', 'camping'..."
+                placeholder="Type 'rafting', 'zipline', 'camping'..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-black rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-accent font-semibold"
@@ -522,7 +518,7 @@ export default function App() {
               <div className="space-y-1.5 pt-1">
                 <span className="block text-[10px] text-gray-400 font-bold uppercase">Popular Queries</span>
                 <div className="flex flex-wrap gap-2">
-                  {['Rafting', 'Bungee', 'Camping', 'Scooty'].map((term, i) => (
+                  {['Rafting', 'Zipline', 'Camping', 'Scooty'].map((term, i) => (
                     <button
                       key={i}
                       onClick={() => setSearchQuery(term)}

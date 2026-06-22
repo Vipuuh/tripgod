@@ -81,8 +81,16 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
           if (item.hasVideoOption) message += `   Add-ons: DSLR Video Included\n`;
           message += `   Subtotal: ₹${item.totalPrice.toLocaleString('en-IN')}\n`;
           if (paymentOption === 'advance') {
-            message += `   Advance Paid (${itemPct}%): ₹${item.advancePayment.toLocaleString('en-IN')}\n`;
-            message += `   Remaining Balance (${100 - itemPct}%): ₹${item.remainingPayment.toLocaleString('en-IN')}\n`;
+            if (item.payment_mode === 'fixed_advance') {
+              message += `   Advance Paid (Fixed): ₹${item.advancePayment.toLocaleString('en-IN')}\n`;
+              message += `   Remaining Balance (At Venue): ₹${item.remainingPayment.toLocaleString('en-IN')}\n`;
+            } else if (item.payment_mode === 'full_payment') {
+              message += `   Paid Online (100%): ₹${item.totalPrice.toLocaleString('en-IN')}\n`;
+              message += `   Remaining Balance: ₹0 (Paid in Full)\n`;
+            } else {
+              message += `   Advance Paid (${itemPct}%): ₹${item.advancePayment.toLocaleString('en-IN')}\n`;
+              message += `   Remaining Balance (${100 - itemPct}%): ₹${item.remainingPayment.toLocaleString('en-IN')}\n`;
+            }
           } else {
             message += `   Paid Online (100%): ₹${item.totalPrice.toLocaleString('en-IN')}\n`;
           }
@@ -132,6 +140,10 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
           const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
           cart.forEach(async (item) => {
             const itemPct = item.commission_percentage || 10.0;
+            const commissionEarned = item.payment_mode === 'fixed_advance'
+              ? Math.min(item.fixed_advance_amount || 0, item.totalPrice)
+              : Math.round(item.totalPrice * (itemPct / 100));
+
             const bookingInsertData = {
               city_id: item.city_id && isValidUUID(item.city_id) ? item.city_id : null,
               vendor_id: item.vendor_id && isValidUUID(item.vendor_id) ? item.vendor_id : null,
@@ -145,7 +157,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
               payment_type: paymentOption === 'full' ? 'full_online' : 'advance_custom',
               amount_paid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
               remaining_amount: paymentOption === 'full' ? 0 : item.remainingPayment,
-              commission_earned: Math.round(item.totalPrice * (itemPct / 100))
+              commission_earned: commissionEarned
             };
             const { error } = await supabase.from('bookings').insert([bookingInsertData]);
             if (error) console.error('Error inserting booking to Supabase from cart:', error);
@@ -381,8 +393,14 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center text-xs text-gray-700 bg-[#FF5F00]/10 p-2 rounded-lg border border-[#FF5F00]/20">
-                        <span>{item.commission_percentage || 10}% booking advance</span>
+                      <div className="flex justify-between items-center text-xs text-gray-700 bg-blue-600/10 p-2 rounded-lg border border-blue-500/20">
+                        <span>
+                          {item.payment_mode === 'fixed_advance'
+                            ? `₹${item.fixed_advance_amount} flat advance`
+                            : (item.payment_mode === 'full_payment'
+                                ? '100% full payment'
+                                : `${item.commission_percentage || 10}% booking advance`)}
+                        </span>
                         <span className="font-bold text-black">
                           ₹{item.advancePayment.toLocaleString('en-IN')}
                         </span>
@@ -427,20 +445,23 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>Total Cost ({cart.length} adventure{cart.length > 1 ? 's' : ''})</span>
+                {/* Pricing breakdown - Highlighted in Blue */}
+                <div className="p-4 bg-blue-600/10 border border-blue-500/20 text-blue-900 rounded-2xl space-y-2.5 font-sans">
+                  <div className="flex justify-between items-center text-xs text-blue-900/70 font-semibold">
+                    <span>Total Cost ({cart.length} item{cart.length > 1 ? 's' : ''})</span>
                     <span>₹{totalCost.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between items-center font-bold text-base text-[#FF5F00]">
+                  <div className="h-px bg-blue-500/20 my-1" />
+                  
+                  <div className="flex justify-between items-center text-sm font-black text-blue-800">
                     <span className="flex items-center gap-1">
                       {paymentOption === 'full' ? 'Pay 100% Online Now' : 'Pay Total Advance Now'}
                     </span>
-                    <span className="text-lg font-black text-black">₹{amountToPayNow.toLocaleString('en-IN')}</span>
+                    <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>{paymentOption === 'full' ? 'Remaining Balance' : 'Pay at Rishikesh (Offline)'}</span>
-                    <span>{paymentOption === 'full' ? '₹0' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
+                  <div className="flex justify-between items-center text-xs text-blue-900/80 font-bold">
+                    <span>{paymentOption === 'full' ? 'Remaining Balance' : 'Pay at Venue (Remaining)'}</span>
+                    <span>{paymentOption === 'full' ? '₹0 (Paid in Full)' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
                   </div>
                 </div>
 

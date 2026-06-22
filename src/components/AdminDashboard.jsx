@@ -14,14 +14,6 @@ const STANDARD_ADVENTURE_NAMES = {
     "24 KM Rafting",
     "36 KM Rafting"
   ],
-  bungee: [
-    "117M Jumps with DSLR Video",
-    "117M Jumps (Without Video)",
-    "111M Bungee Jump with DSLR Video",
-    "Combo: Bungee Jump (111M) + Giant Swing (113M) with Video",
-    "Rooftop Bungee Jump (111M) (Without Video)",
-    "Couple Bungee Jump with DSLR Video"
-  ],
   swing: [
     "GIANT SWING RISHIKESH",
     "GIANT SWING COUPLE RISHIKESH"
@@ -529,7 +521,6 @@ export default function AdminDashboard({ setRoute }) {
                   >
                     <option value="all">All Adventures</option>
                     <option value="rafting">Rafting</option>
-                    <option value="bungee">Bungee Jumping</option>
                     <option value="swing">Giant Swing</option>
                     <option value="paragliding">Paragliding</option>
                     <option value="zipline">Ganga Zipline</option>
@@ -1379,9 +1370,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
   const [bikesOperators, setBikesOperators] = useState({});
   const [toursOperators, setToursOperators] = useState({});
 
-  // Initialize adventures/activities operators state (covers rafting, bungee, swing, paragliding, zipline, camping)
+  // Initialize adventures/activities operators state (covers rafting, swing, paragliding, zipline, camping)
   useEffect(() => {
-    if (['rafting', 'adventures', 'bungee', 'swing', 'paragliding', 'zipline', 'camping'].includes(type)) {
+    if (['rafting', 'adventures', 'swing', 'paragliding', 'zipline', 'camping'].includes(type)) {
       const initialOps = {};
       
       // Initialize all vendors
@@ -1506,7 +1497,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         social_proof: data.social_proof || { trusted_count: '10,000+', top_rated_text: 'Top Rated In Tapovan' },
         benefits: data.benefits || [],
         phone_number: data.phone_number || '+919837371137',
-        featured_image: data.featured_image || ''
+        featured_image: data.featured_image || '',
+        payment_mode: data.payment_mode || 'commission_advance',
+        fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : ''
       });
     } else {
       // Set defaults for empty forms
@@ -1521,7 +1514,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         is_limited_offer: false,
         images: [],
         whatsapp_number: '',
-        cancellation_policy: '100% refund up to 24 hours prior to arrival.'
+        cancellation_policy: '100% refund up to 24 hours prior to arrival.',
+        payment_mode: 'commission_advance',
+        fixed_advance_amount: 0
       };
 
       if (type === 'hotels') {
@@ -1621,7 +1616,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           inclusions: formData.inclusions || [],
           exclusions: formData.exclusions || [],
           cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
-          activity_type: formData.activity_type || 'rafting'
+          activity_type: formData.activity_type || 'rafting',
+          payment_mode: formData.payment_mode || 'commission_advance',
+          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount)) : null
         };
 
         if (data) {
@@ -1717,7 +1714,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           name: formData.name,
           description: formData.description || '',
           documents: formData.documents || ['Driving License', 'Aadhar Card'],
-          images: formData.images || []
+          images: formData.images || [],
+          payment_mode: formData.payment_mode || 'commission_advance',
+          commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
+          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null
         };
 
         if (data) {
@@ -1813,7 +1813,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           inclusions: formData.inclusions || [],
           exclusions: formData.exclusions || [],
           cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
-          images: formData.images || []
+          images: formData.images || [],
+          payment_mode: formData.payment_mode || 'commission_advance',
+          commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
+          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null
         };
 
         if (data) {
@@ -1891,7 +1894,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       const submitData = {
         ...formData,
         original_price: formData.original_price === '' || formData.original_price === null || formData.original_price === undefined ? null : Number(formData.original_price),
-        commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null || formData.commission_percentage === undefined ? null : Number(formData.commission_percentage),
+        payment_mode: formData.payment_mode || 'commission_advance',
+        commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage === '' || formData.commission_percentage === null || formData.commission_percentage === undefined ? null : Number(formData.commission_percentage)) : null,
+        fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null || formData.fixed_advance_amount === undefined ? null : Number(formData.fixed_advance_amount)) : null,
         is_limited_offer: !!formData.is_limited_offer
       };
       if (data) {
@@ -2035,7 +2040,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none font-bold"
             >
               <option value="rafting">Rafting</option>
-              <option value="bungee">Bungee Jumping</option>
               <option value="swing">Giant Swing</option>
               <option value="paragliding">Paragliding</option>
               <option value="zipline">Ganga Zipline</option>
@@ -3437,6 +3441,54 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         />
       </div>
 
+      {/* 5. Payment Configuration */}
+      <div className="space-y-4 border-t border-slate-900 pt-4">
+        <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">Payment Configuration</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Payment Mode</label>
+            <select
+              value={formData.payment_mode || 'commission_advance'}
+              onChange={(e) => setFormData(prev => ({ ...prev, payment_mode: e.target.value }))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none font-bold"
+            >
+              <option value="commission_advance">Commission-Based Advance</option>
+              <option value="fixed_advance">Fixed Advance Amount</option>
+              <option value="full_payment">Full 100% Payment Online</option>
+            </select>
+          </div>
+
+          {(formData.payment_mode === 'commission_advance' || !formData.payment_mode) && (
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Percentage (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={formData.commission_percentage !== null && formData.commission_percentage !== undefined ? formData.commission_percentage : ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, commission_percentage: e.target.value === '' ? '' : Number(e.target.value) }))}
+                placeholder="e.g. 20"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+          )}
+
+          {formData.payment_mode === 'fixed_advance' && (
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
+              <input
+                type="number"
+                min="0"
+                value={formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? formData.fixed_advance_amount : ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value) }))}
+                placeholder="e.g. 500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Actions */}
       <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
         <button
@@ -3601,7 +3653,6 @@ const getVendorsForType = (activityType, vendorsList) => {
   }
   
   const mappedCategory = 
-    typeLower === 'bungee' ? 'Bungee' :
     typeLower === 'swing' ? 'Giant Swing' :
     typeLower === 'paragliding' ? 'Paragliding' :
     typeLower === 'zipline' ? 'Zipline' : '';
