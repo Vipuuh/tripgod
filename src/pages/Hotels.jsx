@@ -705,34 +705,34 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               </div>
 
                               {/* Trust Tag Accent Pills */}
-                              <div className="flex flex-wrap gap-1.5 mt-1 select-none">
-                                <span className="inline-flex items-center gap-0.5 text-[8px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/5 px-1.5 py-0.5 rounded border border-[#10B981]/15">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2 h-2 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <div className="flex flex-row flex-wrap gap-2 items-center mt-1 select-none">
+                                <span className="inline-flex items-center gap-1 text-[10px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                   </svg>
                                   Free Cancellation
                                 </span>
-                                <span className="inline-flex items-center gap-0.5 text-[8px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/5 px-1.5 py-0.5 rounded border border-[#10B981]/15">
+                                <span className="inline-flex items-center gap-1 text-[10px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
                                   100% Refund Guarantee
                                 </span>
                               </div>
                             </div>
 
                             {/* Right Column: Pricing */}
-                            <div className="text-right shrink-0 min-w-[85px] self-start">
+                            <div className="text-right shrink-0 min-w-[95px] self-start mt-1">
                               <div className="flex flex-col items-end">
                                 {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
                                   <span className="text-[10px] text-gray-400 line-through font-medium leading-none">
                                     ₹{Number(hotel.original_price).toLocaleString('en-IN')}
                                   </span>
                                 )}
-                                <span className="text-base font-black text-black leading-none mt-1">
+                                <span className="text-2xl sm:text-3xl font-black text-black leading-none mt-1">
                                   ₹{Number(hotel.price).toLocaleString('en-IN')}
                                 </span>
-                                <span className="text-[9px] text-gray-500 font-semibold mt-1 leading-none">
+                                <span className="text-[10px] text-gray-500 font-bold mt-1.5 leading-none">
                                   + ₹{taxes} taxes
                                 </span>
-                                <span className="text-[8px] text-gray-450 font-bold uppercase tracking-wider mt-0.5 leading-none">
+                                <span className="text-[9px] text-gray-450 font-bold uppercase tracking-wider mt-1 leading-none">
                                   Per Night
                                 </span>
                               </div>
@@ -745,11 +745,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             if (!parsed.text) return null;
                             const IconComponent = HIGHLIGHT_ICONS[parsed.icon] || Sparkles;
                             return (
-                              <div className="flex items-center gap-1.5 text-[10px] text-gray-650 bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-lg py-1.5 px-2.5 w-full">
-                                <IconComponent size={11} className="text-[#FF5F00] shrink-0" />
-                                <span className="font-bold truncate text-left flex-1 italic">
+                              <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl py-1 px-3 flex items-start gap-2 text-xs text-black leading-relaxed w-full min-w-0">
+                                <IconComponent size={13} className="text-[#FF5F00] shrink-0 mt-0.5" />
+                                <p className="font-semibold text-gray-700 italic text-left break-words flex-1">
                                   {parsed.text}
-                                </span>
+                                </p>
                               </div>
                             );
                           })()}
