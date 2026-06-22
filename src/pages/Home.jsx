@@ -514,7 +514,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   }, []);
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-[#FAF8F5] via-[#F3F5F6] to-[#FAF8F5] text-black">
+    <div className="w-full max-w-screen-xl mx-auto px-4 overflow-x-hidden min-h-screen bg-neutral-50 text-black">
       {/* 1. Hero Section */}
       <div 
         onMouseMove={handleMouseMove}
@@ -916,7 +916,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 onClick={() => setRoute(item.route)}
                 className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-3 sm:p-5 rounded-2xl bg-gradient-to-br from-white to-neutral-50/80 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:border-[#FF5F00]/40 hover:shadow-[0_12px_30px_rgba(255,95,0,0.1)] transition-all duration-300 hover:-translate-y-1 group cursor-pointer"
               >
-                <div className="flex items-center justify-center h-11 w-11 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200/30 group-hover:from-[#FF5F00] group-hover:to-[#FF3E00] group-hover:shadow-[0_6px_20px_rgba(255,95,0,0.35)] transition-all duration-300">
+                <div className="flex items-center justify-center h-11 w-11 sm:h-14 sm:w-14 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200/30 shadow-sm group-hover:from-[#FF5F00] group-hover:to-[#FF3E00] group-hover:shadow-[0_6px_20px_rgba(255,95,0,0.35)] transition-all duration-300">
                   <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-300">{item.emoji}</span>
                 </div>
                 <span className="font-bold text-[9px] sm:text-xs text-neutral-700 tracking-wider uppercase group-hover:text-[#FF5F00] transition-colors text-center font-display leading-tight">
@@ -939,10 +939,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             className="text-center space-y-2"
           >
             <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Stay in Luxury</span>
-            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
               TOP HOTELS IN RISHIKESH
             </h2>
-            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
           </motion.div>
 
           <motion.div
@@ -986,7 +986,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 variants={fadeInUp}
                 whileHover={{ y: -5 }}
                 onClick={() => setRoute('hotels')}
-                className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+                className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
               >
                 <div className="h-48 bg-gray-100 overflow-hidden relative border-b border-black/5">
                   <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover" />
@@ -1022,17 +1022,18 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       </div>
 
       {/* 3. Activity Cards Section */}
-      <div id="adventures" className="max-w-6xl mx-auto px-6 py-20 space-y-12">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-2"
-        >
-          <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Select Your Thrill</span>
-          <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">CHOOSE YOUR ADVENTURE</h2>
-          <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+      <div id="adventures" className="w-full bg-gray-50/80 py-20 border-b border-black/5">
+        <div className="max-w-6xl mx-auto px-6 space-y-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center space-y-2"
+          >
+            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Select Your Thrill</span>
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight text-neutral-900">CHOOSE YOUR ADVENTURE</h2>
+            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
         </motion.div>
 
         <motion.div 
@@ -1047,7 +1048,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               variants={fadeInUp}
               whileHover={{ y: -5 }}
               onClick={() => setRoute(act.route)}
-              className="border border-white/60 bg-white/60 backdrop-blur-md rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:scale-[1.01] hover:border-accent/40 flex flex-col h-full shadow-[0_8px_32px_rgba(0,0,0,0.04)] group"
+              className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col h-full group"
             >
               {/* Image box */}
               <div className="h-32 sm:h-56 bg-gray-100 overflow-hidden relative">
@@ -1085,6 +1086,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             </motion.div>
           ))}
         </motion.div>
+        </div>
       </div>
 
       {/* 4.2. Char Dham Yatra Section */}
@@ -1098,10 +1100,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             className="text-center space-y-2"
           >
             <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Spiritual Pilgrimage</span>
-            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
               SACRED CHAR DHAM YATRA PACKAGES
             </h2>
-            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
           </motion.div>
 
           <motion.div
@@ -1136,7 +1138,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 variants={fadeInUp}
                 whileHover={{ y: -5 }}
                 onClick={() => setRoute('tours')}
-                className="bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+                className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
               >
                 <div className="h-56 bg-gray-100 overflow-hidden relative border-b border-black/5">
                   <img src={tour.img} alt={tour.name} className="w-full h-full object-cover" />
@@ -1184,10 +1186,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             className="text-center space-y-2"
           >
             <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Explore Rishikesh Solo</span>
-            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight leading-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
               BIKE & SCOOTY RENTALS
             </h2>
-            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
           </motion.div>
 
           {/* Cards container with responsive horizontal scroll on mobile */}
@@ -1204,7 +1206,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 variants={fadeInUp}
                 whileHover={{ y: -5 }}
                 onClick={() => setRoute('bikerent')}
-                className="flex-shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-center bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden flex flex-col justify-between relative hover:border-[#FF5F00]/50 transition-all duration-300 cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)]"
+                className="flex-shrink-0 w-[85%] sm:w-[60%] md:w-auto snap-center bg-white border border-gray-100/50 rounded-2xl overflow-hidden flex flex-col justify-between relative shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
               >
                 {bike.badge && (
                   <span className="absolute top-4 right-4 bg-black text-[#FF6B00] text-[10px] font-black tracking-wider py-1 px-3 rounded-full border border-[#FF6B00]/30 shadow-md z-10">
@@ -1317,7 +1319,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       </div>
 
       {/* 6.5. FAQ Section */}
-      <div className="py-20 border-y border-black/5">
+      <div className="w-full bg-gray-50/80 py-20 border-y border-black/5">
         <div className="max-w-4xl mx-auto px-6 space-y-12">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -1327,10 +1329,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             className="text-center space-y-2"
           >
             <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">GOT QUESTIONS?</span>
-            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight bg-gradient-to-r from-black via-[#1E2029] to-[#4A4F63] bg-clip-text text-transparent uppercase">
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight text-neutral-900 uppercase">
               FREQUENTLY ASKED QUESTIONS
             </h2>
-            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
           </motion.div>
 
           <div className="space-y-4 max-w-3xl mx-auto font-sans">
@@ -1339,7 +1341,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               return (
                 <div 
                   key={idx}
-                  className="border border-white/60 bg-white/60 backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.03)] hover:border-accent/40"
+                  className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
@@ -1391,8 +1393,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             className="space-y-2"
           >
             <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block font-display">Testimonials</span>
-            <h2 className="text-3xl md:text-5xl font-black font-display tracking-tight text-white uppercase">WHAT OUR CUSTOMERS SAY</h2>
-            <div className="w-16 h-1 bg-[#FF6B00] mx-auto mt-4" />
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight text-white uppercase">WHAT OUR CUSTOMERS SAY</h2>
+            <div className="w-16 h-1 bg-[#10B981] mx-auto mt-4" />
           </motion.div>
         </div>
 
