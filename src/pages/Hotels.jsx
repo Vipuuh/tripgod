@@ -649,7 +649,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         </div>
 
                         {/* MakeMyTrip Style Card Content */}
-                        <div className="p-5 space-y-4">
+                        <div className="px-3 py-4 space-y-3">
                           {/* Rating Row */}
                           <div className="flex items-center gap-2">
                             <span className="bg-[#FF5F00] text-white text-[10px] font-black px-1.5 py-0.5 rounded leading-none">
@@ -666,28 +666,28 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           {/* Title & Verification Badge */}
                           <div className="flex items-start gap-1.5">
                             {hotel.is_verified && (
-                              <ShieldCheck size={16} className="text-[#FF5F00] shrink-0 mt-0.5" />
+                              <ShieldCheck size={14} className="text-[#FF5F00] shrink-0 mt-0.5" />
                             )}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-2" title={hotel.name}>
+                              <h3 className="font-bold text-sm sm:text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-2" title={hotel.name}>
                                 {hotel.name}
                               </h3>
                             </div>
                           </div>
 
                           {/* Split Row for Info and Pricing */}
-                          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pt-2 border-t border-gray-100/50">
+                          <div className="flex justify-between items-start gap-3 pt-2 border-t border-gray-100/50 w-full">
                             {/* Left Column: Location & Room Details */}
-                            <div className="space-y-2 flex-1 w-full min-w-0">
-                              <p className="text-xs text-gray-500 font-semibold flex items-start gap-1">
-                                <MapPin size={12} className="text-[#FF5F00] shrink-0 mt-0.5" />
-                                <span className="break-words text-left">
+                            <div className="space-y-1.5 flex-1 min-w-0">
+                              <p className="text-[11px] text-gray-500 font-semibold flex items-start gap-1">
+                                <MapPin size={11} className="text-[#FF5F00] shrink-0 mt-0.5" />
+                                <span className="truncate text-left">
                                   {hotel.address.replace(', Rishikesh', '')} {hotel.landmarks && hotel.landmarks[0] ? `| ${sanitizeHighlightText(hotel.landmarks[0])}` : ''}
                                 </span>
                               </p>
                               
-                              <div className="border-l-2 border-[#FF5F00]/30 pl-2 py-0.5">
-                                <p className="text-[11px] text-gray-700 font-bold leading-normal truncate">
+                              <div className="border-l border-[#FF5F00]/30 pl-1.5 py-0">
+                                <p className="text-[10px] text-gray-700 font-bold leading-normal truncate">
                                   {hotel.room_type}
                                 </p>
                               </div>
@@ -698,47 +698,43 @@ export default function Hotels({ currentCity, openBookingModal }) {
                                   .filter(([_, val]) => !!val)
                                   .slice(0, 2)
                                   .map(([key]) => (
-                                    <span key={key} className="text-[9px] bg-gray-50 border border-black/5 text-gray-650 font-bold px-2 py-0.5 rounded-md">
+                                    <span key={key} className="text-[8px] bg-gray-50 border border-black/5 text-gray-650 font-bold px-1.5 py-0.5 rounded">
                                       {key.replace('_', ' ')}
                                     </span>
                                   ))}
                               </div>
 
                               {/* Trust Tag Accent Pills */}
-                              <div className="flex flex-wrap gap-2 mt-1.5 select-none">
-                                <span className="inline-flex items-center gap-1 text-[9px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <div className="flex flex-wrap gap-1.5 mt-1 select-none">
+                                <span className="inline-flex items-center gap-0.5 text-[8px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/5 px-1.5 py-0.5 rounded border border-[#10B981]/15">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2 h-2 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                   </svg>
                                   Free Cancellation
                                 </span>
-                                <span className="inline-flex items-center gap-1 text-[9px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
+                                <span className="inline-flex items-center gap-0.5 text-[8px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/5 px-1.5 py-0.5 rounded border border-[#10B981]/15">
                                   100% Refund Guarantee
                                 </span>
                               </div>
                             </div>
 
                             {/* Right Column: Pricing */}
-                            <div className="w-full sm:w-auto text-left sm:text-right shrink-0 border-t sm:border-t-0 border-gray-100/50 pt-3.5 sm:pt-0">
-                              <div className="flex flex-row sm:flex-col items-baseline sm:items-end justify-between sm:justify-end gap-2 flex-wrap">
-                                <div className="flex items-baseline gap-1.5">
-                                  {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
-                                    <span className="text-xs text-gray-400 line-through font-semibold">
-                                      ₹{Number(hotel.original_price).toLocaleString('en-IN')}
-                                    </span>
-                                  )}
-                                  <span className="text-xl font-black text-black leading-none">
-                                    ₹{Number(hotel.price).toLocaleString('en-IN')}
+                            <div className="text-right shrink-0 min-w-[85px] self-start">
+                              <div className="flex flex-col items-end">
+                                {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
+                                  <span className="text-[10px] text-gray-400 line-through font-medium leading-none">
+                                    ₹{Number(hotel.original_price).toLocaleString('en-IN')}
                                   </span>
-                                </div>
-                                <div className="flex items-center gap-1.5 sm:flex-col sm:items-end">
-                                  <span className="text-[9px] text-gray-500 font-bold">
-                                    + ₹{taxes} taxes & fees
-                                  </span>
-                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">
-                                    Per Night
-                                  </span>
-                                </div>
+                                )}
+                                <span className="text-base font-black text-black leading-none mt-1">
+                                  ₹{Number(hotel.price).toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-[9px] text-gray-500 font-semibold mt-1 leading-none">
+                                  + ₹{taxes} taxes
+                                </span>
+                                <span className="text-[8px] text-gray-450 font-bold uppercase tracking-wider mt-0.5 leading-none">
+                                  Per Night
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -749,19 +745,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             if (!parsed.text) return null;
                             const IconComponent = HIGHLIGHT_ICONS[parsed.icon] || Sparkles;
                             return (
-                              <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-3 flex items-start gap-2 text-xs text-black leading-relaxed w-full min-w-0">
-                                <IconComponent size={13} className="text-[#FF5F00] shrink-0 mt-0.5" />
-                                <p className="font-semibold text-gray-700 italic text-left break-words flex-1">
+                              <div className="flex items-center gap-1.5 text-[10px] text-gray-650 bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-lg py-1.5 px-2.5 w-full">
+                                <IconComponent size={11} className="text-[#FF5F00] shrink-0" />
+                                <span className="font-bold truncate text-left flex-1 italic">
                                   {parsed.text}
-                                </p>
+                                </span>
                               </div>
                             );
                           })()}
 
                           {/* Exclusive UPI Discount Banner */}
-                          <div className="bg-black/5 border border-black/5 rounded-xl p-2.5 flex items-center justify-between text-[10px] text-gray-600 font-bold w-full min-w-0">
+                          <div className="bg-black/5 border border-black/5 rounded-xl p-2 flex items-center justify-between text-[9px] text-gray-600 font-bold w-full min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="w-4 h-4 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0 text-[#FF5F00] text-[9px] font-black">%</span>
+                              <span className="w-3.5 h-3.5 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0 text-[#FF5F00] text-[8px] font-black">%</span>
                               <span className="break-words text-left flex-1">Pay via UPI & get flat ₹{getUpiDiscountForHotel(hotel)} instant discount</span>
                             </div>
                           </div>
@@ -769,13 +765,13 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       </div>
 
                       {/* View Details Action */}
-                      <div className="px-5 pb-5 pt-1">
+                      <div className="px-3 pb-4 pt-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectHotel(hotel);
                           }}
-                          className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
+                          className="w-full py-2.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
                         >
                           View Stay Details
                         </button>
