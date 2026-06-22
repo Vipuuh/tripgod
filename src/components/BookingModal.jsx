@@ -135,7 +135,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     return 250;
   };
 
-  const upiDiscountVal = getUPIDiscount(totalPrice);
+  // UPI Discount is ONLY applicable on 100% Full Payment
+  const applyUpiDiscount = effectivePaymentOption === 'full';
+  const upiDiscountVal = applyUpiDiscount ? getUPIDiscount(totalPrice) : 0;
   const finalAmountToPay = Math.max(0, amountToPayNow - upiDiscountVal);
 
   const minDate = new Date().toISOString().split('T')[0];
@@ -203,7 +205,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 ${hasVideoOption ? `*Add-ons:* DSLR Video Included\n` : ''}
 *Price Summary:*
 - Total Price: ₹${totalPrice.toLocaleString('en-IN')}
-- *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${finalAmountToPay.toLocaleString('en-IN')} (UPI Discount of ₹${upiDiscountVal} applied)
+- *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${finalAmountToPay.toLocaleString('en-IN')}${upiDiscountVal > 0 ? ` (UPI Discount of ₹${upiDiscountVal} applied)` : ''}
 - ${effectivePaymentOption === 'full' ? 'Remaining Balance: ₹0 (Paid in Full)' : `Pay at Venue: ₹${remainingPayment.toLocaleString('en-IN')}`}
 ----------------------------------
 My payment ID is verified. Please confirm my slots.`;
@@ -671,10 +673,25 @@ My payment ID is verified. Please confirm my slots.`;
                   <span>Online payment amount</span>
                   <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs text-[#FF5F00] font-black">
-                  <span>UPI Instant Discount</span>
-                  <span>- ₹{upiDiscountVal.toLocaleString('en-IN')}</span>
-                </div>
+                {effectivePaymentOption === 'full' ? (
+                  <div className="flex justify-between items-center text-xs text-[#10B981] font-black">
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
+                      UPI Discount Applied
+                    </span>
+                    <span>- ₹{upiDiscountVal.toLocaleString('en-IN')}</span>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-xs text-gray-400 font-semibold line-through">
+                      <span>UPI Instant Discount</span>
+                      <span>₹0</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 font-bold text-left italic leading-normal">
+                      * UPI Discount is applicable only on 100% Full Payment
+                    </p>
+                  </div>
+                )}
                 <div className="h-px bg-emerald-500/20 my-1" />
                 
                 <div className="flex justify-between items-center text-sm font-black text-emerald-600">

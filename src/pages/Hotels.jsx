@@ -32,32 +32,55 @@ const BENEFIT_ICONS = {
 };
 
 const parseHighlight = (highlight) => {
-  if (!highlight) return { icon: 'Star', text: '' };
+  let result = { icon: 'Star', text: '' };
+  if (!highlight) return result;
   if (typeof highlight === 'object' && highlight !== null) {
-    return {
+    result = {
       icon: highlight.icon || 'Star',
       text: highlight.text || ''
     };
-  }
-  if (typeof highlight === 'string') {
+  } else if (typeof highlight === 'string') {
     const trimmed = highlight.trim();
     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
       try {
         const parsed = JSON.parse(trimmed);
-        return {
+        result = {
           icon: parsed.icon || 'Star',
           text: parsed.text || ''
         };
       } catch (e) {
-        // ignore
+        result = { icon: 'Star', text: highlight };
       }
+    } else {
+      result = { icon: 'Star', text: highlight };
     }
-    return {
-      icon: 'Star',
-      text: highlight
-    };
+  } else {
+    result = { icon: 'Star', text: String(highlight) };
   }
-  return { icon: 'Star', text: String(highlight) };
+  result.text = sanitizeHighlightText(result.text);
+  return result;
+};
+
+const sanitizeHighlightText = (text) => {
+  if (!text) return '';
+  let str = String(text).trim();
+  
+  if (str.startsWith('[') && str.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(str);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        str = String(parsed[0]);
+      } else {
+        str = str.slice(1, -1);
+      }
+    } catch (e) {
+      str = str.slice(1, -1);
+    }
+  }
+  
+  str = str.replace(/^['"`\s]+|['"`\s]+$/g, '');
+  str = str.replace(/^[•\-\*\s]+/, '');
+  return str.trim();
 };
 
 const getUpiDiscountForHotel = (hotel) => {
@@ -504,29 +527,38 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </p>
               </div>
 
-              {/* Sorting Controls */}
-              <div className="flex justify-end items-center -mb-2 relative z-10 px-2">
-                <div className="flex items-center gap-2 bg-white border border-black/10 rounded-xl px-3.5 py-2 shadow-sm">
-                  <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">Sort By:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-transparent border-none text-xs font-bold text-black focus:outline-none focus:ring-0 cursor-pointer p-0 pr-6 appearance-none"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FF5F00'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg>")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right center',
-                      backgroundSize: '12px'
-                    }}
-                  >
-                    <option value="rating-desc">Top Rated</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="near-ramjhula">Near Ram Jhula</option>
-                    <option value="near-laxmanjhula">Near Laxman Jhula</option>
-                    <option value="near-yognagri">Near Yog Nagri Station</option>
-                    <option value="near-busstand">Near Bus Stand</option>
-                  </select>
+              {/* Premium Sorting Bar Upgrade */}
+              <div className="sticky top-4 z-30 bg-gradient-to-r from-blue-950 to-blue-900 border border-blue-800 rounded-2xl p-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Result Counter */}
+                <div className="text-white text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
+                  Showing {hotels.length} Stays
+                </div>
+                
+                {/* Horizontal Scrollable Chips UI */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none snap-x select-none max-w-full">
+                  {[
+                    { val: 'rating-desc', label: 'Top Rated' },
+                    { val: 'price-asc', label: 'Price: Low to High' },
+                    { val: 'price-desc', label: 'Price: High to Low' },
+                    { val: 'near-ramjhula', label: 'Near Ram Jhula' },
+                    { val: 'near-laxmanjhula', label: 'Near Laxman Jhula' },
+                    { val: 'near-yognagri', label: 'Near Yog Nagri Station' },
+                    { val: 'near-busstand', label: 'Near Bus Stand' }
+                  ].map(chip => (
+                    <button
+                      key={chip.val}
+                      type="button"
+                      onClick={() => setSortBy(chip.val)}
+                      className={`px-4.5 py-2 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 transition-all border cursor-pointer ${
+                        sortBy === chip.val
+                          ? 'bg-[#FF5F00] text-white border-[#FF5F00] shadow-[0_4px_12px_rgba(255,95,0,0.3)]'
+                          : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -593,7 +625,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               <p className="text-xs text-gray-500 font-semibold flex items-start gap-1">
                                 <MapPin size={12} className="text-[#FF5F00] shrink-0 mt-0.5" />
                                 <span className="break-words text-left">
-                                  {hotel.address.replace(', Rishikesh', '')} {hotel.landmarks && hotel.landmarks[0] ? `| ${hotel.landmarks[0]}` : ''}
+                                  {hotel.address.replace(', Rishikesh', '')} {hotel.landmarks && hotel.landmarks[0] ? `| ${sanitizeHighlightText(hotel.landmarks[0])}` : ''}
                                 </span>
                               </p>
                               
@@ -609,10 +641,23 @@ export default function Hotels({ currentCity, openBookingModal }) {
                                   .filter(([_, val]) => !!val)
                                   .slice(0, 2)
                                   .map(([key]) => (
-                                    <span key={key} className="text-[9px] bg-gray-50 border border-black/5 text-gray-600 font-bold px-2 py-0.5 rounded-md">
+                                    <span key={key} className="text-[9px] bg-gray-50 border border-black/5 text-gray-650 font-bold px-2 py-0.5 rounded-md">
                                       {key.replace('_', ' ')}
                                     </span>
                                   ))}
+                              </div>
+
+                              {/* Trust Tag Accent Pills */}
+                              <div className="flex flex-wrap gap-2 mt-1.5 select-none">
+                                <span className="inline-flex items-center gap-1 text-[9px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  Free Cancellation
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-[9px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
+                                  100% Refund Guarantee
+                                </span>
                               </div>
                             </div>
 
@@ -1137,7 +1182,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             <MapPin size={14} />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-black leading-snug">{landmark}</p>
+                            <p className="text-xs font-bold text-black leading-snug">{sanitizeHighlightText(landmark)}</p>
                           </div>
                         </div>
                       ))

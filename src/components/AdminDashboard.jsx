@@ -1766,7 +1766,34 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         is_limited_offer: !!data.is_limited_offer,
         rating: data.rating !== null && data.rating !== undefined ? data.rating : 4.5,
         reviews_count: data.reviews_count !== null && data.reviews_count !== undefined ? data.reviews_count : 100,
-        why_guests_love: data.why_guests_love || [],
+        why_guests_love: (data.why_guests_love || []).map(hl => {
+          if (!hl) return { icon: 'Star', text: '' };
+          if (typeof hl === 'object' && hl !== null) {
+            return {
+              icon: hl.icon || 'Star',
+              text: hl.text || ''
+            };
+          }
+          if (typeof hl === 'string') {
+            const trimmed = hl.trim();
+            if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                return {
+                  icon: parsed.icon || 'Star',
+                  text: parsed.text || ''
+                };
+              } catch (e) {
+                // ignore
+              }
+            }
+            return {
+              icon: 'Star',
+              text: hl
+            };
+          }
+          return { icon: 'Star', text: String(hl) };
+        }),
         rooms_left: data.rooms_left !== null && data.rooms_left !== undefined ? data.rooms_left : 5,
         high_demand: !!data.high_demand,
         attractions: data.attractions || [],
