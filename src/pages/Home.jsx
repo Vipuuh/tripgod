@@ -1375,35 +1375,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         </div>
       </div>
 
-      {/* VENDOR ONBOARDING BANNER */}
-      <div className="bg-black py-16 border-y border-white/10 relative overflow-hidden">
-        {/* Subtle orange glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FF5F00]/5 via-transparent to-[#FF5F00]/5 pointer-events-none" />
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0">
-              <Handshake size={26} className="text-[#FF5F00]" />
-            </div>
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black text-white font-display leading-tight">
-                Own a Hotel, Bikes, or Rafting Business in Rishikesh?
-              </h3>
-              <p className="text-gray-400 text-sm font-medium mt-1">
-                Grow your bookings with TripGod. Join 50+ verified local vendors on the platform.
-              </p>
-            </div>
-          </div>
-          <a
-            href="https://wa.me/919837371137?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 px-8 py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-sm uppercase tracking-widest rounded-full shadow-[0_8px_30px_rgba(255,95,0,0.35)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.5)] hover:scale-105 transition-all border-none cursor-pointer flex items-center gap-2"
-          >
-            <Handshake size={16} />
-            Partner With Us
-          </a>
-        </div>
-      </div>
 
       {/* 7. Reviews Section (Infinite Translucent Marquee Slider - Luxury Dark Obsidian Edition) */}
       <div className="bg-[#0B0C10] py-20 overflow-hidden relative border-y border-white/5">
