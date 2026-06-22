@@ -34,29 +34,40 @@ const BENEFIT_ICONS = {
 const parseHighlight = (highlight) => {
   let result = { icon: 'Star', text: '' };
   if (!highlight) return result;
-  if (typeof highlight === 'object' && highlight !== null) {
+
+  // 1. If it's an array, recursively parse the first element
+  if (Array.isArray(highlight)) {
+    if (highlight.length === 0) return result;
+    return parseHighlight(highlight[0]);
+  }
+
+  // 2. If it's an object (and not null/array), check fields
+  if (typeof highlight === 'object') {
     result = {
       icon: highlight.icon || 'Star',
       text: highlight.text || ''
     };
   } else if (typeof highlight === 'string') {
-    const trimmed = highlight.trim();
-    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    let trimmed = highlight.trim();
+
+    // 3. If the string is a JSON array or object representation, parse it
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || 
+        (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
       try {
         const parsed = JSON.parse(trimmed);
-        result = {
-          icon: parsed.icon || 'Star',
-          text: parsed.text || ''
-        };
+        return parseHighlight(parsed);
       } catch (e) {
-        result = { icon: 'Star', text: highlight };
+        // Fall back to treating it as raw string
       }
-    } else {
-      result = { icon: 'Star', text: highlight };
     }
+    
+    // Otherwise, treat as raw text
+    result = { icon: 'Star', text: trimmed };
   } else {
     result = { icon: 'Star', text: String(highlight) };
   }
+
+  // Sanitize text at the end
   result.text = sanitizeHighlightText(result.text);
   return result;
 };
@@ -65,21 +76,43 @@ const sanitizeHighlightText = (text) => {
   if (!text) return '';
   let str = String(text).trim();
   
-  if (str.startsWith('[') && str.endsWith(']')) {
+  // Recursively unpack arrays/objects string representations if any remain
+  while ((str.startsWith('[') && str.endsWith(']')) || 
+         (str.startsWith('{') && str.endsWith('}'))) {
     try {
       const parsed = JSON.parse(str);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        str = String(parsed[0]);
+      if (Array.isArray(parsed)) {
+        if (parsed.length > 0) {
+          str = String(parsed[0]).trim();
+        } else {
+          str = '';
+          break;
+        }
+      } else if (typeof parsed === 'object' && parsed !== null) {
+        str = String(parsed.text || parsed.icon || '').trim();
       } else {
-        str = str.slice(1, -1);
+        str = String(parsed).trim();
       }
     } catch (e) {
-      str = str.slice(1, -1);
+      // If parsing fails but it's wrapped in brackets, strip them
+      if (str.startsWith('[') && str.endsWith(']')) {
+        str = str.slice(1, -1).trim();
+      } else if (str.startsWith('{') && str.endsWith('}')) {
+        str = str.slice(1, -1).trim();
+      } else {
+        break;
+      }
     }
   }
-  
-  str = str.replace(/^['"`\s]+|['"`\s]+$/g, '');
-  str = str.replace(/^[•\-\*\s]+/, '');
+
+  // Strip leading/trailing quotes (single, double, backticks) recursively/repeatedly
+  let prevStr;
+  do {
+    prevStr = str;
+    str = str.replace(/^['"`\s]+|['"`\s]+$/g, '');
+    str = str.replace(/^[•\-\*\s]+/, '');
+  } while (str !== prevStr);
+
   return str.trim();
 };
 
@@ -309,7 +342,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
               rating: data.rating !== null && data.rating !== undefined ? Number(data.rating) : 4.5,
               reviewsCount: data.reviews_count !== null && data.reviews_count !== undefined ? Number(data.reviews_count) : 100,
               is_limited_offer: !!data.is_limited_offer,
-              why_guests_love: data.why_guests_love || [],
+              why_guests_love: (() => {
+                const val = data.why_guests_love;
+                if (!val) return [];
+                if (typeof val === 'string') {
+                  try {
+                    const parsed = JSON.parse(val);
+                    return Array.isArray(parsed) ? parsed : [parsed];
+                  } catch (e) {
+                    return [val];
+                  }
+                }
+                return Array.isArray(val) ? val : [val];
+              })(),
               rooms_left: data.rooms_left !== null && data.rooms_left !== undefined ? Number(data.rooms_left) : 5,
               high_demand: !!data.high_demand,
               attractions: Array.isArray(data.attractions) ? data.attractions : [],
@@ -404,7 +449,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
             rating: item.rating !== null && item.rating !== undefined ? Number(item.rating) : 4.5,
             reviewsCount: item.reviews_count !== null && item.reviews_count !== undefined ? Number(item.reviews_count) : 100,
             is_limited_offer: !!item.is_limited_offer,
-            why_guests_love: item.why_guests_love || [],
+            why_guests_love: (() => {
+              const val = item.why_guests_love;
+              if (!val) return [];
+              if (typeof val === 'string') {
+                try {
+                  const parsed = JSON.parse(val);
+                  return Array.isArray(parsed) ? parsed : [parsed];
+                } catch (e) {
+                  return [val];
+                }
+              }
+              return Array.isArray(val) ? val : [val];
+            })(),
             rooms_left: item.rooms_left !== null && item.rooms_left !== undefined ? Number(item.rooms_left) : 5,
             high_demand: !!item.high_demand,
             attractions: Array.isArray(item.attractions) ? item.attractions : [],
@@ -501,7 +558,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
   }
 
   return (
-    <div className="w-full min-h-screen bg-white">
+    <div className="w-full max-w-screen-xl mx-auto overflow-x-hidden bg-white min-h-screen">
       <AnimatePresence mode="wait">
         {!selectedHotel ? (
           /* SECTION A: LISTING VIEW */
@@ -528,7 +585,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               </div>
 
               {/* Premium Sorting Bar Upgrade */}
-              <div className="sticky top-4 z-30 bg-gradient-to-r from-blue-950 to-blue-900 border border-blue-800 rounded-2xl p-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="sticky top-4 z-30 w-full max-w-full bg-gradient-to-r from-blue-950 to-blue-900 border border-blue-800 rounded-2xl p-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden">
                 {/* Result Counter */}
                 <div className="text-white text-xs font-black uppercase tracking-wider flex items-center gap-2">
                   <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
@@ -536,7 +593,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
                 
                 {/* Horizontal Scrollable Chips UI */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none snap-x select-none max-w-full">
+                <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
                     { val: 'rating-desc', label: 'Top Rated' },
                     { val: 'price-asc', label: 'Price: Low to High' },
@@ -691,7 +748,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-3 flex items-start gap-2 text-xs text-black leading-relaxed">
                                 <IconComponent size={13} className="text-[#FF5F00] shrink-0 mt-0.5" />
                                 <p className="font-semibold text-gray-700 italic text-left">
-                                  "{parsed.text}"
+                                  {parsed.text}
                                 </p>
                               </div>
                             );
