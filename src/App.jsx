@@ -327,34 +327,6 @@ export default function App() {
       {/* 4. Footer */}
       <footer className="bg-black text-white font-sans">
 
-        {/* PARTNER WITH US BANNER — top of footer */}
-        <div className="border-b border-white/10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#d5f538]/5 via-transparent to-[#d5f538]/5 pointer-events-none" />
-          <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#d5f538]/10 border border-[#d5f538]/20 flex items-center justify-center shrink-0">
-                <Handshake size={22} className="text-[#d5f538]" />
-              </div>
-              <div>
-                <h3 className="text-lg sm:text-xl font-black text-white font-display leading-tight tracking-tight">
-                  Own a Hotel, Bikes, or Rafting Business in Rishikesh?
-                </h3>
-                <p className="text-gray-400 text-sm font-medium mt-0.5">
-                  Grow your bookings with TripGod. Join 50+ verified local vendors on the platform.
-                </p>
-              </div>
-            </div>
-            <a
-              href="https://wa.me/919837371137?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 px-7 py-3.5 bg-[#d5f538] text-black font-black text-xs uppercase tracking-widest rounded-full shadow-[0_4px_20px_rgba(213,245,56,0.25)] hover:shadow-[0_8px_30px_rgba(213,245,56,0.4)] hover:scale-105 transition-all border-none cursor-pointer flex items-center gap-2 font-display whitespace-nowrap"
-            >
-              <Handshake size={14} />
-              Partner With Us
-            </a>
-          </div>
-        </div>
 
         {/* MAIN FOOTER GRID */}
         <div className="py-16 border-b border-white/5">
@@ -366,6 +338,25 @@ export default function App() {
               <span className="font-black text-2xl tracking-tighter text-white">TRIP</span>
               <span className="font-black text-2xl tracking-tighter text-accent bg-white/10 px-1.5 py-0.5 rounded ml-0.5">GOD</span>
             </div>
+
+            {/* Partner With Us */}
+            <div className="flex flex-col gap-1.5">
+              <a
+                href="https://wa.me/919837371137?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 group w-fit"
+              >
+                <Handshake size={16} className="text-accent group-hover:scale-110 transition-all duration-300" />
+                <span className="text-xs font-black uppercase tracking-widest text-white group-hover:text-accent transition-colors font-display">
+                  Partner With Us
+                </span>
+              </a>
+              <p className="text-[11px] text-gray-400 font-semibold leading-normal">
+                Own a hotel, bike, or rafting business? Grow your bookings with TripGod.
+              </p>
+            </div>
+
             <p className="text-gray-400 text-xs font-semibold leading-relaxed">
               Rishikesh's #1 Adventure Booking Partner. Handpicked activities, verified crews and a 100% refund guarantee.
             </p>
@@ -386,55 +377,28 @@ export default function App() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {/* UPI */}
-                <div className="bg-white rounded-lg px-2.5 py-1.5 flex items-center justify-center h-8">
-                  <svg viewBox="0 0 100 40" className="h-5 w-auto">
-                    <text x="2" y="28" fontFamily="Arial Black, sans-serif" fontWeight="900" fontSize="20" fill="#6B21A8">UPI</text>
-                    <polygon points="80,8 95,8 88,28" fill="#FF6B00"/>
-                    <polygon points="70,28 85,28 78,8" fill="#6B21A8"/>
-                  </svg>
+                <div className="bg-white rounded-lg px-2 flex items-center justify-center h-8 w-[68px]">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo-vector.svg" alt="UPI" className="h-4.5 w-auto object-contain" />
                 </div>
                 {/* Google Pay */}
-                <div className="bg-white rounded-lg px-2.5 py-1.5 flex items-center justify-center h-8">
-                  <svg viewBox="0 0 80 30" className="h-5 w-auto">
-                    <text x="2" y="22" fontFamily="Arial, sans-serif" fontWeight="500" fontSize="14" fill="#5F6368">G</text>
-                    <text x="12" y="22" fontFamily="Arial, sans-serif" fontWeight="700" fontSize="14">
-                      <tspan fill="#4285F4">P</tspan><tspan fill="#EA4335">a</tspan><tspan fill="#34A853">y</tspan>
-                    </text>
-                  </svg>
+                <div className="bg-white rounded-lg px-2 flex items-center justify-center h-8 w-[68px]">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" className="h-4 w-auto object-contain" />
                 </div>
                 {/* BHIM */}
-                <div className="bg-white rounded-lg px-2.5 py-1.5 flex items-center justify-center h-8">
-                  <svg viewBox="0 0 70 30" className="h-5 w-auto">
-                    <text x="2" y="22" fontFamily="Arial Black, sans-serif" fontWeight="900" fontSize="15" fill="#00529B">BHIM</text>
-                  </svg>
+                <div className="bg-white rounded-lg px-2 flex items-center justify-center h-8 w-[68px]">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/BHIM_logo.svg" alt="BHIM" className="h-4 w-auto object-contain" />
                 </div>
                 {/* Visa */}
-                <div className="bg-white rounded-lg px-2.5 py-1.5 flex items-center justify-center h-8">
-                  <svg viewBox="0 0 70 30" className="h-5 w-auto">
-                    <text x="2" y="23" fontFamily="Arial Black, sans-serif" fontWeight="900" fontSize="20" fill="#1A1F71" letterSpacing="-1">VISA</text>
-                  </svg>
+                <div className="bg-white rounded-lg px-2 flex items-center justify-center h-8 w-[68px]">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/Visa_Inc._logo_%282005%E2%80%932014%29.svg" alt="Visa" className="h-3 w-auto object-contain" />
                 </div>
                 {/* Mastercard */}
-                <div className="bg-white rounded-lg px-2.5 py-1.5 flex items-center justify-center h-8">
-                  <svg viewBox="0 0 50 30" className="h-5 w-auto">
-                    <circle cx="17" cy="15" r="12" fill="#EB001B"/>
-                    <circle cx="33" cy="15" r="12" fill="#F79E1B"/>
-                    <path d="M25 6.5 A12 12 0 0 1 25 23.5 A12 12 0 0 1 25 6.5" fill="#FF5F00"/>
-                  </svg>
+                <div className="bg-white rounded-lg px-2 flex items-center justify-center h-8 w-[68px]">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-4.5 w-auto object-contain" />
                 </div>
                 {/* Amex */}
-                <div className="bg-[#016FD0] rounded-lg px-2.5 py-1.5 flex items-center justify-center h-8">
-                  <svg viewBox="0 0 80 30" className="h-5 w-auto">
-                    <text x="2" y="21" fontFamily="Arial Black, sans-serif" fontWeight="900" fontSize="11" fill="white">AMERICAN</text>
-                    <text x="2" y="28" fontFamily="Arial Black, sans-serif" fontWeight="900" fontSize="9" fill="white">EXPRESS</text>
-                  </svg>
-                </div>
-                {/* Razorpay */}
-                <div className="bg-white rounded-lg px-2.5 py-1.5 flex items-center justify-center h-8">
-                  <svg viewBox="0 0 90 30" className="h-5 w-auto">
-                    <polygon points="12,4 20,18 8,18" fill="#3395FF"/>
-                    <text x="24" y="22" fontFamily="Arial, sans-serif" fontWeight="700" fontSize="14" fill="#0D2366">Razorpay</text>
-                  </svg>
+                <div className="bg-white rounded-lg px-2 flex items-center justify-center h-8 w-[68px]">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg" alt="American Express" className="h-3.5 w-auto object-contain" />
                 </div>
               </div>
             </div>
