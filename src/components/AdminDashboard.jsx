@@ -1495,7 +1495,18 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         why_guests_love: data.why_guests_love || [],
         rooms_left: data.rooms_left !== null && data.rooms_left !== undefined ? data.rooms_left : 5,
         high_demand: !!data.high_demand,
-        attractions: data.attractions || []
+        attractions: data.attractions || [],
+        is_verified: data.is_verified !== undefined ? !!data.is_verified : true,
+        bookings_count: data.bookings_count !== null && data.bookings_count !== undefined ? Number(data.bookings_count) : 18,
+        popular_badge_text: data.popular_badge_text || '18 bookings this week',
+        property_type: data.property_type || 'Hotel',
+        room_type: data.room_type || 'Deluxe Double Room',
+        best_for: data.best_for || [],
+        perfect_for: data.perfect_for || [],
+        social_proof: data.social_proof || { trusted_count: '10,000+', top_rated_text: 'Top Rated In Tapovan' },
+        benefits: data.benefits || [],
+        phone_number: data.phone_number || '+919837371137',
+        featured_image: data.featured_image || ''
       });
     } else {
       // Set defaults for empty forms
@@ -1523,10 +1534,33 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.landmarks = [];
         defaults.rating = 4.5;
         defaults.reviews_count = 100;
-        defaults.why_guests_love = [];
+        defaults.why_guests_love = [
+          { icon: 'Waves', text: 'River View Rooms' },
+          { icon: 'Wifi', text: 'Fast WiFi' },
+          { icon: 'Compass', text: '5 Min Walk To Laxman Jhula' },
+          { icon: 'Smile', text: 'Clean Comfortable Rooms' }
+        ];
         defaults.rooms_left = 5;
         defaults.high_demand = false;
         defaults.attractions = [];
+        defaults.is_verified = true;
+        defaults.bookings_count = 18;
+        defaults.popular_badge_text = '18 bookings this week';
+        defaults.property_type = 'Hotel';
+        defaults.room_type = 'Deluxe Double Room';
+        defaults.best_for = ['Family Friendly', 'Couples Welcome', 'Backpackers'];
+        defaults.perfect_for = ['Couples', 'Families', 'Backpackers'];
+        defaults.social_proof = { trusted_count: '10,000+', top_rated_text: 'Top Rated In Tapovan' };
+        defaults.benefits = [
+          { icon: 'Lock', title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gate' },
+          { icon: 'CalendarCheck', title: 'Instant Booking', desc: 'Hotel room voucher sent immediately' },
+          { icon: 'RefreshCw', title: 'Easy Refund', desc: 'No-hassle cancellation & quick refunds' },
+          { icon: 'HelpCircle', title: '24×7 Support', desc: '24/7 on-ground assistance & guide network' },
+          { icon: 'ShieldCheck', title: 'Verified Partners', desc: 'Every stay is handpicked and verified' },
+          { icon: 'CircleDollarSign', title: 'Best Price Guarantee', desc: 'Find it cheaper? We match the price!' }
+        ];
+        defaults.phone_number = '+919837371137';
+        defaults.featured_image = '';
       } else if (['rafting', 'adventures'].includes(type)) {
         defaults.activity_type = 'rafting';
         defaults.route = '';
@@ -2118,7 +2152,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       </div>
 
       {/* 4. Type Specific Fields */}
-      {/* ----------------- HOTELS FIELDS ----------------- */}
       {type === 'hotels' && (
         <div className="space-y-4 border-t border-slate-900 pt-4">
           <div className="grid grid-cols-2 gap-4">
@@ -2146,21 +2179,21 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Check-in Time</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Property Type (e.g. Hotel, Resort)</label>
               <input
                 type="text"
-                value={formData.check_in || '12:00 PM'}
-                onChange={(e) => setFormData(prev => ({ ...prev, check_in: e.target.value }))}
+                value={formData.property_type || 'Hotel'}
+                onChange={(e) => setFormData(prev => ({ ...prev, property_type: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Check-out Time</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Room Type (e.g. Deluxe Double Room)</label>
               <input
                 type="text"
-                value={formData.check_out || '11:00 AM'}
-                onChange={(e) => setFormData(prev => ({ ...prev, check_out: e.target.value }))}
+                value={formData.room_type || 'Deluxe Double Room'}
+                onChange={(e) => setFormData(prev => ({ ...prev, room_type: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
               />
             </div>
@@ -2205,68 +2238,355 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               />
             </div>
 
-            <div className="flex flex-col justify-end pb-3">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-350 select-none">
-                <input
-                  type="checkbox"
-                  checked={!!formData.high_demand}
-                  onChange={(e) => setFormData(prev => ({ ...prev, high_demand: e.target.checked }))}
-                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
-                />
-                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">High Demand</span>
-              </label>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Bookings This Week</label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={formData.bookings_count === undefined ? 18 : formData.bookings_count}
+                onChange={(e) => setFormData(prev => ({ ...prev, bookings_count: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
             </div>
           </div>
 
-          {/* Why Guests Love - Dynamic List */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Direct Phone (Sticky Bar)</label>
+              <input
+                type="text"
+                value={formData.phone_number || '+919837371137'}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Featured Image URL (Slider Cover)</label>
+              <input
+                type="text"
+                placeholder="Defaults to first image if blank"
+                value={formData.featured_image || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, featured_image: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Popular Badge Text</label>
+              <input
+                type="text"
+                value={formData.popular_badge_text || '18 bookings this week'}
+                onChange={(e) => setFormData(prev => ({ ...prev, popular_badge_text: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-6 py-2">
+            <label className="flex items-center gap-2 cursor-pointer text-slate-350 select-none">
+              <input
+                type="checkbox"
+                checked={!!formData.high_demand}
+                onChange={(e) => setFormData(prev => ({ ...prev, high_demand: e.target.checked }))}
+                className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+              />
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">High Demand</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer text-slate-350 select-none">
+              <input
+                type="checkbox"
+                checked={formData.is_verified === undefined ? true : !!formData.is_verified}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_verified: e.target.checked }))}
+                className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+              />
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">TripGod Verified</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer text-slate-350 select-none">
+              <input
+                type="checkbox"
+                checked={!!formData.is_limited_offer}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_limited_offer: e.target.checked }))}
+                className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+              />
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Limited Offer</span>
+            </label>
+          </div>
+
+          {/* Social Proof Stats */}
+          <div className="p-4 bg-slate-900/20 border border-slate-800 rounded-2xl space-y-4">
+            <h4 className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Social Proof Details</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="block text-[9px] font-black uppercase text-gray-550 tracking-wider">Trusted Guests Count (e.g. 10,000+)</label>
+                <input
+                  type="text"
+                  value={formData.social_proof?.trusted_count || '10,000+'}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    social_proof: { ...prev.social_proof, trusted_count: e.target.value }
+                  }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[9px] font-black uppercase text-gray-550 tracking-wider">Top Rated Badging Text</label>
+                <input
+                  type="text"
+                  value={formData.social_proof?.top_rated_text || 'Top Rated In Tapovan'}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    social_proof: { ...prev.social_proof, top_rated_text: e.target.value }
+                  }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Highlights Section (Why Guests Love) - JSON editor */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Why Guests Love This Stay Highlights</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Why Guests Love Highlights</label>
               <button
                 type="button"
                 onClick={() => {
-                  const currentList = formData.why_guests_love || [];
+                  const current = formData.why_guests_love || [];
                   setFormData(prev => ({
                     ...prev,
-                    why_guests_love: [...currentList, '']
+                    why_guests_love: [...current, { icon: 'Star', text: '' }]
                   }));
                 }}
                 className="py-1 px-2.5 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/25 text-[#FF5F00] font-black text-[9px] uppercase tracking-wider rounded-lg border border-[#FF5F00]/20 cursor-pointer transition-all"
               >
-                + Add Highlight
+                + Add Highlight Card
               </button>
             </div>
             
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {(formData.why_guests_love || []).map((reason, idx) => (
-                <div key={idx} className="flex items-center gap-2">
+            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              {(formData.why_guests_love || []).map((highlight, idx) => (
+                <div key={idx} className="flex gap-2 items-center bg-slate-900/30 p-2 border border-slate-800 rounded-xl">
+                  <select
+                    value={highlight.icon || 'Star'}
+                    onChange={(e) => {
+                      const updated = [...(formData.why_guests_love || [])];
+                      updated[idx] = { ...updated[idx], icon: e.target.value };
+                      setFormData(prev => ({ ...prev, why_guests_love: updated }));
+                    }}
+                    className="bg-slate-900 border border-[#2b3547] rounded-lg px-2.5 py-1.5 text-white focus:outline-none text-xs w-36"
+                  >
+                    {['Waves', 'Wifi', 'Car', 'Utensils', 'Tv', 'Mountain', 'Bell', 'Zap', 'Flame', 'ShieldCheck', 'Check', 'Heart', 'MapPin', 'Compass', 'Coffee', 'Sparkles', 'Smile', 'ThumbsUp', 'CalendarCheck', 'Lock', 'RefreshCw', 'HelpCircle', 'Star'].map(ic => (
+                      <option key={ic} value={ic}>{ic}</option>
+                    ))}
+                  </select>
+
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Stunning sunset views from the terrace"
-                    value={reason}
+                    placeholder="e.g. 5 Min Walk To Laxman Jhula"
+                    value={highlight.text || ''}
                     onChange={(e) => {
                       const updated = [...(formData.why_guests_love || [])];
-                      updated[idx] = e.target.value;
+                      updated[idx] = { ...updated[idx], text: e.target.value };
                       setFormData(prev => ({ ...prev, why_guests_love: updated }));
                     }}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none text-xs"
+                    className="flex-1 bg-slate-900 border border-[#2b3547] rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
                   />
+
                   <button
                     type="button"
                     onClick={() => {
                       const updated = (formData.why_guests_love || []).filter((_, i) => i !== idx);
                       setFormData(prev => ({ ...prev, why_guests_love: updated }));
                     }}
-                    className="p-2 bg-rose-550/10 hover:bg-rose-500/20 text-rose-550 border border-rose-500/20 rounded-xl cursor-pointer transition-colors flex items-center justify-center"
-                    title="Remove Highlight"
+                    className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-550 border border-rose-500/20 rounded-lg cursor-pointer"
                   >
-                    <X size={14} />
+                    <X size={12} />
                   </button>
                 </div>
               ))}
               {(formData.why_guests_love || []).length === 0 && (
-                <p className="text-[10px] text-gray-500 font-medium italic">No highlights added yet. Click "+ Add Highlight" above.</p>
+                <p className="text-[10px] text-gray-500 font-medium italic">No highlights added yet. Click "+ Add Highlight Card" above.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Facts (Best For & Perfect For) */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Best For list */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Quick Facts: Best For</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = formData.best_for || [];
+                    setFormData(prev => ({
+                      ...prev,
+                      best_for: [...current, '']
+                    }));
+                  }}
+                  className="py-0.5 px-2 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/25 text-[#FF5F00] font-black text-[9px] uppercase tracking-wider rounded border border-[#FF5F00]/20 cursor-pointer"
+                >
+                  + Add Fact
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {(formData.best_for || []).map((fact, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Couples Welcome"
+                      value={fact}
+                      onChange={(e) => {
+                        const updated = [...(formData.best_for || [])];
+                        updated[idx] = e.target.value;
+                        setFormData(prev => ({ ...prev, best_for: updated }));
+                      }}
+                      className="flex-1 bg-slate-900 border border-[#2b3547] rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = (formData.best_for || []).filter((_, i) => i !== idx);
+                        setFormData(prev => ({ ...prev, best_for: updated }));
+                      }}
+                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-550 border border-rose-500/20 rounded-lg cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+                {(formData.best_for || []).length === 0 && (
+                  <p className="text-[10px] text-gray-500 font-medium italic">No Quick Facts (Best For) items. Click "+ Add Fact".</p>
+                )}
+              </div>
+            </div>
+
+            {/* Perfect For checklist */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Perfect For (Target Travelers)</label>
+              <div className="grid grid-cols-2 gap-2 text-slate-350">
+                {['Couples', 'Families', 'Backpackers', 'Riders', 'Adventure Travelers'].map(pf => {
+                  const perfectList = formData.perfect_for || [];
+                  const isChecked = perfectList.includes(pf);
+                  return (
+                    <label key={pf} className="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          let updated = [...perfectList];
+                          if (e.target.checked) {
+                            updated.push(pf);
+                          } else {
+                            updated = updated.filter(item => item !== pf);
+                          }
+                          setFormData(prev => ({ ...prev, perfect_for: updated }));
+                        }}
+                        className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+                      />
+                      <span>{pf}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* TripGod Trust Benefits - JSON editor */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">TripGod Trust Benefits</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const current = formData.benefits || [];
+                  setFormData(prev => ({
+                    ...prev,
+                    benefits: [...current, { icon: 'Lock', title: '', desc: '' }]
+                  }));
+                }}
+                className="py-1 px-2.5 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/25 text-[#FF5F00] font-black text-[9px] uppercase tracking-wider rounded-lg border border-[#FF5F00]/20 cursor-pointer transition-all"
+              >
+                + Add Benefit Card
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+              {(formData.benefits || []).map((benefit, idx) => (
+                <div key={idx} className="p-3 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-2 relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = (formData.benefits || []).filter((_, i) => i !== idx);
+                      setFormData(prev => ({ ...prev, benefits: updated }));
+                    }}
+                    className="absolute top-2.5 right-2.5 p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-550 border border-rose-500/20 rounded-lg cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-black uppercase text-gray-500 tracking-wider">Benefit Icon</label>
+                      <select
+                        value={benefit.icon || 'Lock'}
+                        onChange={(e) => {
+                          const updated = [...(formData.benefits || [])];
+                          updated[idx] = { ...updated[idx], icon: e.target.value };
+                          setFormData(prev => ({ ...prev, benefits: updated }));
+                        }}
+                        className="w-full bg-slate-900 border border-[#2b3547] rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
+                      >
+                        {['Lock', 'CalendarCheck', 'RefreshCw', 'HelpCircle', 'ShieldCheck', 'CircleDollarSign', 'Award', 'Sparkles'].map(ic => (
+                          <option key={ic} value={ic}>{ic}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-black uppercase text-gray-500 tracking-wider">Benefit Title</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Secure Payment"
+                        value={benefit.title || ''}
+                        onChange={(e) => {
+                          const updated = [...(formData.benefits || [])];
+                          updated[idx] = { ...updated[idx], title: e.target.value };
+                          setFormData(prev => ({ ...prev, benefits: updated }));
+                        }}
+                        className="w-full bg-slate-900 border border-[#2b3547] rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black uppercase text-gray-500 tracking-wider">Description</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Protected by Razorpay SECURE payment gate"
+                      value={benefit.desc || ''}
+                      onChange={(e) => {
+                        const updated = [...(formData.benefits || [])];
+                        updated[idx] = { ...updated[idx], desc: e.target.value };
+                        setFormData(prev => ({ ...prev, benefits: updated }));
+                      }}
+                      className="w-full bg-slate-900 border border-[#2b3547] rounded-lg px-3 py-1.5 text-white focus:outline-none text-xs"
+                    />
+                  </div>
+                </div>
+              ))}
+              {(formData.benefits || []).length === 0 && (
+                <p className="text-[10px] text-gray-500 font-medium italic">No trust benefits added yet. Click "+ Add Benefit Card" above.</p>
               )}
             </div>
           </div>
@@ -2451,7 +2771,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                       const updated = (formData.landmarks || []).filter((_, i) => i !== idx);
                       setFormData(prev => ({ ...prev, landmarks: updated }));
                     }}
-                    className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 rounded-xl cursor-pointer transition-colors flex items-center justify-center"
+                    className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-550 border border-rose-500/20 rounded-xl cursor-pointer transition-colors flex items-center justify-center"
                     title="Remove Landmark"
                   >
                     <X size={14} />

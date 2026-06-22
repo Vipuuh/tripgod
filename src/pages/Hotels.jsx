@@ -4,7 +4,9 @@ import {
   Building2, Star, MapPin, Check, X, ShieldCheck, 
   ChevronLeft, ChevronRight, MessageSquare, ShieldAlert, Map,
   Wifi, Wind, Car, Utensils, Tv, Mountain, Waves, Bell, Zap, Flame,
-  Lock, CalendarCheck, RefreshCw, HelpCircle, Eye
+  Lock, CalendarCheck, RefreshCw, HelpCircle, Eye,
+  Share2, Heart, Phone, Compass, Smile, ThumbsUp, Users, Award, Sparkles,
+  Coffee, CircleDollarSign
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -21,6 +23,21 @@ const AMENITY_ICONS = {
   geyser: Flame
 };
 
+const HIGHLIGHT_ICONS = {
+  Waves, Wifi, Car, Utensils, Tv, Mountain, Bell, Zap, Flame, ShieldCheck, Check, Heart, MapPin, Compass, Coffee, Sparkles, Smile, ThumbsUp, CalendarCheck, Lock, RefreshCw, HelpCircle, Star
+};
+
+const BENEFIT_ICONS = {
+  Lock, CalendarCheck, RefreshCw, HelpCircle, ShieldCheck, CircleDollarSign, Award, Sparkles
+};
+
+const getMapsEmbedUrl = (mapsLink, address) => {
+  if (mapsLink && (mapsLink.includes('google.com/maps/embed') || mapsLink.includes('maps/embed'))) {
+    return mapsLink;
+  }
+  return `https://maps.google.com/maps?q=${encodeURIComponent(mapsLink || address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+};
+
 export default function Hotels({ currentCity, openBookingModal }) {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +45,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImgIdx, setLightboxImgIdx] = useState(0);
+  const [wishlistedHotels, setWishlistedHotels] = useState({});
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState(false);
 
   // Swipe gesture support for gallery
   const [touchStart, setTouchStart] = useState(null);
@@ -96,7 +116,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
             why_guests_love: item.why_guests_love || [],
             rooms_left: item.rooms_left !== null && item.rooms_left !== undefined ? Number(item.rooms_left) : 5,
             high_demand: !!item.high_demand,
-            attractions: Array.isArray(item.attractions) ? item.attractions : []
+            attractions: Array.isArray(item.attractions) ? item.attractions : [],
+            is_verified: item.is_verified !== undefined ? !!item.is_verified : true,
+            bookings_count: item.bookings_count !== null && item.bookings_count !== undefined ? Number(item.bookings_count) : 18,
+            popular_badge_text: item.popular_badge_text || '18 bookings this week',
+            property_type: item.property_type || 'Hotel',
+            room_type: item.room_type || 'Deluxe Double Room',
+            best_for: item.best_for || [],
+            perfect_for: item.perfect_for || [],
+            social_proof: item.social_proof || { trusted_count: '10,000+', top_rated_text: 'Top Rated In Tapovan' },
+            benefits: item.benefits || [],
+            phone_number: item.phone_number || '+919837371137',
+            whatsapp_number: item.whatsapp_number || '919837371137',
+            featured_image: item.featured_image || ''
           }));
           setHotels(mapped);
         }
@@ -113,6 +145,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const handleContactWhatsApp = () => {
     const text = encodeURIComponent(`*ENQUIRY ABOUT STAYS - TRIPGOD*\nHello! I am planning a trip to Rishikesh and want to book accommodations. Please let me know what options are available.`);
     window.open(`https://wa.me/919837371137?text=${text}`, '_blank');
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareFeedback(true);
+      setTimeout(() => setShareFeedback(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy link:', err);
+    });
   };
 
   if (loading) {
@@ -288,105 +330,97 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 onClick={() => {
                   setSelectedHotel(null);
                   setActiveImgIdx(0);
+                  setIsDescExpanded(false);
                 }}
                 className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
               >
                 <ChevronLeft size={16} /> Back to Hotel Stays
               </button>
 
-              {/* Title Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div className="space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] text-[9px] font-black uppercase tracking-wider rounded-md border border-[#FF5F00]/20">
-                      Stay Details
+              {/* SECTION 2: HOTEL HEADER */}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] text-[9px] font-black uppercase tracking-wider rounded-md border border-[#FF5F00]/25">
+                    Stay Details
+                  </span>
+                  {selectedHotel.is_limited_offer && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider rounded-md">
+                      Limited Time Offer
                     </span>
-                    {selectedHotel.is_limited_offer && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider rounded-md">
-                        Limited Time Offer
-                      </span>
-                    )}
-                    {selectedHotel.vendors?.name && (
-                      <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded">
-                        Operator: {selectedHotel.vendors.name}
-                      </span>
-                    )}
-                  </div>
-                  <h1 className="text-xl md:text-2xl font-black font-display text-black uppercase leading-tight tracking-tight">
-                    {selectedHotel.name}
-                  </h1>
-                  
-                  {/* Stars Rating & Reviews */}
-                  <div className="flex flex-col gap-1.5 mt-0.5">
-                    <div className="flex items-center gap-1 text-xs text-black font-black">
-                      <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                      <span>{selectedHotel.rating}</span>
-                      <span className="text-gray-500 font-bold">({selectedHotel.reviewsCount} reviews)</span>
-                    </div>
-
-                    {/* Badge / Scarcity alerts */}
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-800 border border-amber-500/20 text-[10px] font-black rounded-lg">
-                        <ShieldCheck size={12} className="text-amber-600" />
-                        TripGod Verified Stay
-                      </span>
-                      {selectedHotel.rooms_left !== null && selectedHotel.rooms_left > 0 && selectedHotel.rooms_left <= 8 && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 text-[10px] font-black rounded-lg animate-pulse">
-                          ⚠️ Only {selectedHotel.rooms_left} Rooms Left!
-                        </span>
-                      )}
-                      {selectedHotel.high_demand && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-[10px] font-black rounded-lg">
-                          🔥 High Demand
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Clickable Address Header */}
-                  {selectedHotel.maps_link ? (
-                    <a 
-                      href={selectedHotel.maps_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-gray-600 hover:text-[#FF5F00] font-semibold flex items-center gap-1.5 mt-2 group transition-colors text-decoration-none"
-                    >
-                      <MapPin size={12} className="text-[#FF5F00] group-hover:scale-110 transition-transform" /> 
-                      <span className="underline underline-offset-2">{selectedHotel.address}</span>
-                      <span className="text-[9px] bg-[#FF5F00]/10 text-[#FF5F00] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ml-1">Open Map</span>
-                    </a>
-                  ) : (
-                    <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5 mt-2">
-                      <MapPin size={12} className="text-[#FF5F00]" /> {selectedHotel.address}
-                    </p>
                   )}
-                </div>
-
-                <div className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3.5 rounded-2xl flex flex-col w-fit shrink-0">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-0.5">Price / Night</span>
-                  <div className="flex items-baseline gap-1.5">
-                    {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
-                      <span className="text-xs text-gray-400 line-through">
-                        ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
-                      </span>
-                    )}
-                    <span className="text-xl font-black text-black">₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
-                  </div>
-                  {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
-                    <span className="text-[9px] text-emerald-600 font-bold">
-                      Saved ₹{(selectedHotel.original_price - selectedHotel.price).toLocaleString('en-IN')} per night
+                  {selectedHotel.vendors?.name && (
+                    <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded">
+                      Operator: {selectedHotel.vendors.name}
                     </span>
                   )}
                 </div>
+                
+                <h1 className="text-2xl md:text-3xl font-black font-display text-[#0d1b2a] uppercase leading-tight tracking-tight">
+                  {selectedHotel.name}
+                </h1>
+                
+                {/* Badges / Rating row */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  {/* Rating Badge */}
+                  <div className="flex items-center gap-1.5 bg-amber-500/10 text-amber-800 border border-amber-500/20 px-2.5 py-1 rounded-lg text-xs font-black">
+                    <Star size={12} className="text-amber-600 fill-amber-600" />
+                    <span>{selectedHotel.rating} {selectedHotel.rating >= 4.5 ? 'Excellent' : selectedHotel.rating >= 4.0 ? 'Very Good' : 'Good'}</span>
+                  </div>
+
+                  {/* Review Count */}
+                  <span className="text-xs text-gray-500 font-bold">
+                    ({selectedHotel.reviewsCount}+ Reviews)
+                  </span>
+
+                  {/* TripGod Verified badge */}
+                  {selectedHotel.is_verified && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black rounded-lg">
+                      <ShieldCheck size={12} className="text-emerald-600" />
+                      TripGod Verified Stay
+                    </span>
+                  )}
+
+                  {/* Bookings alert count */}
+                  {selectedHotel.bookings_count > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-[10px] font-black rounded-lg">
+                      🔥 {selectedHotel.popular_badge_text || `${selectedHotel.bookings_count} bookings this week`}
+                    </span>
+                  )}
+
+                  {/* Room scarcity alert count */}
+                  {selectedHotel.rooms_left !== null && selectedHotel.rooms_left > 0 && selectedHotel.rooms_left <= 8 && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 text-[10px] font-black rounded-lg animate-pulse">
+                      ⚠️ Only {selectedHotel.rooms_left} Rooms Left!
+                    </span>
+                  )}
+                </div>
+
+                {/* Location */}
+                {selectedHotel.maps_link ? (
+                  <a 
+                    href={selectedHotel.maps_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-gray-655 hover:text-[#FF5F00] font-semibold flex items-center gap-1.5 mt-2 group transition-colors text-decoration-none"
+                  >
+                    <MapPin size={13} className="text-[#FF5F00] group-hover:scale-110 transition-transform" /> 
+                    <span className="underline underline-offset-2">{selectedHotel.address}</span>
+                    <span className="text-[9px] bg-[#FF5F00]/10 text-[#FF5F00] px-1.5 py-0.5 rounded font-black uppercase tracking-wider ml-1">Open Map</span>
+                  </a>
+                ) : (
+                  <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5 mt-2">
+                    <MapPin size={13} className="text-[#FF5F00]" /> {selectedHotel.address}
+                  </p>
+                )}
               </div>
 
-              {/* Image Gallery / Slider */}
-              {selectedHotel.images && selectedHotel.images.length > 0 ? (
+              {/* SECTION 1: HERO GALLERY */}
+              <div className="space-y-3">
                 <div 
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
-                  className="relative h-56 sm:h-96 w-full rounded-3xl overflow-hidden bg-gray-100 group border border-black/5 cursor-grab active:cursor-grabbing"
+                  className="relative h-60 sm:h-[420px] w-full rounded-3xl overflow-hidden bg-gray-100 group border border-black/5 shadow-md"
                 >
                   <img
                     src={selectedHotel.images[activeImgIdx]}
@@ -398,103 +432,209 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     className="w-full h-full object-cover transition-all duration-300 select-none cursor-pointer"
                   />
 
+                  {/* Top-right action buttons (Share / Wishlist) */}
+                  <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+                    {/* Share button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare();
+                      }}
+                      className="w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-800 hover:text-[#FF5F00] flex items-center justify-center border-none shadow-md cursor-pointer transition-all relative"
+                      title="Share Stay"
+                    >
+                      <Share2 size={16} />
+                      {shareFeedback && (
+                        <span className="absolute -bottom-8 right-0 bg-black text-white text-[8px] font-black uppercase py-1 px-2.5 rounded shadow tracking-wider whitespace-nowrap z-20">
+                          Link Copied!
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Wishlist Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setWishlistedHotels(prev => ({
+                          ...prev,
+                          [selectedHotel.id]: !prev[selectedHotel.id]
+                        }));
+                      }}
+                      className="w-9 h-9 rounded-full bg-white/95 hover:bg-white flex items-center justify-center border-none shadow-md cursor-pointer transition-all"
+                      title="Add to Wishlist"
+                    >
+                      <Heart 
+                        size={16} 
+                        className={wishlistedHotels[selectedHotel.id] ? 'text-rose-550 fill-rose-500' : 'text-slate-800'} 
+                      />
+                    </button>
+                  </div>
+
                   {selectedHotel.images.length > 1 && (
                     <>
                       <button
                         onClick={() => setActiveImgIdx(prev => (prev - 1 + selectedHotel.images.length) % selectedHotel.images.length)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"
                       >
-                        <ChevronLeft size={18} />
+                        <ChevronLeft size={20} />
                       </button>
                       <button
                         onClick={() => setActiveImgIdx(prev => (prev + 1) % selectedHotel.images.length)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"
                       >
-                        <ChevronRight size={18} />
+                        <ChevronRight size={20} />
                       </button>
-
-                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
-                        {selectedHotel.images.map((_, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setActiveImgIdx(idx)}
-                            className={`w-1.5 h-1.5 rounded-full border-none cursor-pointer transition-all ${
-                              activeImgIdx === idx ? 'bg-[#FF5F00] w-3' : 'bg-white/60 hover:bg-white'
-                            }`}
-                          />
-                        ))}
-                      </div>
                     </>
                   )}
 
-                  {/* Photo counter overlay */}
-                  <button
-                    onClick={() => {
-                      setLightboxImgIdx(activeImgIdx);
-                      setIsLightboxOpen(true);
-                    }}
-                    className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/85 text-white text-[10px] font-black py-1.5 px-3 rounded-xl flex items-center gap-1 border border-white/10 shadow-lg cursor-pointer transition-colors"
-                  >
-                    <Eye size={12} />
-                    <span>{activeImgIdx + 1} / {selectedHotel.images.length} Photos</span>
-                  </button>
+                  {/* Counter badge & View all photos button overlays */}
+                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center z-10">
+                    <span className="bg-black/60 text-white text-[10px] font-black py-1.5 px-3 rounded-xl border border-white/10 shadow-lg tracking-wider">
+                      {activeImgIdx + 1} / {selectedHotel.images.length} Photos
+                    </span>
+                    
+                    <button
+                      onClick={() => {
+                        setLightboxImgIdx(activeImgIdx);
+                        setIsLightboxOpen(true);
+                      }}
+                      className="bg-[#FF5F00] hover:bg-[#FF3E00] text-white text-[10px] font-black py-1.5 px-3 rounded-xl flex items-center gap-1 border border-white/10 shadow-lg cursor-pointer transition-colors"
+                    >
+                      <Eye size={12} />
+                      <span>View All Photos</span>
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <div className="h-48 sm:h-72 w-full rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 gap-2">
-                  <Building2 size={36} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">No images uploaded</span>
-                </div>
-              )}
 
-              {/* Checkin / Checkout Specs Card */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between text-white text-[11px] sm:text-xs bg-slate-950 p-4 rounded-2xl border border-white/5 shadow-sm">
-                <div className="flex gap-8 flex-wrap">
-                  <div>
-                    <span className="block text-gray-400 text-[9px] uppercase font-bold tracking-wider mb-0.5">Check-in Time</span>
-                    <span className="font-bold text-white text-xs sm:text-sm">{selectedHotel.check_in || '12:00 PM'}</span>
+                {/* Thumbnails preview strip below slider */}
+                {selectedHotel.images && selectedHotel.images.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto py-1 pr-2 scrollbar-none">
+                    {selectedHotel.images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveImgIdx(idx)}
+                        className={`w-16 h-12 rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
+                          activeImgIdx === idx ? 'border-[#FF5F00] scale-105 shadow-md' : 'border-black/5 hover:border-black/20'
+                        }`}
+                      >
+                        <img src={img} alt="stay thumbnail" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <span className="block text-gray-400 text-[9px] uppercase font-bold tracking-wider mb-0.5">Check-out Time</span>
-                    <span className="font-bold text-white text-xs sm:text-sm">{selectedHotel.check_out || '11:00 AM'}</span>
-                  </div>
-                </div>
-                <div className="px-2.5 py-1 bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/25 font-black rounded-lg flex items-center gap-1 text-[10px] uppercase tracking-wider">
-                  ⚡ INSTANT BOOK
-                </div>
+                )}
               </div>
 
-              {/* Why Guests Love This Stay Highlights */}
+              {/* SECTION 3: PRICE & SAVINGS BOX */}
+              <div className="p-5 bg-gradient-to-br from-emerald-500/5 to-emerald-600/10 border border-emerald-500/20 rounded-3xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-black uppercase text-emerald-700 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md tracking-wider">Special Discount Applied</span>
+                  <div className="flex items-baseline gap-2.5 pt-1">
+                    <span className="text-3xl font-black text-black">₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
+                    {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                      <>
+                        <span className="text-sm text-gray-400 line-through font-semibold">
+                          ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-xs font-black text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                          {Math.round(((selectedHotel.original_price - selectedHotel.price) / selectedHotel.original_price) * 100)}% OFF
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-gray-550 font-bold block">per night + taxes (with breakfast options)</span>
+                </div>
+                
+                {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                  <div className="bg-emerald-600 text-white font-black text-xs uppercase px-4 py-3 rounded-2xl tracking-wider text-center border-none shadow-sm flex items-center gap-1.5 w-fit">
+                    <ShieldCheck size={14} className="stroke-[2.5]" />
+                    <span>Save ₹{(selectedHotel.original_price - selectedHotel.price).toLocaleString('en-IN')}!</span>
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 4: WHY GUESTS LOVE THIS STAY HIGHLIGHT CARDS */}
               {selectedHotel.why_guests_love && selectedHotel.why_guests_love.length > 0 && (
-                <div className="p-5 bg-gradient-to-br from-[#FF5F00]/5 to-orange-500/5 border border-[#FF5F00]/10 rounded-2xl space-y-3.5 shadow-sm">
+                <div className="p-5 bg-gradient-to-br from-[#FF5F00]/5 to-orange-500/5 border border-[#FF5F00]/10 rounded-3xl space-y-4 shadow-3xs">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-[#FF5F00]/10 flex items-center justify-center text-[#FF5F00]">
                       <Star size={14} className="fill-[#FF5F00]" />
                     </div>
                     <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Why Guests Love This Stay</h4>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-700 font-semibold">
-                    {selectedHotel.why_guests_love.map((reason, idx) => (
-                      <div key={idx} className="flex items-start gap-2 bg-white/70 p-3 rounded-xl border border-black/5 hover:bg-white transition-colors shadow-2xs">
-                        <Check size={14} className="text-emerald-600 shrink-0 mt-0.5" />
-                        <span className="leading-relaxed">{reason}</span>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {selectedHotel.why_guests_love.map((highlight, idx) => {
+                      const IconComponent = HIGHLIGHT_ICONS[highlight.icon] || Star;
+                      return (
+                        <div key={idx} className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-black/5 hover:border-[#FF5F00]/25 transition-all shadow-3xs group">
+                          <div className="w-8 h-8 rounded-xl bg-orange-500/5 text-[#FF5F00] flex items-center justify-center border border-[#FF5F00]/10 group-hover:scale-105 transition-transform">
+                            <IconComponent size={15} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 leading-snug">{highlight.text}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* Description */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">About the Property</h4>
-                <p className="text-xs sm:text-sm text-gray-650 leading-relaxed font-medium">
-                  {selectedHotel.description}
-                </p>
+              {/* SECTION 5: QUICK FACTS CARD */}
+              <div className="p-5 bg-slate-50 border border-slate-100 rounded-3xl space-y-4 shadow-3xs">
+                <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Quick Facts</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-gray-700 font-bold">
+                  <div className="p-3 bg-white rounded-2xl border border-slate-100 flex flex-col justify-center shadow-3xs">
+                    <span className="text-[9px] text-gray-400 uppercase tracking-wider mb-1 block font-black">⏰ Check-In</span>
+                    <span className="text-black text-xs sm:text-sm">{selectedHotel.check_in || '12:00 PM'}</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-2xl border border-slate-100 flex flex-col justify-center shadow-3xs">
+                    <span className="text-[9px] text-gray-400 uppercase tracking-wider mb-1 block font-black">⏰ Check-Out</span>
+                    <span className="text-black text-xs sm:text-sm">{selectedHotel.check_out || '11:00 AM'}</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-2xl border border-slate-100 flex flex-col justify-center shadow-3xs">
+                    <span className="text-[9px] text-gray-400 uppercase tracking-wider mb-1 block font-black">🏨 Property Type</span>
+                    <span className="text-[#FF5F00] text-xs sm:text-sm capitalize">{selectedHotel.property_type || 'Hotel'}</span>
+                  </div>
+                  <div className="p-3 bg-white rounded-2xl border border-slate-100 flex flex-col justify-center shadow-3xs">
+                    <span className="text-[9px] text-gray-400 uppercase tracking-wider mb-1 block font-black">🛏 Room Type</span>
+                    <span className="text-[#FF5F00] text-xs sm:text-sm truncate">{selectedHotel.room_type || 'Deluxe Double Room'}</span>
+                  </div>
+                </div>
+
+                {/* Best For facts pills */}
+                {selectedHotel.best_for && selectedHotel.best_for.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-150 items-center">
+                    <span className="text-[9px] text-gray-450 uppercase tracking-wider flex items-center font-black">Recommended For:</span>
+                    {selectedHotel.best_for.map((fact, idx) => (
+                      <span key={idx} className="bg-white px-3 py-1 rounded-full border border-slate-200 text-slate-700 text-[10px] font-bold shadow-3xs">
+                        {fact}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Amenities */}
+              {/* SECTION 8: ABOUT PROPERTY */}
+              <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
+                <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">About the Property</h4>
+                <div className="text-xs sm:text-sm text-gray-650 leading-relaxed font-medium space-y-2">
+                  <p className={isDescExpanded ? 'line-clamp-none' : 'line-clamp-4'}>
+                    {selectedHotel.description}
+                  </p>
+                  
+                  {selectedHotel.description && selectedHotel.description.length > 250 && (
+                    <button
+                      onClick={() => setIsDescExpanded(!isDescExpanded)}
+                      className="py-1 px-3 border border-[#FF5F00]/20 hover:border-[#FF5F00]/40 text-[#FF5F00] bg-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-colors cursor-pointer mt-1"
+                    >
+                      {isDescExpanded ? 'Read Less' : 'Read More'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* SECTION 9: AMENITIES */}
               {selectedHotel.amenities && Object.keys(selectedHotel.amenities).length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Amenities Provided</h4>
+                <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
+                  <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Amenities Provided</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {Object.entries(selectedHotel.amenities)
                       .filter(([_, val]) => !!val)
@@ -503,7 +643,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         return (
                           <div
                             key={key}
-                            className="flex flex-col items-center justify-center p-4 bg-slate-50/70 border border-black/5 rounded-2xl text-center hover:bg-white hover:border-[#FF5F00]/20 hover:shadow-md transition-all duration-300 group"
+                            className="flex flex-col items-center justify-center p-4 bg-slate-50/70 border border-black/5 rounded-2xl text-center hover:bg-white hover:border-[#FF5F00]/25 hover:shadow-md transition-all duration-300 group"
                           >
                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-black/5 text-gray-500 group-hover:text-[#FF5F00] group-hover:bg-[#FF5F00]/5 transition-colors mb-2 shadow-sm">
                               <IconComponent size={18} />
@@ -518,34 +658,79 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               )}
 
-              {/* Property Location section inside page content */}
-              <div className="p-4 bg-slate-50 rounded-2xl border border-black/5 flex items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <h4 className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Property Location</h4>
-                  <p className="text-xs font-bold text-black">{selectedHotel.address}</p>
+              {/* SECTION 10: PERFECT FOR TARGET TRAVELERS */}
+              <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
+                <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Perfect For</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {(selectedHotel.perfect_for && selectedHotel.perfect_for.length > 0
+                    ? selectedHotel.perfect_for
+                    : ['Couples', 'Families', 'Backpackers', 'Adventure Travelers']
+                  ).map(pf => {
+                    const iconsMap = {
+                      Couples: Heart,
+                      Families: Users,
+                      Backpackers: Compass,
+                      Riders: Car,
+                      'Adventure Travelers': Sparkles
+                    };
+                    const Icon = iconsMap[pf] || Sparkles;
+                    return (
+                      <div key={pf} className="flex items-center gap-2.5 p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-[#FF5F00]/20 transition-all shadow-3xs">
+                        <div className="w-7 h-7 rounded-lg bg-orange-500/5 text-[#FF5F00] flex items-center justify-center border border-[#FF5F00]/10 shrink-0">
+                          <Icon size={14} />
+                        </div>
+                        <span className="text-xs font-bold text-slate-800 truncate">{pf}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-                {selectedHotel.maps_link && (
-                  <a 
-                    href={selectedHotel.maps_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-2.5 px-4 bg-white border border-black/10 hover:border-[#FF5F00]/30 hover:text-[#FF5F00] text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow-sm text-decoration-none shrink-0"
-                  >
-                    <Map size={13} />
-                    <span>Get Directions</span>
-                  </a>
-                )}
               </div>
 
-              {/* Nearby Attractions */}
+              {/* SECTION 7: PROPERTY LOCATION */}
+              <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-gray-100">
+                  <div>
+                    <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Property Location</h4>
+                    <span className="text-[10px] text-gray-500 font-bold block mt-0.5">
+                      📍 {selectedHotel.address.split(',')[0] || selectedHotel.address}
+                    </span>
+                  </div>
+                  {selectedHotel.maps_link && (
+                    <a 
+                      href={selectedHotel.maps_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2 px-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 shadow-sm text-decoration-none w-fit shrink-0"
+                    >
+                      <Map size={12} />
+                      <span>Get Directions</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Map Preview containing Google Maps Embed */}
+                <div className="w-full h-60 rounded-2xl overflow-hidden border border-black/10 relative bg-gray-50 shadow-inner">
+                  <iframe
+                    title="Google Maps Embed Location"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    allowFullScreen
+                    src={getMapsEmbedUrl(selectedHotel.maps_link, selectedHotel.address)}
+                  />
+                </div>
+              </div>
+
+              {/* SECTION 6: LOCATION HIGHLIGHTS NEARBY ATTRACTIONS */}
               {((selectedHotel.attractions && selectedHotel.attractions.length > 0) || (selectedHotel.landmarks && selectedHotel.landmarks.length > 0)) && (
-                <div className="space-y-3">
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Nearby Attractions & Landmarks</h4>
+                <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
+                  <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Location Highlights</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Render attractions if they exist */}
                     {selectedHotel.attractions && selectedHotel.attractions.length > 0 ? (
                       selectedHotel.attractions.map((attraction, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-50/70 rounded-2xl border border-black/5 hover:border-[#FF5F00]/20 hover:bg-white transition-all">
+                        <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-50/70 rounded-2xl border border-black/5 hover:border-[#FF5F00]/25 hover:bg-white transition-all shadow-3xs">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-xl bg-[#FF5F00]/5 flex items-center justify-center border border-[#FF5F00]/10 text-[#FF5F00]">
                               <MapPin size={14} />
@@ -571,7 +756,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     ) : (
                       /* Fallback to original landmarks array if attractions JSON is empty */
                       selectedHotel.landmarks.map((landmark, idx) => (
-                        <div key={idx} className="flex items-center gap-3 p-3.5 bg-slate-50/70 rounded-2xl border border-black/5">
+                        <div key={idx} className="flex items-center gap-3 p-3.5 bg-slate-50/70 rounded-2xl border border-black/5 shadow-3xs">
                           <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center border border-black/5 text-gray-400">
                             <MapPin size={14} />
                           </div>
@@ -585,11 +770,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               )}
 
-              {/* House Rules & Cancellation Policy */}
+              {/* SECTION 11: HOUSE RULES & SECTION 12: CANCELLATION POLICY */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-5">
                 {selectedHotel.rules && Object.keys(selectedHotel.rules).length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">House Rules</h4>
+                  <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
+                    <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">House Rules</h4>
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-655 font-bold">
                       {Object.entries(selectedHotel.rules).map(([key, val]) => {
                         const labelMap = {
@@ -617,35 +802,68 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   </div>
                 )}
 
-                <div className="space-y-2 text-left">
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Cancellation Policy</h4>
-                  <div className="p-3.5 bg-amber-50/40 border border-amber-200/50 rounded-2xl text-[11px] text-amber-800 leading-relaxed font-semibold">
+                <div className="space-y-3 bg-amber-50/30 p-5 border border-amber-200/50 rounded-3xl shadow-3xs">
+                  <h4 className="text-xs font-black uppercase text-amber-800 tracking-wider font-display flex items-center gap-1">
+                    <ShieldCheck size={13} className="text-amber-700" />
+                    <span>Cancellation Policy</span>
+                  </h4>
+                  <div className="text-[11px] text-amber-900 leading-relaxed font-semibold">
                     {selectedHotel.cancellation_policy || 'No refund within 24 hours of check-in.'}
                   </div>
                 </div>
               </div>
 
-              {/* TripGod Booking Benefits */}
+              {/* SECTION 13: TRIPGOD TRUST BENEFITS */}
               <div className="border-t border-gray-100 pt-6">
-                <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider font-display mb-4">TripGod Booking Benefits</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-                  {[
-                    { title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gate', icon: Lock, color: 'bg-indigo-50 text-indigo-600' },
-                    { title: 'Instant Booking', desc: 'Hotel room voucher sent immediately', icon: CalendarCheck, color: 'bg-emerald-50 text-emerald-600' },
-                    { title: 'Easy Refund', desc: 'No-hassle cancellation & quick refunds', icon: RefreshCw, color: 'bg-amber-50 text-amber-600' },
-                    { title: 'Local Support', desc: '24/7 on-ground assistance & guide network', icon: HelpCircle, color: 'bg-rose-50 text-rose-600' }
-                  ].map((benefit, idx) => {
-                    const Icon = benefit.icon;
+                <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider font-display mb-4">TripGod Trust Benefits</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
+                  {(selectedHotel.benefits && selectedHotel.benefits.length > 0 ? selectedHotel.benefits : [
+                    { icon: 'Lock', title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gate' },
+                    { icon: 'CalendarCheck', title: 'Instant Booking', desc: 'Hotel room voucher sent immediately' },
+                    { icon: 'RefreshCw', title: 'Easy Refund', desc: 'No-hassle cancellation & quick refunds' },
+                    { icon: 'HelpCircle', title: '24×7 Support', desc: '24/7 on-ground assistance & guide network' },
+                    { icon: 'ShieldCheck', title: 'Verified Partners', desc: 'Every stay is handpicked and verified' },
+                    { icon: 'CircleDollarSign', title: 'Best Price Guarantee', desc: 'Find it cheaper? We match the price!' }
+                  ]).map((benefit, idx) => {
+                    const Icon = BENEFIT_ICONS[benefit.icon] || ShieldCheck;
                     return (
-                      <div key={idx} className="p-4 bg-slate-50/50 border border-black/5 rounded-2xl flex flex-col items-center text-center">
-                        <div className={`w-9 h-9 rounded-full ${benefit.color} flex items-center justify-center mb-2.5 shadow-3xs`}>
+                      <div key={idx} className="p-4 bg-slate-50/50 border border-black/5 rounded-2xl flex flex-col items-center text-center shadow-3xs">
+                        <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 shadow-3xs">
                           <Icon size={16} />
                         </div>
-                        <p className="text-xs font-bold text-black mb-1 leading-tight">{benefit.title}</p>
+                        <p className="text-xs font-black text-black mb-1 leading-tight">{benefit.title}</p>
                         <p className="text-[10px] text-gray-500 leading-relaxed font-semibold">{benefit.desc}</p>
                       </div>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* SECTION 14: SOCIAL PROOF */}
+              <div className="p-5 bg-[#0d1b2a] text-white rounded-3xl border border-white/5 space-y-4 shadow-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-orange-500/15 flex items-center justify-center text-[#FF5F00]">
+                    <Sparkles size={14} className="fill-[#FF5F00]" />
+                  </div>
+                  <h4 className="text-xs font-black uppercase tracking-wider font-display">Guest Trust & Social Proof</h4>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
+                    <span className="block text-lg font-black text-amber-400">⭐ {selectedHotel.rating} / 5</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Rated by {selectedHotel.reviewsCount}+ Guests</span>
+                  </div>
+                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
+                    <span className="block text-lg font-black text-[#FF5F00]">🔥 {selectedHotel.bookings_count} Bookings</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{selectedHotel.popular_badge_text || 'This week'}</span>
+                  </div>
+                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
+                    <span className="block text-lg font-black text-emerald-400">🏆 Top Rated</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{selectedHotel.social_proof?.top_rated_text || 'Top Rated In Tapovan'}</span>
+                  </div>
+                  <div className="p-3 bg-white/5 border border-white/10 rounded-2xl text-center">
+                    <span className="block text-lg font-black text-indigo-400">👥 {selectedHotel.social_proof?.trusted_count || '10,000+'}</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Trusted Travelers</span>
+                  </div>
                 </div>
               </div>
 
@@ -675,7 +893,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
             {/* Sticky Bottom Bar for booking stay */}
             <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
               <div>
-                <span className="block text-[9px] text-gray-500 uppercase font-black tracking-wider truncate max-w-[150px] sm:max-w-[250px]">{selectedHotel.name}</span>
+                <span className="block text-[9px] text-gray-550 uppercase font-black tracking-wider truncate max-w-[120px] sm:max-w-[220px]">{selectedHotel.name}</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-base sm:text-lg font-black text-black">
                     ₹{Number(selectedHotel.price).toLocaleString('en-IN')}
@@ -693,23 +911,46 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
                 <span className="text-[9px] text-gray-450 font-semibold block -mt-0.5">per night + taxes</span>
               </div>
-              <button
-                onClick={() => {
-                  const hotelToBook = selectedHotel;
-                  openBookingModal({
-                    id: hotelToBook.id,
-                    name: hotelToBook.name,
-                    price: hotelToBook.price,
-                    category: 'hotels',
-                    city_id: hotelToBook.city_id,
-                    vendor_id: hotelToBook.vendor_id,
-                    slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
-                  });
-                }}
-                className="py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
-              >
-                Book Now
-              </button>
+              
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Call Button */}
+                <a
+                  href={`tel:${selectedHotel.phone_number || '+919837371137'}`}
+                  className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl cursor-pointer transition-colors flex items-center justify-center shadow-3xs border border-black/5"
+                  title="Call Property"
+                >
+                  <Phone size={14} />
+                </a>
+
+                {/* WhatsApp Button */}
+                <a
+                  href={`https://wa.me/${(selectedHotel.whatsapp_number || '919837371137').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello! I want to book a room at ${selectedHotel.name}.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl cursor-pointer transition-colors flex items-center justify-center shadow-3xs border border-emerald-250/20"
+                  title="WhatsApp Property"
+                >
+                  <MessageSquare size={14} />
+                </a>
+
+                <button
+                  onClick={() => {
+                    const hotelToBook = selectedHotel;
+                    openBookingModal({
+                      id: hotelToBook.id,
+                      name: hotelToBook.name,
+                      price: hotelToBook.price,
+                      category: 'hotels',
+                      city_id: hotelToBook.city_id,
+                      vendor_id: hotelToBook.vendor_id,
+                      slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
+                    });
+                  }}
+                  className="py-3 px-5 sm:px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                >
+                  Book Now
+                </button>
+              </div>
             </div>
 
             {/* Full screen lightbox modal */}

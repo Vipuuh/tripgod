@@ -208,9 +208,26 @@ ALTER TABLE rafting ADD COLUMN IF NOT EXISTS activity_type TEXT DEFAULT 'rafting
 -- =========================================================================
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS rating NUMERIC DEFAULT 4.5;
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS reviews_count INTEGER DEFAULT 100;
-ALTER TABLE hotels ADD COLUMN IF NOT EXISTS why_guests_love TEXT[] DEFAULT '{}'::TEXT[];
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS rooms_left INTEGER DEFAULT 5;
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS high_demand BOOLEAN DEFAULT false;
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS attractions JSONB DEFAULT '[]'::JSONB;
+
+-- =========================================================================
+-- Schema Extensions (Premium Hotels Redesign OTA Standards — June 2026)
+-- =========================================================================
+ALTER TABLE hotels DROP COLUMN IF EXISTS why_guests_love;
+ALTER TABLE hotels ADD COLUMN why_guests_love JSONB DEFAULT '[]'::JSONB;
+
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT true;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS bookings_count INTEGER DEFAULT 18;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS popular_badge_text TEXT DEFAULT '18 bookings this week';
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS property_type TEXT DEFAULT 'Hotel';
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS room_type TEXT DEFAULT 'Deluxe Double Room';
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS best_for TEXT[] DEFAULT '{}'::TEXT[];
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS perfect_for TEXT[] DEFAULT '{}'::TEXT[];
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS social_proof JSONB DEFAULT '{"trusted_count": "10,000+", "top_rated_text": "Top Rated In Tapovan"}'::JSONB;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS benefits JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS phone_number TEXT DEFAULT '+919837371137';
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS featured_image TEXT;
 
 
