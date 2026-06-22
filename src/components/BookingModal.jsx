@@ -7,6 +7,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   if (!activity) return null;
 
   const [date, setDate] = useState('');
+  const [checkInDate, setCheckInDate] = useState('');
+  const [checkOutDate, setCheckOutDate] = useState('');
   const [slot, setSlot] = useState('');
   const [guests, setGuests] = useState(1);
   const [hasVideoOption, setHasVideoOption] = useState(false);
@@ -50,6 +52,16 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       const mode = activity.payment_mode || 'commission_advance';
       setPaymentOption(mode === 'full_payment' ? 'full' : 'advance');
 
+      // Initialize check-in and check-out dates for hotels
+      if (activity.category === 'hotels') {
+        const tomorrowStr = today.toISOString().split('T')[0];
+        const dayAfter = new Date(today);
+        dayAfter.setDate(dayAfter.getDate() + 1);
+        const dayAfterStr = dayAfter.toISOString().split('T')[0];
+        setCheckInDate(tomorrowStr);
+        setCheckOutDate(dayAfterStr);
+      }
+
       // Prefill user details if logged in
       const userEmail = localStorage.getItem('tripgod_user_email') || '';
       const userName = localStorage.getItem('tripgod_user_name') || '';
@@ -62,6 +74,14 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     }
   }, [activity, initialDate, initialGuests]);
 
+  const getSlotLabel = () => {
+    const cat = (activity.category || '').toLowerCase();
+    if (cat === 'hotels') return 'Room Type';
+    if (cat === 'bikes' || cat === 'bikerent') return 'Select Vehicle';
+    if (cat === 'tours') return 'Select Package';
+    return 'Select Slot';
+  };
+
   // Determine payment configuration
   const paymentMode = activity.payment_mode || 'commission_advance';
   const commissionPercentage = activity.commission_percentage !== undefined && activity.commission_percentage !== null
@@ -73,10 +93,19 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     ? Number(activity.fixed_advance_amount)
     : 0;
 
+  // Calculate nights for hotel bookings
+  let nights = 1;
+  if (activity.category === 'hotels' && checkInDate && checkOutDate) {
+    const start = new Date(checkInDate);
+    const end = new Date(checkOutDate);
+    const diffTime = Math.abs(end - start);
+    nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+  }
+
   // Calculate pricing
   const basePrice = activity.price || 0;
   const pricePerPerson = basePrice;
-  const totalPrice = pricePerPerson * guests;
+  const totalPrice = pricePerPerson * guests * (activity.category === 'hotels' ? nights : 1);
   
   // Calculate dynamic advance amount
   const calculatedAdvance = paymentMode === 'fixed_advance'
@@ -136,6 +165,10 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
           ? 'Fixed Advance Booking'
           : `${commissionPercentage}% Advance Booking`;
 
+        const dateRangeStr = activity.category === 'hotels'
+          ? `${checkInDate.split('-').reverse().join('/')} to ${checkOutDate.split('-').reverse().join('/')} (${nights} Night${nights > 1 ? 's' : ''})`
+          : date.split('-').reverse().join('/');
+
         const message = `*BOOKING SUCCESSFUL & PAID - TRIPGOD*
 ----------------------------------
 *Payment Confirmation ID:* ${paymentId}
@@ -146,8 +179,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 *Customer Phone:* ${phone}
 ----------------------------------
 *Activity:* ${activity.name} ${activity.stretch ? `(${activity.stretch})` : ''}
-*Date:* ${date.split('-').reverse().join('/')}
-*Slot:* ${slot}
+*Date:* ${dateRangeStr}
+*${activity.category === 'hotels' ? 'Room Type' : (isBikeRent ? 'Select Vehicle' : 'Slot')}:* ${slot}
 *${isBikeRent ? 'No. of Vehicles' : 'Guests'}:* ${guests} ${unitLabel}
 ${hasVideoOption ? `*Add-ons:* DSLR Video Included\n` : ''}
 *Price Summary:*
@@ -168,7 +201,7 @@ My payment ID is verified. Please confirm my slots.`;
             activities: [{
               name: activity.name,
               stretch: activity.stretch || '',
-              date: date.split('-').reverse().join('/'),
+              date: dateRangeStr,
               slot: slot,
               guests: guests,
               subtotal: totalPrice
@@ -194,7 +227,7 @@ My payment ID is verified. Please confirm my slots.`;
             customer_email: email,
             service_type: activity.category === 'hotels' ? 'Hotel' : activity.category === 'rafting' ? 'Rafting' : activity.category === 'bikerent' ? 'Bike Rental' : activity.category === 'tour' ? 'Tour' : activity.category === 'camping' ? 'Camping' : 'Rafting',
             service_id: activity.id && isValidUUID(activity.id) ? activity.id : '00000000-0000-0000-0000-000000000000',
-            travel_date: date,
+            travel_date: activity.category === 'hotels' ? checkInDate : date,
             status: 'pending',
             payment_type: effectivePaymentOption === 'full' ? 'full_online' : 'advance_custom',
             amount_paid: amountToPayNow,
@@ -410,27 +443,71 @@ My payment ID is verified. Please confirm my slots.`;
               </div>
 
               {/* Date selection */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                  <Calendar size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'Select Start Date' : 'Select Date'}
-                </label>
-                <input
-                  type="date"
-                  min={minDate}
-                  value={date}
-                  onChange={(e) => {
-                    setDate(e.target.value);
-                    setError('');
-                  }}
-                  className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
-                />
-              </div>
+              {activity.category === 'hotels' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                      <Calendar size={14} className="text-[#FF5F00]" /> Check-in Date
+                    </label>
+                    <input
+                      type="date"
+                      min={minDate}
+                      value={checkInDate}
+                      onChange={(e) => {
+                        setCheckInDate(e.target.value);
+                        setError('');
+                        if (checkOutDate <= e.target.value) {
+                          const nextDay = new Date(e.target.value);
+                          nextDay.setDate(nextDay.getDate() + 1);
+                          setCheckOutDate(nextDay.toISOString().split('T')[0]);
+                        }
+                      }}
+                      className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                      <Calendar size={14} className="text-[#FF5F00]" /> Check-out Date
+                    </label>
+                    <input
+                      type="date"
+                      min={checkInDate ? (() => {
+                        const next = new Date(checkInDate);
+                        next.setDate(next.getDate() + 1);
+                        return next.toISOString().split('T')[0];
+                      })() : minDate}
+                      value={checkOutDate}
+                      onChange={(e) => {
+                        setCheckOutDate(e.target.value);
+                        setError('');
+                      }}
+                      className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                    <Calendar size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'Select Start Date' : 'Select Date'}
+                  </label>
+                  <input
+                    type="date"
+                    min={minDate}
+                    value={date}
+                    onChange={(e) => {
+                      setDate(e.target.value);
+                      setError('');
+                    }}
+                    className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                  />
+                </div>
+              )}
 
               {/* Time slot and Guests */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                    <Clock size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'Rental Duration' : 'Select Slot'}
+                    <Clock size={14} className="text-[#FF5F00]" /> {getSlotLabel()}
                   </label>
                   <select
                     value={slot}
@@ -556,19 +633,25 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
               )}
 
-              {/* Pricing breakdown - Highlighted in Blue */}
-              <div className="p-4 bg-blue-600/10 border border-blue-500/20 text-blue-900 rounded-2xl space-y-2.5 font-sans">
-                <div className="flex justify-between items-center text-xs text-blue-900/70 font-semibold">
-                  <span>{isBikeRent ? 'Price per day' : 'Price per person'}</span>
+              {/* Pricing breakdown - Highlighted in Green */}
+              <div className="p-4 bg-emerald-600/10 border border-emerald-500/20 text-emerald-950 rounded-2xl space-y-2.5 font-sans">
+                <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                  <span>{isBikeRent ? 'Price per day' : (activity.category === 'hotels' ? 'Price per room per night' : 'Price per person')}</span>
                   <span>₹{pricePerPerson.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs text-blue-900/70 font-semibold">
+                {activity.category === 'hotels' && (
+                  <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                    <span>Number of nights</span>
+                    <span>{nights} Night{nights > 1 ? 's' : ''}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
                   <span>Total price ({guests} {isBikeRent ? `vehicle${guests > 1 ? 's' : ''}` : `guest${guests > 1 ? 's' : ''}`})</span>
                   <span>₹{totalPrice.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="h-px bg-blue-500/20 my-1" />
+                <div className="h-px bg-emerald-500/20 my-1" />
                 
-                <div className="flex justify-between items-center text-sm font-black text-blue-800">
+                <div className="flex justify-between items-center text-sm font-black text-emerald-600">
                   <span className="flex items-center gap-1.5">
                     {effectivePaymentOption === 'full'
                       ? 'Pay 100% Online Now'
@@ -578,7 +661,7 @@ My payment ID is verified. Please confirm my slots.`;
                   </span>
                   <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs text-blue-900/80 font-bold">
+                <div className="flex justify-between items-center text-xs text-emerald-900/80 font-bold">
                   <span>{effectivePaymentOption === 'full' ? 'Remaining Balance' : 'Remaining Balance (Pay at venue)'}</span>
                   <span>{effectivePaymentOption === 'full' ? '₹0 (Paid in Full)' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
                 </div>
@@ -586,16 +669,10 @@ My payment ID is verified. Please confirm my slots.`;
             </div>
 
             {/* Footer buttons */}
-            <div className="p-5 bg-transparent border-t border-black/5 flex gap-3">
-              <button
-                onClick={handleAddToCartClick}
-                className="flex-1 py-3 px-4 rounded-xl border border-black/20 font-bold text-sm bg-transparent text-black hover:bg-black hover:text-[#FF5F00] hover:border-black transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-              >
-                Add to Cart
-              </button>
+            <div className="p-5 bg-transparent border-t border-black/5 flex">
               <button
                 onClick={handleRazorpayPayment}
-                className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
+                className="w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
               >
                 <CreditCard size={16} />
                 <span>

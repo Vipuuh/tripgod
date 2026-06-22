@@ -856,34 +856,26 @@ export default function Hotels({ currentCity, openBookingModal }) {
               </div>
 
               {/* SECTION 13: TRIPGOD TRUST BENEFITS */}
-              <div className="border-t border-gray-100 pt-6">
+              <div className="border-t border-gray-100 pt-6 pb-2">
                 <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider font-display mb-4">TripGod Trust Benefits</h4>
-                <div 
-                  className="flex flex-row overflow-x-auto gap-3.5 pb-2 scroll-smooth no-scrollbar"
-                  style={{
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
-                    WebkitOverflowScrolling: 'touch'
-                  }}
-                >
-                  <style dangerouslySetInnerHTML={{__html: `
-                    .no-scrollbar::-webkit-scrollbar { display: none; }
-                  `}} />
+                <div className="flex flex-col gap-3">
                   {(selectedHotel.benefits && selectedHotel.benefits.length > 0 ? selectedHotel.benefits : [
-                    { icon: 'Lock', title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gate' },
-                    { icon: 'CalendarCheck', title: 'Instant Booking', desc: 'Hotel room voucher sent immediately' },
-                    { icon: 'RefreshCw', title: 'Easy Refund', desc: 'No-hassle cancellation & quick refunds' },
-                    { icon: 'HelpCircle', title: '24×7 Support', desc: '24/7 on-ground assistance & guide network' },
-                    { icon: 'ShieldCheck', title: 'Verified Partners', desc: 'Every stay is handpicked and verified' },
+                    { icon: 'Lock', title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gateway' },
+                    { icon: 'CalendarCheck', title: 'Instant Booking', desc: 'Hotel room voucher sent immediately to WhatsApp/Email' },
+                    { icon: 'RefreshCw', title: 'Easy Refund', desc: 'No-hassle cancellation & quick automatic refunds' },
+                    { icon: 'HelpCircle', title: '24×7 Support', desc: '24/7 on-ground assistance & direct guide network' },
+                    { icon: 'ShieldCheck', title: 'Verified Partners', desc: 'Every stay is handpicked, inspected, and verified' },
                   ]).map((benefit, idx) => {
                     const Icon = BENEFIT_ICONS[benefit.icon] || ShieldCheck;
                     return (
-                      <div key={idx} className="p-4 bg-slate-50/50 border border-black/5 rounded-2xl flex flex-col items-center text-center shadow-3xs min-w-[140px] max-w-[140px] shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 shadow-3xs">
+                      <div key={idx} className="flex flex-row items-start gap-3.5 p-3.5 bg-slate-50/50 border border-black/5 rounded-2xl shadow-3xs">
+                        <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-3xs shrink-0">
                           <Icon size={16} />
                         </div>
-                        <p className="text-xs font-black text-black mb-1 leading-tight">{benefit.title}</p>
-                        <p className="text-[10px] text-gray-500 leading-relaxed font-semibold">{benefit.desc}</p>
+                        <div className="flex flex-col text-left">
+                          <span className="text-xs font-black text-black leading-none mb-1">{benefit.title}</span>
+                          <span className="text-[10px] text-gray-500 font-semibold leading-relaxed">{benefit.desc}</span>
+                        </div>
                       </div>
                     );
                   })}
