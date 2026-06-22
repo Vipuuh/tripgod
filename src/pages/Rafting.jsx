@@ -42,8 +42,8 @@ const defaultStretches = [
       'Personal expenses'
     ],
     operators: [
-      { id: 'rafting-12km-op1', name: 'River Runners Crew', price: 650, original_price: 800, is_limited_offer: true, commission_percentage: 10 },
-      { id: 'rafting-12km-op2', name: 'Himalayan Rapids Adventure', price: 800, original_price: 1000, commission_percentage: 10 }
+      { id: 'rafting-12km-op1', name: 'River Runners Crew', price: 650, original_price: 800, is_limited_offer: true, commission_percentage: 10, operator_logo: '/tripgod_logo_1780207208353.png', years_of_experience: 8, is_govt_approved: true, safety_rating: 4.8, full_payment_upi_discount: 100 },
+      { id: 'rafting-12km-op2', name: 'Himalayan Rapids Adventure', price: 800, original_price: 1000, commission_percentage: 10, operator_logo: '', years_of_experience: 5, is_govt_approved: true, safety_rating: 4.5, full_payment_upi_discount: 150 }
     ]
   },
   {
@@ -79,8 +79,8 @@ const defaultStretches = [
       'Personal expenses'
     ],
     operators: [
-      { id: 'rafting-16km-op1', name: 'Shivpuri Rapids Patrol', price: 800, original_price: 1200, is_limited_offer: true, commission_percentage: 10 },
-      { id: 'rafting-16km-op2', name: 'Ganga Adventure Club', price: 950, original_price: 1300, commission_percentage: 10 }
+      { id: 'rafting-16km-op1', name: 'Shivpuri Rapids Patrol', price: 800, original_price: 1200, is_limited_offer: true, commission_percentage: 10, operator_logo: '/tripgod_logo_1780207208353.png', years_of_experience: 10, is_govt_approved: true, safety_rating: 4.9, full_payment_upi_discount: 100 },
+      { id: 'rafting-16km-op2', name: 'Ganga Adventure Club', price: 950, original_price: 1300, commission_percentage: 10, operator_logo: '', years_of_experience: 6, is_govt_approved: false, safety_rating: 4.6, full_payment_upi_discount: 150 }
     ]
   },
   {
@@ -116,8 +116,8 @@ const defaultStretches = [
       'Personal expenses'
     ],
     operators: [
-      { id: 'rafting-24km-op1', name: 'Ganga Extreme Outfitters', price: 1500, original_price: 2000, commission_percentage: 10 },
-      { id: 'rafting-24km-op2', name: 'Bull Adventure Crew', price: 1650, original_price: 2200, commission_percentage: 12 }
+      { id: 'rafting-24km-op1', name: 'Ganga Extreme Outfitters', price: 1500, original_price: 2000, commission_percentage: 10, operator_logo: '/tripgod_logo_1780207208353.png', years_of_experience: 12, is_govt_approved: true, safety_rating: 4.9, full_payment_upi_discount: 200 },
+      { id: 'rafting-24km-op2', name: 'Bull Adventure Crew', price: 1650, original_price: 2200, commission_percentage: 12, operator_logo: '', years_of_experience: 7, is_govt_approved: true, safety_rating: 4.7, full_payment_upi_discount: 250 }
     ]
   },
   {
@@ -153,8 +153,8 @@ const defaultStretches = [
       'Personal expenses'
     ],
     operators: [
-      { id: 'rafting-36km-op1', name: 'Kaudiyala Extreme Team', price: 2500, original_price: 3500, commission_percentage: 10 },
-      { id: 'rafting-36km-op2', name: 'Apex River Guides', price: 2800, original_price: 3800, commission_percentage: 12 }
+      { id: 'rafting-36km-op1', name: 'Kaudiyala Extreme Team', price: 2500, original_price: 3500, commission_percentage: 10, operator_logo: '/tripgod_logo_1780207208353.png', years_of_experience: 15, is_govt_approved: true, safety_rating: 5.0, full_payment_upi_discount: 300 },
+      { id: 'rafting-36km-op2', name: 'Apex River Guides', price: 2800, original_price: 3800, commission_percentage: 12, operator_logo: '', years_of_experience: 9, is_govt_approved: true, safety_rating: 4.8, full_payment_upi_discount: 250 }
     ]
   }
 ];
@@ -671,7 +671,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
               {/* Operator Selection Modal */}
               <AnimatePresence>
                 {showOperatorModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -714,6 +714,18 @@ export default function Rafting({ currentCity, openBookingModal }) {
                                   originalPrice: op.original_price ? Number(op.original_price) : null,
                                   isLimitedOffer: !!op.is_limited_offer,
                                   commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                                  
+                                  // Pass stretch details for dynamic button formatting
+                                  stretchRoute: selectedStretch.stretch || op.route || 'Rafting Stretch',
+                                  distanceKm: selectedStretch.name.match(/\d+/) ? selectedStretch.name.match(/\d+/)[0] : op.distance_km,
+
+                                  // Pass new fields
+                                  operatorLogo: op.operator_logo || null,
+                                  yearsOfExperience: op.years_of_experience !== undefined ? op.years_of_experience : null,
+                                  isGovtApproved: op.is_govt_approved !== undefined ? !!op.is_govt_approved : false,
+                                  safetyRating: op.safety_rating !== undefined && op.safety_rating !== null ? Number(op.safety_rating) : 4.5,
+                                  fullPaymentUpiDiscount: op.full_payment_upi_discount !== undefined && op.full_payment_upi_discount !== null ? Number(op.full_payment_upi_discount) : 0,
+
                                   _raw: op
                                 }))
                               : [
@@ -727,6 +739,18 @@ export default function Rafting({ currentCity, openBookingModal }) {
                                     originalPrice: selectedStretch.original_price || null,
                                     isLimitedOffer: selectedStretch.is_limited_offer || false,
                                     commissionPercentage: selectedStretch.commission_percentage || 10,
+                                    
+                                    // Pass stretch details for dynamic button formatting
+                                    stretchRoute: selectedStretch.stretch || 'Rafting Stretch',
+                                    distanceKm: selectedStretch.name.match(/\d+/) ? selectedStretch.name.match(/\d+/)[0] : 12,
+
+                                    // Pass new fields (empty fallback)
+                                    operatorLogo: null,
+                                    yearsOfExperience: null,
+                                    isGovtApproved: false,
+                                    safetyRating: 4.5,
+                                    fullPaymentUpiDiscount: 0,
+
                                     _raw: selectedStretch
                                   }
                                 ]

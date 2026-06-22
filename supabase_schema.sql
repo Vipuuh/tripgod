@@ -283,5 +283,13 @@ ALTER TABLE rafting ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
 ALTER TABLE bikes ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
 
+-- Schema Extensions (Rafting Operators Enhancements — June 2026)
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS operator_logo TEXT;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS years_of_experience INTEGER;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS is_govt_approved BOOLEAN DEFAULT false;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS safety_rating NUMERIC DEFAULT 4.5;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS full_payment_upi_discount NUMERIC DEFAULT 0;
+
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
+

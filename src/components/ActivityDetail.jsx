@@ -313,7 +313,7 @@ export default function ActivityDetail({
       {/* Operator Selection Modal */}
       <AnimatePresence>
         {showOperatorModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -354,6 +354,18 @@ export default function ActivityDetail({
                     originalPrice: op.original_price ? Number(op.original_price) : null,
                     isLimitedOffer: !!op.is_limited_offer,
                     commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                    
+                    // Pass stretch route and distance if available
+                    stretchRoute: op.route || null,
+                    distanceKm: op.distance_km || null,
+
+                    // Pass new fields
+                    operatorLogo: op.operator_logo || null,
+                    yearsOfExperience: op.years_of_experience !== undefined ? op.years_of_experience : null,
+                    isGovtApproved: op.is_govt_approved !== undefined ? !!op.is_govt_approved : false,
+                    safetyRating: op.safety_rating !== undefined && op.safety_rating !== null ? Number(op.safety_rating) : 4.5,
+                    fullPaymentUpiDiscount: op.full_payment_upi_discount !== undefined && op.full_payment_upi_discount !== null ? Number(op.full_payment_upi_discount) : 0,
+
                     _raw: op
                   }))}
                   onBookOperator={(op) => {

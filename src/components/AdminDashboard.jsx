@@ -1666,6 +1666,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           original_price: '',
           commission_percentage: '',
           whatsapp_number: v.whatsapp || '',
+          operator_logo: '',
+          years_of_experience: '',
+          is_govt_approved: false,
+          safety_rating: 4.5,
+          full_payment_upi_discount: 0,
           id: null
         };
       });
@@ -1679,6 +1684,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             original_price: op.original_price !== null && op.original_price !== undefined ? op.original_price : '',
             commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
             whatsapp_number: op.whatsapp_number || op.vendors?.whatsapp || '',
+            operator_logo: op.operator_logo || '',
+            years_of_experience: op.years_of_experience !== null && op.years_of_experience !== undefined ? op.years_of_experience : '',
+            is_govt_approved: !!op.is_govt_approved,
+            safety_rating: op.safety_rating !== null && op.safety_rating !== undefined ? op.safety_rating : 4.5,
+            full_payment_upi_discount: op.full_payment_upi_discount !== null && op.full_payment_upi_discount !== undefined ? op.full_payment_upi_discount : 0,
             id: op.id
           };
         });
@@ -1901,6 +1911,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
             commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
             whatsappNumber: op.whatsapp_number || null,
+            operatorLogo: op.operator_logo || null,
+            yearsOfExperience: op.years_of_experience === '' || op.years_of_experience === null || op.years_of_experience === undefined ? null : Number(op.years_of_experience),
+            isGovtApproved: !!op.is_govt_approved,
+            safetyRating: op.safety_rating === '' || op.safety_rating === null || op.safety_rating === undefined ? 4.5 : Number(op.safety_rating),
+            fullPaymentUpiDiscount: op.full_payment_upi_discount === '' || op.full_payment_upi_discount === null || op.full_payment_upi_discount === undefined ? 0 : Number(op.full_payment_upi_discount),
             id: op.id
           }));
 
@@ -1924,7 +1939,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
           activity_type: formData.activity_type || 'rafting',
           payment_mode: formData.payment_mode || 'commission_advance',
-          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount)) : null
+          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
+          fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
+          upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount)
         };
 
         if (data) {
@@ -1948,7 +1965,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 price: op.price,
                 original_price: op.originalPrice,
                 commission_percentage: op.commissionPercentage,
-                whatsapp_number: op.whatsappNumber
+                whatsapp_number: op.whatsappNumber,
+                operator_logo: op.operatorLogo,
+                years_of_experience: op.yearsOfExperience,
+                is_govt_approved: op.isGovtApproved,
+                safety_rating: op.safetyRating,
+                full_payment_upi_discount: op.fullPaymentUpiDiscount
               });
               delete existingOpsMap[op.vendorId];
             } else {
@@ -1958,7 +1980,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 price: op.price,
                 original_price: op.originalPrice,
                 commission_percentage: op.commissionPercentage,
-                whatsapp_number: op.whatsappNumber
+                whatsapp_number: op.whatsappNumber,
+                operator_logo: op.operatorLogo,
+                years_of_experience: op.yearsOfExperience,
+                is_govt_approved: op.isGovtApproved,
+                safety_rating: op.safetyRating,
+                full_payment_upi_discount: op.fullPaymentUpiDiscount
               });
             }
           });
@@ -1989,7 +2016,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             price: op.price,
             original_price: op.originalPrice,
             commission_percentage: op.commissionPercentage,
-            whatsapp_number: op.whatsappNumber
+            whatsapp_number: op.whatsappNumber,
+            operator_logo: op.operatorLogo,
+            years_of_experience: op.yearsOfExperience,
+            is_govt_approved: op.isGovtApproved,
+            safety_rating: op.safetyRating,
+            full_payment_upi_discount: op.fullPaymentUpiDiscount
           }));
 
           const { error: insertError } = await supabase.from('rafting').insert(recordsToInsert);
@@ -3261,7 +3293,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                               price: prev[vendor.id]?.price || '',
                               original_price: prev[vendor.id]?.original_price || '',
                               commission_percentage: prev[vendor.id]?.commission_percentage || '',
-                              whatsapp_number: prev[vendor.id]?.whatsapp_number || vendor.whatsapp || ''
+                              whatsapp_number: prev[vendor.id]?.whatsapp_number || vendor.whatsapp || '',
+                              operator_logo: prev[vendor.id]?.operator_logo || '',
+                              years_of_experience: prev[vendor.id]?.years_of_experience || '',
+                              is_govt_approved: prev[vendor.id]?.is_govt_approved || false,
+                              safety_rating: prev[vendor.id]?.safety_rating || 4.5,
+                              full_payment_upi_discount: prev[vendor.id]?.full_payment_upi_discount || 0
                             }
                           }));
                         }}
@@ -3275,82 +3312,186 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
                     {/* Right: Price inputs (only editable if enabled) */}
                     {opState.enabled ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-grow">
-                        <div className="space-y-1">
-                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹)</label>
-                          <input
-                            type="number"
-                            required
-                            value={opState.price}
-                            onChange={(e) => {
-                              setActivitiesOperators(prev => ({
-                                ...prev,
-                                [vendor.id]: {
-                                  ...prev[vendor.id],
-                                  price: Number(e.target.value)
-                                }
-                              }));
-                            }}
-                            placeholder="Price"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                          />
+                      <div className="flex-grow space-y-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹)</label>
+                            <input
+                              type="number"
+                              required
+                              value={opState.price}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    price: Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="Price"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Original Price (₹)</label>
+                            <input
+                              type="number"
+                              value={opState.original_price}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    original_price: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="Strikethrough"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
+                            <input
+                              type="number"
+                              value={opState.commission_percentage}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="e.g. 10"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">WhatsApp</label>
+                            <input
+                              type="text"
+                              value={opState.whatsapp_number}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    whatsapp_number: e.target.value
+                                  }
+                                }));
+                              }}
+                              placeholder="WhatsApp Number"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
                         </div>
 
-                        <div className="space-y-1">
-                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Original Price (₹)</label>
-                          <input
-                            type="number"
-                            value={opState.original_price}
-                            onChange={(e) => {
-                              setActivitiesOperators(prev => ({
-                                ...prev,
-                                [vendor.id]: {
-                                  ...prev[vendor.id],
-                                  original_price: e.target.value === '' ? '' : Number(e.target.value)
-                                }
-                              }));
-                            }}
-                            placeholder="Strikethrough"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                          />
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                          <div className="space-y-1 sm:col-span-2">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Logo URL</label>
+                            <input
+                              type="text"
+                              value={opState.operator_logo || ''}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    operator_logo: e.target.value
+                                  }
+                                }));
+                              }}
+                              placeholder="https://example.com/logo.png"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Years Exp</label>
+                            <input
+                              type="number"
+                              value={opState.years_of_experience || ''}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    years_of_experience: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="e.g. 5"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Safety Rating</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              max="5"
+                              value={opState.safety_rating || ''}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    safety_rating: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="4.8"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">UPI Discount (₹)</label>
+                            <input
+                              type="number"
+                              value={opState.full_payment_upi_discount || ''}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    full_payment_upi_discount: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="e.g. 200"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            />
+                          </div>
                         </div>
 
-                        <div className="space-y-1">
-                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
+                        <div className="flex items-center gap-2 pt-1">
                           <input
-                            type="number"
-                            value={opState.commission_percentage}
+                            type="checkbox"
+                            id={`govt-${vendor.id}`}
+                            checked={!!opState.is_govt_approved}
                             onChange={(e) => {
                               setActivitiesOperators(prev => ({
-                                ...prev,
-                                [vendor.id]: {
-                                  ...prev[vendor.id],
-                                  commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
-                                }
-                              }));
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    is_govt_approved: e.target.checked
+                                  }
+                                }));
                             }}
-                            placeholder="e.g. 10"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                            className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-3.5 h-3.5 cursor-pointer"
                           />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">WhatsApp</label>
-                          <input
-                            type="text"
-                            value={opState.whatsapp_number}
-                            onChange={(e) => {
-                              setActivitiesOperators(prev => ({
-                                ...prev,
-                                [vendor.id]: {
-                                  ...prev[vendor.id],
-                                  whatsapp_number: e.target.value
-                                }
-                              }));
-                            }}
-                            placeholder="WhatsApp Number"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                          />
+                          <label htmlFor={`govt-${vendor.id}`} className="text-[10px] font-bold text-gray-400 cursor-pointer select-none">
+                            Govt. Approved Agency
+                          </label>
                         </div>
                       </div>
                     ) : (

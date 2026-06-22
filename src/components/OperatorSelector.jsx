@@ -60,7 +60,7 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
       </div>
 
 
-      <div className="space-y-3">
+      <div className="space-y-3 text-left">
         {operators.map((op, idx) => {
           const rating = op.starRating !== null && op.starRating !== undefined ? Number(op.starRating) : 4.5;
           const displayPrice = op.price || 0;
@@ -73,34 +73,38 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: idx * 0.05 }}
-              className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden"
+              className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-all space-y-4 relative overflow-hidden"
             >
               {/* Limited Offer Accent Bar */}
               {op.isLimitedOffer && (
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent to-[#FF3E00]" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00]" />
               )}
 
               {/* Upper Section: Photo and Info */}
               <div className="flex gap-4.5 items-start">
-                {/* Operator Photo */}
-                <div className="w-18 h-18 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 flex-shrink-0">
-                  {op.shopImage ? (
+                {/* Operator Photo / Safety Trust Badge */}
+                <div className="w-18 h-18 rounded-xl overflow-hidden border border-gray-100 bg-gradient-to-br from-orange-50 to-orange-100/50 flex-shrink-0 flex items-center justify-center">
+                  {op.operatorLogo || op.shopImage ? (
                     <img
-                      src={op.shopImage}
+                      src={op.operatorLogo || op.shopImage}
                       alt={op.vendorName}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center font-display font-black text-lg text-slate-400 uppercase">
-                      {op.vendorName ? op.vendorName.charAt(0) : 'O'}
+                    <div className="flex flex-col items-center justify-center text-center p-1 text-[#FF5F00]">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 drop-shadow-sm">
+                        <path fillRule="evenodd" d="M12.53 16.28a.75.75 0 01-1.06 0l-3-3a.75.75 0 111.06-1.06l2.47 2.47 4.97-4.97a.75.75 0 111.06 1.06l-5.5 5.5z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.75H10.5a.75.75 0 000 1.5h.75v.75a.75.75 0 001.5 0V8.25h.75a.75 0 000-1.5h-.75V6z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-[7px] font-black uppercase tracking-widest mt-1 leading-none">SAFETY TRUST</span>
                     </div>
                   )}
                 </div>
 
                 {/* Operator Meta details */}
                 <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <h5 className="text-sm font-black text-slate-900 truncate font-display">
+                  <div className="flex items-start justify-between gap-2">
+                    <h5 className="text-sm font-black text-slate-900 font-display leading-tight truncate">
                       {op.vendorName || 'Local Operator'}
                     </h5>
                     
@@ -113,31 +117,52 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                     </div>
                   </div>
 
+                  {/* Trust Tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    {op.yearsOfExperience && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-slate-600 bg-slate-150 border border-slate-200 px-2 py-0.5 rounded-md">
+                        {op.yearsOfExperience} Years Exp
+                      </span>
+                    )}
+                    {op.isGovtApproved && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-250 px-2 py-0.5 rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-emerald-650">
+                          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                        </svg>
+                        Govt. Approved
+                      </span>
+                    )}
+                  </div>
+
                   {/* Landmark/Location */}
                   {op.landmark && (
-                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-bold truncate">
-                      <MapPin size={11} className="text-accent flex-shrink-0" />
+                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-bold truncate pt-0.5">
+                      <MapPin size={11} className="text-[#FF5F00] flex-shrink-0" />
                       <span className="truncate">Office/Pickup: {op.landmark}</span>
                     </div>
                   )}
 
-                  {/* Pricing / Badges Row */}
-                  <div className="flex items-center flex-wrap gap-2 pt-1">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-base font-black text-accent">
+                  {/* Pricing & Discount copy */}
+                  <div className="space-y-1 pt-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-bold text-neutral-900">
                         ₹{displayPrice.toLocaleString('en-IN')}
                       </span>
                       {isDiscounted && (
-                        <span className="text-[11px] text-slate-400 line-through">
+                        <span className="text-xs text-gray-400 line-through font-medium">
                           ₹{displayOriginalPrice.toLocaleString('en-IN')}
                         </span>
                       )}
+                      {op.isLimitedOffer && (
+                        <span className="flex items-center gap-0.5 text-[9px] font-black uppercase text-[#FF5F00] bg-[#FF5F00]/10 border border-[#FF5F00]/20 px-1.5 py-0.5 rounded-md">
+                          <Tag size={8} /> Limited Offer
+                        </span>
+                      )}
                     </div>
-
-                    {op.isLimitedOffer && (
-                      <span className="flex items-center gap-0.5 text-[9px] font-black uppercase text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.5 rounded-md">
-                        <Tag size={8} /> Limited Offer
-                      </span>
+                    {op.fullPaymentUpiDiscount > 0 && (
+                      <p className="text-[10px] text-orange-600 font-black tracking-wide">
+                        🎉 Get Flat ₹{op.fullPaymentUpiDiscount} off on 100% Full UPI Payment
+                      </p>
                     )}
                   </div>
                 </div>
@@ -146,9 +171,15 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
               {/* Lower Section: Book Button */}
               <button
                 onClick={() => onBookOperator(op)}
-                className="w-full py-2.5 bg-accent hover:bg-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-[#FF5F00] hover:bg-[#FF3E00] text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-1.5"
               >
-                Book with {op.vendorName || 'Operator'}
+                {op.stretchRoute ? (
+                  <span className="truncate max-w-full">
+                    Book {op.stretchRoute} ({op.distanceKm} KM)
+                  </span>
+                ) : (
+                  <span>Book with {op.vendorName || 'Operator'}</span>
+                )}
               </button>
             </motion.div>
           );
