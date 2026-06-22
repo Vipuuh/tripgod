@@ -211,7 +211,7 @@ function HotelCardCarousel({ images, hotelName, onSelect }) {
 
   return (
     <div 
-      className="h-48 bg-gray-100 overflow-hidden relative group/carousel select-none cursor-pointer"
+      className="aspect-video w-full bg-gray-100 overflow-hidden relative group/carousel select-none cursor-pointer"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -569,7 +569,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
             exit={{ opacity: 0 }}
             className="w-full min-h-[80vh] bg-white flex flex-col py-16 font-sans"
           >
-            <div className="max-w-6xl mx-auto px-6 space-y-12">
+            <div className="w-full px-4 overflow-x-hidden space-y-12 max-w-6xl mx-auto">
               {/* Title Section */}
               <div className="text-center space-y-3">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 text-xs font-black uppercase tracking-widest rounded-full">
@@ -631,15 +631,15 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       key={hotel.id}
                       whileHover={{ y: -5 }}
                       onClick={() => handleSelectHotel(hotel)}
-                      className="border border-black/5 bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 group cursor-pointer"
+                      className="w-full max-w-full border border-black/5 bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 group cursor-pointer"
                     >
                       <div>
                         {/* Airbnb-style Image Carousel */}
                         <div className="relative">
                           <HotelCardCarousel 
-                            images={hotel.images} 
-                            hotelName={hotel.name} 
-                            onSelect={() => handleSelectHotel(hotel)} 
+                             images={hotel.images} 
+                             hotelName={hotel.name} 
+                             onSelect={() => handleSelectHotel(hotel)} 
                           />
                           {hotel.is_limited_offer && (
                             <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider pointer-events-none z-10">
@@ -676,9 +676,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           </div>
 
                           {/* Split Row for Info and Pricing */}
-                          <div className="flex justify-between items-start gap-4 pt-1 border-t border-gray-100/50">
+                          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pt-2 border-t border-gray-100/50">
                             {/* Left Column: Location & Room Details */}
-                            <div className="space-y-2 flex-1 min-w-0">
+                            <div className="space-y-2 flex-1 w-full min-w-0">
                               <p className="text-xs text-gray-500 font-semibold flex items-start gap-1">
                                 <MapPin size={12} className="text-[#FF5F00] shrink-0 mt-0.5" />
                                 <span className="break-words text-left">
@@ -719,22 +719,26 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             </div>
 
                             {/* Right Column: Pricing */}
-                            <div className="text-right shrink-0">
-                              <div className="flex flex-col items-end">
-                                {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
-                                  <span className="text-xs text-gray-400 line-through font-medium">
-                                    ₹{Number(hotel.original_price).toLocaleString('en-IN')}
+                            <div className="w-full sm:w-auto text-left sm:text-right shrink-0 border-t sm:border-t-0 border-gray-100/50 pt-3.5 sm:pt-0">
+                              <div className="flex flex-row sm:flex-col items-baseline sm:items-end justify-between sm:justify-end gap-2 flex-wrap">
+                                <div className="flex items-baseline gap-1.5">
+                                  {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
+                                    <span className="text-xs text-gray-400 line-through font-semibold">
+                                      ₹{Number(hotel.original_price).toLocaleString('en-IN')}
+                                    </span>
+                                  )}
+                                  <span className="text-xl font-black text-black leading-none">
+                                    ₹{Number(hotel.price).toLocaleString('en-IN')}
                                   </span>
-                                )}
-                                <span className="text-xl font-black text-black leading-none">
-                                  ₹{Number(hotel.price).toLocaleString('en-IN')}
-                                </span>
-                                <span className="text-[9px] text-gray-500 font-semibold mt-1">
-                                  + ₹{taxes} taxes & fees
-                                </span>
-                                <span className="text-[8px] text-gray-400 font-medium uppercase tracking-wider">
-                                  Per Night
-                                </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 sm:flex-col sm:items-end">
+                                  <span className="text-[9px] text-gray-500 font-bold">
+                                    + ₹{taxes} taxes & fees
+                                  </span>
+                                  <span className="text-[8px] text-gray-400 font-bold uppercase tracking-wider">
+                                    Per Night
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -745,9 +749,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             if (!parsed.text) return null;
                             const IconComponent = HIGHLIGHT_ICONS[parsed.icon] || Sparkles;
                             return (
-                              <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-3 flex items-start gap-2 text-xs text-black leading-relaxed">
+                              <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-3 flex items-start gap-2 text-xs text-black leading-relaxed w-full min-w-0">
                                 <IconComponent size={13} className="text-[#FF5F00] shrink-0 mt-0.5" />
-                                <p className="font-semibold text-gray-700 italic text-left">
+                                <p className="font-semibold text-gray-700 italic text-left break-words flex-1">
                                   {parsed.text}
                                 </p>
                               </div>
@@ -755,10 +759,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           })()}
 
                           {/* Exclusive UPI Discount Banner */}
-                          <div className="bg-black/5 border border-black/5 rounded-xl p-2.5 flex items-center justify-between text-[10px] text-gray-600 font-bold">
-                            <div className="flex items-center gap-1.5">
+                          <div className="bg-black/5 border border-black/5 rounded-xl p-2.5 flex items-center justify-between text-[10px] text-gray-600 font-bold w-full min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="w-4 h-4 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0 text-[#FF5F00] text-[9px] font-black">%</span>
-                              <span>Pay via UPI & get flat ₹{getUpiDiscountForHotel(hotel)} instant discount</span>
+                              <span className="break-words text-left flex-1">Pay via UPI & get flat ₹{getUpiDiscountForHotel(hotel)} instant discount</span>
                             </div>
                           </div>
                         </div>
