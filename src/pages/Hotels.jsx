@@ -31,6 +31,47 @@ const BENEFIT_ICONS = {
   Lock, CalendarCheck, RefreshCw, HelpCircle, ShieldCheck, CircleDollarSign, Award, Sparkles
 };
 
+const parseHighlight = (highlight) => {
+  if (!highlight) return { icon: 'Star', text: '' };
+  if (typeof highlight === 'object' && highlight !== null) {
+    return {
+      icon: highlight.icon || 'Star',
+      text: highlight.text || ''
+    };
+  }
+  if (typeof highlight === 'string') {
+    const trimmed = highlight.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return {
+          icon: parsed.icon || 'Star',
+          text: parsed.text || ''
+        };
+      } catch (e) {
+        // ignore
+      }
+    }
+    return {
+      icon: 'Star',
+      text: highlight
+    };
+  }
+  return { icon: 'Star', text: String(highlight) };
+};
+
+const getUpiDiscountForHotel = (hotel) => {
+  if (hotel.upi_discount !== null && hotel.upi_discount !== undefined) {
+    return Number(hotel.upi_discount);
+  }
+  const price = Number(hotel.price);
+  if (price <= 1000) return 50;
+  if (price <= 2000) return 120;
+  if (price <= 4000) return 150;
+  if (price <= 6000) return 210;
+  return 250;
+};
+
 const formatExternalUrl = (url) => {
   if (!url) return '';
   const trimmed = url.trim();
@@ -262,7 +303,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
               featured_image: data.featured_image || '',
               payment_mode: data.payment_mode || 'commission_advance',
               commission_percentage: data.commission_percentage !== null && data.commission_percentage !== undefined ? Number(data.commission_percentage) : 10,
-              fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? Number(data.fixed_advance_amount) : 0
+              fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? Number(data.fixed_advance_amount) : 0,
+              upi_discount: data.upi_discount !== null && data.upi_discount !== undefined ? Number(data.upi_discount) : null
             };
             setSelectedHotel(mapped);
             setActiveImgIdx(0);
@@ -307,7 +349,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
           query = query.order('price', { ascending: true });
         } else if (sortBy === 'price-desc') {
           query = query.order('price', { ascending: false });
-        } else if (sortBy === 'rating-desc') {
+        } else {
           query = query.order('rating', { ascending: false });
         }
         
@@ -350,15 +392,55 @@ export default function Hotels({ currentCity, openBookingModal }) {
             room_type: item.room_type || 'Deluxe Double Room',
             best_for: item.best_for || [],
             perfect_for: item.perfect_for || [],
-
             benefits: item.benefits || [],
             phone_number: item.phone_number || '+919837371137',
             whatsapp_number: item.whatsapp_number || '919837371137',
             featured_image: item.featured_image || '',
             payment_mode: item.payment_mode || 'commission_advance',
             commission_percentage: item.commission_percentage !== null && item.commission_percentage !== undefined ? Number(item.commission_percentage) : 10,
-            fixed_advance_amount: item.fixed_advance_amount !== null && item.fixed_advance_amount !== undefined ? Number(item.fixed_advance_amount) : 0
+            fixed_advance_amount: item.fixed_advance_amount !== null && item.fixed_advance_amount !== undefined ? Number(item.fixed_advance_amount) : 0,
+            upi_discount: item.upi_discount !== null && item.upi_discount !== undefined ? Number(item.upi_discount) : null
           }));
+
+          const hasKeyword = (h, keywords) => {
+            const textToSearch = `${h.name} ${h.address} ${(h.landmarks || []).join(' ')}`.toLowerCase();
+            return keywords.some(kw => textToSearch.includes(kw.toLowerCase()));
+          };
+
+          if (sortBy === 'near-ramjhula') {
+            mapped.sort((a, b) => {
+              const aNear = hasKeyword(a, ['ram jhula', 'ramjhula']);
+              const bNear = hasKeyword(b, ['ram jhula', 'ramjhula']);
+              if (aNear && !bNear) return -1;
+              if (!aNear && bNear) return 1;
+              return 0;
+            });
+          } else if (sortBy === 'near-laxmanjhula') {
+            mapped.sort((a, b) => {
+              const aNear = hasKeyword(a, ['laxman jhula', 'laxmanjhula', 'janki jhula', 'jankijhula']);
+              const bNear = hasKeyword(b, ['laxman jhula', 'laxmanjhula', 'janki jhula', 'jankijhula']);
+              if (aNear && !bNear) return -1;
+              if (!aNear && bNear) return 1;
+              return 0;
+            });
+          } else if (sortBy === 'near-yognagri') {
+            mapped.sort((a, b) => {
+              const aNear = hasKeyword(a, ['yog nagri', 'yognagri', 'yog nagari', 'yognagari', 'railway station', 'station']);
+              const bNear = hasKeyword(b, ['yog nagri', 'yognagri', 'yog nagari', 'yognagari', 'railway station', 'station']);
+              if (aNear && !bNear) return -1;
+              if (!aNear && bNear) return 1;
+              return 0;
+            });
+          } else if (sortBy === 'near-busstand') {
+            mapped.sort((a, b) => {
+              const aNear = hasKeyword(a, ['bus stand', 'busstand', 'bus stop', 'shrinagar bypass', 'roadways']);
+              const bNear = hasKeyword(b, ['bus stand', 'busstand', 'bus stop', 'shrinagar bypass', 'roadways']);
+              if (aNear && !bNear) return -1;
+              if (!aNear && bNear) return 1;
+              return 0;
+            });
+          }
+
           setHotels(mapped);
         }
       } catch (err) {
@@ -440,6 +522,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <option value="rating-desc">Top Rated</option>
                     <option value="price-asc">Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
+                    <option value="near-ramjhula">Near Ram Jhula</option>
+                    <option value="near-laxmanjhula">Near Laxman Jhula</option>
+                    <option value="near-yognagri">Near Yog Nagri Station</option>
+                    <option value="near-busstand">Near Bus Stand</option>
                   </select>
                 </div>
               </div>
@@ -497,11 +583,6 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               <h3 className="font-bold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-2" title={hotel.name}>
                                 {hotel.name}
                               </h3>
-                              {hotel.vendors?.name && (
-                                <span className="inline-block mt-1 text-[9px] bg-slate-50 border border-black/5 text-gray-500 font-bold px-1.5 py-0.5 rounded">
-                                  by {hotel.vendors.name}
-                                </span>
-                              )}
                             </div>
                           </div>
 
@@ -509,9 +590,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           <div className="flex justify-between items-start gap-4 pt-1 border-t border-gray-100/50">
                             {/* Left Column: Location & Room Details */}
                             <div className="space-y-2 flex-1 min-w-0">
-                              <p className="text-xs text-gray-500 font-semibold flex items-center gap-1">
-                                <MapPin size={12} className="text-[#FF5F00] shrink-0" />
-                                <span className="truncate">
+                              <p className="text-xs text-gray-500 font-semibold flex items-start gap-1">
+                                <MapPin size={12} className="text-[#FF5F00] shrink-0 mt-0.5" />
+                                <span className="break-words text-left">
                                   {hotel.address.replace(', Rishikesh', '')} {hotel.landmarks && hotel.landmarks[0] ? `| ${hotel.landmarks[0]}` : ''}
                                 </span>
                               </p>
@@ -557,20 +638,25 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           </div>
 
                           {/* Highlight Review Snippet */}
-                          {hotel.why_guests_love && hotel.why_guests_love[0] && (
-                            <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-3 flex items-start gap-2 text-xs text-black leading-relaxed">
-                              <Sparkles size={13} className="text-[#FF5F00] shrink-0 mt-0.5" />
-                              <p className="font-semibold text-gray-700 italic">
-                                "{hotel.why_guests_love[0]}"
-                              </p>
-                            </div>
-                          )}
+                          {hotel.why_guests_love && hotel.why_guests_love.length > 0 && (() => {
+                            const parsed = parseHighlight(hotel.why_guests_love[0]);
+                            if (!parsed.text) return null;
+                            const IconComponent = HIGHLIGHT_ICONS[parsed.icon] || Sparkles;
+                            return (
+                              <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-3 flex items-start gap-2 text-xs text-black leading-relaxed">
+                                <IconComponent size={13} className="text-[#FF5F00] shrink-0 mt-0.5" />
+                                <p className="font-semibold text-gray-700 italic text-left">
+                                  "{parsed.text}"
+                                </p>
+                              </div>
+                            );
+                          })()}
 
                           {/* Exclusive UPI Discount Banner */}
                           <div className="bg-black/5 border border-black/5 rounded-xl p-2.5 flex items-center justify-between text-[10px] text-gray-600 font-bold">
                             <div className="flex items-center gap-1.5">
                               <span className="w-4 h-4 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0 text-[#FF5F00] text-[9px] font-black">%</span>
-                              <span>Pay via UPI & get flat ₹150 instant discount</span>
+                              <span>Pay via UPI & get flat ₹{getUpiDiscountForHotel(hotel)} instant discount</span>
                             </div>
                           </div>
                         </div>
@@ -629,11 +715,6 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   {selectedHotel.is_limited_offer && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider rounded-md">
                       Limited Time Offer
-                    </span>
-                  )}
-                  {selectedHotel.vendors?.name && (
-                    <span className="text-[9px] bg-slate-50 border border-black/5 text-[#FF5F00] font-black px-2 py-0.5 rounded">
-                      Operator: {selectedHotel.vendors.name}
                     </span>
                   )}
                 </div>
@@ -845,7 +926,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Why Guests Love This Stay</h4>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {selectedHotel.why_guests_love.map((highlight, idx) => {
+                    {selectedHotel.why_guests_love.map((rawHighlight, idx) => {
+                      const highlight = parseHighlight(rawHighlight);
+                      if (!highlight.text) return null;
                       const IconComponent = HIGHLIGHT_ICONS[highlight.icon] || Star;
                       return (
                         <div key={idx} className="flex items-center gap-3 bg-white p-3.5 rounded-2xl border border-black/5 hover:border-[#FF5F00]/25 transition-all shadow-3xs group">
@@ -1150,6 +1233,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       payment_mode: hotelToBook.payment_mode,
                       commission_percentage: hotelToBook.commission_percentage,
                       fixed_advance_amount: hotelToBook.fixed_advance_amount,
+                      upi_discount: hotelToBook.upi_discount,
                       slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
                     });
                   }}
@@ -1197,6 +1281,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       payment_mode: hotelToBook.payment_mode,
                       commission_percentage: hotelToBook.commission_percentage,
                       fixed_advance_amount: hotelToBook.fixed_advance_amount,
+                      upi_discount: hotelToBook.upi_discount,
                       slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
                     });
                   }}

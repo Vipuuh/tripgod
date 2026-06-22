@@ -120,6 +120,24 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const amountToPayNow = effectivePaymentOption === 'full' ? totalPrice : calculatedAdvance;
   const remainingPayment = totalPrice - amountToPayNow;
 
+  // Calculate dynamic UPI Discount
+  const customUpiDiscount = activity.upi_discount !== undefined && activity.upi_discount !== null
+    ? Number(activity.upi_discount)
+    : null;
+
+  const getUPIDiscount = (price) => {
+    if (customUpiDiscount !== null && customUpiDiscount > 0) return customUpiDiscount;
+    const p = Number(price);
+    if (p <= 1000) return 50;
+    if (p <= 2000) return 120;
+    if (p <= 4000) return 150;
+    if (p <= 6000) return 210;
+    return 250;
+  };
+
+  const upiDiscountVal = getUPIDiscount(totalPrice);
+  const finalAmountToPay = Math.max(0, amountToPayNow - upiDiscountVal);
+
   const minDate = new Date().toISOString().split('T')[0];
   const isBikeRent = activity.category === 'bikerent';
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
@@ -149,7 +167,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
     const options = {
       key: "rzp_live_SwElxrZFXDUFIx",
-      amount: amountToPayNow * 100, // paise
+      amount: finalAmountToPay * 100, // paise
       currency: "INR",
       name: "TripGod Rishikesh",
       description: effectivePaymentOption === 'full' 
@@ -185,7 +203,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 ${hasVideoOption ? `*Add-ons:* DSLR Video Included\n` : ''}
 *Price Summary:*
 - Total Price: ₹${totalPrice.toLocaleString('en-IN')}
-- *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${amountToPayNow.toLocaleString('en-IN')}
+- *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${finalAmountToPay.toLocaleString('en-IN')} (UPI Discount of ₹${upiDiscountVal} applied)
 - ${effectivePaymentOption === 'full' ? 'Remaining Balance: ₹0 (Paid in Full)' : `Pay at Venue: ₹${remainingPayment.toLocaleString('en-IN')}`}
 ----------------------------------
 My payment ID is verified. Please confirm my slots.`;
@@ -207,7 +225,7 @@ My payment ID is verified. Please confirm my slots.`;
               subtotal: totalPrice
             }],
             totalPrice: totalPrice,
-            advancePaid: amountToPayNow,
+            advancePaid: finalAmountToPay,
             remainingPaid: remainingPayment
           };
           storedBookings.push(newBooking);
@@ -230,7 +248,7 @@ My payment ID is verified. Please confirm my slots.`;
             travel_date: activity.category === 'hotels' ? checkInDate : date,
             status: 'pending',
             payment_type: effectivePaymentOption === 'full' ? 'full_online' : 'advance_custom',
-            amount_paid: amountToPayNow,
+            amount_paid: finalAmountToPay,
             remaining_amount: remainingPayment,
             commission_earned: paymentMode === 'fixed_advance'
               ? Math.min(fixedAdvanceAmount, totalPrice)
@@ -259,7 +277,7 @@ My payment ID is verified. Please confirm my slots.`;
             slot: slot,
             guests: guests,
             totalPrice: totalPrice,
-            advancePaid: amountToPayNow,
+            advancePaid: finalAmountToPay,
             remainingPaid: remainingPayment,
             paymentId: paymentId,
             category: activity.category
@@ -649,17 +667,23 @@ My payment ID is verified. Please confirm my slots.`;
                   <span>Total price ({guests} {isBikeRent ? `vehicle${guests > 1 ? 's' : ''}` : `guest${guests > 1 ? 's' : ''}`})</span>
                   <span>₹{totalPrice.toLocaleString('en-IN')}</span>
                 </div>
+                <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                  <span>Online payment amount</span>
+                  <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-[#FF5F00] font-black">
+                  <span>UPI Instant Discount</span>
+                  <span>- ₹{upiDiscountVal.toLocaleString('en-IN')}</span>
+                </div>
                 <div className="h-px bg-emerald-500/20 my-1" />
                 
                 <div className="flex justify-between items-center text-sm font-black text-emerald-600">
                   <span className="flex items-center gap-1.5">
                     {effectivePaymentOption === 'full'
-                      ? 'Pay 100% Online Now'
-                      : (paymentMode === 'fixed_advance'
-                          ? 'Pay Flat Advance Now'
-                          : `Pay ${commissionPercentage}% Advance Now`)}
+                      ? 'Net Payable Online'
+                      : 'Net Advance Payable Online'}
                   </span>
-                  <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
+                  <span>₹{finalAmountToPay.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-emerald-900/80 font-bold">
                   <span>{effectivePaymentOption === 'full' ? 'Remaining Balance' : 'Remaining Balance (Pay at venue)'}</span>

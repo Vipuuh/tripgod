@@ -1772,13 +1772,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         attractions: data.attractions || [],
         is_verified: data.is_verified !== undefined ? !!data.is_verified : true,
         bookings_count: data.bookings_count !== null && data.bookings_count !== undefined ? Number(data.bookings_count) : 18,
-        popular_badge_text: data.popular_badge_text || '18 bookings this week',
         property_type: data.property_type || 'Hotel',
         room_type: data.room_type || 'Deluxe Double Room',
         best_for: data.best_for || [],
         perfect_for: data.perfect_for || [],
         benefits: data.benefits || [],
-        phone_number: data.phone_number || '+919837371137',
+        upi_discount: data.upi_discount !== null && data.upi_discount !== undefined ? Number(data.upi_discount) : null,
         featured_image: data.featured_image || '',
         payment_mode: data.payment_mode || 'commission_advance',
         fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : ''
@@ -1822,7 +1821,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.attractions = [];
         defaults.is_verified = true;
         defaults.bookings_count = 18;
-        defaults.popular_badge_text = '18 bookings this week';
         defaults.property_type = 'Hotel';
         defaults.room_type = 'Deluxe Double Room';
         defaults.best_for = ['Family Friendly', 'Couples Welcome', 'Backpackers'];
@@ -1835,7 +1833,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           { icon: 'ShieldCheck', title: 'Verified Partners', desc: 'Every stay is handpicked and verified' },
           { icon: 'CircleDollarSign', title: 'Best Price Guarantee', desc: 'Find it cheaper? We match the price!' }
         ];
-        defaults.phone_number = '+919837371137';
+        defaults.upi_discount = null;
         defaults.featured_image = '';
       } else if (['rafting', 'adventures'].includes(type)) {
         defaults.activity_type = 'rafting';
@@ -2180,6 +2178,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null || formData.fixed_advance_amount === undefined ? null : Number(formData.fixed_advance_amount)) : null,
         is_limited_offer: !!formData.is_limited_offer
       };
+      if (type === 'hotels') {
+        delete submitData.phone_number;
+        delete submitData.popular_badge_text;
+      }
       if (data) {
         // Edit Row
         const { error } = await supabase.from(type).update(submitData).eq('id', data.id);
@@ -2231,7 +2233,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </select>
         </div>
 
-        {!['rafting', 'adventures', 'bikes', 'tours'].includes(type) && (
+        {!['rafting', 'adventures', 'bikes', 'tours', 'hotels'].includes(type) && (
           <div className="space-y-1">
             <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Partner Vendor</label>
             <select
@@ -2536,13 +2538,15 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Direct Phone (Sticky Bar)</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Custom UPI Discount (INR)</label>
               <input
-                type="text"
-                value={formData.phone_number || '+919837371137'}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone_number: e.target.value }))}
+                type="number"
+                min="0"
+                placeholder="Leave blank for tier default"
+                value={formData.upi_discount === undefined || formData.upi_discount === null ? '' : formData.upi_discount}
+                onChange={(e) => setFormData(prev => ({ ...prev, upi_discount: e.target.value === '' ? null : Number(e.target.value) }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
               />
             </div>
@@ -2554,16 +2558,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 placeholder="Defaults to first image if blank"
                 value={formData.featured_image || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, featured_image: e.target.value }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Popular Badge Text</label>
-              <input
-                type="text"
-                value={formData.popular_badge_text || '18 bookings this week'}
-                onChange={(e) => setFormData(prev => ({ ...prev, popular_badge_text: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
               />
             </div>

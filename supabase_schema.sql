@@ -276,3 +276,12 @@ CREATE POLICY "Allow authenticated write on homepage_sections"
 
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
+
+-- Add upi_discount to hotels, rafting, bikes, and tours
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
