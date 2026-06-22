@@ -253,3 +253,26 @@ ALTER TABLE tours ADD COLUMN IF NOT EXISTS fixed_advance_amount NUMERIC DEFAULT 
 NOTIFY pgrst, 'reload schema';
 
 
+
+-- ===========================================================================
+-- HOMEPAGE SECTIONS TABLE (Admin-curated homepage listings)
+-- ===========================================================================
+CREATE TABLE IF NOT EXISTS homepage_sections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  section TEXT NOT NULL,           -- 'hotels', 'tours', 'bikes', 'adventures'
+  item_id UUID NOT NULL,           -- references the item in its respective table
+  item_type TEXT NOT NULL,         -- mirrors section (for future use)
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+ALTER TABLE homepage_sections ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read on homepage_sections"
+  ON homepage_sections FOR SELECT USING (true);
+
+CREATE POLICY "Allow authenticated write on homepage_sections"
+  ON homepage_sections FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';

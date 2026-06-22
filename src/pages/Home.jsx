@@ -4,9 +4,11 @@ import {
   Waves, Zap, Compass, Milestone, 
   ArrowRight, ShieldCheck, CreditCard, 
   Star, MessageSquare, Lock, PhoneCall, ChevronDown,
-  Calendar, Users, Clock, Activity, MapPin, Building2, Bike, Car, MapPinned, Mountain, Hotel, Ship
+  Calendar, Users, Clock, Activity, MapPin, Building2, Bike, Car, MapPinned, Mountain, Hotel, Ship,
+  Handshake
 } from 'lucide-react';
 import CountUp from '../components/CountUp';
+import { supabase } from '../supabase';
 
 
 const RaftingIcon = (props) => (
@@ -428,6 +430,89 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     return () => clearInterval(interval);
   }, [isHoveringReviews, reviews.length]);
 
+  // Fetch admin-curated homepage sections from Supabase
+  const [featuredHotels, setFeaturedHotels] = useState(null);
+  const [featuredTours, setFeaturedTours] = useState(null);
+  const [featuredBikes, setFeaturedBikes] = useState(null);
+
+  useEffect(() => {
+    const fetchHomepageSections = async () => {
+      try {
+        // Fetch all curated sections
+        const { data: sections, error } = await supabase
+          .from('homepage_sections')
+          .select('*')
+          .order('display_order', { ascending: true });
+        if (error) throw error;
+        if (!sections || sections.length === 0) return;
+
+        // Hotels
+        const hotelIds = sections.filter(s => s.section === 'hotels').map(s => s.item_id);
+        if (hotelIds.length > 0) {
+          const { data: hotelsData } = await supabase
+            .from('hotels')
+            .select('id, name, price, images, rating, reviews_count, address')
+            .in('id', hotelIds);
+          if (hotelsData && hotelsData.length > 0) {
+            const ordered = hotelIds.map(id => hotelsData.find(h => h.id === id)).filter(Boolean);
+            setFeaturedHotels(ordered.map(h => ({
+              id: h.id,
+              name: h.name,
+              price: Number(h.price),
+              img: h.images && h.images[0] ? h.images[0] : '/aloha_resort.png',
+              rating: h.rating ? Number(h.rating) : 4.5,
+              reviewsCount: h.reviews_count ? Number(h.reviews_count) : 100,
+              location: h.address || 'Rishikesh'
+            })));
+          }
+        }
+
+        // Tours
+        const tourIds = sections.filter(s => s.section === 'tours').map(s => s.item_id);
+        if (tourIds.length > 0) {
+          const { data: toursData } = await supabase
+            .from('tours')
+            .select('id, name, price, images, duration')
+            .in('id', tourIds);
+          if (toursData && toursData.length > 0) {
+            const ordered = tourIds.map(id => toursData.find(t => t.id === id)).filter(Boolean);
+            setFeaturedTours(ordered.map(t => ({
+              id: t.id,
+              name: t.name,
+              price: Number(t.price),
+              img: t.images && t.images[0] ? t.images[0] : '/kedarnath_temple.png',
+              duration: t.duration || '5 Days',
+              rating: 4.9,
+              reviewsCount: 100
+            })));
+          }
+        }
+
+        // Bikes
+        const bikeIds = sections.filter(s => s.section === 'bikes').map(s => s.item_id);
+        if (bikeIds.length > 0) {
+          const { data: bikesData } = await supabase
+            .from('bikes')
+            .select('id, name, price, images, description')
+            .in('id', bikeIds);
+          if (bikesData && bikesData.length > 0) {
+            const ordered = bikeIds.map(id => bikesData.find(b => b.id === id)).filter(Boolean);
+            setFeaturedBikes(ordered.map(b => ({
+              id: b.id,
+              name: b.name,
+              price: Number(b.price),
+              img: b.images && b.images[0] ? b.images[0] : '/scooty-rent.jpg',
+              type: b.description || 'Motorcycle'
+            })));
+          }
+        }
+      } catch (err) {
+        console.warn('Homepage sections fetch failed, using static data:', err);
+      }
+    };
+    fetchHomepageSections();
+  }, []);
+
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-[#FAF8F5] via-[#F3F5F6] to-[#FAF8F5] text-black">
       {/* 1. Hero Section */}
@@ -528,7 +613,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight font-display tracking-tight uppercase"
           >
-            STAY, RIDE & EXPLORE <br />
+            STAY, RIDE & ADVENTURE <br />
             IN <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF7A00] to-[#FF3E00] drop-shadow-[0_2px_10px_rgba(255,95,0,0.2)] font-black">RISHIKESH</span>
           </motion.h1>
 
@@ -538,7 +623,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm md:text-base leading-relaxed font-medium px-4"
           >
-            Rishikesh's most trusted holiday booking platform. Book verified hotels, Char Dham tours, bike rentals, and adventure sports with <strong className="text-[#FF6B00]">token advance booking</strong> and <strong className="text-white">100% refund guarantee</strong>.
+            From riverside stays to the holy Char Dham yatra. Book trusted local vendors instantly. Pay just a <strong className="text-[#FF6B00]">token advance</strong> today, <strong className="text-white">zero stress tomorrow</strong>.
           </motion.p>
 
           <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-stretch md:items-center px-4">
@@ -867,11 +952,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
           >
-            {[
+            {(featuredHotels || [
               {
                 id: 'aloha',
                 name: 'Aloha On The Ganges',
-                desc: 'Luxurious resort nestled in the foothills of Himalayas, offering stunning Ganges view, spa, and yoga retreats.',
                 price: 7500,
                 img: '/aloha_resort.png',
                 rating: 4.8,
@@ -881,7 +965,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               {
                 id: 'ganga-kinare',
                 name: 'Ganga Kinare Resort',
-                desc: 'Premium riverside boutique hotel offering direct access to the private ghat, ganga aarti, and organic dining.',
                 price: 5500,
                 img: '/ganga_kinare.png',
                 rating: 4.7,
@@ -891,14 +974,13 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               {
                 id: 'divine',
                 name: 'Divine Resort & Spa',
-                desc: 'Perched on a high cliff overlooking Laxman Jhula with breathtaking panoramic views and a multi-cuisine restaurant.',
                 price: 4800,
                 img: '/divine_resort.png',
                 rating: 4.6,
                 reviewsCount: 195,
                 location: 'Laxman Jhula Road, Tapovan'
               }
-            ].map((hotel, idx) => (
+            ]).map((hotel, idx) => (
               <motion.div
                 key={idx}
                 variants={fadeInUp}
@@ -913,25 +995,21 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
+                <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5 text-xs text-[#FF5F00] font-black">
                       <Star size={12} fill="#FF5F00" />
                       <span>{hotel.rating}</span>
                       <span className="text-gray-400 font-bold">({hotel.reviewsCount} reviews)</span>
                     </div>
-                    <h3 className="font-bold text-lg font-display text-black">{hotel.name}</h3>
+                    <h3 className="font-bold text-base font-display text-black leading-snug">{hotel.name}</h3>
                     <p className="text-xs text-gray-500 font-bold flex items-center gap-1"><MapPin size={11} className="text-[#FF5F00]" /> {hotel.location}</p>
-                    <p className="text-xs text-gray-600 font-medium leading-relaxed pt-1">{hotel.desc}</p>
                   </div>
 
-                  <div className="pt-4 border-t border-black/5 mt-4">
+                  <div className="pt-3 border-t border-black/5">
                     <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRoute('hotels');
-                      }}
-                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                      onClick={(e) => { e.stopPropagation(); setRoute('hotels'); }}
+                      className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
                     >
                       View Stays
                     </button>
@@ -984,27 +1062,21 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 </div>
               </div>
 
-              {/* Text content */}
-              <div className="p-3 sm:p-6 flex-1 flex flex-col justify-between space-y-3 sm:space-y-4">
-                <div className="space-y-1 sm:space-y-2">
-                  <h3 className="text-sm sm:text-xl font-bold font-display tracking-tight text-black group-hover:text-[#FF5F00] transition-colors truncate">
+              {/* Text content — compact, no description */}
+              <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm sm:text-lg font-bold font-display tracking-tight text-black group-hover:text-[#FF5F00] transition-colors">
                     {act.name}
                   </h3>
-                  <p className="text-[10px] sm:text-sm text-gray-600 leading-relaxed font-medium line-clamp-2 sm:line-clamp-none">
-                    {act.desc}
-                  </p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-black/5">
-                  <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-black flex items-center gap-1 group-hover:text-[#FF5F00] group-hover:underline decoration-accent decoration-2">
-                    Details <ArrowRight size={10} className="sm:hidden" /> <ArrowRight size={14} className="hidden sm:inline" />
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-black/5">
+                  <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-black flex items-center gap-1 group-hover:text-[#FF5F00]">
+                    Details <ArrowRight size={12} />
                   </span>
                   <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRoute(act.route);
-                    }}
-                    className="w-full sm:w-auto py-1.5 sm:py-2.5 px-2 sm:px-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-[9px] sm:text-xs font-black uppercase rounded-lg hover:shadow-[0_4px_15px_rgba(255,95,0,0.4)] transition-all duration-300 hover:scale-[1.02] border-none text-center cursor-pointer font-display"
+                    onClick={(e) => { e.stopPropagation(); setRoute(act.route); }}
+                    className="py-1.5 sm:py-2 px-3 sm:px-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-[9px] sm:text-xs font-black uppercase rounded-lg hover:shadow-[0_4px_15px_rgba(255,95,0,0.4)] transition-all border-none cursor-pointer font-display"
                   >
                     Book Now
                   </button>
@@ -1039,11 +1111,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-2 gap-8"
           >
-            {[
+            {(featuredTours || [
               {
                 id: 'dodham',
                 name: 'Do Dham Yatra (Kedarnath & Badrinath)',
-                desc: 'A complete pilgrimage package covering Yamunotri & Gangotri, or Kedarnath & Badrinath. Includes luxury transport, VIP Darshan slips, premium hotel stays, and expert local guides.',
                 price: 18500,
                 duration: '5 Days / 4 Nights',
                 img: '/badrinath_temple.png',
@@ -1053,14 +1124,13 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               {
                 id: 'chardham',
                 name: 'Complete Char Dham Yatra Tour',
-                desc: 'The ultimate sacred spiritual yatra to Yamunotri, Gangotri, Kedarnath, and Badrinath. Fully managed transfers, helicopter booking options, medical assistance, and premium lodging.',
                 price: 32000,
                 duration: '10 Days / 9 Nights',
                 img: '/kedarnath_temple.png',
                 rating: 4.9,
                 reviewsCount: 215
               }
-            ].map((tour, idx) => (
+            ]).map((tour, idx) => (
               <motion.div
                 key={idx}
                 variants={fadeInUp}
@@ -1075,27 +1145,23 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
+                <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5 text-xs text-[#FF5F00] font-black">
                       <Star size={12} fill="#FF5F00" />
                       <span>{tour.rating}</span>
                       <span className="text-gray-400 font-bold">({tour.reviewsCount} reviews)</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-lg font-display text-black">{tour.name}</h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-bold text-base font-display text-black leading-snug">{tour.name}</h3>
                       <span className="text-[10px] bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded shrink-0">{tour.duration}</span>
                     </div>
-                    <p className="text-xs text-gray-600 font-medium leading-relaxed pt-1">{tour.desc}</p>
                   </div>
 
-                  <div className="pt-4 border-t border-black/5 mt-4">
+                  <div className="pt-3 border-t border-black/5">
                     <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRoute('tours');
-                      }}
-                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                      onClick={(e) => { e.stopPropagation(); setRoute('tours'); }}
+                      className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
                     >
                       Explore Tours
                     </button>
@@ -1132,7 +1198,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             viewport={{ once: true, margin: "-80px" }}
             className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-6 overflow-x-auto pt-5 pb-4 md:pb-0 no-scrollbar snap-x snap-mandatory"
           >
-            {rentalBikes.map((bike, idx) => (
+            {(featuredBikes || rentalBikes).map((bike, idx) => (
               <motion.div
                 key={idx}
                 variants={fadeInUp}
@@ -1153,16 +1219,15 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
+                <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-1">
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
                       {bike.type}
                     </span>
-                    <h3 className="font-bold text-lg font-display text-black">{bike.name}</h3>
-                    <p className="text-xs text-gray-600 font-medium leading-relaxed">{bike.spec}</p>
+                    <h3 className="font-bold text-base font-display text-black">{bike.name}</h3>
                   </div>
 
-                  <div className="pt-4 border-t border-black/5 mt-4">
+                  <div className="pt-3 border-t border-black/5">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1174,7 +1239,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                           slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent']
                         });
                       }}
-                      className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                      className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
                     >
                       Book Rental
                     </button>
@@ -1307,6 +1372,36 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* VENDOR ONBOARDING BANNER */}
+      <div className="bg-black py-16 border-y border-white/10 relative overflow-hidden">
+        {/* Subtle orange glow */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FF5F00]/5 via-transparent to-[#FF5F00]/5 pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0">
+              <Handshake size={26} className="text-[#FF5F00]" />
+            </div>
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black text-white font-display leading-tight">
+                Own a Hotel, Bikes, or Rafting Business in Rishikesh?
+              </h3>
+              <p className="text-gray-400 text-sm font-medium mt-1">
+                Grow your bookings with TripGod. Join 50+ verified local vendors on the platform.
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://wa.me/919837371137?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 px-8 py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-sm uppercase tracking-widest rounded-full shadow-[0_8px_30px_rgba(255,95,0,0.35)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.5)] hover:scale-105 transition-all border-none cursor-pointer flex items-center gap-2"
+          >
+            <Handshake size={16} />
+            Partner With Us
+          </a>
         </div>
       </div>
 

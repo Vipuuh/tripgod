@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ShoppingBag, Search, LogIn, MessageSquare, X, 
+  BookOpen, Search, LogIn, MessageSquare, X, 
   MapPin, Phone, Mail, ChevronRight, Waves, Bike, Car, Building2, User,
-  MapPinned, ShieldCheck
+  MapPinned, ShieldCheck, Lock
 } from 'lucide-react';
 import { supabase } from './supabase';
 
@@ -267,17 +267,13 @@ export default function App() {
               <Search size={18} className="sm:w-[20px] sm:h-[20px]" />
             </button>
 
-            {/* Cart Trigger */}
+            {/* My Bookings Trigger */}
             <button 
-              onClick={() => setIsCartOpen(true)}
+              onClick={() => userLoggedIn ? setIsAccountOpen(true) : setIsLoginOpen(true)}
               className="p-1.5 sm:p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
+              title="My Bookings"
             >
-              <ShoppingBag size={18} className="sm:w-[20px] sm:h-[20px]" />
-              {cart.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-black text-accent border border-white text-[8px] sm:text-[10px] font-black rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center">
-                  {cart.length}
-                </span>
-              )}
+              <BookOpen size={18} className="sm:w-[20px] sm:h-[20px]" />
             </button>
 
             {/* Login Button */}
@@ -401,6 +397,34 @@ export default function App() {
             <button onClick={() => navigateTo('privacy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
             <button onClick={() => navigateTo('terms')} className="hover:text-white transition-colors cursor-pointer">Terms & Conditions</button>
             <button onClick={() => navigateTo('refund')} className="hover:text-white transition-colors cursor-pointer">Refund & Cancellation Policy</button>
+          </div>
+        </div>
+
+        {/* Secure Payments Row */}
+        <div className="max-w-6xl mx-auto px-6 pt-8 mt-8 border-t border-white/5">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex items-center gap-1.5 text-gray-500 text-[10px] font-black uppercase tracking-widest shrink-0">
+              <Lock size={11} className="text-[#FF5F00]" />
+              <span>Secure Payments</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {[
+                { label: 'UPI', color: '#6B21A8' },
+                { label: 'Google Pay', color: '#1a73e8' },
+                { label: 'BHIM', color: '#00529B' },
+                { label: 'Visa', color: '#1a1f71' },
+                { label: 'Mastercard', color: '#EB001B' },
+                { label: 'Amex', color: '#016FD0' },
+                { label: 'Razorpay', color: '#3395FF' }
+              ].map(pm => (
+                <span
+                  key={pm.label}
+                  className="px-2.5 py-1 bg-white/10 border border-white/15 text-white text-[9px] font-black tracking-wider rounded-md whitespace-nowrap"
+                >
+                  {pm.label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </footer>

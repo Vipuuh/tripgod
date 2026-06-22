@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, ShoppingBag, Building2, Waves, Bike, MapPin, Users, Image, 
   Trash2, Edit, Plus, LogOut, Search, Filter, ShieldCheck, ChevronRight,
-  TrendingUp, CircleDollarSign, Check, X, PlusCircle, Sparkles, MapPinned
+  TrendingUp, CircleDollarSign, Check, X, PlusCircle, Sparkles, MapPinned,
+  LayoutDashboard, GripVertical, Star
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -462,7 +463,8 @@ export default function AdminDashboard({ setRoute }) {
               { id: 'tours', label: 'Tour Packages', icon: MapPinned },
               { id: 'cities', label: 'Cities List', icon: MapPin },
               { id: 'vendors', label: 'Vendors DB', icon: Users },
-              { id: 'media', label: 'Media Library', icon: Image }
+              { id: 'media', label: 'Media Library', icon: Image },
+              { id: 'homepage', label: 'Manage Homepage', icon: LayoutDashboard }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -1308,6 +1310,11 @@ export default function AdminDashboard({ setRoute }) {
             </div>
           )}
 
+          {/* MANAGE HOMEPAGE TAB */}
+          {activeTab === 'homepage' && (
+            <HomepageManager hotels={hotels} toursList={toursList} bikesList={bikesList} />
+          )}
+
         </div>
       </main>
 
@@ -1356,6 +1363,282 @@ export default function AdminDashboard({ setRoute }) {
         )}
       </AnimatePresence>
 
+    </div>
+  );
+}
+
+// =============================================================================
+// SUB-COMPONENT: HOMEPAGE MANAGER
+// =============================================================================
+function HomepageManager({ hotels, toursList, bikesList }) {
+  const [sections, setSections] = useState({
+    hotels: [],
+    tours: [],
+    bikes: []
+  });
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [searchTerms, setSearchTerms] = useState({ hotels: '', tours: '', bikes: '' });
+
+  // Fetch existing homepage_sections from Supabase on mount
+  useEffect(() => {
+    const fetchSections = async () => {
+      setLoading(true);
+      try {
+        const { data: rows, error } = await supabase
+          .from('homepage_sections')
+          .select('*')
+          .order('display_order', { ascending: true });
+        if (error) throw error;
+
+        const grouped = { hotels: [], tours: [], bikes: [] };
+        (rows || []).forEach(row => {
+          if (grouped[row.section]) {
+            grouped[row.section].push(row.item_id);
+          }
+        });
+        setSections(grouped);
+      } catch (err) {
+        console.error('Failed to fetch homepage sections:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSections();
+  }, []);
+
+  const toggleItem = (sectionKey, itemId) => {
+    setSections(prev => {
+      const current = prev[sectionKey];
+      const exists = current.includes(itemId);
+      return {
+        ...prev,
+        [sectionKey]: exists ? current.filter(id => id !== itemId) : [...current, itemId]
+      };
+    });
+    setSaved(false);
+  };
+
+  const moveItem = (sectionKey, fromIdx, toIdx) => {
+    setSections(prev => {
+      const arr = [...prev[sectionKey]];
+      const [moved] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, moved);
+      return { ...prev, [sectionKey]: arr };
+    });
+    setSaved(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // Delete all existing rows and re-insert
+      const { error: deleteError } = await supabase
+        .from('homepage_sections')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
+      if (deleteError) throw deleteError;
+
+      const toInsert = [];
+      Object.entries(sections).forEach(([sectionKey, ids]) => {
+        ids.forEach((itemId, idx) => {
+          toInsert.push({
+            section: sectionKey,
+            item_id: itemId,
+            item_type: sectionKey,
+            display_order: idx
+          });
+        });
+      });
+
+      if (toInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('homepage_sections')
+          .insert(toInsert);
+        if (insertError) throw insertError;
+      }
+
+      setSaved(true);
+    } catch (err) {
+      alert('Save failed: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const sectionConfig = [
+    {
+      key: 'hotels',
+      label: 'Featured Hotels',
+      icon: Building2,
+      items: hotels || [],
+      getLabel: (item) => item.name,
+      getPrice: (item) => `₹${item.price || 0}/night`,
+      getImg: (item) => item.images?.[0] || null
+    },
+    {
+      key: 'tours',
+      label: 'Featured Tours',
+      icon: MapPinned,
+      items: (() => {
+        const seen = new Set();
+        return (toursList || []).filter(t => {
+          if (seen.has(t.name)) return false;
+          seen.add(t.name);
+          return true;
+        });
+      })(),
+      getLabel: (item) => item.name,
+      getPrice: (item) => `₹${item.price || 0}/person`,
+      getImg: (item) => item.images?.[0] || null
+    },
+    {
+      key: 'bikes',
+      label: 'Featured Bikes',
+      icon: Bike,
+      items: (() => {
+        const seen = new Set();
+        return (bikesList || []).filter(b => {
+          if (seen.has(b.name)) return false;
+          seen.add(b.name);
+          return true;
+        });
+      })(),
+      getLabel: (item) => item.name,
+      getPrice: (item) => `₹${item.price || 0}/day`,
+      getImg: (item) => item.images?.[0] || null
+    }
+  ];
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64 text-slate-400 text-sm font-bold">
+      Loading homepage settings...
+    </div>
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black text-white uppercase tracking-tight">Manage Homepage</h2>
+          <p className="text-slate-400 text-xs mt-1">Select and order the items that appear on the homepage. Changes are saved to Supabase.</p>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all disabled:opacity-60 border-none cursor-pointer"
+        >
+          {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save All Sections'}
+        </button>
+      </div>
+
+      {sectionConfig.map(({ key, label, icon: Icon, items, getLabel, getPrice, getImg }) => {
+        const selectedIds = sections[key];
+        const searchTerm = searchTerms[key].toLowerCase();
+        const filteredItems = items.filter(item => getLabel(item).toLowerCase().includes(searchTerm));
+
+        return (
+          <div key={key} className="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-5">
+            {/* Section Header */}
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-4">
+              <div className="w-8 h-8 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded-lg flex items-center justify-center">
+                <Icon size={14} className="text-[#FF5F00]" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-white uppercase tracking-wide">{label}</h3>
+                <p className="text-[10px] text-slate-500 font-semibold">{selectedIds.length} selected · will appear on homepage in this order</p>
+              </div>
+            </div>
+
+            {/* Selected Items — ordered preview */}
+            {selectedIds.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Display Order (drag to reorder)</p>
+                <div className="space-y-1.5">
+                  {selectedIds.map((id, idx) => {
+                    const item = items.find(i => i.id === id);
+                    if (!item) return null;
+                    return (
+                      <div key={id} className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 group">
+                        <GripVertical size={14} className="text-slate-600 shrink-0" />
+                        <span className="text-[10px] font-black text-[#FF5F00] w-4 shrink-0">{idx + 1}</span>
+                        {getImg(item) && (
+                          <img src={getImg(item)} alt={getLabel(item)} className="w-8 h-8 rounded-lg object-cover border border-slate-800 shrink-0" />
+                        )}
+                        <span className="text-xs font-bold text-white flex-1 truncate">{getLabel(item)}</span>
+                        <span className="text-[10px] text-slate-400 font-bold shrink-0">{getPrice(item)}</span>
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            onClick={() => moveItem(key, idx, Math.max(0, idx - 1))}
+                            disabled={idx === 0}
+                            className="px-1.5 py-0.5 text-slate-500 hover:text-white text-[10px] font-black border border-slate-800 rounded cursor-pointer disabled:opacity-30"
+                          >↑</button>
+                          <button
+                            onClick={() => moveItem(key, idx, Math.min(selectedIds.length - 1, idx + 1))}
+                            disabled={idx === selectedIds.length - 1}
+                            className="px-1.5 py-0.5 text-slate-500 hover:text-white text-[10px] font-black border border-slate-800 rounded cursor-pointer disabled:opacity-30"
+                          >↓</button>
+                          <button
+                            onClick={() => toggleItem(key, id)}
+                            className="px-1.5 py-0.5 text-red-400 hover:text-red-300 text-[10px] font-black border border-red-900/40 rounded cursor-pointer"
+                          >✕</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Search & Item list */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2">
+                <Search size={13} className="text-slate-500 shrink-0" />
+                <input
+                  type="text"
+                  placeholder={`Search ${label}...`}
+                  value={searchTerms[key]}
+                  onChange={(e) => setSearchTerms(prev => ({ ...prev, [key]: e.target.value }))}
+                  className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 border-none focus:outline-none"
+                />
+              </div>
+
+              <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+                {filteredItems.length === 0 && (
+                  <p className="text-slate-500 text-xs text-center py-6">No items found</p>
+                )}
+                {filteredItems.map(item => {
+                  const isSelected = selectedIds.includes(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => toggleItem(key, item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors border cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#FF5F00]/10 border-[#FF5F00]/30 text-white'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
+                      }`}
+                    >
+                      {getImg(item) && (
+                        <img src={getImg(item)} alt={getLabel(item)} className="w-7 h-7 rounded-lg object-cover border border-slate-800 shrink-0" />
+                      )}
+                      <span className="flex-1 text-xs font-bold truncate">{getLabel(item)}</span>
+                      <span className="text-[10px] text-slate-500 font-bold shrink-0">{getPrice(item)}</span>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected ? 'bg-[#FF5F00] border-[#FF5F00]' : 'border-slate-700'
+                      }`}>
+                        {isSelected && <Check size={10} className="text-white" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
