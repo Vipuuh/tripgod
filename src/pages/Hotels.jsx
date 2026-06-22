@@ -67,6 +67,103 @@ const getMapsEmbedUrl = (mapsLink, address) => {
   return `https://maps.google.com/maps?q=${encodeURIComponent(cleanLink)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 };
 
+// Airbnb-Style Image Carousel Sub-component
+function HotelCardCarousel({ images, hotelName, onSelect }) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const prevSlide = (e) => {
+    e.stopPropagation();
+    setCurrentIdx((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const nextSlide = (e) => {
+    e.stopPropagation();
+    setCurrentIdx((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      setCurrentIdx((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    } else if (isRightSwipe) {
+      setCurrentIdx((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    }
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
+  const fallbacks = [
+    'https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=600',
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600'
+  ];
+  const displayImages = images && images.length > 0 ? images : fallbacks;
+
+  return (
+    <div 
+      className="h-48 bg-gray-100 overflow-hidden relative group/carousel select-none cursor-pointer"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onClick={onSelect}
+    >
+      {/* Images container */}
+      <div className="w-full h-full relative">
+        <img 
+          src={displayImages[currentIdx]} 
+          alt={`${hotelName} view ${currentIdx + 1}`} 
+          className="w-full h-full object-cover transition-all duration-300" 
+        />
+      </div>
+
+      {/* Navigation Chevrons */}
+      {displayImages.length > 1 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-black flex items-center justify-center border-none shadow cursor-pointer transition-all opacity-0 group-hover/carousel:opacity-100 z-10 hover:scale-105"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-black flex items-center justify-center border-none shadow cursor-pointer transition-all opacity-0 group-hover/carousel:opacity-100 z-10 hover:scale-105"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </>
+      )}
+
+      {/* Dots Indicator */}
+      {displayImages.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          {displayImages.slice(0, 5).map((_, idx) => (
+            <div
+              key={idx}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${
+                currentIdx === idx ? 'bg-white scale-125' : 'bg-white/50'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Hotels({ currentCity, openBookingModal }) {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +174,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [wishlistedHotels, setWishlistedHotels] = useState({});
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [shareFeedback, setShareFeedback] = useState(false);
+  const [sortBy, setSortBy] = useState('rating-desc');
 
   // Swipe gesture support for gallery
   const [touchStart, setTouchStart] = useState(null);
@@ -103,6 +201,96 @@ export default function Hotels({ currentCity, openBookingModal }) {
     }
   };
 
+  // Direct dynamic routing mount and back/forward browser history sync
+  useEffect(() => {
+    const handleRouteSync = async () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/hotels/')) {
+        const hotelId = path.substring('/hotels/'.length);
+        if (selectedHotel && selectedHotel.id === hotelId) {
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('hotels')
+            .select('*, vendors(*)')
+            .eq('id', hotelId)
+            .single();
+
+          if (error) throw error;
+          if (data) {
+            const mapped = {
+              id: data.id,
+              name: data.name,
+              description: data.description,
+              price: Number(data.price),
+              original_price: data.original_price ? Number(data.original_price) : null,
+              address: data.address,
+              maps_link: data.maps_link,
+              check_in: data.check_in,
+              check_out: data.check_out,
+              cancellation_policy: data.cancellation_policy,
+              images: data.images && data.images.length > 0 ? data.images : [
+                'https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=1200',
+                'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'
+              ],
+              amenities: typeof data.amenities === 'string' ? JSON.parse(data.amenities) : (data.amenities || {}),
+              rules: typeof data.rules === 'string' ? JSON.parse(data.rules) : (data.rules || {}),
+              landmarks: data.landmarks || [],
+              city_id: data.city_id,
+              vendor_id: data.vendor_id,
+              vendors: data.vendors,
+              rating: data.rating !== null && data.rating !== undefined ? Number(data.rating) : 4.5,
+              reviewsCount: data.reviews_count !== null && data.reviews_count !== undefined ? Number(data.reviews_count) : 100,
+              is_limited_offer: !!data.is_limited_offer,
+              why_guests_love: data.why_guests_love || [],
+              rooms_left: data.rooms_left !== null && data.rooms_left !== undefined ? Number(data.rooms_left) : 5,
+              high_demand: !!data.high_demand,
+              attractions: Array.isArray(data.attractions) ? data.attractions : [],
+              is_verified: data.is_verified !== undefined ? !!data.is_verified : true,
+              bookings_count: data.bookings_count !== null && data.bookings_count !== undefined ? Number(data.bookings_count) : 18,
+              popular_badge_text: data.popular_badge_text || '18 bookings this week',
+              property_type: data.property_type || 'Hotel',
+              room_type: data.room_type || 'Deluxe Double Room',
+              best_for: data.best_for || [],
+              perfect_for: data.perfect_for || [],
+              benefits: data.benefits || [],
+              phone_number: data.phone_number || '+919837371137',
+              whatsapp_number: data.whatsapp_number || '919837371137',
+              featured_image: data.featured_image || '',
+              payment_mode: data.payment_mode || 'commission_advance',
+              commission_percentage: data.commission_percentage !== null && data.commission_percentage !== undefined ? Number(data.commission_percentage) : 10,
+              fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? Number(data.fixed_advance_amount) : 0
+            };
+            setSelectedHotel(mapped);
+            setActiveImgIdx(0);
+            setIsDescExpanded(false);
+          }
+        } catch (err) {
+          console.error('Error fetching dynamic single hotel:', err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setSelectedHotel(null);
+      }
+    };
+
+    handleRouteSync();
+    window.addEventListener('popstate', handleRouteSync);
+    return () => window.removeEventListener('popstate', handleRouteSync);
+  }, []);
+
+  const handleSelectHotel = (hotel) => {
+    window.history.pushState(null, '', `/hotels/${hotel.id}`);
+    setSelectedHotel(hotel);
+    setActiveImgIdx(0);
+    setIsDescExpanded(false);
+    window.scrollTo(0, 0);
+  };
+
   useEffect(() => {
     const fetchHotels = async () => {
       setLoading(true);
@@ -112,6 +300,15 @@ export default function Hotels({ currentCity, openBookingModal }) {
         
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
+        }
+
+        // Apply sorting
+        if (sortBy === 'price-asc') {
+          query = query.order('price', { ascending: true });
+        } else if (sortBy === 'price-desc') {
+          query = query.order('price', { ascending: false });
+        } else if (sortBy === 'rating-desc') {
+          query = query.order('rating', { ascending: false });
         }
         
         const { data, error } = await query;
@@ -172,7 +369,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
     };
 
     fetchHotels();
-  }, [currentCity]);
+  }, [currentCity, sortBy]);
 
   const handleContactWhatsApp = () => {
     const text = encodeURIComponent(`*ENQUIRY ABOUT STAYS - TRIPGOD*\nHello! I am planning a trip to Rishikesh and want to book accommodations. Please let me know what options are available.`);
@@ -225,28 +422,48 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </p>
               </div>
 
+              {/* Sorting Controls */}
+              <div className="flex justify-end items-center max-w-6xl mx-auto px-6 -mb-6">
+                <div className="flex items-center gap-2 bg-white border border-black/10 rounded-xl px-3.5 py-2 shadow-sm">
+                  <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">Sort By:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-transparent border-none text-xs font-bold text-black focus:outline-none focus:ring-0 cursor-pointer p-0 pr-6 appearance-none"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FF5F00'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg>")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right center',
+                      backgroundSize: '12px'
+                    }}
+                  >
+                    <option value="rating-desc">Top Rated</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                  </select>
+                </div>
+              </div>
+
               {/* Listings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {hotels.map(hotel => {
-                  const thumbnail = hotel.images && hotel.images.length > 0 ? hotel.images[0] : 'https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=600';
-                  
                   return (
                     <motion.div
                       key={hotel.id}
                       whileHover={{ y: -5 }}
-                      onClick={() => setSelectedHotel(hotel)}
+                      onClick={() => handleSelectHotel(hotel)}
                       className="border border-black/5 bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 group cursor-pointer"
                     >
                       <div>
-                        {/* Image */}
-                        <div className="h-48 bg-gray-100 overflow-hidden relative">
-                          <img 
-                            src={thumbnail} 
-                            alt={hotel.name} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        {/* Airbnb-style Image Carousel */}
+                        <div className="relative">
+                          <HotelCardCarousel 
+                            images={hotel.images} 
+                            hotelName={hotel.name} 
+                            onSelect={() => handleSelectHotel(hotel)} 
                           />
                           {hotel.is_limited_offer && (
-                            <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider">
+                            <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider pointer-events-none z-10">
                               LIMITED TIME OFFER
                             </span>
                           )}
@@ -255,7 +472,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         {/* Info details */}
                         <div className="p-5 space-y-3.5">
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="font-bold text-lg font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors truncate max-w-[70%]">
+                            <h3 className="font-bold text-lg font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-2 max-w-[70%]" title={hotel.name}>
                               {hotel.name}
                             </h3>
                             {hotel.vendors?.name && (
@@ -268,28 +485,29 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           <div className="flex items-center gap-1 text-xs text-black font-bold">
                             <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
                             <span>{hotel.rating}</span>
-                            <span className="text-gray-500 font-semibold">({hotel.reviewsCount} reviews)</span>
+                            <span className="text-gray-550 font-semibold">({hotel.reviewsCount} reviews)</span>
                           </div>
                           
                           <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                            <p className="text-xs text-gray-500 font-semibold flex items-center gap-1.5">
-                              <MapPin size={12} className="text-[#FF5F00]" /> {hotel.address}
+                            <p className="text-xs text-gray-550 font-semibold flex items-center gap-1.5 max-w-[55%] truncate">
+                              <MapPin size={12} className="text-[#FF5F00] shrink-0" /> {hotel.address}
                             </p>
-                            <div className="flex items-center gap-2 shrink-0">
-                              {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
-                                <span className="text-xs text-gray-400 line-through">
-                                  ₹{Number(hotel.original_price).toLocaleString('en-IN')}
+                            <div className="flex flex-col items-end shrink-0">
+                              <div className="flex items-center gap-1.5">
+                                {hotel.original_price && Number(hotel.original_price) > Number(hotel.price) && (
+                                  <span className="text-xs text-gray-400 line-through">
+                                    ₹{Number(hotel.original_price).toLocaleString('en-IN')}
+                                  </span>
+                                )}
+                                <span className="text-sm font-black text-[#FF5F00]">
+                                  ₹{Number(hotel.price).toLocaleString('en-IN')}/night
                                 </span>
-                              )}
-                              <span className="text-sm font-black text-[#FF5F00]">
-                                ₹{Number(hotel.price).toLocaleString('en-IN')}/night
+                              </div>
+                              <span className="text-[9px] text-gray-400 font-bold mt-0.5">
+                                + taxes & fees
                               </span>
                             </div>
                           </div>
-
-                          <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">
-                            {hotel.description}
-                          </p>
 
                           {/* Landmarks list preview */}
                           {hotel.landmarks && hotel.landmarks.length > 0 && (
@@ -302,13 +520,23 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             </div>
                           )}
 
-                          {/* Amenities list */}
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {Object.entries(hotel.amenities || {}).filter(([_, val]) => !!val).map(([key]) => (
-                              <span key={key} className="text-[9px] bg-slate-50 border border-black/5 text-gray-600 font-bold px-2 py-0.5 rounded capitalize">
-                                {key.replace('_', ' ')}
-                              </span>
-                            ))}
+                          {/* Simplified Amenities Icons list */}
+                          <div className="flex items-center gap-2 pt-1">
+                            {Object.entries(hotel.amenities || {})
+                              .filter(([_, val]) => !!val)
+                              .slice(0, 4)
+                              .map(([key]) => {
+                                const IconComponent = AMENITY_ICONS[key] || Building2;
+                                return (
+                                  <div 
+                                    key={key} 
+                                    className="p-1.5 bg-slate-50 border border-black/5 rounded-xl text-gray-550 hover:text-[#FF5F00] transition-colors"
+                                    title={key.replace('_', ' ')}
+                                  >
+                                    <IconComponent size={13} />
+                                  </div>
+                                );
+                              })}
                           </div>
                         </div>
                       </div>
@@ -318,7 +546,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedHotel(hotel);
+                            handleSelectHotel(hotel);
                           }}
                           className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
                         >
@@ -330,21 +558,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 })}
               </div>
 
-              {/* Offline Notice Banner */}
-              <div className="max-w-xl mx-auto p-5 border border-black/10 rounded-3xl space-y-4 bg-gray-50 text-center shadow-sm">
-                <div className="flex items-center gap-2 text-yellow-800 text-xs font-semibold leading-relaxed justify-center">
-                  <ShieldAlert size={16} className="flex-shrink-0" />
-                  <span>Need custom packages or direct group bookings? Our local team is available 24/7.</span>
-                </div>
 
-                <button
-                  onClick={handleContactWhatsApp}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_20px_rgba(16,185,129,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer font-display"
-                >
-                  <MessageSquare size={16} />
-                  <span>Enquire Stays on WhatsApp</span>
-                </button>
-              </div>
             </div>
           </motion.div>
         ) : (
@@ -360,9 +574,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* Back Button */}
               <button
                 onClick={() => {
+                  window.history.pushState(null, '', '/hotels');
                   setSelectedHotel(null);
                   setActiveImgIdx(0);
                   setIsDescExpanded(false);
+                  window.scrollTo(0, 0);
                 }}
                 className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
               >

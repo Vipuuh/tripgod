@@ -124,9 +124,10 @@ export default function App() {
       const hash = window.location.hash;
       const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund'];
 
-      if (validRoutes.includes(path)) {
-        setRoute(path);
-        if (hash === '#adventures' && path === 'home') {
+      if (validRoutes.includes(path) || path.startsWith('hotels/')) {
+        const resolvedRoute = path.startsWith('hotels/') ? 'hotels' : path;
+        setRoute(resolvedRoute);
+        if (hash === '#adventures' && resolvedRoute === 'home') {
           setTimeout(() => {
             document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
           }, 150);
