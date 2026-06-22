@@ -192,7 +192,7 @@ export default function Tours({ currentCity, openBookingModal }) {
         
         {/* Banner */}
         <div className="text-center space-y-3">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 text-xs font-black uppercase tracking-widest rounded-full">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 text-xs font-black uppercase tracking-widest rounded-full">
             EXPLORE THE HIGHLANDS
           </span>
           <h1 className="text-3xl md:text-5xl font-black font-display text-black uppercase tracking-tight">
@@ -248,7 +248,7 @@ export default function Tours({ currentCity, openBookingModal }) {
                         <Clock size={12} className="text-[#FF5F00]" />
                         <span>{tour.duration}</span>
                       </div>
-                      <span className="text-[9px] bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981] font-black px-2 py-0.5 rounded">
+                      <span className="text-[9px] bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] font-black px-2 py-0.5 rounded">
                         {tour.operators.length} Operator{tour.operators.length > 1 ? 's' : ''}
                       </span>
                     </div>

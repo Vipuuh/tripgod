@@ -514,7 +514,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   }, []);
 
   return (
-    <div className="w-full max-w-screen-xl mx-auto px-4 overflow-x-hidden min-h-screen bg-neutral-50 text-black">
+    <div className="w-full max-w-screen-xl mx-auto overflow-x-hidden min-h-screen bg-neutral-50 text-black">
       {/* 1. Hero Section */}
       <div 
         onMouseMove={handleMouseMove}
@@ -602,7 +602,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md text-[#10B981] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#10B981]/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] animate-pulse"
+            className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md text-[#FF6B00] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)] animate-pulse"
           >
             3+ Years of Trusted Service in Rishikesh
           </motion.span>
@@ -914,12 +914,12 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               <button 
                 key={index} 
                 onClick={() => setRoute(item.route)}
-                className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-3 sm:p-5 rounded-2xl bg-gradient-to-br from-white to-neutral-50/80 border border-neutral-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:border-[#FF5F00]/40 hover:shadow-[0_12px_30px_rgba(255,95,0,0.1)] transition-all duration-300 hover:-translate-y-1 group cursor-pointer"
+                className="flex flex-col items-center justify-center gap-2 p-3 sm:p-5 rounded-2xl bg-white border border-neutral-200/60 shadow-sm hover:border-[#FF5F00]/40 hover:shadow-md transition-all duration-300 group cursor-pointer"
               >
-                <div className="flex items-center justify-center h-11 w-11 sm:h-14 sm:w-14 rounded-lg sm:rounded-xl bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200/30 shadow-sm group-hover:from-[#FF5F00] group-hover:to-[#FF3E00] group-hover:shadow-[0_6px_20px_rgba(255,95,0,0.35)] transition-all duration-300">
+                <div className="flex items-center justify-center h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-[#FFF0E5] border border-orange-100/80 group-hover:bg-[#FF5F00] group-hover:shadow-md transition-all duration-300">
                   <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-300">{item.emoji}</span>
                 </div>
-                <span className="font-bold text-[9px] sm:text-xs text-neutral-700 tracking-wider uppercase group-hover:text-[#FF5F00] transition-colors text-center font-display leading-tight">
+                <span className="font-black text-[9px] sm:text-xs text-black tracking-wider uppercase text-center font-display leading-tight mt-1">
                   {item.label}
                 </span>
               </button>
@@ -938,11 +938,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Stay in Luxury</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Stay in Luxury</span>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
               TOP HOTELS IN RISHIKESH
             </h2>
-            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
 
           <motion.div
@@ -1031,9 +1031,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Select Your Thrill</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight text-neutral-900">CHOOSE YOUR ADVENTURE</h2>
-            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Select Your Thrill</span>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold font-display tracking-tight text-neutral-900">CHOOSE YOUR ADVENTURE</h2>
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
         </motion.div>
 
         <motion.div 
@@ -1099,11 +1099,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Spiritual Pilgrimage</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Spiritual Pilgrimage</span>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
               SACRED CHAR DHAM YATRA PACKAGES
             </h2>
-            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
 
           <motion.div
@@ -1185,11 +1185,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">Explore Rishikesh Solo</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">Explore Rishikesh Solo</span>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold font-display tracking-tight leading-tight text-neutral-900">
               BIKE & SCOOTY RENTALS
             </h2>
-            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
 
           {/* Cards container with responsive horizontal scroll on mobile */}
@@ -1328,11 +1328,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="text-center space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block mb-1">GOT QUESTIONS?</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight text-neutral-900 uppercase">
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block mb-1">GOT QUESTIONS?</span>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold font-display tracking-tight text-neutral-900 uppercase">
               FREQUENTLY ASKED QUESTIONS
             </h2>
-            <div className="w-20 h-1 bg-[#10B981] mx-auto mt-4" />
+            <div className="w-20 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
 
           <div className="space-y-4 max-w-3xl mx-auto font-sans">
@@ -1392,9 +1392,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.6 }}
             className="space-y-2"
           >
-            <span className="text-[10px] font-black uppercase text-[#10B981] tracking-widest bg-[#10B981]/10 border border-[#10B981]/20 px-3 py-1 rounded-full inline-block font-display">Testimonials</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display tracking-tight text-white uppercase">WHAT OUR CUSTOMERS SAY</h2>
-            <div className="w-16 h-1 bg-[#10B981] mx-auto mt-4" />
+            <span className="text-[10px] font-black uppercase text-[#FF6B00] tracking-widest bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-3 py-1 rounded-full inline-block font-display">Testimonials</span>
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold font-display tracking-tight text-white uppercase">WHAT OUR CUSTOMERS SAY</h2>
+            <div className="w-16 h-1 bg-[#FF6B00] mx-auto mt-4" />
           </motion.div>
         </div>
 
@@ -1418,7 +1418,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               {reviews.map((rev, idx) => (
                 <div 
                   key={idx}
-                  className="w-[250px] sm:w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                  className="w-[250px] sm:w-[280px] flex-shrink-0 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.15)]"
                 >
                   <div className="space-y-3">
                     {/* User Profile header */}
@@ -1439,14 +1439,14 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     </div>
 
                     {/* Review Text */}
-                    <p className="text-[11px] sm:text-xs text-white/80 font-medium leading-relaxed whitespace-normal">
+                    <p className="text-[11px] sm:text-xs text-white font-medium leading-relaxed whitespace-normal">
                       "{rev.text}"
                     </p>
                   </div>
 
                   {/* Bottom tag */}
                   <div>
-                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#10B981] px-2.5 py-1 bg-[#10B981]/10 rounded-lg border border-[#10B981]/20 inline-block font-display">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#FF6B00] px-2.5 py-1 bg-[#FF6B00]/10 rounded-lg border border-[#FF6B00]/15 inline-block font-display">
                       {rev.activity}
                     </span>
                   </div>
@@ -1459,7 +1459,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               {reviews.map((rev, idx) => (
                 <div 
                   key={`dup-${idx}`}
-                  className="w-[250px] sm:w-[280px] flex-shrink-0 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.12)]"
+                  className="w-[250px] sm:w-[280px] flex-shrink-0 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.15)]"
                 >
                   <div className="space-y-3">
                     {/* User Profile header */}
@@ -1480,14 +1480,14 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     </div>
 
                     {/* Review Text */}
-                    <p className="text-[11px] sm:text-xs text-white/80 font-medium leading-relaxed whitespace-normal">
+                    <p className="text-[11px] sm:text-xs text-white font-medium leading-relaxed whitespace-normal">
                       "{rev.text}"
                     </p>
                   </div>
 
                   {/* Bottom tag */}
                   <div>
-                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#10B981] px-2.5 py-1 bg-[#10B981]/10 rounded-lg border border-[#10B981]/20 inline-block font-display">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-[#FF6B00] px-2.5 py-1 bg-[#FF6B00]/10 rounded-lg border border-[#FF6B00]/15 inline-block font-display">
                       {rev.activity}
                     </span>
                   </div>

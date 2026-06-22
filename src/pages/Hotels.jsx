@@ -572,7 +572,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
             <div className="w-full px-4 overflow-x-hidden space-y-12 max-w-6xl mx-auto">
               {/* Title Section */}
               <div className="text-center space-y-3">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20 text-xs font-black uppercase tracking-widest rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 text-xs font-black uppercase tracking-widest rounded-full">
                   Stay Premium
                 </span>
                 <h1 className="text-3xl md:text-5xl font-black font-display text-black uppercase tracking-tight">
@@ -811,7 +811,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* SECTION 2: HOTEL HEADER */}
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#10B981]/10 text-[#10B981] text-[9px] font-black uppercase tracking-wider rounded-md border border-[#10B981]/20">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] text-[9px] font-black uppercase tracking-wider rounded-md border border-[#FF5F00]/20">
                     Stay Details
                   </span>
                   {selectedHotel.is_limited_offer && (
