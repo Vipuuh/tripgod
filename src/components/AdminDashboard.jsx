@@ -1788,6 +1788,14 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         pickup_drop: data.pickup_drop || { pickup_point: '', drop_point: '', reporting_time: '', coordinator_number: '' },
         landmarks_data: data.landmarks_data || [],
         faq_data: data.faq_data || [],
+        is_bestseller: !!data.is_bestseller,
+        is_instant_confirmation: data.is_instant_confirmation !== undefined && data.is_instant_confirmation !== null ? !!data.is_instant_confirmation : true,
+        seats_left: data.seats_left !== undefined && data.seats_left !== null ? Number(data.seats_left) : 10,
+        hotel_included: data.hotel_included !== undefined && data.hotel_included !== null ? !!data.hotel_included : true,
+        meals_included: data.meals_included !== undefined && data.meals_included !== null ? !!data.meals_included : true,
+        transport_included: data.transport_included !== undefined && data.transport_included !== null ? !!data.transport_included : true,
+        guide_included: data.guide_included !== undefined && data.guide_included !== null ? !!data.guide_included : true,
+        tour_type: data.tour_type || 'Sightseeing',
         why_guests_love: (data.why_guests_love || []).map(hl => {
 
           if (!hl) return { icon: 'Star', text: '' };
@@ -1820,8 +1828,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         rooms_left: data.rooms_left !== null && data.rooms_left !== undefined ? data.rooms_left : 5,
         high_demand: !!data.high_demand,
         attractions: data.attractions || [],
-        is_verified: data.is_verified !== undefined ? !!data.is_verified : true,
-        bookings_count: data.bookings_count !== null && data.bookings_count !== undefined ? Number(data.bookings_count) : 18,
+        is_verified: data.is_verified !== undefined && data.is_verified !== null ? !!data.is_verified : true,
+        bookings_count: data.bookings_count !== null && data.bookings_count !== undefined ? Number(data.bookings_count) : (type === 'tours' ? 150 : 18),
         property_type: data.property_type || 'Hotel',
         room_type: data.room_type || 'Deluxe Double Room',
         best_for: data.best_for || [],
@@ -1918,6 +1926,16 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.pickup_drop = { pickup_point: '', drop_point: '', reporting_time: '', coordinator_number: '' };
         defaults.landmarks_data = [];
         defaults.faq_data = [];
+        defaults.is_verified = true;
+        defaults.is_bestseller = false;
+        defaults.is_instant_confirmation = true;
+        defaults.seats_left = 10;
+        defaults.bookings_count = 150;
+        defaults.hotel_included = true;
+        defaults.meals_included = true;
+        defaults.transport_included = true;
+        defaults.guide_included = true;
+        defaults.tour_type = 'Sightseeing';
       }
 
       setFormData(defaults);
@@ -2194,7 +2212,17 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           images: formData.images || [],
           payment_mode: formData.payment_mode || 'commission_advance',
           commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
-          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null
+          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null,
+          is_verified: formData.is_verified !== undefined ? !!formData.is_verified : true,
+          is_bestseller: !!formData.is_bestseller,
+          is_instant_confirmation: formData.is_instant_confirmation !== undefined ? !!formData.is_instant_confirmation : true,
+          seats_left: formData.seats_left !== undefined && formData.seats_left !== null && formData.seats_left !== '' ? Number(formData.seats_left) : 10,
+          bookings_count: formData.bookings_count !== undefined && formData.bookings_count !== null && formData.bookings_count !== '' ? Number(formData.bookings_count) : 150,
+          hotel_included: formData.hotel_included !== undefined ? !!formData.hotel_included : true,
+          meals_included: formData.meals_included !== undefined ? !!formData.meals_included : true,
+          transport_included: formData.transport_included !== undefined ? !!formData.transport_included : true,
+          guide_included: formData.guide_included !== undefined ? !!formData.guide_included : true,
+          tour_type: formData.tour_type || 'Sightseeing'
         };
 
         if (data) {
@@ -4242,33 +4270,180 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               </h4>
               <p className="text-[10px] text-gray-500 mt-1">Configure premium badges, highlights, route maps, hotel previews, pickup details, and FAQs.</p>
             </div>
+            <div className="space-y-3">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Marketplace Badges & Inclusions</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                
+                {/* TripGod Verified */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="is_verified"
+                    checked={formData.is_verified || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_verified: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="is_verified" className="text-xs font-bold text-white cursor-pointer select-none">
+                    TripGod Verified
+                  </label>
+                </div>
 
-            {/* Badges Toggle Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                {/* Bestseller */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="is_bestseller"
+                    checked={formData.is_bestseller || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_bestseller: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="is_bestseller" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Bestseller Tour
+                  </label>
+                </div>
+
+                {/* Instant Confirmation */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="is_instant_confirmation"
+                    checked={formData.is_instant_confirmation || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_instant_confirmation: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="is_instant_confirmation" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Instant Confirmation
+                  </label>
+                </div>
+
+                {/* Free Cancellation */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="is_free_cancellation"
+                    checked={formData.is_free_cancellation || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_free_cancellation: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="is_free_cancellation" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Free Cancellation
+                  </label>
+                </div>
+
+                {/* Limited Seats */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="is_limited_seats"
+                    checked={formData.is_limited_seats || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_limited_seats: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="is_limited_seats" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Limited Seats
+                  </label>
+                </div>
+
+                {/* Hotel Included */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="hotel_included"
+                    checked={formData.hotel_included || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, hotel_included: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="hotel_included" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Hotel Included
+                  </label>
+                </div>
+
+                {/* Meals Included */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="meals_included"
+                    checked={formData.meals_included || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, meals_included: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="meals_included" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Meals Included
+                  </label>
+                </div>
+
+                {/* Transport Included */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="transport_included"
+                    checked={formData.transport_included || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, transport_included: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="transport_included" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Transport Included
+                  </label>
+                </div>
+
+                {/* Guide Included */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="guide_included"
+                    checked={formData.guide_included || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, guide_included: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="guide_included" className="text-xs font-bold text-white cursor-pointer select-none">
+                    Guide Included
+                  </label>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Statistics & Tour Type Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Seats Left */}
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Seats Left Indicator</label>
                 <input
-                  type="checkbox"
-                  id="is_free_cancellation"
-                  checked={formData.is_free_cancellation || false}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_free_cancellation: e.target.checked }))}
-                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  type="number"
+                  value={formData.seats_left || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, seats_left: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                  placeholder="e.g., 5"
                 />
-                <label htmlFor="is_free_cancellation" className="text-xs font-bold text-white cursor-pointer select-none">
-                  Enable Free Cancellation Badge
-                </label>
               </div>
 
-              <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+              {/* Bookings Count (Travelers Count) */}
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Traveler Bookings Count</label>
                 <input
-                  type="checkbox"
-                  id="is_limited_seats"
-                  checked={formData.is_limited_seats || false}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_limited_seats: e.target.checked }))}
-                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  type="number"
+                  value={formData.bookings_count || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bookings_count: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                  placeholder="e.g., 180"
                 />
-                <label htmlFor="is_limited_seats" className="text-xs font-bold text-white cursor-pointer select-none">
-                  Enable Limited Seats Badge
-                </label>
+              </div>
+
+              {/* Tour Type */}
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Tour Type</label>
+                <select
+                  value={formData.tour_type || 'Sightseeing'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, tour_type: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                >
+                  <option value="Sightseeing">Sightseeing</option>
+                  <option value="Trekking">Trekking</option>
+                  <option value="Pilgrimage">Pilgrimage</option>
+                  <option value="Adventure">Adventure</option>
+                  <option value="Camping">Camping</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
 
