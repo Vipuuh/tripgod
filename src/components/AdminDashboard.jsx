@@ -1766,7 +1766,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     }
   }, [type, data, vendors]);
 
-  // Initialize form fields based on type
   useEffect(() => {
     if (data) {
       setFormData({ 
@@ -1776,7 +1775,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         is_limited_offer: !!data.is_limited_offer,
         rating: data.rating !== null && data.rating !== undefined ? data.rating : 4.5,
         reviews_count: data.reviews_count !== null && data.reviews_count !== undefined ? data.reviews_count : 100,
+        quick_info_tags: data.quick_info_tags || ['🏨 Stay', '🚗 Private AC Cab', '🍔 Meals', '🗺️ Local Driver'],
+        day_wise_itinerary: data.day_wise_itinerary || data.itinerary || [],
+        reporting_address: data.reporting_address || '',
         why_guests_love: (data.why_guests_love || []).map(hl => {
+
           if (!hl) return { icon: 'Star', text: '' };
           if (typeof hl === 'object' && hl !== null) {
             return {
@@ -1889,12 +1892,16 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       } else if (type === 'tours') {
         defaults.duration = '3 Days / 2 Nights';
         defaults.itinerary = [];
+        defaults.day_wise_itinerary = [];
+        defaults.quick_info_tags = ['🏨 Stay', '🚗 Private AC Cab', '🍔 Meals', '🗺️ Local Driver'];
+        defaults.reporting_address = '';
         defaults.inclusions = [];
         defaults.exclusions = [];
         defaults.contact_number = '';
       }
 
       setFormData(defaults);
+
     }
   }, [type, data, cities, vendors]);
 
@@ -2147,7 +2154,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           name: formData.name,
           description: formData.description || '',
           duration: formData.duration || '3 Days / 2 Nights',
-          itinerary: formData.itinerary || [],
+          itinerary: formData.day_wise_itinerary || formData.itinerary || [],
+          day_wise_itinerary: formData.day_wise_itinerary || formData.itinerary || [],
+          quick_info_tags: formData.quick_info_tags || [],
+          reporting_address: formData.reporting_address || '',
           inclusions: formData.inclusions || [],
           exclusions: formData.exclusions || [],
           cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
@@ -3393,6 +3403,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                          <div className="col-span-2 sm:col-span-5 text-[8px] font-black text-accent uppercase tracking-wider mt-1 border-t border-slate-900 pt-1.5">
+                            Trust & Itinerary Metrics
+                          </div>
                           <div className="space-y-1 sm:col-span-2">
                             <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Logo URL</label>
                             <input
@@ -3702,6 +3715,172 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
                 placeholder="e.g. 9837371137"
               />
+            </div>
+          </div>
+
+          {/* Trust & Itinerary Metrics */}
+          <div className="space-y-4 pt-4 border-t border-slate-900">
+            <h4 className="text-[10px] font-black uppercase text-accent tracking-wider">Trust & Itinerary Metrics</h4>
+            
+            {/* Reporting Address */}
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Reporting Address</label>
+              <input
+                type="text"
+                value={formData.reporting_address || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, reporting_address: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                placeholder="e.g., Reporting Address: Near Lakshman Jhula, Rishikesh"
+              />
+            </div>
+
+            {/* Quick Info Tags */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Quick Info Inclusions (Tags)</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tag = prompt("Enter tag (e.g. 🏨 Stay, 🚗 Private AC Cab):");
+                    if (tag) {
+                      setFormData(prev => ({
+                        ...prev,
+                        quick_info_tags: [...(prev.quick_info_tags || []), tag]
+                      }));
+                    }
+                  }}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-350 font-bold cursor-pointer"
+                >
+                  + Add Tag
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(formData.quick_info_tags || []).map((tag, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded text-xs text-white border border-slate-800">
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        quick_info_tags: (prev.quick_info_tags || []).filter((_, i) => i !== idx)
+                      }))}
+                      className="text-red-500 hover:text-red-400 ml-1 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                {(formData.quick_info_tags || []).length === 0 && (
+                  <span className="text-[10px] text-gray-500 italic">No quick info tags added. Fallback will show: Stay, Cab, Meals, Local Driver.</span>
+                )}
+              </div>
+            </div>
+
+            {/* Day Wise Itinerary Accordion Builder */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Day-Wise Itinerary Accordion Builder</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextDay = (formData.day_wise_itinerary || []).length + 1;
+                    setFormData(prev => ({
+                      ...prev,
+                      day_wise_itinerary: [
+                        ...(prev.day_wise_itinerary || []),
+                        { day: nextDay, title: '', tags: [], description: '' }
+                      ]
+                    }));
+                  }}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add Day
+                </button>
+              </div>
+
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                {(formData.day_wise_itinerary || []).map((item, idx) => (
+                  <div key={idx} className="bg-slate-950 border border-slate-900 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-[10px] text-accent">DAY {item.day || idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => {
+                            const updated = (prev.day_wise_itinerary || []).filter((_, i) => i !== idx)
+                              .map((dayItem, dIdx) => ({ ...dayItem, day: dIdx + 1 }));
+                            return { ...prev, day_wise_itinerary: updated };
+                          });
+                        }}
+                        className="text-red-500 hover:text-red-400 text-[10px] font-bold"
+                      >
+                        Remove Day
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Day Title</label>
+                        <input
+                          type="text"
+                          required
+                          value={item.title || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const updated = [...(prev.day_wise_itinerary || [])];
+                              updated[idx] = { ...updated[idx], title: val };
+                              return { ...prev, day_wise_itinerary: updated };
+                            });
+                          }}
+                          placeholder="e.g. Arrival & Camp setup"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Route Tags (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={(item.tags || []).join(', ')}
+                          onChange={(e) => {
+                            const tagsVal = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+                            setFormData(prev => {
+                              const updated = [...(prev.day_wise_itinerary || [])];
+                              updated[idx] = { ...updated[idx], tags: tagsVal };
+                              return { ...prev, day_wise_itinerary: updated };
+                            });
+                          }}
+                          placeholder="e.g. 🚗 Pickup, 🏨 Luxury Camp"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black text-gray-500 uppercase">Description</label>
+                      <textarea
+                        required
+                        value={item.description || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const updated = [...(prev.day_wise_itinerary || [])];
+                            updated[idx] = { ...updated[idx], description: val };
+                            return { ...prev, day_wise_itinerary: updated };
+                          });
+                        }}
+                        rows={2}
+                        placeholder="Description of the day's route and activities..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+                {(formData.day_wise_itinerary || []).length === 0 && (
+                  <p className="text-[10px] text-gray-500 italic">No itinerary days added. Default mock yatra days will be rendered as fallback.</p>
+                )}
+              </div>
             </div>
           </div>
 

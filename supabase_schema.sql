@@ -290,6 +290,12 @@ ALTER TABLE rafting ADD COLUMN IF NOT EXISTS is_govt_approved BOOLEAN DEFAULT fa
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS safety_rating NUMERIC DEFAULT 4.5;
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS full_payment_upi_discount NUMERIC DEFAULT 0;
 
+-- Schema Extensions (Tours Operator / Details Enhancements — June 2026)
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS quick_info_tags JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS day_wise_itinerary JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS reporting_address TEXT;
+
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
+
 

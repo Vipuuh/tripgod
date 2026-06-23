@@ -18,6 +18,7 @@ import BikeRent from './pages/BikeRent';
 import Pickup from './pages/Pickup';
 import Hotels from './pages/Hotels';
 import Tours from './pages/Tours';
+import TourPartnerSelection from './pages/TourPartnerSelection';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import RefundPolicy from './pages/RefundPolicy';
@@ -32,6 +33,7 @@ import AccountModal from './components/AccountModal';
 export default function App() {
   // Navigation State
   const [route, setRoute] = useState('home');
+  const [selectedTour, setSelectedTour] = useState(null);
   
   // City states (Supabase dynamic multi-city support)
   const [citiesList, setCitiesList] = useState([]);
@@ -122,10 +124,12 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund', 'tour-partner-selection'];
 
-      if (validRoutes.includes(path) || path.startsWith('hotels/')) {
-        const resolvedRoute = path.startsWith('hotels/') ? 'hotels' : path;
+      const isTourPartners = path.startsWith('tours/') && path.endsWith('/partners');
+
+      if (validRoutes.includes(path) || path.startsWith('hotels/') || isTourPartners) {
+        const resolvedRoute = path.startsWith('hotels/') ? 'hotels' : (isTourPartners ? 'tour-partner-selection' : path);
         setRoute(resolvedRoute);
         if (resolvedRoute === 'home') {
           const savedScroll = sessionStorage.getItem('home_scroll_pos');
@@ -172,9 +176,19 @@ export default function App() {
       if (newRoute === 'home') {
         sessionStorage.removeItem('home_scroll_pos');
       }
-      const targetPath = newRoute === 'home' ? '/' : `/${newRoute}`;
+      
+      let targetPath;
+      let resolvedRoute = newRoute;
+      
+      if (newRoute.startsWith('tours/') && newRoute.endsWith('/partners')) {
+        targetPath = `/${newRoute}`;
+        resolvedRoute = 'tour-partner-selection';
+      } else {
+        targetPath = newRoute === 'home' ? '/' : `/${newRoute}`;
+      }
+      
       window.history.pushState(null, '', targetPath);
-      setRoute(newRoute);
+      setRoute(resolvedRoute);
       window.scrollTo(0, 0);
     }
   };
@@ -331,7 +345,24 @@ export default function App() {
             {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
             {route === 'hotels' && <Hotels currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'tours' && <Tours currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'tours' && (
+              <Tours
+                currentCity={currentCity}
+                openBookingModal={openBookingModal}
+                selectedTour={selectedTour}
+                setSelectedTour={setSelectedTour}
+                navigateTo={navigateTo}
+              />
+            )}
+            {route === 'tour-partner-selection' && (
+              <TourPartnerSelection
+                currentCity={currentCity}
+                openBookingModal={openBookingModal}
+                selectedTour={selectedTour}
+                setSelectedTour={setSelectedTour}
+                navigateTo={navigateTo}
+              />
+            )}
             {route === 'admin' && <AdminDashboard setRoute={navigateTo} />}
             {route === 'privacy' && <Privacy />}
             {route === 'terms' && <Terms />}
