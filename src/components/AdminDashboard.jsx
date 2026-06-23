@@ -1780,6 +1780,14 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         reporting_address: data.reporting_address || '',
         tour_guidelines: data.tour_guidelines || [],
         why_book_with_us: data.why_book_with_us || { items: [] },
+        is_free_cancellation: !!data.is_free_cancellation,
+        is_limited_seats: !!data.is_limited_seats,
+        tour_highlights: data.tour_highlights || [],
+        route_map: data.route_map || [],
+        stay_details: data.stay_details || { hotel_name: '', photos: [], amenities: [], room_type: '' },
+        pickup_drop: data.pickup_drop || { pickup_point: '', drop_point: '', reporting_time: '', coordinator_number: '' },
+        landmarks_data: data.landmarks_data || [],
+        faq_data: data.faq_data || [],
         why_guests_love: (data.why_guests_love || []).map(hl => {
 
           if (!hl) return { icon: 'Star', text: '' };
@@ -1902,6 +1910,14 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.inclusions = [];
         defaults.exclusions = [];
         defaults.contact_number = '';
+        defaults.is_free_cancellation = false;
+        defaults.is_limited_seats = false;
+        defaults.tour_highlights = [];
+        defaults.route_map = [];
+        defaults.stay_details = { hotel_name: '', photos: [], amenities: [], room_type: '' };
+        defaults.pickup_drop = { pickup_point: '', drop_point: '', reporting_time: '', coordinator_number: '' };
+        defaults.landmarks_data = [];
+        defaults.faq_data = [];
       }
 
       setFormData(defaults);
@@ -2166,6 +2182,14 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           exclusions: (formData.exclusions || []).filter(Boolean),
           tour_guidelines: (formData.tour_guidelines || []).filter(Boolean),
           why_book_with_us: formData.why_book_with_us || { items: [] },
+          is_free_cancellation: !!formData.is_free_cancellation,
+          is_limited_seats: !!formData.is_limited_seats,
+          tour_highlights: (formData.tour_highlights || []).filter(Boolean),
+          route_map: (formData.route_map || []).filter(Boolean),
+          stay_details: formData.stay_details || { hotel_name: '', photos: [], amenities: [], room_type: '' },
+          pickup_drop: formData.pickup_drop || { pickup_point: '', drop_point: '', reporting_time: '', coordinator_number: '' },
+          landmarks_data: formData.landmarks_data || [],
+          faq_data: formData.faq_data || [],
           cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
           images: formData.images || [],
           payment_mode: formData.payment_mode || 'commission_advance',
@@ -4112,6 +4136,78 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                           className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
                         />
                       </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Stay Location/Place Name</label>
+                        <input
+                          type="text"
+                          value={item.stay || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const updated = [...(prev.day_wise_itinerary || [])];
+                              updated[idx] = { ...updated[idx], stay: val };
+                              return { ...prev, day_wise_itinerary: updated };
+                            });
+                          }}
+                          placeholder="e.g. Deluxe Camps, Rishikesh"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Meals (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={Array.isArray(item.meals) ? item.meals.join(', ') : (item.meals || '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const updated = [...(prev.day_wise_itinerary || [])];
+                              updated[idx] = { ...updated[idx], meals: val.split(',').map(m => m.trim()).filter(Boolean) };
+                              return { ...prev, day_wise_itinerary: updated };
+                            });
+                          }}
+                          placeholder="e.g. Breakfast, Dinner"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Activities (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={Array.isArray(item.activities) ? item.activities.join(', ') : (item.activities || '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const updated = [...(prev.day_wise_itinerary || [])];
+                              updated[idx] = { ...updated[idx], activities: val.split(',').map(a => a.trim()).filter(Boolean) };
+                              return { ...prev, day_wise_itinerary: updated };
+                            });
+                          }}
+                          placeholder="e.g. Trekking, Sightseeing"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Image URLs (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={Array.isArray(item.images) ? item.images.join(', ') : (item.images || '')}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const updated = [...(prev.day_wise_itinerary || [])];
+                              updated[idx] = { ...updated[idx], images: val.split(',').map(img => img.trim()).filter(Boolean) };
+                              return { ...prev, day_wise_itinerary: updated };
+                            });
+                          }}
+                          placeholder="e.g. https://images.com/pic1.jpg"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-1">
@@ -4134,8 +4230,509 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                     </div>
                   </div>
                 ))}
-                {(formData.day_wise_itinerary || []).length === 0 && (
-                  <p className="text-[10px] text-gray-500 italic">No itinerary days added.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Premium Experience Details Section Card */}
+          <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 md:p-6 space-y-6 mt-4">
+            <div className="border-b border-slate-900 pb-3">
+              <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">
+                Premium Experience & FAQ Matrix
+              </h4>
+              <p className="text-[10px] text-gray-500 mt-1">Configure premium badges, highlights, route maps, hotel previews, pickup details, and FAQs.</p>
+            </div>
+
+            {/* Badges Toggle Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                <input
+                  type="checkbox"
+                  id="is_free_cancellation"
+                  checked={formData.is_free_cancellation || false}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_free_cancellation: e.target.checked }))}
+                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="is_free_cancellation" className="text-xs font-bold text-white cursor-pointer select-none">
+                  Enable Free Cancellation Badge
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                <input
+                  type="checkbox"
+                  id="is_limited_seats"
+                  checked={formData.is_limited_seats || false}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_limited_seats: e.target.checked }))}
+                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                />
+                <label htmlFor="is_limited_seats" className="text-xs font-bold text-white cursor-pointer select-none">
+                  Enable Limited Seats Badge
+                </label>
+              </div>
+            </div>
+
+            {/* Tour Highlights */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  Tour Highlights (Why Travelers Choose)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      tour_highlights: [...(prev.tour_highlights || []), '']
+                    }));
+                  }}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add Highlight
+                </button>
+              </div>
+              <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                {(formData.tour_highlights || []).map((hl, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={hl}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => {
+                          const updated = [...(prev.tour_highlights || [])];
+                          updated[idx] = val;
+                          return { ...prev, tour_highlights: updated };
+                        });
+                      }}
+                      placeholder="e.g. Verified Local Operator"
+                      className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => {
+                          const updated = (prev.tour_highlights || []).filter((_, i) => i !== idx);
+                          return { ...prev, tour_highlights: updated };
+                        });
+                      }}
+                      className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg cursor-pointer text-xs font-bold"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+                {(formData.tour_highlights || []).length === 0 && (
+                  <p className="text-[10px] text-gray-500 italic">No highlights added. Fallbacks will show default Trust badges.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Route Map Timeline Points */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  Route Map Points (Trace sequence)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      route_map: [...(prev.route_map || []), '']
+                    }));
+                  }}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add Point
+                </button>
+              </div>
+              <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                {(formData.route_map || []).map((pt, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={pt}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => {
+                          const updated = [...(prev.route_map || [])];
+                          updated[idx] = val;
+                          return { ...prev, route_map: updated };
+                        });
+                      }}
+                      placeholder="e.g. Rishikesh, Shivpuri"
+                      className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => {
+                          const updated = (prev.route_map || []).filter((_, i) => i !== idx);
+                          return { ...prev, route_map: updated };
+                        });
+                      }}
+                      className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg cursor-pointer text-xs font-bold"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+                {(formData.route_map || []).length === 0 && (
+                  <p className="text-[10px] text-gray-500 italic">No route map points added.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Stay Details */}
+            <div className="space-y-3 pt-2 border-t border-slate-900">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                Hotel/Stay Previews
+              </label>
+              <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-900 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-gray-500 uppercase">Hotel/Camp Name</label>
+                    <input
+                      type="text"
+                      value={formData.stay_details?.hotel_name || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          stay_details: { ...(prev.stay_details || {}), hotel_name: val }
+                        }));
+                      }}
+                      placeholder="e.g. Majestic River Camp"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black text-gray-500 uppercase">Room Type</label>
+                    <input
+                      type="text"
+                      value={formData.stay_details?.room_type || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          stay_details: { ...(prev.stay_details || {}), room_type: val }
+                        }));
+                      }}
+                      placeholder="e.g. Luxury Tents on Twin Sharing"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-gray-500 uppercase">Stay Amenities (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={Array.isArray(formData.stay_details?.amenities) ? formData.stay_details.amenities.join(', ') : (formData.stay_details?.amenities || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        stay_details: {
+                          ...(prev.stay_details || {}),
+                          amenities: val.split(',').map(a => a.trim()).filter(Boolean)
+                        }
+                      }));
+                    }}
+                    placeholder="e.g. Attached Washroom, Fast Wifi, Hot Water"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-gray-500 uppercase">Hotel Photos (comma-separated URLs)</label>
+                  <input
+                    type="text"
+                    value={Array.isArray(formData.stay_details?.photos) ? formData.stay_details.photos.join(', ') : (formData.stay_details?.photos || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        stay_details: {
+                          ...(prev.stay_details || {}),
+                          photos: val.split(',').map(p => p.trim()).filter(Boolean)
+                        }
+                      }));
+                    }}
+                    placeholder="e.g. url1, url2"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Pickup & Drop Details */}
+            <div className="space-y-3 pt-2 border-t border-slate-900">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                Pickup & Drop Details
+              </label>
+              <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-900 grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-gray-500 uppercase">Pickup Location</label>
+                  <input
+                    type="text"
+                    value={formData.pickup_drop?.pickup_point || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        pickup_drop: { ...(prev.pickup_drop || {}), pickup_point: val }
+                      }));
+                    }}
+                    placeholder="e.g. Rishikesh Railway Station"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-gray-500 uppercase">Drop Location</label>
+                  <input
+                    type="text"
+                    value={formData.pickup_drop?.drop_point || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        pickup_drop: { ...(prev.pickup_drop || {}), drop_point: val }
+                      }));
+                    }}
+                    placeholder="e.g. Rishikesh Railway Station"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-gray-500 uppercase">Reporting Time</label>
+                  <input
+                    type="text"
+                    value={formData.pickup_drop?.reporting_time || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        pickup_drop: { ...(prev.pickup_drop || {}), reporting_time: val }
+                      }));
+                    }}
+                    placeholder="e.g. 09:00 AM"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-gray-500 uppercase">Coordinator Contact Number</label>
+                  <input
+                    type="text"
+                    value={formData.pickup_drop?.coordinator_number || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        pickup_drop: { ...(prev.pickup_drop || {}), coordinator_number: val }
+                      }));
+                    }}
+                    placeholder="e.g. +91 99999 99999"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Landmarks & Attractions */}
+            <div className="space-y-3 pt-2 border-t border-slate-900">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  Nearby Landmarks & Attractions
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      landmarks_data: [...(prev.landmarks_data || []), { name: '', distance: '', time: '', map_url: '' }]
+                    }));
+                  }}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add Landmark
+                </button>
+              </div>
+              <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                {(formData.landmarks_data || []).map((landmark, idx) => (
+                  <div key={idx} className="bg-slate-900/40 p-3 rounded-xl border border-slate-900 grid grid-cols-4 gap-2 relative">
+                    <div className="space-y-1 col-span-2">
+                      <label className="block text-[7px] text-gray-500 uppercase">Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={landmark.name || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const list = [...(prev.landmarks_data || [])];
+                            list[idx] = { ...list[idx], name: val };
+                            return { ...prev, landmarks_data: list };
+                          });
+                        }}
+                        placeholder="e.g. Ram Jhula"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[7px] text-gray-500 uppercase">Distance</label>
+                      <input
+                        type="text"
+                        required
+                        value={landmark.distance || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const list = [...(prev.landmarks_data || [])];
+                            list[idx] = { ...list[idx], distance: val };
+                            return { ...prev, landmarks_data: list };
+                          });
+                        }}
+                        placeholder="e.g. 5 km"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[7px] text-gray-500 uppercase">Time</label>
+                      <input
+                        type="text"
+                        required
+                        value={landmark.time || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const list = [...(prev.landmarks_data || [])];
+                            list[idx] = { ...list[idx], time: val };
+                            return { ...prev, landmarks_data: list };
+                          });
+                        }}
+                        placeholder="e.g. 15 min"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1 col-span-3">
+                      <label className="block text-[7px] text-gray-500 uppercase">Google Maps URL</label>
+                      <input
+                        type="text"
+                        value={landmark.map_url || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const list = [...(prev.landmarks_data || [])];
+                            list[idx] = { ...list[idx], map_url: val };
+                            return { ...prev, landmarks_data: list };
+                          });
+                        }}
+                        placeholder="e.g. https://maps.google.com/..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-[10px] focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex items-end justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => {
+                            const list = (prev.landmarks_data || []).filter((_, i) => i !== idx);
+                            return { ...prev, landmarks_data: list };
+                          });
+                        }}
+                        className="py-1 px-2.5 bg-red-950/20 border border-red-900/30 text-red-450 rounded-lg text-[9px] font-bold cursor-pointer hover:bg-red-950/30"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {(formData.landmarks_data || []).length === 0 && (
+                  <p className="text-[10px] text-gray-500 italic">No landmarks added.</p>
+                )}
+              </div>
+            </div>
+
+            {/* FAQs matrix */}
+            <div className="space-y-3 pt-2 border-t border-slate-900">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  FAQs Accordion
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      faq_data: [...(prev.faq_data || []), { question: '', answer: '' }]
+                    }));
+                  }}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add FAQ
+                </button>
+              </div>
+              <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                {(formData.faq_data || []).map((faq, idx) => (
+                  <div key={idx} className="bg-slate-900/40 p-3 rounded-xl border border-slate-900 space-y-2 relative">
+                    <div className="space-y-1">
+                      <label className="block text-[7px] text-gray-500 uppercase">Question</label>
+                      <input
+                        type="text"
+                        required
+                        value={faq.question || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const list = [...(prev.faq_data || [])];
+                            list[idx] = { ...list[idx], question: val };
+                            return { ...prev, faq_data: list };
+                          });
+                        }}
+                        placeholder="e.g. What is the cancellation policy?"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[7px] text-gray-500 uppercase">Answer</label>
+                      <textarea
+                        required
+                        value={faq.answer || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const list = [...(prev.faq_data || [])];
+                            list[idx] = { ...list[idx], answer: val };
+                            return { ...prev, faq_data: list };
+                          });
+                        }}
+                        rows={2}
+                        placeholder="Answer details..."
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => {
+                            const list = (prev.faq_data || []).filter((_, i) => i !== idx);
+                            return { ...prev, faq_data: list };
+                          });
+                        }}
+                        className="py-1 px-2.5 bg-red-950/20 border border-red-900/30 text-red-450 rounded-lg text-[9px] font-bold cursor-pointer hover:bg-red-950/30"
+                      >
+                        Remove FAQ
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {(formData.faq_data || []).length === 0 && (
+                  <p className="text-[10px] text-gray-500 italic">No FAQs added.</p>
                 )}
               </div>
             </div>

@@ -297,6 +297,16 @@ ALTER TABLE tours ADD COLUMN IF NOT EXISTS reporting_address TEXT;
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS tour_guidelines TEXT[] DEFAULT '{}'::TEXT[];
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS why_book_with_us JSONB DEFAULT '{"items": []}'::JSONB;
 
+-- Premium Display Settings & FAQ Matrix Extensions (June 2026)
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS is_free_cancellation BOOLEAN DEFAULT false;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS is_limited_seats BOOLEAN DEFAULT false;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS tour_highlights TEXT[] DEFAULT '{}'::TEXT[];
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS route_map TEXT[] DEFAULT '{}'::TEXT[];
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS stay_details JSONB DEFAULT '{"hotel_name": "", "photos": [], "amenities": [], "room_type": ""}'::JSONB;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS pickup_drop JSONB DEFAULT '{"pickup_point": "", "drop_point": "", "reporting_time": "", "coordinator_number": ""}'::JSONB;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS landmarks_data JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS faq_data JSONB DEFAULT '[]'::JSONB;
+
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
 

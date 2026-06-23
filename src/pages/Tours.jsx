@@ -4,7 +4,8 @@ import {
   MapPin, Clock, Calendar, ShieldCheck, Waves, ChevronLeft, Star, 
   ChevronDown, ChevronUp, Check, X, Hotel, Car, Utensils, Compass, 
   Flame, Footprints, Moon, Sun, ShoppingBag, Eye, Tag, Info, Ticket, 
-  Headphones, CheckCircle2 
+  Headphones, CheckCircle2, Phone, MessageSquare, Zap, Users, Shield, 
+  Award, Sparkles, HelpCircle, ArrowRight
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -168,9 +169,14 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
   const [loading, setLoading] = useState(true);
   const [expandedDays, setExpandedDays] = useState({ 0: true });
   const [costTab, setCostTab] = useState('included');
+  const [expandedFAQs, setExpandedFAQs] = useState({});
 
   const toggleDay = (idx) => {
     setExpandedDays(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  const toggleFAQ = (idx) => {
+    setExpandedFAQs(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
   useEffect(() => {
@@ -332,6 +338,15 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
           quick_info_tags: t.quick_info_tags || null,
           day_wise_itinerary: t.day_wise_itinerary || t.itinerary || null,
           reporting_address: t.reporting_address || '',
+          why_book_with_us: t.why_book_with_us || null,
+          is_free_cancellation: t.is_free_cancellation || false,
+          is_limited_seats: t.is_limited_seats || false,
+          tour_highlights: t.tour_highlights || [],
+          route_map: t.route_map || [],
+          stay_details: t.stay_details || null,
+          pickup_drop: t.pickup_drop || null,
+          landmarks_data: t.landmarks_data || [],
+          faq_data: t.faq_data || [],
           operators: []
         };
       }
@@ -370,247 +385,690 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
 
     const tourId = selectedTour.id || (selectedTour.operators?.[0]?.id) || 'demo-tour-1';
 
-    const defaultWhyBookItems = [
-      { icon: 'Ticket', title: 'Instant Confirmation', desc: 'Get your booking voucher instantly in your inbox' },
-      { icon: 'Shield', title: 'Safe & Insured Fleets', desc: 'All cabs and campsites are thoroughly safety checked' },
-      { icon: 'Headset', title: '24/7 Local Support', desc: 'Direct helpline to our regional support desk during yatra' }
-    ];
+    const cheapestOp = selectedTour.operators?.find(op => Number(op.price) === selectedTour.minPrice) || selectedTour.operators?.[0] || selectedTour;
+    const price = Number(cheapestOp.price || selectedTour.minPrice || 0);
+    const originalPrice = cheapestOp.original_price ? Number(cheapestOp.original_price) : Math.round(price * 1.3);
+    const discountPercent = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+    
+    // Images list
+    const imagesList = selectedTour.images || cheapestOp.images || [];
+    const displayImages = imagesList.length > 0 ? imagesList : [selectedTour.img];
 
-    const whyBookItems = (selectedTour.why_book_with_us?.items && selectedTour.why_book_with_us.items.length > 0)
-      ? selectedTour.why_book_with_us.items
-      : defaultWhyBookItems;
+    const parseJSONSafely = (data, defaultValue = {}) => {
+      if (!data) return defaultValue;
+      if (typeof data === 'object') return data;
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return defaultValue;
+      }
+    };
+
+    const stayDetails = parseJSONSafely(selectedTour.stay_details, { hotel_name: "", photos: [], amenities: [], room_type: "" });
+    const pickupDrop = parseJSONSafely(selectedTour.pickup_drop, { pickup_point: "", drop_point: "", reporting_time: "", coordinator_number: "" });
+    const landmarks = Array.isArray(selectedTour.landmarks_data) ? selectedTour.landmarks_data : parseJSONSafely(selectedTour.landmarks_data, []);
+    const faqData = Array.isArray(selectedTour.faq_data) ? selectedTour.faq_data : parseJSONSafely(selectedTour.faq_data, []);
+    const tourHighlights = Array.isArray(selectedTour.tour_highlights) ? selectedTour.tour_highlights : (selectedTour.tour_highlights ? [selectedTour.tour_highlights] : []);
+    const routeMap = Array.isArray(selectedTour.route_map) ? selectedTour.route_map : [];
+
+    const getAsArray = (val) => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') {
+        return val.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      return [];
+    };
 
     return (
-      <div className="w-full min-h-screen bg-gray-50 pb-24 font-sans text-left">
-        {/* Back button header */}
-        <div className="bg-white border-b border-gray-150 py-4 px-6">
-          <div className="max-w-4xl mx-auto flex items-center">
+      <div className="w-full min-h-screen bg-slate-50 pb-32 font-sans text-left text-slate-800">
+        {/* Navigation header */}
+        <div className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-30 shadow-sm">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
             <button
               onClick={() => setSelectedTour(null)}
-              className="flex items-center gap-2 text-xs font-black text-slate-800 uppercase tracking-wider hover:text-[#FF5722] cursor-pointer border-none bg-transparent"
+              className="flex items-center gap-2 text-xs font-black text-slate-700 uppercase tracking-wider hover:text-[#FF5722] cursor-pointer border-none bg-transparent"
             >
               <ChevronLeft size={16} /> Back to Packages
             </button>
+            <span className="text-[10px] font-black text-slate-400 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full uppercase tracking-wider">
+              Package Details
+            </span>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-          {/* Card 1: Tour Info Card */}
-          <div className="bg-white shadow-md rounded-2xl p-4 border border-gray-100/50">
-            <div className="w-full h-56 sm:h-80 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 mb-4">
-              <img src={selectedTour.img} alt={selectedTour.name} className="w-full h-full object-cover" />
-            </div>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Two-column layout grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <div className="space-y-3">
-              <div>
-                <span className="text-[10px] text-[#FF5722] font-black uppercase tracking-wider block">
-                  {selectedTour.duration}
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase leading-tight font-display">
-                  {selectedTour.name}
-                </h2>
-                
-                <div className="flex items-center gap-2 flex-wrap mt-1">
-                  <div className="flex items-center gap-1 text-xs text-black font-black">
-                    <Star size={12} className="text-[#FF5722]" fill="#FF5722" />
-                    <span>{selectedTour.rating}</span>
-                    <span className="text-gray-500 font-bold">({selectedTour.reviewsCount} reviews)</span>
+            {/* Left/Main Column: 2 spans */}
+            <div className="lg:col-span-2 space-y-8">
+              
+              {/* Premium Image Gallery */}
+              <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 p-2">
+                  <div className={`h-64 md:h-96 overflow-hidden rounded-2xl ${displayImages.length >= 2 ? 'md:col-span-2' : 'md:col-span-3'}`}>
+                    <img 
+                      src={displayImages[0]} 
+                      alt={selectedTour.name} 
+                      className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" 
+                    />
+                  </div>
+                  {displayImages.length >= 2 && (
+                    <div className="hidden md:flex flex-col gap-2 h-96">
+                      <div className="flex-1 overflow-hidden rounded-xl">
+                        <img 
+                          src={displayImages[1]} 
+                          alt={selectedTour.name} 
+                          className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" 
+                        />
+                      </div>
+                      {displayImages.length >= 3 ? (
+                        <div className="flex-1 overflow-hidden rounded-xl">
+                          <img 
+                            src={displayImages[2]} 
+                            alt={selectedTour.name} 
+                            className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" 
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex-1 bg-slate-50 flex items-center justify-center rounded-xl border border-slate-100">
+                          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider text-center">TripGod Verified</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tour Title Section */}
+                <div className="p-6 md:p-8 space-y-4 border-t border-slate-100">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                        <ShieldCheck size={12} className="text-emerald-600" />
+                        <span>TripGod Verified</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                        <Zap size={12} className="text-amber-500" />
+                        <span>Instant Confirmation</span>
+                      </div>
+
+                      {selectedTour.is_free_cancellation && (
+                        <div className="flex items-center gap-1 bg-green-50 border border-green-200 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                          <Check size={12} className="text-green-600" />
+                          <span>Free Cancellation</span>
+                        </div>
+                      )}
+
+                      {selectedTour.is_limited_seats && (
+                        <div className="flex items-center gap-1 bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                          <Users size={12} className="text-red-500" />
+                          <span>Limited Seats</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight leading-tight pt-1">
+                      {selectedTour.name}
+                    </h1>
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-500 pt-1">
+                      <div className="flex items-center gap-1">
+                        <Clock size={14} className="text-[#FF5722]" />
+                        <span>{selectedTour.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin size={14} className="text-[#FF5722]" />
+                        <span>Starts from {currentCity?.name || 'Rishikesh'}</span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/10 text-amber-700 text-[11px] font-black">
+                        <Star size={12} className="fill-amber-500 text-amber-500" />
+                        <span>{selectedTour.rating}</span>
+                        <span className="text-slate-400 font-bold ml-1">({selectedTour.reviewsCount} reviews)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                    {selectedTour.description}
+                  </p>
+
+                  {/* Info Tags Ribbon */}
+                  <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+                    {infoTags.map((tag, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 text-xs text-slate-700 font-bold shadow-xs">
+                        {getTagIcon(tag, "w-4 h-4 text-slate-500 shrink-0")}
+                        <span>{stripEmojis(tag)}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600 font-medium leading-relaxed">{selectedTour.description}</p>
-              
-              {/* Quick Info Ribbon */}
-              <div className="border-t border-gray-100 pt-3 mt-2">
-                <div className="flex flex-wrap items-center gap-3 text-[10px] sm:text-xs text-slate-700 font-bold">
-                  {infoTags.map((tag, idx) => (
-                    <div key={idx} className="flex items-center gap-2 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                      {getTagIcon(tag, "w-4 h-4 text-slate-500 shrink-0")}
-                      <span>{stripEmojis(tag)}</span>
+              {/* Trust Section: Why Travelers Choose This Tour */}
+              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
+                  <Award className="text-[#FF5722]" size={18} />
+                  Why Travelers Choose This Tour
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(tourHighlights.length > 0 ? tourHighlights : [
+                    "100% Verified Local Operators with experienced mountain drivers",
+                    "Premium handpicked accommodation (deluxe camps & hotels)",
+                    "No hidden charges: all tolls, green cess, and driver allowance included",
+                    "24/7 on-trip emergency coordinate desk support"
+                  ]).map((hl, idx) => (
+                    <div key={idx} className="flex gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-xs">
+                      <div className="p-1 bg-[#10B981]/10 rounded-lg h-fit text-emerald-600 shrink-0">
+                        <CheckCircle2 size={16} />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-black text-slate-950 uppercase tracking-wide">
+                          Feature #{idx + 1}
+                        </p>
+                        <p className="text-xs text-slate-650 font-medium leading-relaxed">
+                          {hl.startsWith('✓') ? hl.substring(1).trim() : hl}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Why Book With Us Widget */}
-          <div className="bg-white shadow-md rounded-2xl p-5 border border-gray-100/50">
-            <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider mb-4 font-display">
-              Why Book With Us
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {whyBookItems.map((item, idx) => (
-                <div key={idx} className="flex flex-col items-start gap-2 p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <div className="p-2 bg-[#FF5722]/10 rounded-lg">
-                    {getLucideIcon(item.icon)}
-                  </div>
-                  <span className="text-xs font-bold text-slate-900">{item.title}</span>
-                  <span className="text-[10px] text-slate-500 leading-normal">{item.desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 2: Accordion Itinerary */}
-          <div className="bg-white shadow-md rounded-2xl p-4 border border-gray-100/50">
-            <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider mb-3 font-display">
-              Itinerary Streamline
-            </h3>
-            <div className="space-y-2">
-              {itineraryData.map((day, idx) => {
-                const isOpen = !!expandedDays[idx];
-                const dayTags = day.tags || [];
-                return (
-                  <div key={idx} className="border border-slate-150 rounded-xl overflow-hidden bg-white">
-                    <button
-                      onClick={() => toggleDay(idx)}
-                      className="w-full flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left border-none cursor-pointer"
-                    >
-                      <div className="flex-1 min-w-0 pr-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-black text-[#FF5722] uppercase tracking-wider shrink-0">
-                            Day {day.day || idx + 1}
-                          </span>
-                          <span className="text-xs font-bold text-slate-800 truncate">
-                            {day.title || 'Sightseeing'}
-                          </span>
+              {/* Route Map Timeline */}
+              {routeMap.length > 0 && (
+                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
+                    <Compass className="text-[#FF5722]" size={18} />
+                    Route Map & Destination Sequence
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    {routeMap.map((point, pIdx) => (
+                      <React.Fragment key={pIdx}>
+                        <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-800 flex items-center gap-1.5 shadow-sm">
+                          <span className="w-5 h-5 rounded-full bg-[#FF5722]/10 text-[#FF5722] flex items-center justify-center text-[10px] font-black">{pIdx + 1}</span>
+                          <span>{point}</span>
                         </div>
-                        {/* Mobile highlights/capsule tags */}
-                        {dayTags.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                            {dayTags.map((tag, tIdx) => (
-                              <span key={tIdx} className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-650 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50">
-                                {getTagIcon(tag, "w-3 h-3 text-slate-500 shrink-0")}
-                                <span>{stripEmojis(tag)}</span>
-                              </span>
+                        {pIdx < routeMap.length - 1 && (
+                          <ArrowRight size={14} className="text-slate-400 shrink-0" />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Visual Timeline Itinerary */}
+              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
+                  <Calendar className="text-[#FF5722]" size={18} />
+                  Detailed Day-Wise Itinerary
+                </h3>
+                
+                <div className="relative pl-6 md:pl-8 border-l-2 border-dashed border-[#FF5722]/30 space-y-8 ml-2 text-left">
+                  {itineraryData.map((day, idx) => {
+                    const meals = getAsArray(day.meals);
+                    const activities = getAsArray(day.activities);
+                    const dayImages = getAsArray(day.images);
+
+                    return (
+                      <div key={idx} className="relative space-y-3">
+                        {/* Timeline Circle Node */}
+                        <div className="absolute -left-[35px] md:-left-[43px] top-0.5 w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#FF5722] text-white flex items-center justify-center text-[10px] md:text-xs font-black shadow-md border-2 border-white ring-4 ring-[#FF5722]/10">
+                          {idx + 1}
+                        </div>
+
+                        {/* Title Row */}
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-[#FF5722] font-black uppercase tracking-widest block text-left">
+                            DAY {day.day || idx + 1}
+                          </span>
+                          <h4 className="text-sm md:text-base font-extrabold text-slate-900 uppercase tracking-tight text-left">
+                            {day.title || 'Sightseeing'}
+                          </h4>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-xs text-slate-600 font-medium leading-relaxed text-left">
+                          {day.description}
+                        </p>
+
+                        {/* Day Metadata Cards */}
+                        <div className="flex flex-wrap gap-2 pt-1.5">
+                          {/* Stay details */}
+                          {(day.stay || stayDetails?.hotel_name) && idx === 0 && (
+                            <div className="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-800 px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-xs">
+                              <Hotel size={12} className="text-sky-600 shrink-0" />
+                              <span>Stay: {day.stay || stayDetails.hotel_name}</span>
+                            </div>
+                          )}
+                          {day.stay && idx > 0 && (
+                            <div className="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-800 px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-xs">
+                              <Hotel size={12} className="text-sky-600 shrink-0" />
+                              <span>Stay: {day.stay}</span>
+                            </div>
+                          )}
+
+                          {/* Meals details */}
+                          {meals.length > 0 && (
+                            <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-emerald-800 px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-xs">
+                              <Utensils size={12} className="text-emerald-600 shrink-0" />
+                              <span>Meals: {meals.join(', ')}</span>
+                            </div>
+                          )}
+
+                          {/* Activities details */}
+                          {activities.length > 0 && (
+                            <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-100 text-amber-800 px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-xs">
+                              <Compass size={12} className="text-amber-600 shrink-0" />
+                              <span>Activities: {activities.join(', ')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Day Photos Grid */}
+                        {dayImages.length > 0 && (
+                          <div className="flex gap-2 overflow-x-auto py-2 pr-4 scrollbar-thin">
+                            {dayImages.map((imgUrl, imgIdx) => (
+                              <div key={imgIdx} className="w-24 h-16 md:w-32 md:h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0 shadow-sm animate-fade-in">
+                                <img src={imgUrl} alt={`Day ${idx + 1} view`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                              </div>
                             ))}
                           </div>
                         )}
                       </div>
-                      <div className="text-slate-400 shrink-0">
-                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Stay Preview Section */}
+              {stayDetails?.hotel_name && (
+                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
+                    <Hotel className="text-[#FF5722]" size={18} />
+                    Hotel & Accommodation Details
+                  </h3>
+                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-3">
+                      <div className="text-left">
+                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                          {stayDetails.hotel_name}
+                        </h4>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mt-0.5">
+                          {stayDetails.room_type || 'Premium Deluxe Room'}
+                        </span>
                       </div>
-                    </button>
-                    
-                    <AnimatePresence initial={false}>
-                      {isOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <div className="p-3.5 bg-white border-t border-slate-100 text-xs text-slate-600 font-medium leading-relaxed font-sans">
-                            {day.description}
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-250 px-2.5 py-1 rounded-md w-fit">
+                        <Check size={10} strokeWidth={3} /> Double Sharing Included
+                      </span>
+                    </div>
+
+                    {/* Stay Amenities */}
+                    {stayDetails.amenities && getAsArray(stayDetails.amenities).length > 0 && (
+                      <div className="space-y-2 text-left">
+                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">Stay Amenities</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {getAsArray(stayDetails.amenities).map((am, amIdx) => (
+                            <span key={amIdx} className="bg-white border border-slate-200 text-slate-700 px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-xs">
+                              {am}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Stay Photos */}
+                    {stayDetails.photos && getAsArray(stayDetails.photos).length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                        {getAsArray(stayDetails.photos).map((photo, phIdx) => (
+                          <div key={phIdx} className="h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs">
+                            <img src={photo} alt="Hotel preview" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+              )}
 
-          {/* Card 3: Dynamic Cost Tabs (What's Included / Excluded) */}
-          <div className="bg-white shadow-md rounded-2xl p-4 border border-gray-100/50">
-            <div className="flex border-b border-gray-100 mb-4">
-              <button
-                type="button"
-                onClick={() => setCostTab('included')}
-                className={`flex-1 py-2.5 text-center text-xs font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
-                  costTab === 'included'
-                    ? 'border-[#FF5722] text-[#FF5722]'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                What's Included
-              </button>
-              <button
-                type="button"
-                onClick={() => setCostTab('excluded')}
-                className={`flex-1 py-2.5 text-center text-xs font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
-                  costTab === 'excluded'
-                    ? 'border-[#FF5722] text-[#FF5722]'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                What's Excluded
-              </button>
+              {/* Pickup & Drop transfers widget */}
+              {(pickupDrop?.pickup_point || pickupDrop?.drop_point || pickupDrop?.reporting_time) && (
+                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
+                    <Car className="text-[#FF5722]" size={18} />
+                    Reporting & Transfer Details
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {pickupDrop.pickup_point && (
+                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
+                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">PICKUP POINT</span>
+                        <p className="text-xs font-extrabold text-slate-900 leading-snug">{pickupDrop.pickup_point}</p>
+                      </div>
+                    )}
+                    {pickupDrop.drop_point && (
+                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
+                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">DROP POINT</span>
+                        <p className="text-xs font-extrabold text-slate-900 leading-snug">{pickupDrop.drop_point}</p>
+                      </div>
+                    )}
+                    {pickupDrop.reporting_time && (
+                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
+                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">REPORTING TIME</span>
+                        <p className="text-xs font-extrabold text-slate-900 leading-snug">{pickupDrop.reporting_time}</p>
+                      </div>
+                    )}
+                    {pickupDrop.coordinator_number && (
+                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
+                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">ON-TRIP COORDINATOR</span>
+                        <a href={`tel:${pickupDrop.coordinator_number}`} className="inline-flex items-center gap-1 text-xs font-black text-slate-900 hover:text-[#FF5722] underline pt-0.5">
+                          <Phone size={12} className="text-[#FF5722]" /> Call Coordinator
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Dynamic Inclusions & Exclusions Tabs */}
+              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                <div className="flex border-b border-slate-100 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setCostTab('included')}
+                    className={`flex-1 pb-3 text-center text-xs font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
+                      costTab === 'included'
+                        ? 'border-[#FF5722] text-[#FF5722]'
+                        : 'border-transparent text-slate-400 hover:text-slate-700'
+                    }`}
+                  >
+                    What's Included
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCostTab('excluded')}
+                    className={`flex-1 pb-3 text-center text-xs font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
+                      costTab === 'excluded'
+                        ? 'border-[#FF5722] text-[#FF5722]'
+                        : 'border-transparent text-slate-400 hover:text-slate-700'
+                    }`}
+                  >
+                    What's Excluded
+                  </button>
+                </div>
+
+                {costTab === 'included' ? (
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 font-bold list-none p-0 m-0 text-left">
+                    {displayInclusions.map((item, idx) => (
+                      <li key={idx} className="flex gap-2.5 items-start bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="bg-green-50 text-green-600 rounded-full p-0.5 w-5 h-5 flex items-center justify-center shrink-0 border border-green-200">
+                          <Check size={12} strokeWidth={3} />
+                        </span>
+                        <span className="leading-snug">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 font-bold list-none p-0 m-0 text-left">
+                    {displayExclusions.map((item, idx) => (
+                      <li key={idx} className="flex gap-2.5 items-start bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="bg-red-50 text-red-650 rounded-full p-0.5 w-5 h-5 flex items-center justify-center shrink-0 border border-red-200">
+                          <X size={12} strokeWidth={3} />
+                        </span>
+                        <span className="leading-snug">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Nearby Landmarks Grid */}
+              {landmarks.length > 0 && (
+                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
+                    <MapPin className="text-[#FF5722]" size={18} />
+                    Nearby Attractions & Landmarks
+                  </h3>
+                  <div className="overflow-hidden border border-slate-150 rounded-2xl bg-white shadow-xs">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-750 border-b border-slate-200 font-black uppercase text-[10px] tracking-wider">
+                          <th className="p-3.5 pl-4">Location Name</th>
+                          <th className="p-3.5">Distance</th>
+                          <th className="p-3.5">Travel Time</th>
+                          <th className="p-3.5 pr-4 text-right">Directions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-150 text-slate-650 font-medium">
+                        {landmarks.map((mark, mIdx) => (
+                          <tr key={mIdx} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="p-3.5 pl-4 font-bold text-slate-900">{mark.name}</td>
+                            <td className="p-3.5">{mark.distance || 'N/A'}</td>
+                            <td className="p-3.5">{mark.time || 'N/A'}</td>
+                            <td className="p-3.5 pr-4 text-right">
+                              {mark.maps_url ? (
+                                <a
+                                  href={mark.maps_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-[#FF5722]/10 text-[#FF5722] hover:bg-[#FF5722]/20 px-2.5 py-1.5 rounded-lg transition-all"
+                                >
+                                  Map View
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 text-[10px]">No link</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* FAQs accordion section */}
+              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
+                  <HelpCircle className="text-[#FF5722]" size={18} />
+                  Frequently Asked Questions
+                </h3>
+                <div className="space-y-3">
+                  {(faqData.length > 0 ? faqData : [
+                    {
+                      question: "How is the cancellation handled?",
+                      answer: selectedTour.cancellation_policy || "Refunds are processed based on the operator guidelines. Contact support for instant yatra cancellations."
+                    },
+                    {
+                      question: "Are guides provided?",
+                      answer: "Yes, certified local coordinators and local mountain guides will manage safety briefings during treks."
+                    },
+                    {
+                      question: "Are tolls and state taxes included in the pricing?",
+                      answer: "Absolutely. Under our TripGod promise, all green taxes, toll permits, and local charges are 100% covered."
+                    }
+                  ]).map((faq, fIdx) => {
+                    const isOpen = !!expandedFAQs[fIdx];
+                    return (
+                      <div key={fIdx} className="border border-slate-150 rounded-2xl overflow-hidden bg-white shadow-xs">
+                        <button
+                          onClick={() => toggleFAQ(fIdx)}
+                          className="w-full flex items-center justify-between p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left border-none cursor-pointer"
+                        >
+                          <span className="text-xs font-black text-slate-800 pr-4">
+                            {faq.question}
+                          </span>
+                          <span className="text-slate-400 shrink-0">
+                            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </span>
+                        </button>
+                        
+                        <AnimatePresence initial={false}>
+                          {isOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <div className="p-4 bg-white border-t border-slate-100 text-xs text-slate-655 font-medium leading-relaxed">
+                                {faq.answer}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Guidelines Box */}
+              {selectedTour.tour_guidelines && selectedTour.tour_guidelines.length > 0 && (
+                <div className="bg-amber-50/30 border border-amber-100 rounded-3xl p-6 shadow-sm text-left">
+                  <h3 className="text-xs sm:text-sm font-black text-amber-900 uppercase tracking-wider mb-4 font-display flex items-center gap-2">
+                    <Info size={16} className="text-amber-600" />
+                    Important Tour Guidelines
+                  </h3>
+                  <ul className="space-y-2.5 list-none p-0 m-0">
+                    {selectedTour.tour_guidelines.map((guideline, gIdx) => (
+                      <li key={gIdx} className="flex gap-2.5 items-start text-xs text-amber-800 font-bold leading-normal">
+                        <span className="text-amber-500 shrink-0 mt-0.5">•</span>
+                        <span>{guideline}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* TripGod Promise checklist */}
+              <div className="bg-white shadow-sm rounded-3xl p-6 border border-slate-100">
+                <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider mb-3 font-display">
+                  TripGod Promise: ₹1 Extra Nahi Dena
+                </h3>
+                <div className="flex gap-2.5 items-start bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 text-xs text-slate-700 font-bold text-left">
+                  <span className="bg-emerald-100 text-[#10B981] rounded-full p-1.5 shrink-0 border border-emerald-250">
+                    <Check size={12} strokeWidth={3} />
+                  </span>
+                  <div>
+                    <p className="text-emerald-800 font-black uppercase text-[10px] tracking-wider">All Tolls, Taxes, and Driver Allowances Included</p>
+                    <p className="text-[11px] text-emerald-650 font-medium mt-1 leading-relaxed">
+                      No hidden charges, parking fees, or driver stay charges. The price you book at is final.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            {costTab === 'included' ? (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 font-medium list-none p-0 m-0 text-left">
-                {displayInclusions.map((item, idx) => (
-                  <li key={idx} className="flex gap-2.5 items-start">
-                    <span className="bg-green-50 text-green-600 rounded-full p-1 w-5 h-5 flex items-center justify-center shrink-0">
+            {/* Right Column: Floating Sidebar Book Now widget (sticky on desktop) */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="sticky top-20 bg-white shadow-md border border-slate-100 rounded-3xl p-6 space-y-6">
+                
+                {/* Price Summary */}
+                <div className="space-y-2 pb-5 border-b border-slate-100 text-left">
+                  <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Packages starting from</span>
+                  
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-slate-900">₹{price.toLocaleString('en-IN')}</span>
+                    {originalPrice > price && (
+                      <span className="text-base text-slate-400 line-through font-bold">
+                        ₹{originalPrice.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                  </div>
+
+                  {discountPercent > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-[#FF5722] bg-[#FF5722]/10 border border-[#FF5722]/20 px-2.5 py-1 rounded-md mt-1">
+                      Save {discountPercent}% OFF
+                    </span>
+                  )}
+                  
+                  <p className="text-[10px] text-slate-400 font-bold mt-1">
+                    *Price shown is the starting rate of the cheapest verified operator.
+                  </p>
+                </div>
+
+                {/* Trust Highlights */}
+                <div className="space-y-3.5 text-xs text-slate-650 font-medium text-left">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shrink-0">
                       <Check size={12} strokeWidth={3} />
-                    </span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 font-medium list-none p-0 m-0 text-left">
-                {displayExclusions.map((item, idx) => (
-                  <li key={idx} className="flex gap-2.5 items-start">
-                    <span className="bg-red-50 text-red-605 rounded-full p-1 w-5 h-5 flex items-center justify-center shrink-0">
-                      <X size={12} strokeWidth={3} />
-                    </span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                    </div>
+                    <span>No Hidden Charges (Toll & State Tax Included)</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shrink-0">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span>Instant voucher confirmation desk</span>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shrink-0">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span>Verified local coordinator matching</span>
+                  </div>
+                </div>
 
-          {/* Important Tour Guidelines Widget */}
-          {selectedTour.tour_guidelines && selectedTour.tour_guidelines.length > 0 && (
-            <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-5 shadow-sm text-left">
-              <h3 className="text-xs sm:text-sm font-black text-amber-900 uppercase tracking-wider mb-3 font-display flex items-center gap-2">
-                <Info size={16} className="text-amber-600" />
-                Important Tour Guidelines
-              </h3>
-              <ul className="space-y-2 list-none p-0 m-0">
-                {selectedTour.tour_guidelines.map((guideline, gIdx) => (
-                  <li key={gIdx} className="flex gap-2.5 items-start text-xs text-amber-800 font-medium">
-                    <span className="text-amber-500 shrink-0 mt-0.5">•</span>
-                    <span>{guideline}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Card 4: TripGod Promise checklist */}
-          <div className="bg-white shadow-md rounded-2xl p-4 border border-gray-100/50">
-            <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider mb-3 font-display">
-              TripGod Promise: ₹1 Extra Nahi Dena
-            </h3>
-            <div className="flex gap-2.5 items-start bg-emerald-50/50 border border-emerald-100 rounded-xl p-3.5 text-xs text-slate-750 font-bold text-left">
-              <span className="bg-emerald-100 text-[#10B981] rounded-full p-1 shrink-0">
-                <Check size={12} strokeWidth={3} />
-              </span>
-              <div>
-                <p className="text-emerald-800 font-black">All Tolls, Taxes, and Driver Allowances Included</p>
-                <p className="text-[10px] text-emerald-650 font-medium mt-0.5 leading-relaxed">
-                  No hidden charges, parking fees, or driver stay charges. The price you book at is final.
-                </p>
+                {/* Primary CTA */}
+                <button
+                  onClick={() => navigateTo(`tours/${tourId}/partners`)}
+                  className="w-full py-4 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-md hover:shadow-lg border-none font-display text-center block"
+                >
+                  SELECT LOCAL OPERATOR
+                </button>
               </div>
             </div>
+
           </div>
         </div>
 
-        {/* Sticky Bottom Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-150 p-4 z-40 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-          <div className="max-w-4xl mx-auto">
+        {/* Sticky bottom bar (Mobile/Tablet only) */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-150 p-4 z-40 shadow-[0_-5px_15px_rgba(0,0,0,0.06)] flex items-center justify-between gap-4">
+          <div className="flex flex-col text-left">
+            <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Starts from</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-extrabold text-slate-900">₹{price.toLocaleString('en-IN')}</span>
+              {originalPrice > price && (
+                <span className="text-xs text-slate-400 line-through font-bold">
+                  ₹{originalPrice.toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
+            {discountPercent > 0 && (
+              <span className="text-[8px] font-black text-[#FF5722] uppercase tracking-wider block mt-0.5">
+                {discountPercent}% OFF Package
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Call desk */}
+            <a
+              href="tel:+919837371137"
+              className="p-3 bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#FF5722] rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
+            >
+              <Phone size={16} />
+            </a>
+            
+            {/* WhatsApp */}
+            <a
+              href={`https://wa.me/919837371137?text=Hi%2C%20I'm%20interested%20in%2520booking%2520the%2520${encodeURIComponent(selectedTour.name)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 bg-slate-50 border border-slate-200 text-slate-700 hover:text-emerald-500 rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
+            >
+              <MessageSquare size={16} />
+            </a>
+
+            {/* Select Partner */}
             <button
               onClick={() => navigateTo(`tours/${tourId}/partners`)}
-              className="w-full py-4 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-md text-center border-none font-display"
+              className="py-3 px-5 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm font-display border-none shrink-0"
             >
-              SELECT YOUR LOCAL TOUR PARTNER
+              Book Now
             </button>
           </div>
         </div>
