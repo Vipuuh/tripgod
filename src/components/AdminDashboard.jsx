@@ -1775,9 +1775,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         is_limited_offer: !!data.is_limited_offer,
         rating: data.rating !== null && data.rating !== undefined ? data.rating : 4.5,
         reviews_count: data.reviews_count !== null && data.reviews_count !== undefined ? data.reviews_count : 100,
-        quick_info_tags: data.quick_info_tags || ['🏨 Stay', '🚗 Private AC Cab', '🍔 Meals', '🗺️ Local Driver'],
+        quick_info_tags: data.quick_info_tags || ['Stay Included', 'Private AC Cab', 'Meals Included', 'Local Driver'],
         day_wise_itinerary: data.day_wise_itinerary || data.itinerary || [],
         reporting_address: data.reporting_address || '',
+        tour_guidelines: data.tour_guidelines || [],
+        why_book_with_us: data.why_book_with_us || { items: [] },
         why_guests_love: (data.why_guests_love || []).map(hl => {
 
           if (!hl) return { icon: 'Star', text: '' };
@@ -1893,8 +1895,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.duration = '3 Days / 2 Nights';
         defaults.itinerary = [];
         defaults.day_wise_itinerary = [];
-        defaults.quick_info_tags = ['🏨 Stay', '🚗 Private AC Cab', '🍔 Meals', '🗺️ Local Driver'];
+        defaults.quick_info_tags = ['Stay Included', 'Private AC Cab', 'Meals Included', 'Local Driver'];
         defaults.reporting_address = '';
+        defaults.tour_guidelines = [];
+        defaults.why_book_with_us = { items: [] };
         defaults.inclusions = [];
         defaults.exclusions = [];
         defaults.contact_number = '';
@@ -2156,10 +2160,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           duration: formData.duration || '3 Days / 2 Nights',
           itinerary: formData.day_wise_itinerary || formData.itinerary || [],
           day_wise_itinerary: formData.day_wise_itinerary || formData.itinerary || [],
-          quick_info_tags: formData.quick_info_tags || [],
+          quick_info_tags: (formData.quick_info_tags || []).filter(Boolean),
           reporting_address: formData.reporting_address || '',
-          inclusions: formData.inclusions || [],
-          exclusions: formData.exclusions || [],
+          inclusions: (formData.inclusions || []).filter(Boolean),
+          exclusions: (formData.exclusions || []).filter(Boolean),
+          tour_guidelines: (formData.tour_guidelines || []).filter(Boolean),
+          why_book_with_us: formData.why_book_with_us || { items: [] },
           cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
           images: formData.images || [],
           payment_mode: formData.payment_mode || 'commission_advance',
@@ -3713,14 +3719,19 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 value={formData.contact_number || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, contact_number: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder="e.g. 9837371137"
+                placeholder="e.g. +91 99999 99999"
               />
             </div>
           </div>
 
-          {/* Trust & Itinerary Metrics */}
-          <div className="space-y-4 pt-4 border-t border-slate-900">
-            <h4 className="text-[10px] font-black uppercase text-accent tracking-wider">Trust & Itinerary Metrics</h4>
+          {/* Trust Factors & Policy Matrix Section Card */}
+          <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 md:p-6 space-y-6 mt-4">
+            <div className="border-b border-slate-900 pb-3">
+              <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">
+                Trust Factors & Policy Matrix
+              </h4>
+              <p className="text-[10px] text-gray-500 mt-1">Configure verification guidelines, dynamic inclusion/exclusion lists, micro-features, and itineraries.</p>
+            </div>
             
             {/* Reporting Address */}
             <div className="space-y-1">
@@ -3734,14 +3745,260 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               />
             </div>
 
+            {/* Inclusions & Exclusions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Inclusions Dynamic List */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Inclusions</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        inclusions: [...(prev.inclusions || []), '']
+                      }));
+                    }}
+                    className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                  >
+                    + Add
+                  </button>
+                </div>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                  {(formData.inclusions || []).map((inc, idx) => (
+                    <div key={idx} className="flex gap-1.5">
+                      <input
+                        type="text"
+                        required
+                        value={inc}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const updated = [...(prev.inclusions || [])];
+                            updated[idx] = val;
+                            return { ...prev, inclusions: updated };
+                          });
+                        }}
+                        className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-[11px] focus:outline-none"
+                        placeholder="Inclusion item"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => {
+                            const updated = (prev.inclusions || []).filter((_, i) => i !== idx);
+                            return { ...prev, inclusions: updated };
+                          });
+                        }}
+                        className="p-1 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Exclusions Dynamic List */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Exclusions</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        exclusions: [...(prev.exclusions || []), '']
+                      }));
+                    }}
+                    className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-350 font-bold cursor-pointer"
+                  >
+                    + Add
+                  </button>
+                </div>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                  {(formData.exclusions || []).map((exc, idx) => (
+                    <div key={idx} className="flex gap-1.5">
+                      <input
+                        type="text"
+                        required
+                        value={exc}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => {
+                            const updated = [...(prev.exclusions || [])];
+                            updated[idx] = val;
+                            return { ...prev, exclusions: updated };
+                          });
+                        }}
+                        className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-[11px] focus:outline-none"
+                        placeholder="Exclusion item"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => {
+                            const updated = (prev.exclusions || []).filter((_, i) => i !== idx);
+                            return { ...prev, exclusions: updated };
+                          });
+                        }}
+                        className="p-1 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg cursor-pointer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Tour Guidelines Dynamic List */}
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-display text-slate-300">
+                  Important Tour Guidelines
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      tour_guidelines: [...(prev.tour_guidelines || []), '']
+                    }));
+                  }}
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                >
+                  + Add Item
+                </button>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {(formData.tour_guidelines || []).map((guide, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={guide}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData(prev => {
+                          const updated = [...(prev.tour_guidelines || [])];
+                          updated[idx] = val;
+                          return { ...prev, tour_guidelines: updated };
+                        });
+                      }}
+                      placeholder="e.g., Aadhaar Card is mandatory for verification."
+                      className="flex-grow bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => {
+                          const updated = (prev.tour_guidelines || []).filter((_, i) => i !== idx);
+                          return { ...prev, tour_guidelines: updated };
+                        });
+                      }}
+                      className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 rounded-lg cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+                {(formData.tour_guidelines || []).length === 0 && (
+                  <p className="text-[10px] text-gray-500 italic">No tour guidelines added. Fallback will hide guidelines widget cleanly.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Why Book With Us Items */}
+            <div className="space-y-3 pt-2">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                Why Book With Us micro-features (3 Items)
+              </label>
+              
+              <div className="space-y-3">
+                {[0, 1, 2].map((idx) => {
+                  const itemsList = formData.why_book_with_us?.items || [];
+                  const item = itemsList[idx] || { icon: 'Ticket', title: '', desc: '' };
+                  
+                  return (
+                    <div key={idx} className="bg-slate-905 border border-slate-900 rounded-xl p-3 grid grid-cols-3 gap-3">
+                      <div className="space-y-1 col-span-3 font-bold text-slate-400 text-[9px] uppercase tracking-wider">
+                        Feature {idx + 1}
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Icon</label>
+                        <select
+                          value={item.icon || 'Ticket'}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const list = [...(prev.why_book_with_us?.items || [])];
+                              while (list.length <= idx) list.push({ icon: 'Ticket', title: '', desc: '' });
+                              list[idx] = { ...list[idx], icon: val };
+                              return { ...prev, why_book_with_us: { items: list } };
+                            });
+                          }}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-white text-xs focus:outline-none"
+                        >
+                          <option value="Ticket">Ticket</option>
+                          <option value="Shield">Shield</option>
+                          <option value="Headset">Headset</option>
+                          <option value="Hotel">Hotel</option>
+                          <option value="Car">Car</option>
+                          <option value="Utensils">Utensils</option>
+                          <option value="Compass">Compass</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Title</label>
+                        <input
+                          type="text"
+                          value={item.title || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const list = [...(prev.why_book_with_us?.items || [])];
+                              while (list.length <= idx) list.push({ icon: 'Ticket', title: '', desc: '' });
+                              list[idx] = { ...list[idx], title: val };
+                              return { ...prev, why_book_with_us: { items: list } };
+                            });
+                          }}
+                          placeholder="e.g. Instant Confirmation"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase">Description</label>
+                        <input
+                          type="text"
+                          value={item.desc || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => {
+                              const list = [...(prev.why_book_with_us?.items || [])];
+                              while (list.length <= idx) list.push({ icon: 'Ticket', title: '', desc: '' });
+                              list[idx] = { ...list[idx], desc: val };
+                              return { ...prev, why_book_with_us: { items: list } };
+                            });
+                          }}
+                          placeholder="e.g. Secure booking immediately"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Quick Info Tags */}
-            <div className="space-y-2">
+            <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between">
                 <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Quick Info Inclusions (Tags)</label>
                 <button
                   type="button"
                   onClick={() => {
-                    const tag = prompt("Enter tag (e.g. 🏨 Stay, 🚗 Private AC Cab):");
+                    const tag = prompt("Enter tag (e.g. Stay Included, Private AC Cab):");
                     if (tag) {
                       setFormData(prev => ({
                         ...prev,
@@ -3771,13 +4028,13 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                   </span>
                 ))}
                 {(formData.quick_info_tags || []).length === 0 && (
-                  <span className="text-[10px] text-gray-500 italic">No quick info tags added. Fallback will show: Stay, Cab, Meals, Local Driver.</span>
+                  <span className="text-[10px] text-gray-500 italic">No quick info tags added. Fallback will show defaults.</span>
                 )}
               </div>
             </div>
 
             {/* Day Wise Itinerary Accordion Builder */}
-            <div className="space-y-3">
+            <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Day-Wise Itinerary Accordion Builder</label>
                 <button
@@ -3792,7 +4049,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                       ]
                     }));
                   }}
-                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-300 font-bold cursor-pointer"
+                  className="py-0.5 px-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[9px] text-slate-350 font-bold cursor-pointer"
                 >
                   + Add Day
                 </button>
@@ -3851,7 +4108,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                               return { ...prev, day_wise_itinerary: updated };
                             });
                           }}
-                          placeholder="e.g. 🚗 Pickup, 🏨 Luxury Camp"
+                          placeholder="e.g. Pickup, Luxury Camp"
                           className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
                         />
                       </div>
@@ -3871,14 +4128,14 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                           });
                         }}
                         rows={2}
-                        placeholder="Description of the day's route and activities..."
+                        placeholder="Description of the day's route..."
                         className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
                       />
                     </div>
                   </div>
                 ))}
                 {(formData.day_wise_itinerary || []).length === 0 && (
-                  <p className="text-[10px] text-gray-500 italic">No itinerary days added. Default mock yatra days will be rendered as fallback.</p>
+                  <p className="text-[10px] text-gray-500 italic">No itinerary days added.</p>
                 )}
               </div>
             </div>

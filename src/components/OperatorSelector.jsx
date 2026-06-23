@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, MapPin, Tag, Info } from 'lucide-react';
+import { Star, MapPin, Tag, Info, Sparkles } from 'lucide-react';
 
 
 export default function OperatorSelector({ operators = [], onBookOperator, activityName }) {
@@ -53,7 +53,7 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
       </div>
 
       <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-slate-650 leading-relaxed flex gap-2">
-        <Info size={14} className="text-accent flex-shrink-0 mt-0.5" />
+        <Info size={14} className="text-[#FF5722] flex-shrink-0 mt-0.5" />
         <p>
           Select an operator to book. Your reporting, safety briefing, and activity pickup will begin directly at the chosen operator's offline office location shown below.
         </p>
@@ -77,7 +77,7 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
             >
               {/* Limited Offer Accent Bar */}
               {op.isLimitedOffer && (
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00]" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF5722] to-[#E54A18]" />
               )}
 
               {/* Upper Section: Photo and Info */}
@@ -91,7 +91,7 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-center p-1 text-[#FF5F00]">
+                    <div className="flex flex-col items-center justify-center text-center p-1 text-[#FF5722]">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 drop-shadow-sm">
                         <path fillRule="evenodd" d="M12.53 16.28a.75.75 0 01-1.06 0l-3-3a.75.75 0 111.06-1.06l2.47 2.47 4.97-4.97a.75.75 0 111.06 1.06l-5.5 5.5z" clipRule="evenodd" />
                         <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v.75H10.5a.75.75 0 000 1.5h.75v.75a.75.75 0 001.5 0V8.25h.75a.75 0 000-1.5h-.75V6z" clipRule="evenodd" />
@@ -137,7 +137,7 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                   {/* Landmark/Location */}
                   {op.landmark && (
                     <div className="flex items-center gap-1 text-[11px] text-slate-500 font-bold truncate pt-0.5">
-                      <MapPin size={11} className="text-[#FF5F00] flex-shrink-0" />
+                      <MapPin size={11} className="text-[#FF5722] flex-shrink-0" />
                       <span className="truncate">Office/Pickup: {op.landmark}</span>
                     </div>
                   )}
@@ -154,14 +154,15 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                         </span>
                       )}
                       {op.isLimitedOffer && (
-                        <span className="flex items-center gap-0.5 text-[9px] font-black uppercase text-[#FF5F00] bg-[#FF5F00]/10 border border-[#FF5F00]/20 px-1.5 py-0.5 rounded-md">
+                        <span className="flex items-center gap-0.5 text-[9px] font-black uppercase text-[#FF5722] bg-[#FF5722]/10 border border-[#FF5722]/20 px-1.5 py-0.5 rounded-md">
                           <Tag size={8} /> Limited Offer
                         </span>
                       )}
                     </div>
                     {op.fullPaymentUpiDiscount > 0 && (
-                      <p className="text-[10px] text-orange-600 font-black tracking-wide">
-                        🎉 Get Flat ₹{op.fullPaymentUpiDiscount} off on 100% Full UPI Payment
+                      <p className="text-[10px] text-orange-600 font-black tracking-wide flex items-center gap-1.5">
+                        <Sparkles size={12} className="text-[#FF5722] flex-shrink-0" />
+                        <span>Get Flat ₹{op.fullPaymentUpiDiscount} off on 100% Full UPI Payment</span>
                       </p>
                     )}
                   </div>
@@ -171,7 +172,7 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
               {/* Lower Section: Book Button */}
               <button
                 onClick={() => onBookOperator(op)}
-                className="w-full py-2.5 bg-[#FF5F00] hover:bg-[#FF3E00] text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-1.5 border-none"
               >
                 {op.stretchRoute ? (
                   <span className="truncate max-w-full">

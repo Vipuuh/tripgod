@@ -294,6 +294,8 @@ ALTER TABLE rafting ADD COLUMN IF NOT EXISTS full_payment_upi_discount NUMERIC D
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS quick_info_tags JSONB DEFAULT '[]'::JSONB;
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS day_wise_itinerary JSONB DEFAULT '[]'::JSONB;
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS reporting_address TEXT;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS tour_guidelines TEXT[] DEFAULT '{}'::TEXT[];
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS why_book_with_us JSONB DEFAULT '{"items": []}'::JSONB;
 
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
