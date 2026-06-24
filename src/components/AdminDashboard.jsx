@@ -1796,6 +1796,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         transport_included: data.transport_included !== undefined && data.transport_included !== null ? !!data.transport_included : true,
         guide_included: data.guide_included !== undefined && data.guide_included !== null ? !!data.guide_included : true,
         tour_type: data.tour_type || 'Sightseeing',
+        next_batch: data.next_batch || '15 July',
+        difficulty: data.difficulty || 'Moderate',
+        group_type: data.group_type || 'Group Tour',
+        perfect_for: data.perfect_for || [],
         why_guests_love: (data.why_guests_love || []).map(hl => {
 
           if (!hl) return { icon: 'Star', text: '' };
@@ -1936,6 +1940,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.transport_included = true;
         defaults.guide_included = true;
         defaults.tour_type = 'Sightseeing';
+        defaults.next_batch = '15 July';
+        defaults.difficulty = 'Moderate';
+        defaults.group_type = 'Group Tour';
+        defaults.perfect_for = [];
       }
 
       setFormData(defaults);
@@ -2222,7 +2230,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           meals_included: formData.meals_included !== undefined ? !!formData.meals_included : true,
           transport_included: formData.transport_included !== undefined ? !!formData.transport_included : true,
           guide_included: formData.guide_included !== undefined ? !!formData.guide_included : true,
-          tour_type: formData.tour_type || 'Sightseeing'
+          tour_type: formData.tour_type || 'Sightseeing',
+          next_batch: formData.next_batch || '15 July',
+          difficulty: formData.difficulty || 'Moderate',
+          group_type: formData.group_type || 'Group Tour',
+          perfect_for: (formData.perfect_for || []).filter(Boolean)
         };
 
         if (data) {
@@ -4444,6 +4456,80 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                   <option value="Camping">Camping</option>
                   <option value="Other">Other</option>
                 </select>
+              </div>
+            </div>
+
+            {/* Premium Tour Listing Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Next Batch Date */}
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Next Batch Date</label>
+                <input
+                  type="text"
+                  value={formData.next_batch || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, next_batch: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                  placeholder="e.g. 15 July"
+                />
+              </div>
+
+              {/* Tour Difficulty */}
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Difficulty Level</label>
+                <select
+                  value={formData.difficulty || 'Moderate'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                >
+                  <option value="Easy">Easy</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="Difficult">Difficult</option>
+                  <option value="Challenging">Challenging</option>
+                </select>
+              </div>
+
+              {/* Group Type */}
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Group / Tour Format</label>
+                <select
+                  value={formData.group_type || 'Group Tour'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, group_type: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                >
+                  <option value="Group Tour">Group Tour</option>
+                  <option value="Private Tour">Private Tour</option>
+                  <option value="Customized Tour">Customized Tour</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Perfect For checklist for Tours */}
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Perfect For (Target Segments)</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-300">
+                {['Solo Travelers', 'Couples', 'Families', 'Friends', 'Backpackers', 'Adventure Seekers', 'Riders', 'Nature Lovers'].map(pf => {
+                  const perfectList = formData.perfect_for || [];
+                  const isChecked = perfectList.includes(pf);
+                  return (
+                    <label key={pf} className="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          let updated = [...perfectList];
+                          if (e.target.checked) {
+                            updated.push(pf);
+                          } else {
+                            updated = updated.filter(item => item !== pf);
+                          }
+                          setFormData(prev => ({ ...prev, perfect_for: updated }));
+                        }}
+                        className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                      />
+                      <span>{pf}</span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 

@@ -319,6 +319,12 @@ ALTER TABLE tours ADD COLUMN IF NOT EXISTS transport_included BOOLEAN DEFAULT tr
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS guide_included BOOLEAN DEFAULT true;
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS tour_type TEXT DEFAULT 'Sightseeing';
 
+-- Premium Tour Conversion Optimizations (June 2026)
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS next_batch TEXT DEFAULT '15 July';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS difficulty TEXT DEFAULT 'Moderate';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS group_type TEXT DEFAULT 'Group Tour';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS perfect_for TEXT[] DEFAULT '{}'::TEXT[];
+
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
 
