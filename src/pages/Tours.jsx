@@ -5,7 +5,7 @@ import {
   ChevronDown, ChevronUp, Check, X, Hotel, Car, Utensils, Compass, 
   Flame, Footprints, Moon, Sun, ShoppingBag, Eye, Tag, Info, Ticket, 
   Headphones, CheckCircle2, Phone, MessageSquare, Zap, Users, Shield, 
-  Award, Sparkles, HelpCircle, ArrowRight
+  Award, Sparkles, HelpCircle, ArrowRight, CreditCard, Headset
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
