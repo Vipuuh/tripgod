@@ -593,18 +593,20 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
   )}
 
                     <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-500 pt-1">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 bg-slate-100/60 px-2.5 py-1 rounded-xl border border-slate-200/50">
                         <Clock size={14} className="text-[#FF5722]" />
                         <span>{selectedTour.duration}</span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 bg-slate-100/60 px-2.5 py-1 rounded-xl border border-slate-200/50">
                         <MapPin size={14} className="text-[#FF5722]" />
                         <span>Starts from {currentCity?.name || 'Rishikesh'}</span>
                       </div>
-                      <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/10 text-amber-700 text-[11px] font-black">
-                        <Star size={12} className="fill-amber-500 text-amber-500" />
-                        <span>{selectedTour.rating}</span>
-                        <span className="text-slate-400 font-bold ml-1">({selectedTour.reviewsCount} reviews)</span>
+                      <div className="flex flex-col text-left pl-3 border-l border-slate-200">
+                        <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
+                          <Star size={14} className="fill-amber-500 text-amber-500" />
+                          <span>{selectedTour.rating}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{selectedTour.reviewsCount} Reviews</span>
                       </div>
   {/* Route Display */}
   {routeMap.length > 0 && (
@@ -622,26 +624,48 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
 
                   <p className="text-sm text-slate-600 leading-relaxed font-medium">
                     {selectedTour.description}
-  {/* Small Highlights */}
-  <div className="flex flex-wrap gap-3 mt-4">
-    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
-      <Hotel size={14} className="text-[#FF5722]" />
-      <span>Hotel Included</span>
-    </div>
-    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
-      <Utensils size={14} className="text-[#FF5722]" />
-      <span>Breakfast + Dinner</span>
-    </div>
-    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
-      <Car size={14} className="text-[#FF5722]" />
-      <span>Transfers Included</span>
-    </div>
-    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
-      <Users size={14} className="text-[#FF5722]" />
-      <span>Guide Available</span>
-    </div>
-  </div>
                   </p>
+
+                  {/* Small Highlights */}
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
+                      <Hotel size={14} className="text-[#FF5722]" />
+                      <span>Hotel Included</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
+                      <Utensils size={14} className="text-[#FF5722]" />
+                      <span>Breakfast + Dinner</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
+                      <Car size={14} className="text-[#FF5722]" />
+                      <span>Transfers Included</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-black text-slate-700">
+                      <Users size={14} className="text-[#FF5722]" />
+                      <span>Guide Available</span>
+                    </div>
+                  </div>
+
+                  {/* Who is this tour perfect for? */}
+                  {selectedTour.perfect_for && selectedTour.perfect_for.length > 0 && (
+                    <div className="pt-4 border-t border-slate-100 text-left">
+                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-display">
+                        <Users className="text-[#FF5722]" size={14} />
+                        Who is this tour perfect for?
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedTour.perfect_for.map((item, idx) => (
+                          <span 
+                            key={idx} 
+                            className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1"
+                          >
+                            <Sparkles size={10} className="text-indigo-500 animate-pulse" />
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Info Tags Ribbon */}
                   <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
