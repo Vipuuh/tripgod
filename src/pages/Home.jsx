@@ -659,140 +659,179 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               
               {activeSearchTab === 'hotels' && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center pb-4 md:pb-0">
-                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">City / Destination</span>
-                    <span className="text-sm font-extrabold text-black mt-1">Rishikesh, India</span>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <MapPin className="text-[#FF5F00] shrink-0" size={18} />
+                    <div className="flex flex-col text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">City / Destination</span>
+                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Rishikesh, India</span>
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('hotel-checkin')?.showPicker()}>
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Check-in Date</span>
-                    <input 
-                      type="date" 
-                      id="hotel-checkin"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={hotelCheckIn}
-                      onChange={(e) => {
-                        setHotelCheckIn(e.target.value);
-                        const checkInDate = new Date(e.target.value);
-                        checkInDate.setDate(checkInDate.getDate() + 1);
-                        setHotelCheckOut(checkInDate.toISOString().split('T')[0]);
-                      }}
-                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
-                    />
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('hotel-checkin')?.showPicker()}>
+                    <Calendar className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left w-full">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Check-in Date</span>
+                      <input 
+                        type="date" 
+                        id="hotel-checkin"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={hotelCheckIn}
+                        onChange={(e) => {
+                          setHotelCheckIn(e.target.value);
+                          const checkInDate = new Date(e.target.value);
+                          checkInDate.setDate(checkInDate.getDate() + 1);
+                          setHotelCheckOut(checkInDate.toISOString().split('T')[0]);
+                        }}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      />
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('hotel-checkout')?.showPicker()}>
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Check-out Date</span>
-                    <input 
-                      type="date" 
-                      id="hotel-checkout"
-                      min={hotelCheckIn}
-                      value={hotelCheckOut}
-                      onChange={(e) => setHotelCheckOut(e.target.value)}
-                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
-                    />
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('hotel-checkout')?.showPicker()}>
+                    <Calendar className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left w-full">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Check-out Date</span>
+                      <input 
+                        type="date" 
+                        id="hotel-checkout"
+                        min={hotelCheckIn}
+                        value={hotelCheckOut}
+                        onChange={(e) => setHotelCheckOut(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      />
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Guests</span>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm font-extrabold text-black">{hotelGuests} Guest{hotelGuests > 1 ? 's' : ''}</span>
-                      <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => setHotelGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
-                        <button type="button" onClick={() => setHotelGuests(g => Math.min(20, g + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <Users className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left flex-1">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Guests</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-sm font-extrabold text-slate-900">{hotelGuests} Guest{hotelGuests > 1 ? 's' : ''}</span>
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => setHotelGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">-</button>
+                          <button type="button" onClick={() => setHotelGuests(g => Math.min(20, g + 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">+</button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-
+ 
               {activeSearchTab === 'rafting' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
-                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">Activity Route</span>
-                    <span className="text-sm font-extrabold text-black mt-1">Rishikesh Stretches</span>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <MapPin className="text-[#FF5F00] shrink-0" size={18} />
+                    <div className="flex flex-col text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Activity Route</span>
+                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Rishikesh Stretches</span>
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('rafting-date')?.showPicker()}>
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Travel Date</span>
-                    <input 
-                      type="date" 
-                      id="rafting-date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={raftingDate}
-                      onChange={(e) => setRaftingDate(e.target.value)}
-                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
-                    />
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('rafting-date')?.showPicker()}>
+                    <Calendar className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left w-full">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Travel Date</span>
+                      <input 
+                        type="date" 
+                        id="rafting-date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={raftingDate}
+                        onChange={(e) => setRaftingDate(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      />
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Total Rafters</span>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm font-extrabold text-black">{raftingGuests} Person{raftingGuests > 1 ? 's' : ''}</span>
-                      <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => setRaftingGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
-                        <button type="button" onClick={() => setRaftingGuests(g => Math.min(30, g + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <Users className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left flex-1">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Total Rafters</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-sm font-extrabold text-slate-900">{raftingGuests} Person{raftingGuests > 1 ? 's' : ''}</span>
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => setRaftingGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">-</button>
+                          <button type="button" onClick={() => setRaftingGuests(g => Math.min(30, g + 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">+</button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-
+ 
               {activeSearchTab === 'bikerent' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
-                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">Pickup Location</span>
-                    <span className="text-sm font-extrabold text-black mt-1">Rishikesh Office</span>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <MapPin className="text-[#FF5F00] shrink-0" size={18} />
+                    <div className="flex flex-col text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Pickup Location</span>
+                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Rishikesh Office</span>
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('bike-date')?.showPicker()}>
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Start Date</span>
-                    <input 
-                      type="date" 
-                      id="bike-date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={bikeDate}
-                      onChange={(e) => setBikeDate(e.target.value)}
-                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
-                    />
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('bike-date')?.showPicker()}>
+                    <Calendar className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left w-full">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Start Date</span>
+                      <input 
+                        type="date" 
+                        id="bike-date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={bikeDate}
+                        onChange={(e) => setBikeDate(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      />
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Rental Duration</span>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm font-extrabold text-black">{bikeDays} Day{bikeDays > 1 ? 's' : ''}</span>
-                      <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => setBikeDays(d => Math.max(1, d - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
-                        <button type="button" onClick={() => setBikeDays(d => Math.min(30, d + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <Clock className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left flex-1">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Rental Duration</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-sm font-extrabold text-slate-900">{bikeDays} Day{bikeDays > 1 ? 's' : ''}</span>
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => setBikeDays(d => Math.max(1, d - 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">-</button>
+                          <button type="button" onClick={() => setBikeDays(d => Math.min(30, d + 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">+</button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-
+ 
               {activeSearchTab === 'tours' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
-                  <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-[#FF5F00] tracking-wider">Destination</span>
-                    <span className="text-sm font-extrabold text-black mt-1">Char Dham / Local Rishikesh</span>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <MapPin className="text-[#FF5F00] shrink-0" size={18} />
+                    <div className="flex flex-col text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Destination</span>
+                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Char Dham / Rishikesh</span>
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-center cursor-pointer min-h-[64px]" onClick={() => document.getElementById('tour-date')?.showPicker()}>
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Travel Date</span>
-                    <input 
-                      type="date" 
-                      id="tour-date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={tourDate}
-                      onChange={(e) => setTourDate(e.target.value)}
-                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
-                    />
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('tour-date')?.showPicker()}>
+                    <Calendar className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left w-full">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Travel Date</span>
+                      <input 
+                        type="date" 
+                        id="tour-date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={tourDate}
+                        onChange={(e) => setTourDate(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      />
+                    </div>
                   </div>
-                  <div className="p-3 border border-black/10 hover:border-[#FF5F00]/50 rounded-xl bg-gray-50 flex flex-col justify-between min-h-[64px]">
-                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider">Travellers</span>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-sm font-extrabold text-black">{tourGuests} Person{tourGuests > 1 ? 's' : ''}</span>
-                      <div className="flex items-center gap-1">
-                        <button type="button" onClick={() => setTourGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">-</button>
-                        <button type="button" onClick={() => setTourGuests(g => Math.min(50, g + 1))} className="w-5 h-5 rounded bg-black/5 hover:bg-black/10 text-black border-none flex items-center justify-center font-bold">+</button>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <Users className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left flex-1">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Travellers</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-sm font-extrabold text-slate-900">{tourGuests} Person{tourGuests > 1 ? 's' : ''}</span>
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => setTourGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">-</button>
+                          <button type="button" onClick={() => setTourGuests(g => Math.min(50, g + 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">+</button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-
+ 
               {activeSearchTab === 'pickup' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
                   <div className="p-3 border border-black/5 hover:border-black/10 rounded-xl bg-gray-50 flex flex-col justify-center min-h-[64px]">
@@ -815,7 +854,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     <select 
                       value={cabSlot} 
                       onChange={(e) => setCabSlot(e.target.value)}
-                      className="text-sm font-extrabold text-black bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-1"
+                      className="text-sm font-extrabold text-black bg-transparent focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-1"
                     >
                       <option value="Morning Slot" className="text-black">Morning Slot (06:00 AM - 12:00 PM)</option>
                       <option value="Afternoon Slot" className="text-black">Afternoon Slot (12:00 PM - 05:00 PM)</option>
@@ -906,20 +945,20 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="bg-white/60 backdrop-blur-xl border-y border-black/5 py-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)] relative z-20"
+        className="bg-gradient-to-b from-[#FAF8F5] to-white border-y border-slate-100 py-10 relative z-20"
       >
         <div className="max-w-5xl mx-auto px-4">
-          <div className="grid grid-cols-4 gap-3 sm:gap-5 px-2 md:px-0">
+          <div className="grid grid-cols-4 gap-4 sm:gap-6 px-2 md:px-0">
             {quickAccess.map((item, index) => (
               <button 
                 key={index} 
                 onClick={() => setRoute(item.route)}
-                className="flex flex-col items-center justify-center gap-2 p-3 sm:p-5 rounded-2xl bg-white border border-neutral-200/60 shadow-sm hover:border-[#FF5F00]/40 hover:shadow-md transition-all duration-300 group cursor-pointer"
+                className="hover-scale-premium hover-glow flex flex-col items-center justify-center gap-2.5 p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all duration-300 group cursor-pointer"
               >
-                <div className="flex items-center justify-center h-12 w-12 sm:h-16 sm:w-16 rounded-xl bg-[#FFF0E5] border border-orange-100/80 group-hover:bg-[#FF5F00] group-hover:shadow-md transition-all duration-300">
-                  <span className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-300">{item.emoji}</span>
+                <div className="flex items-center justify-center h-14 w-14 sm:h-20 sm:w-20 rounded-2xl bg-slate-50 border border-slate-100 group-hover:bg-accent-gradient group-hover:shadow-[0_8px_20px_rgba(255,107,0,0.25)] transition-all duration-500">
+                  <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-500">{item.emoji}</span>
                 </div>
-                <span className="font-black text-[9px] sm:text-xs text-black tracking-wider uppercase text-center font-display leading-tight mt-1">
+                <span className="font-black text-[10px] sm:text-xs text-slate-800 tracking-wider uppercase text-center font-display leading-tight mt-1 group-hover:text-[#FF6B00] transition-colors">
                   {item.label}
                 </span>
               </button>
@@ -984,32 +1023,33 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               <motion.div
                 key={idx}
                 variants={fadeInUp}
-                whileHover={{ y: -5 }}
                 onClick={() => setRoute('hotels')}
-                className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                className="group bg-white border border-slate-100 rounded-3xl overflow-hidden flex flex-col justify-between shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
               >
-                <div className="h-48 bg-gray-100 overflow-hidden relative border-b border-black/5">
-                  <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover" />
-                  <div className="absolute bottom-4 left-4 bg-[#FF5F00] text-white text-xs font-black py-1 px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
+                <div className="h-52 bg-slate-100 overflow-hidden relative border-b border-slate-100">
+                  <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute bottom-4 left-4 bg-accent-gradient text-white text-xs font-black py-1.5 px-3.5 rounded-full shadow-[0_4px_12px_rgba(255,95,0,0.25)]">
                     FROM ₹{hotel.price}/NIGHT
                   </div>
                 </div>
 
-                <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-xs text-[#FF5F00] font-black">
-                      <Star size={12} fill="#FF5F00" />
-                      <span>{hotel.rating}</span>
-                      <span className="text-gray-400 font-bold">({hotel.reviewsCount} reviews)</span>
+                <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-col text-left mb-1.5">
+                      <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
+                        <Star size={14} className="fill-amber-500 text-amber-500" />
+                        <span>{hotel.rating}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{hotel.reviewsCount} Reviews</span>
                     </div>
-                    <h3 className="font-bold text-base font-display text-black leading-snug">{hotel.name}</h3>
-                    <p className="text-xs text-gray-500 font-bold flex items-center gap-1"><MapPin size={11} className="text-[#FF5F00]" /> {hotel.location}</p>
+                    <h3 className="font-extrabold text-base font-display text-slate-900 leading-snug text-left uppercase">{hotel.name}</h3>
+                    <p className="text-xs text-slate-450 font-bold flex items-center gap-1"><MapPin size={11} className="text-[#FF5F00] shrink-0" /> {hotel.location}</p>
                   </div>
 
-                  <div className="pt-3 border-t border-black/5">
+                  <div className="pt-3 border-t border-slate-100">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setRoute('hotels'); }}
-                      className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                      className="w-full py-3 bg-accent-gradient text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 border-none cursor-pointer font-display"
                     >
                       View Stays
                     </button>
@@ -1043,22 +1083,21 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8"
         >
           {activities.map((act) => (
-            <motion.div
+             <motion.div
               key={act.id}
               variants={fadeInUp}
-              whileHover={{ y: -5 }}
               onClick={() => setRoute(act.route)}
-              className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col h-full group"
+              className="group bg-white border border-slate-100 rounded-3xl overflow-hidden cursor-pointer shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col h-full hover:-translate-y-1"
             >
               {/* Image box */}
-              <div className="h-32 sm:h-56 bg-gray-100 overflow-hidden relative">
+              <div className="h-32 sm:h-56 bg-slate-100 overflow-hidden relative">
                 <img 
                   src={act.img} 
                   alt={act.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
-                <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-[#FF5F00] text-white text-[9px] sm:text-xs font-black py-0.5 sm:py-1 px-2 sm:px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
+                <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-accent-gradient text-white text-[9px] sm:text-xs font-black py-1 px-2.5 sm:px-3.5 rounded-full shadow-[0_4px_12px_rgba(255,95,0,0.25)]">
                   {act.price.includes('Call') || act.price.includes('Enquire') ? act.price : `FROM ₹${act.price}`}
                 </div>
               </div>
@@ -1066,18 +1105,18 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               {/* Text content — compact, no description */}
               <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
                 <div className="space-y-1">
-                  <h3 className="text-sm sm:text-lg font-bold font-display tracking-tight text-black group-hover:text-[#FF5F00] transition-colors">
+                  <h3 className="text-sm sm:text-lg font-extrabold font-display tracking-tight text-slate-800 group-hover:text-[#FF5F00] transition-colors text-left uppercase">
                     {act.name}
                   </h3>
                 </div>
                 
-                <div className="flex items-center justify-between gap-2 pt-2 border-t border-black/5">
-                  <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-black flex items-center gap-1 group-hover:text-[#FF5F00]">
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                  <span className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1 group-hover:text-[#FF5F00] transition-colors">
                     Details <ArrowRight size={12} />
                   </span>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setRoute(act.route); }}
-                    className="py-1.5 sm:py-2 px-3 sm:px-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-[9px] sm:text-xs font-black uppercase rounded-lg hover:shadow-[0_4px_15px_rgba(255,95,0,0.4)] transition-all border-none cursor-pointer font-display"
+                    className="py-1.5 sm:py-2 px-3.5 sm:px-4 bg-accent-gradient text-white text-[9px] sm:text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.4)] transition-all border-none cursor-pointer font-display"
                   >
                     Book Now
                   </button>
@@ -1136,34 +1175,35 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               <motion.div
                 key={idx}
                 variants={fadeInUp}
-                whileHover={{ y: -5 }}
                 onClick={() => setRoute('tours')}
-                className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden flex flex-col justify-between shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                className="group bg-white border border-slate-100 rounded-3xl overflow-hidden flex flex-col justify-between shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
               >
-                <div className="h-56 bg-gray-100 overflow-hidden relative border-b border-black/5">
-                  <img src={tour.img} alt={tour.name} className="w-full h-full object-cover" />
-                  <div className="absolute bottom-4 left-4 bg-[#FF5F00] text-white text-xs font-black py-1 px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
+                <div className="h-56 bg-slate-100 overflow-hidden relative border-b border-slate-100">
+                  <img src={tour.img} alt={tour.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute bottom-4 left-4 bg-accent-gradient text-white text-xs font-black py-1.5 px-3.5 rounded-full shadow-[0_4px_12px_rgba(255,95,0,0.25)]">
                     FROM ₹{tour.price}/PERSON
                   </div>
                 </div>
 
-                <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-xs text-[#FF5F00] font-black">
-                      <Star size={12} fill="#FF5F00" />
-                      <span>{tour.rating}</span>
-                      <span className="text-gray-400 font-bold">({tour.reviewsCount} reviews)</span>
+                <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-col text-left mb-1.5">
+                      <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
+                        <Star size={14} className="fill-amber-500 text-amber-500" />
+                        <span>{tour.rating}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{tour.reviewsCount} Reviews</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-bold text-base font-display text-black leading-snug">{tour.name}</h3>
-                      <span className="text-[10px] bg-slate-100 text-slate-700 font-black px-2 py-0.5 rounded shrink-0">{tour.duration}</span>
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="font-extrabold text-base font-display text-slate-900 leading-snug text-left uppercase">{tour.name}</h3>
+                      <span className="text-[10px] bg-slate-100 text-slate-700 font-black px-2.5 py-1 rounded-xl shrink-0 uppercase tracking-wider">{tour.duration}</span>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-black/5">
+                  <div className="pt-3 border-t border-slate-100">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setRoute('tours'); }}
-                      className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 hover:scale-[1.01] border-none cursor-pointer font-display"
+                      className="w-full py-3 bg-accent-gradient text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 border-none cursor-pointer font-display"
                     >
                       Explore Tours
                     </button>
@@ -1341,18 +1381,18 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               return (
                 <div 
                   key={idx}
-                  className="bg-white border border-gray-100/50 rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300"
+                  className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition-all duration-300"
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
-                    className="w-full p-5 flex items-center justify-between text-left cursor-pointer group"
+                    className="w-full p-5 flex items-center justify-between text-left cursor-pointer group bg-transparent border-none"
                   >
-                    <span className="font-bold text-sm sm:text-base text-black group-hover:text-accent transition-colors pr-4">
+                    <span className="font-extrabold text-sm sm:text-base text-slate-800 group-hover:text-[#FF6B00] transition-colors pr-4 uppercase tracking-tight">
                       {faq.q}
                     </span>
                     <ChevronDown 
                       size={20} 
-                      className={`text-gray-400 group-hover:text-accent transform transition-transform duration-300 ${isOpen ? 'rotate-180 text-accent' : ''}`} 
+                      className={`text-slate-400 group-hover:text-[#FF6B00] transform transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#FF6B00]' : ''}`} 
                     />
                   </button>
                   
@@ -1364,7 +1404,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.25, ease: "easeInOut" }}
                       >
-                        <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-600 font-medium leading-relaxed border-t border-black/5">
+                        <div className="px-5 pb-5 pt-3 text-xs sm:text-sm text-slate-500 font-medium leading-relaxed border-t border-slate-50 bg-slate-50/40 text-left">
                           {faq.a}
                         </div>
                       </motion.div>

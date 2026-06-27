@@ -243,22 +243,22 @@ export default function App() {
       />
 
       {/* 2. Sticky Header */}
-      <header className="sticky top-0 z-40 bg-white/80 border-b border-black/5 backdrop-blur-md shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+      <header className="sticky top-0 z-40 bg-white/80 border-b border-slate-100 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.02)]">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           {/* Left Header Group */}
           <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Logo */}
             <div 
               onClick={() => navigateTo('home')}
-              className="flex items-center cursor-pointer select-none"
+              className="flex items-center cursor-pointer select-none group"
             >
-              <span className="font-black text-lg sm:text-2xl tracking-tighter text-black">TRIP</span>
-              <span className="font-black text-lg sm:text-2xl tracking-tighter text-accent bg-black px-1.5 py-0.5 rounded ml-0.5">GOD</span>
+              <span className="font-black text-lg sm:text-2xl tracking-tighter text-slate-900 group-hover:text-[#FF6B00] transition-colors">TRIP</span>
+              <span className="font-black text-lg sm:text-2xl tracking-tighter text-white bg-accent-gradient px-2 py-0.5 rounded-lg ml-1 shadow-sm group-hover:scale-105 transition-transform">GOD</span>
             </div>
 
             {/* City Selector (Vercel Multi-city dynamic integration) */}
             {citiesList.length > 0 && (
-              <div className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 border border-black/5 rounded-full px-2 py-1 sm:px-3 sm:py-1.5 transition-colors">
+              <div className="flex items-center gap-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full px-2 py-1 sm:px-3 sm:py-1.5 transition-colors">
                 <MapPin size={11} className="text-[#FF5F00] shrink-0" />
                 <select
                   value={currentCity?.id || ''}
@@ -269,7 +269,7 @@ export default function App() {
                       localStorage.setItem('tripgod_selected_city', JSON.stringify(selected));
                     }
                   }}
-                  className="bg-transparent border-none text-[10px] sm:text-[11px] font-black uppercase text-black focus:outline-none focus:ring-0 cursor-pointer p-0 pr-3 sm:pr-4 appearance-none"
+                  className="bg-transparent border-none text-[10px] sm:text-[11px] font-black uppercase text-slate-800 focus:outline-none focus:ring-0 cursor-pointer p-0 pr-3 sm:pr-4 appearance-none"
                   style={{ 
                     backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FF5F00'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/></svg>")`,
                     backgroundRepeat: 'no-repeat',
@@ -292,7 +292,7 @@ export default function App() {
             {/* Search Trigger */}
             <button 
               onClick={() => setIsSearchOpen(true)}
-              className="p-1.5 sm:p-2 text-black hover:bg-black/5 rounded-full transition-colors relative"
+              className="p-1.5 sm:p-2 text-slate-700 hover:text-[#FF6B00] hover:bg-slate-100 rounded-full transition-colors relative border-none cursor-pointer"
             >
               <Search size={18} className="sm:w-[20px] sm:h-[20px]" />
             </button>
@@ -308,7 +308,7 @@ export default function App() {
             ) : (
               <button 
                 onClick={() => setIsLoginOpen(true)}
-                className="py-1.5 px-3.5 sm:py-2 sm:px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white rounded-full font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-md hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] transition-all hover:scale-105 border-none cursor-pointer font-display"
+                className="py-1.5 px-4 sm:py-2 sm:px-5 bg-accent-gradient text-white rounded-full font-black text-[10px] sm:text-xs uppercase tracking-wider shadow-md hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] transition-all hover:scale-105 border-none cursor-pointer font-display"
               >
                 Login
               </button>

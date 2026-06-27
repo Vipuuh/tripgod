@@ -11,38 +11,69 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 9999px;
-  border: 1px solid transparent;
-  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #FF6B00;
-  border: 1px solid transparent;
-  background-clip: padding-box;
 }
 
-/* Custom glow utility */
+/* Custom premium design system utilities */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
+}
+
+.glass-card-dark {
+  background: rgba(15, 15, 15, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.bg-accent-gradient {
+  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
+}
+
+.text-accent-gradient {
+  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .hover-glow {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hover-glow:hover {
-  box-shadow: 0 0 15px rgba(255, 107, 0, 0.6);
-  border-color: #FF6B00;
+  box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.25), 0 8px 10px -6px rgba(255, 107, 0, 0.3);
+  border-color: rgba(255, 107, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.hover-scale-premium {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-scale-premium:hover {
+  transform: scale(1.025) translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
 }
 
 /* Base styling */
 body {
   font-family: var(--font-sans);
-  background-color: #FAF9F6;
-  color: #000000;
+  background-color: #FAF8F5;
+  color: #0c0c0c;
   overflow-x: hidden;
   margin: 0;
   padding: 0;
