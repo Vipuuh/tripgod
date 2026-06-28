@@ -53,3 +53,10 @@ This file contains design rules, architectural specifications, database columns,
   `<script src="https://checkout.razorpay.com/v1/checkout.js"></script>`
 - Payment triggers are managed through the central `BookingModal.jsx` component.
 - **Rule**: Never expose test or live API secret keys in code files; consume credentials strictly from environment variables or handle via back-end server functions.
+
+---
+
+## 5. 21st.dev & Premium Component Sourcing
+- **Proactive Sourcing**: Whenever building new UI components, interactive states, or animations (like custom pricing grids, reviews sliders, or buttons), first search `21st.dev` using web search tools to locate modern Framer Motion / Tailwind designs.
+- **Integration**: Adapt public registry component code to align with React, Tailwind CSS v4, and standard styling themes of this workspace.
+
