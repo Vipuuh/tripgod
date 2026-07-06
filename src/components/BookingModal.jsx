@@ -38,6 +38,49 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   }
   const slots = activity.slots || defaultSlots;
   
+  const checkIfDateClosed = (targetDateStr) => {
+    if (!activity) return { closed: false };
+    
+    // Explicit toggle
+    if (activity.is_closed) {
+      return { 
+        closed: true, 
+        reason: activity.closed_reason || 'Monsoon season / government safety advisory',
+        reopenDate: activity.closed_until 
+      };
+    }
+
+    // Date range check
+    if (activity.closed_from && activity.closed_until && targetDateStr) {
+      try {
+        const checkDate = new Date(targetDateStr);
+        const fromDate = new Date(activity.closed_from);
+        const untilDate = new Date(activity.closed_until);
+        
+        checkDate.setHours(0, 0, 0, 0);
+        fromDate.setHours(0, 0, 0, 0);
+        untilDate.setHours(0, 0, 0, 0);
+
+        if (checkDate >= fromDate && checkDate <= untilDate) {
+          return { 
+            closed: true, 
+            reason: activity.closed_reason || 'Monsoon season / government safety advisory',
+            reopenDate: activity.closed_until 
+          };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { closed: false };
+  };
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayClosure = checkIfDateClosed(todayStr);
+  const selectedDateClosure = checkIfDateClosed(date || checkInDate);
+  const isClosed = todayClosure.closed || selectedDateClosure.closed;
+  const activeClosure = todayClosure.closed ? todayClosure : selectedDateClosure;
+
   // Set default values when active changes
   useEffect(() => {
     if (activity) {
@@ -390,6 +433,22 @@ My payment ID is verified. Please confirm my slots.`;
 
             {/* Content */}
             <div className="p-6 overflow-y-auto space-y-5 flex-1 text-black scrollbar-thin">
+              {isClosed && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl flex flex-col gap-1.5 text-left shadow-sm">
+                  <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-red-700">
+                    ⚠️ TEMPORARILY CLOSED
+                  </span>
+                  <p className="text-xs font-semibold leading-relaxed">
+                    {activeClosure.reason}
+                  </p>
+                  {activeClosure.reopenDate && (
+                    <span className="text-[10px] bg-red-100 text-red-700 font-black uppercase px-2.5 py-1 rounded-lg mt-1 w-max">
+                      Expected Reopening: {new Date(activeClosure.reopenDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                </div>
+              )}
+
               {activity.stretch && (
                 <div className="p-3 text-xs bg-black/5 border-l-4 border-[#FF5F00] text-gray-800 font-bold rounded-r-lg">
                   Route: {activity.stretch}
@@ -711,19 +770,28 @@ My payment ID is verified. Please confirm my slots.`;
 
             {/* Footer buttons */}
             <div className="p-5 bg-transparent border-t border-black/5 flex">
-              <button
-                onClick={handleRazorpayPayment}
-                className="w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
-              >
-                <CreditCard size={16} />
-                <span>
-                  {effectivePaymentOption === 'full'
-                    ? 'Pay Full & Book'
-                    : (paymentMode === 'fixed_advance'
-                        ? 'Pay Advance & Book'
-                        : `Pay ${commissionPercentage}% & Book`)}
-                </span>
-              </button>
+              {isClosed ? (
+                <button
+                  disabled
+                  className="w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gray-300 text-gray-500 flex items-center justify-center gap-2 border-none cursor-not-allowed font-display"
+                >
+                  <span>Temporarily Closed</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleRazorpayPayment}
+                  className="w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
+                >
+                  <CreditCard size={16} />
+                  <span>
+                    {effectivePaymentOption === 'full'
+                      ? 'Pay Full & Book'
+                      : (paymentMode === 'fixed_advance'
+                          ? 'Pay Advance & Book'
+                          : `Pay ${commissionPercentage}% & Book`)}
+                  </span>
+                </button>
+              )}
             </div>
           </motion.div>
         </div>

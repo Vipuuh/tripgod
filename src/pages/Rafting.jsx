@@ -175,6 +175,29 @@ export default function Rafting({ currentCity, openBookingModal }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
   const [showOperatorModal, setShowOperatorModal] = useState(false);
 
+  const checkIfClosed = (item) => {
+    if (!item) return { closed: false };
+    if (item.is_closed) {
+      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+    }
+    if (item.closed_from && item.closed_until) {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const from = new Date(item.closed_from);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(item.closed_until);
+        to.setHours(0, 0, 0, 0);
+        if (today >= from && today <= to) {
+          return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { closed: false };
+  };
+
   // Swipe gesture support
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -262,6 +285,10 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   'Personal expenses'
                 ],
                 cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior.',
+                is_closed: item.is_closed,
+                closed_reason: item.closed_reason,
+                closed_from: item.closed_from,
+                closed_until: item.closed_until,
                 operators: []
               };
             }
@@ -399,6 +426,13 @@ export default function Rafting({ currentCity, openBookingModal }) {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                           loading="lazy" 
                         />
+                        {checkIfClosed(str).closed && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
+                            <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
+                              Closed
+                            </span>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="p-4 sm:p-5 space-y-3">
@@ -502,6 +536,22 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Compare Operators & Book</span>
                 </div>
               </div>
+
+              {checkIfClosed(selectedStretch).closed && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl flex flex-col gap-1.5 text-left shadow-sm">
+                  <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-red-700">
+                    ⚠️ TEMPORARILY CLOSED
+                  </span>
+                  <p className="text-xs font-semibold leading-relaxed">
+                    This rafting stretch is currently closed: {checkIfClosed(selectedStretch).reason}
+                  </p>
+                  {checkIfClosed(selectedStretch).reopenDate && (
+                    <span className="text-[10px] bg-red-100 text-red-700 font-black uppercase px-2.5 py-1 rounded-lg mt-1 w-max">
+                      Expected Reopening: {new Date(checkIfClosed(selectedStretch).reopenDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Slider / Image Gallery */}
               <div 
@@ -767,7 +817,11 @@ export default function Rafting({ currentCity, openBookingModal }) {
                               city_id: raw.city_id,
                               vendor_id: raw.vendor_id,
                               commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
-                              vendors: raw.vendors
+                              vendors: raw.vendors,
+                              is_closed: selectedStretch.is_closed || raw.is_closed,
+                              closed_reason: selectedStretch.closed_reason || raw.closed_reason,
+                              closed_from: selectedStretch.closed_from || raw.closed_from,
+                              closed_until: selectedStretch.closed_until || raw.closed_until
                             });
                           }}
                           activityName={selectedStretch.name}
@@ -838,20 +892,33 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     <p className="text-xs text-gray-600 font-medium">Pay a partial token advance online today to secure your slots. Cancel anytime for full refund.</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => openBookingModal({
-                    id: selectedStretch.id,
-                    name: selectedStretch.name,
-                    stretch: selectedStretch.stretch,
-                    price: selectedStretch.price,
-                    category: 'rafting',
-                    city_id: selectedStretch.city_id,
-                    vendor_id: selectedStretch.vendor_id
-                  })}
-                  className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
-                >
-                  Book Now
-                </button>
+                {checkIfClosed(selectedStretch).closed ? (
+                  <button
+                    disabled
+                    className="w-full sm:w-auto py-3 px-6 bg-gray-300 text-gray-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display"
+                  >
+                    Closed Temporarily
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => openBookingModal({
+                      id: selectedStretch.id,
+                      name: selectedStretch.name,
+                      stretch: selectedStretch.stretch,
+                      price: selectedStretch.price,
+                      category: 'rafting',
+                      city_id: selectedStretch.city_id,
+                      vendor_id: selectedStretch.vendor_id,
+                      is_closed: selectedStretch.is_closed,
+                      closed_reason: selectedStretch.closed_reason,
+                      closed_from: selectedStretch.closed_from,
+                      closed_until: selectedStretch.closed_until
+                    })}
+                    className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                  >
+                    Book Now
+                  </button>
+                )}
               </div>
 
               {/* Auto Sliding Reviews */}

@@ -1790,6 +1790,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         faq_data: data.faq_data || [],
         is_bestseller: !!data.is_bestseller,
         is_instant_confirmation: data.is_instant_confirmation !== undefined && data.is_instant_confirmation !== null ? !!data.is_instant_confirmation : true,
+        is_closed: !!data.is_closed,
+        closed_reason: data.closed_reason || '',
+        closed_from: data.closed_from || '',
+        closed_until: data.closed_until || '',
         seats_left: data.seats_left !== undefined && data.seats_left !== null ? Number(data.seats_left) : 10,
         hotel_included: data.hotel_included !== undefined && data.hotel_included !== null ? !!data.hotel_included : true,
         meals_included: data.meals_included !== undefined && data.meals_included !== null ? !!data.meals_included : true,
@@ -1837,7 +1841,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         property_type: data.property_type || 'Hotel',
         room_type: data.room_type || 'Deluxe Double Room',
         best_for: data.best_for || [],
-        perfect_for: data.perfect_for || [],
         benefits: data.benefits || [],
         upi_discount: data.upi_discount !== null && data.upi_discount !== undefined ? Number(data.upi_discount) : null,
         featured_image: data.featured_image || '',
@@ -1933,6 +1936,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.is_verified = true;
         defaults.is_bestseller = false;
         defaults.is_instant_confirmation = true;
+        defaults.is_closed = false;
+        defaults.closed_reason = '';
+        defaults.closed_from = '';
+        defaults.closed_until = '';
         defaults.seats_left = 10;
         defaults.bookings_count = 150;
         defaults.hotel_included = true;
@@ -1994,7 +2001,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           payment_mode: formData.payment_mode || 'commission_advance',
           commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
-          upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount)
+          upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount),
+          is_closed: !!formData.is_closed,
+          closed_reason: formData.closed_reason || '',
+          closed_from: formData.closed_from || null,
+          closed_until: formData.closed_until || null
         };
 
         if (data) {
@@ -2224,6 +2235,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           is_verified: formData.is_verified !== undefined ? !!formData.is_verified : true,
           is_bestseller: !!formData.is_bestseller,
           is_instant_confirmation: formData.is_instant_confirmation !== undefined ? !!formData.is_instant_confirmation : true,
+          is_closed: !!formData.is_closed,
+          closed_reason: formData.closed_reason || '',
+          closed_from: formData.closed_from || null,
+          closed_until: formData.closed_until || null,
           seats_left: formData.seats_left !== undefined && formData.seats_left !== null && formData.seats_left !== '' ? Number(formData.seats_left) : 10,
           bookings_count: formData.bookings_count !== undefined && formData.bookings_count !== null && formData.bookings_count !== '' ? Number(formData.bookings_count) : 150,
           hotel_included: formData.hotel_included !== undefined ? !!formData.hotel_included : true,
@@ -4412,6 +4427,66 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                   </label>
                 </div>
 
+              </div>
+            </div>
+
+            {/* Seasonal Availability & Closing Settings */}
+            <div className="space-y-4 pt-4 border-t border-slate-900">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Seasonal Availability & Closings</label>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Is Closed checkbox */}
+                <div className="flex items-center gap-3 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="is_closed"
+                    checked={formData.is_closed || false}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_closed: e.target.checked }))}
+                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+                  />
+                  <div>
+                    <label htmlFor="is_closed" className="text-xs font-black text-white cursor-pointer select-none block uppercase tracking-wide">
+                      Temporarily Closed / Block Bookings
+                    </label>
+                    <span className="text-[10px] text-gray-500">Checking this will immediately stop bookings and show a notification on the frontend.</span>
+                  </div>
+                </div>
+
+                {/* Closed Reason */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closure Reason / Reopening Notice</label>
+                  <input
+                    type="text"
+                    value={formData.closed_reason || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, closed_reason: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none"
+                    placeholder="e.g. Monsoon season / Government advisory / Off-season maintenance"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Closed From */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closed From Date</label>
+                  <input
+                    type="date"
+                    value={formData.closed_from || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, closed_from: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                {/* Closed Until */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closed Until / Reopening Date</label>
+                  <input
+                    type="date"
+                    value={formData.closed_until || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, closed_until: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
 

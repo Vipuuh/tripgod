@@ -39,6 +39,29 @@ export default function Zipline({ currentCity, openBookingModal }) {
   const [loading, setLoading] = useState(true);
   const [selectedZip, setSelectedZip] = useState(null);
 
+  const checkIfClosed = (item) => {
+    if (!item) return { closed: false };
+    if (item.is_closed) {
+      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+    }
+    if (item.closed_from && item.closed_until) {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const from = new Date(item.closed_from);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(item.closed_until);
+        to.setHours(0, 0, 0, 0);
+        if (today >= from && today <= to) {
+          return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { closed: false };
+  };
+
   useEffect(() => {
     const fetchZipline = async () => {
       setLoading(true);
@@ -72,6 +95,10 @@ export default function Zipline({ currentCity, openBookingModal }) {
                 rating: item.rating || 4.8,
                 reviewsCount: item.reviews_count || 320,
                 cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
+                is_closed: item.is_closed,
+                closed_reason: item.closed_reason,
+                closed_from: item.closed_from,
+                closed_until: item.closed_until,
                 operators: []
               };
             }
@@ -169,6 +196,13 @@ export default function Zipline({ currentCity, openBookingModal }) {
                         alt={opt.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
                       />
+                      {checkIfClosed(opt).closed && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10">
+                          <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
+                            Closed
+                          </span>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
@@ -256,6 +290,10 @@ export default function Zipline({ currentCity, openBookingModal }) {
               cancellation={selectedZip.cancellation_policy}
               openBookingModal={openBookingModal}
               operators={selectedZip.operators}
+              is_closed={selectedZip.is_closed}
+              closed_reason={selectedZip.closed_reason}
+              closed_from={selectedZip.closed_from}
+              closed_until={selectedZip.closed_until}
             />
           </motion.div>
         )}

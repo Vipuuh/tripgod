@@ -264,6 +264,30 @@ function HotelCardCarousel({ images, hotelName, onSelect }) {
 export default function Hotels({ currentCity, openBookingModal }) {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const checkIfClosed = (item) => {
+    if (!item) return { closed: false };
+    if (item.is_closed) {
+      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+    }
+    if (item.closed_from && item.closed_until) {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const from = new Date(item.closed_from);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(item.closed_until);
+        to.setHours(0, 0, 0, 0);
+        if (today >= from && today <= to) {
+          return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { closed: false };
+  };
+
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -558,7 +582,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
   }
 
   return (
-    <div className="w-full max-w-screen-xl mx-auto overflow-x-hidden bg-white min-h-screen">
+    <div className="w-full overflow-x-hidden bg-white min-h-screen">
       <AnimatePresence mode="wait">
         {!selectedHotel ? (
           /* SECTION A: LISTING VIEW */
@@ -641,6 +665,13 @@ export default function Hotels({ currentCity, openBookingModal }) {
                              hotelName={hotel.name} 
                              onSelect={() => handleSelectHotel(hotel)} 
                           />
+                          {checkIfClosed(hotel).closed && (
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10">
+                              <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
+                                Closed
+                              </span>
+                            </div>
+                          )}
                           {hotel.is_limited_offer && (
                             <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider pointer-events-none z-10">
                               LIMITED TIME OFFER
@@ -807,6 +838,22 @@ export default function Hotels({ currentCity, openBookingModal }) {
               >
                 <ChevronLeft size={16} /> Back to Hotel Stays
               </button>
+
+              {checkIfClosed(selectedHotel).closed && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl flex flex-col gap-1.5 text-left shadow-sm">
+                  <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-red-700">
+                    ⚠️ HOTEL STAYS TEMPORARILY CLOSED
+                  </span>
+                  <p className="text-xs font-semibold leading-relaxed">
+                    This hotel is currently closed or not taking bookings: {checkIfClosed(selectedHotel).reason}
+                  </p>
+                  {checkIfClosed(selectedHotel).reopenDate && (
+                    <span className="text-[10px] bg-red-100 text-red-700 font-black uppercase px-2.5 py-1 rounded-lg mt-1 w-max">
+                      Expected Reopening: {new Date(checkIfClosed(selectedHotel).reopenDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* SECTION 2: HOTEL HEADER */}
               <div className="space-y-2">
@@ -1322,28 +1369,41 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
               {/* Book Actions button */}
               <div className="pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => {
-                    const hotelToBook = selectedHotel;
-                    openBookingModal({
-                      id: hotelToBook.id,
-                      name: hotelToBook.name,
-                      price: hotelToBook.price,
-                      category: 'hotels',
-                      city_id: hotelToBook.city_id,
-                      vendor_id: hotelToBook.vendor_id,
-                      payment_mode: hotelToBook.payment_mode,
-                      commission_percentage: hotelToBook.commission_percentage,
-                      fixed_advance_amount: hotelToBook.fixed_advance_amount,
-                      upi_discount: hotelToBook.upi_discount,
-                      slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
-                    });
-                  }}
-                  className="w-full py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display flex items-center justify-center gap-2"
-                >
-                  <ShieldCheck size={14} />
-                  <span>Book Hotel Room</span>
-                </button>
+                {checkIfClosed(selectedHotel).closed ? (
+                  <button
+                    disabled
+                    className="w-full py-4 bg-gray-300 text-gray-500 font-black text-xs uppercase tracking-wider rounded-xl border-none cursor-not-allowed text-center font-display"
+                  >
+                    Closed Temporarily
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      const hotelToBook = selectedHotel;
+                      openBookingModal({
+                        id: hotelToBook.id,
+                        name: hotelToBook.name,
+                        price: hotelToBook.price,
+                        category: 'hotels',
+                        city_id: hotelToBook.city_id,
+                        vendor_id: hotelToBook.vendor_id,
+                        payment_mode: hotelToBook.payment_mode,
+                        commission_percentage: hotelToBook.commission_percentage,
+                        fixed_advance_amount: hotelToBook.fixed_advance_amount,
+                        upi_discount: hotelToBook.upi_discount,
+                        slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)'],
+                        is_closed: hotelToBook.is_closed,
+                        closed_reason: hotelToBook.closed_reason,
+                        closed_from: hotelToBook.closed_from,
+                        closed_until: hotelToBook.closed_until
+                      });
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck size={14} />
+                    <span>Book Hotel Room</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1370,27 +1430,40 @@ export default function Hotels({ currentCity, openBookingModal }) {
               </div>
               
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => {
-                    const hotelToBook = selectedHotel;
-                    openBookingModal({
-                      id: hotelToBook.id,
-                      name: hotelToBook.name,
-                      price: hotelToBook.price,
-                      category: 'hotels',
-                      city_id: hotelToBook.city_id,
-                      vendor_id: hotelToBook.vendor_id,
-                      payment_mode: hotelToBook.payment_mode,
-                      commission_percentage: hotelToBook.commission_percentage,
-                      fixed_advance_amount: hotelToBook.fixed_advance_amount,
-                      upi_discount: hotelToBook.upi_discount,
-                      slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)']
-                    });
-                  }}
-                  className="py-3 px-5 sm:px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
-                >
-                  Book Now
-                </button>
+                {checkIfClosed(selectedHotel).closed ? (
+                  <button
+                    disabled
+                    className="py-3 px-5 sm:px-6 bg-gray-300 text-gray-500 text-xs font-black uppercase tracking-wider rounded-xl border-none cursor-not-allowed font-display"
+                  >
+                    Closed
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      const hotelToBook = selectedHotel;
+                      openBookingModal({
+                        id: hotelToBook.id,
+                        name: hotelToBook.name,
+                        price: hotelToBook.price,
+                        category: 'hotels',
+                        city_id: hotelToBook.city_id,
+                        vendor_id: hotelToBook.vendor_id,
+                        payment_mode: hotelToBook.payment_mode,
+                        commission_percentage: hotelToBook.commission_percentage,
+                        fixed_advance_amount: hotelToBook.fixed_advance_amount,
+                        upi_discount: hotelToBook.upi_discount,
+                        slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)'],
+                        is_closed: hotelToBook.is_closed,
+                        closed_reason: hotelToBook.closed_reason,
+                        closed_from: hotelToBook.closed_from,
+                        closed_until: hotelToBook.closed_until
+                      });
+                    }}
+                    className="py-3 px-5 sm:px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                  >
+                    Book Now
+                  </button>
+                )}
               </div>
             </div>
 

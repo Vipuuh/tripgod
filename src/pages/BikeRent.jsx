@@ -98,6 +98,29 @@ export default function BikeRent({ currentCity, openBookingModal }) {
   const [loading, setLoading] = useState(true);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
+  const checkIfClosed = (item) => {
+    if (!item) return { closed: false };
+    if (item.is_closed) {
+      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+    }
+    if (item.closed_from && item.closed_until) {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const from = new Date(item.closed_from);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(item.closed_until);
+        to.setHours(0, 0, 0, 0);
+        if (today >= from && today <= to) {
+          return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { closed: false };
+  };
+
   useEffect(() => {
     setSelectedVehicle(null);
     const fetchBikes = async () => {
@@ -165,6 +188,10 @@ export default function BikeRent({ currentCity, openBookingModal }) {
           minPrice: Number(v.price),
           rating: v.rating || 4.7,
           reviewsCount: v.reviewsCount || 150,
+          is_closed: v.is_closed,
+          closed_reason: v.closed_reason,
+          closed_from: v.closed_from,
+          closed_until: v.closed_until,
           operators: []
         };
       }
@@ -194,6 +221,22 @@ export default function BikeRent({ currentCity, openBookingModal }) {
         </div>
 
         <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+          {checkIfClosed(selectedVehicle).closed && (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl flex flex-col gap-1.5 text-left shadow-sm">
+              <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-red-700">
+                ⚠️ VEHICLE RENTAL TEMPORARILY CLOSED
+              </span>
+              <p className="text-xs font-semibold leading-relaxed">
+                This vehicle model is currently unavailable for rent: {checkIfClosed(selectedVehicle).reason}
+              </p>
+              {checkIfClosed(selectedVehicle).reopenDate && (
+                <span className="text-[10px] bg-red-100 text-red-700 font-black uppercase px-2.5 py-1 rounded-lg mt-1 w-max">
+                  Expected Reopening: {new Date(checkIfClosed(selectedVehicle).reopenDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Vehicle Info Card */}
           <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row gap-8">
             <div className="w-full md:w-1/2 h-56 md:h-72 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
@@ -241,35 +284,46 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               </h3>
             </div>
             
-            <OperatorSelector
-              operators={selectedVehicle.operators.map(op => ({
-                id: op.id,
-                vendorName: op.vendors?.name || op.name || 'Local Operator',
-                shopImage: op.vendors?.shop_image || null,
-                starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
-                landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
-                price: Number(op.price || selectedVehicle.minPrice),
-                originalPrice: op.original_price ? Number(op.original_price) : null,
-                isLimitedOffer: !!op.is_limited_offer,
-                commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
-                _raw: op
-              }))}
-              onBookOperator={(op) => {
-                const raw = op._raw;
-                openBookingModal({
-                  id: raw.id,
-                  name: `${selectedVehicle.name} - ${op.vendorName}`,
-                  price: op.price,
-                  category: 'bikerent',
-                  city_id: raw.city_id,
-                  vendor_id: raw.vendor_id,
-                  commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
-                  vendors: raw.vendors,
-                  slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent']
-                });
-              }}
-              activityName={selectedVehicle.name}
-            />
+            {checkIfClosed(selectedVehicle).closed ? (
+              <div className="p-6 bg-red-50/50 border border-red-100 rounded-2xl text-center font-sans space-y-2">
+                <p className="text-xs font-black text-red-700 uppercase tracking-wider">⚠️ Bookings Temporarily Disabled</p>
+                <p className="text-[11px] text-red-650 font-medium">This rental vehicle is currently closed for the season. You will not be able to confirm a slot at this time.</p>
+              </div>
+            ) : (
+              <OperatorSelector
+                operators={selectedVehicle.operators.map(op => ({
+                  id: op.id,
+                  vendorName: op.vendors?.name || op.name || 'Local Operator',
+                  shopImage: op.vendors?.shop_image || null,
+                  starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
+                  landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
+                  price: Number(op.price || selectedVehicle.minPrice),
+                  originalPrice: op.original_price ? Number(op.original_price) : null,
+                  isLimitedOffer: !!op.is_limited_offer,
+                  commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                  _raw: op
+                }))}
+                onBookOperator={(op) => {
+                  const raw = op._raw;
+                  openBookingModal({
+                    id: raw.id,
+                    name: `${selectedVehicle.name} - ${op.vendorName}`,
+                    price: op.price,
+                    category: 'bikerent',
+                    city_id: raw.city_id,
+                    vendor_id: raw.vendor_id,
+                    commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
+                    vendors: raw.vendors,
+                    slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
+                    is_closed: selectedVehicle.is_closed || raw.is_closed,
+                    closed_reason: selectedVehicle.closed_reason || raw.closed_reason,
+                    closed_from: selectedVehicle.closed_from || raw.closed_from,
+                    closed_until: selectedVehicle.closed_until || raw.closed_until
+                  });
+                }}
+                activityName={selectedVehicle.name}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -334,6 +388,13 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 >
                   <div className="h-36 sm:h-40 bg-gray-100 overflow-hidden relative border-b border-black/5">
                     <img src={v.img} alt={v.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {checkIfClosed(v).closed && (
+                      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-none">
+                        <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
+                          Closed
+                        </span>
+                      </div>
+                    )}
                     {v.operators.some(op => op.is_limited_offer) && (
                       <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)] tracking-wider z-10">
                         LIMITED TIME OFFER

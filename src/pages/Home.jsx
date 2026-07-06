@@ -514,7 +514,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   }, []);
 
   return (
-    <div className="w-full max-w-screen-xl mx-auto overflow-x-hidden min-h-screen bg-neutral-50 text-black">
+    <div className="w-full overflow-x-hidden min-h-screen bg-neutral-50 text-black">
       {/* 1. Hero Section */}
       <div 
         onMouseMove={handleMouseMove}

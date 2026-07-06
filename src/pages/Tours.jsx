@@ -167,6 +167,30 @@ const getMockItinerary = (tourName, duration) => {
 export default function Tours({ currentCity, openBookingModal, selectedTour, setSelectedTour, navigateTo }) {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const checkIfClosed = (item) => {
+    if (!item) return { closed: false };
+    if (item.is_closed) {
+      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+    }
+    if (item.closed_from && item.closed_until) {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const from = new Date(item.closed_from);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(item.closed_until);
+        to.setHours(0, 0, 0, 0);
+        if (today >= from && today <= to) {
+          return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { closed: false };
+  };
+
   const [expandedDays, setExpandedDays] = useState({ 0: true });
   const [costTab, setCostTab] = useState('included');
   const [expandedFAQs, setExpandedFAQs] = useState({});
@@ -354,6 +378,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
           is_verified: t.is_verified !== undefined && t.is_verified !== null ? t.is_verified : true,
           is_bestseller: t.is_bestseller || false,
           is_instant_confirmation: t.is_instant_confirmation !== undefined && t.is_instant_confirmation !== null ? t.is_instant_confirmation : true,
+          is_closed: t.is_closed || false,
+          closed_reason: t.closed_reason || '',
+          closed_from: t.closed_from || '',
+          closed_until: t.closed_until || '',
           seats_left: t.seats_left !== undefined && t.seats_left !== null ? t.seats_left : 10,
           bookings_count: t.bookings_count !== undefined && t.bookings_count !== null ? t.bookings_count : 150,
           hotel_included: t.hotel_included !== undefined && t.hotel_included !== null ? t.hotel_included : true,
@@ -495,6 +523,22 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-8">
+          {checkIfClosed(selectedTour).closed && (
+            <div className="p-4 mb-6 bg-red-50 border border-red-200 text-red-800 rounded-3xl flex flex-col gap-1.5 text-left shadow-sm">
+              <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-red-700">
+                ⚠️ TOUR PILGRIMAGE TEMPORARILY CLOSED
+              </span>
+              <p className="text-xs font-semibold leading-relaxed">
+                This sacred yatra package is currently closed: {checkIfClosed(selectedTour).reason}
+              </p>
+              {checkIfClosed(selectedTour).reopenDate && (
+                <span className="text-[10px] bg-red-100 text-red-700 font-black uppercase px-2.5 py-1 rounded-lg mt-1 w-max">
+                  Expected Reopening: {new Date(checkIfClosed(selectedTour).reopenDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Two-column layout grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -1146,12 +1190,21 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 </div>
 
                 {/* Primary CTA */}
-                <button
-                  onClick={() => navigateTo(`tours/${tourId}/partners`)}
-                  className="w-full py-4 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-md hover:shadow-lg border-none font-display text-center block"
-                >
-                  SELECT LOCAL OPERATOR
-                </button>
+                {checkIfClosed(selectedTour).closed ? (
+                  <button
+                    disabled
+                    className="w-full py-4 bg-gray-300 text-gray-500 font-black text-xs uppercase tracking-widest rounded-xl border-none cursor-not-allowed font-display text-center block"
+                  >
+                    TEMPORARILY CLOSED
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigateTo(`tours/${tourId}/partners`)}
+                    className="w-full py-4 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-md hover:shadow-lg border-none font-display text-center block"
+                  >
+                    SELECT LOCAL OPERATOR
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1197,12 +1250,21 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
             </a>
 
             {/* Select Partner */}
-            <button
-              onClick={() => navigateTo(`tours/${tourId}/partners`)}
-              className="py-3 px-5 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm font-display border-none shrink-0"
-            >
-              Book Now
-            </button>
+            {checkIfClosed(selectedTour).closed ? (
+              <button
+                disabled
+                className="py-3 px-5 bg-gray-300 text-gray-500 font-black text-xs uppercase tracking-wider rounded-xl border-none cursor-not-allowed shrink-0 font-display"
+              >
+                Closed
+              </button>
+            ) : (
+              <button
+                onClick={() => navigateTo(`tours/${tourId}/partners`)}
+                className="py-3 px-5 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm font-display border-none shrink-0"
+              >
+                Book Now
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1333,6 +1395,13 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                     alt={tour.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
+                  {checkIfClosed(tour).closed && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-20">
+                      <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
+                        Closed
+                      </span>
+                    </div>
+                  )}
 
                   {/* Top-left Badges (Max 2) */}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 items-start">

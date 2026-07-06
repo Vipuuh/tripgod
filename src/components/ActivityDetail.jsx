@@ -25,9 +25,35 @@ export default function ActivityDetail({
   rating = 4.8,
   reviewsCount = 380,
   openBookingModal,
-  operators = []
+  operators = [],
+  is_closed = false,
+  closed_reason = '',
+  closed_from = '',
+  closed_until = ''
 }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
+
+  const checkIfClosed = () => {
+    if (is_closed) {
+      return { closed: true, reason: closed_reason || 'Monsoon season / government advisory', reopenDate: closed_until };
+    }
+    if (closed_from && closed_until) {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const from = new Date(closed_from);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(closed_until);
+        to.setHours(0, 0, 0, 0);
+        if (today >= from && today <= to) {
+          return { closed: true, reason: closed_reason || 'Monsoon season / government advisory', reopenDate: closed_until };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return { closed: false };
+  };
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [showOperatorModal, setShowOperatorModal] = useState(false);
 
@@ -41,7 +67,11 @@ export default function ActivityDetail({
         name: title,
         price,
         category,
-        videoIncluded: isVideo
+        videoIncluded: isVideo,
+        is_closed,
+        closed_reason,
+        closed_from,
+        closed_until
       });
     }
   };
@@ -78,7 +108,22 @@ export default function ActivityDetail({
   return (
     <div className="w-full min-h-screen bg-white pb-24 pt-6">
       <div className="max-w-4xl mx-auto px-6 space-y-6">
-        
+        {checkIfClosed().closed && (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl flex flex-col gap-1.5 text-left shadow-sm">
+            <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-red-700">
+              ⚠️ TEMPORARILY CLOSED
+            </span>
+            <p className="text-xs font-semibold leading-relaxed">
+              This {category || 'activity'} is currently closed: {checkIfClosed().reason}
+            </p>
+            {checkIfClosed().reopenDate && (
+              <span className="text-[10px] bg-red-100 text-red-700 font-black uppercase px-2.5 py-1 rounded-lg mt-1 w-max">
+                Expected Reopening: {new Date(checkIfClosed().reopenDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Title Block */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
@@ -260,12 +305,21 @@ export default function ActivityDetail({
               <p className="text-xs text-gray-600 font-medium">Pay a partial token advance online today to reserve your slot. 100% refund guarantee up to 24h prior.</p>
             </div>
           </div>
-          <button
-            onClick={handleBookClick}
-            className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
-          >
-            Book Now
-          </button>
+          {checkIfClosed().closed ? (
+            <button
+              disabled
+              className="w-full sm:w-auto py-3 px-6 bg-gray-300 text-gray-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display"
+            >
+              Closed Temporarily
+            </button>
+          ) : (
+            <button
+              onClick={handleBookClick}
+              className="w-full sm:w-auto py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+            >
+              Book Now
+            </button>
+          )}
         </div>
 
         {/* Reviews */}
@@ -302,12 +356,21 @@ export default function ActivityDetail({
             ₹{price.toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/person</span>
           </span>
         </div>
-        <button
-          onClick={handleBookClick}
-          className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
-        >
-          Book Now
-        </button>
+        {checkIfClosed().closed ? (
+          <button
+            disabled
+            className="py-3.5 px-6 bg-gray-300 text-gray-500 text-xs font-black uppercase tracking-wider rounded-xl border-none cursor-not-allowed font-display"
+          >
+            Closed
+          </button>
+        ) : (
+          <button
+            onClick={handleBookClick}
+            className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+          >
+            Book Now
+          </button>
+        )}
       </div>
 
       {/* Operator Selection Modal */}

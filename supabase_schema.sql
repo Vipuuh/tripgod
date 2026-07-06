@@ -328,4 +328,26 @@ ALTER TABLE tours ADD COLUMN IF NOT EXISTS perfect_for TEXT[] DEFAULT '{}'::TEXT
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
 
+-- Seasonal Availability & Closing Management (July 2026)
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS is_closed BOOLEAN DEFAULT false;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS closed_reason TEXT DEFAULT 'Monsoon season / government advisory';
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS closed_from DATE;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS closed_until DATE;
 
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS is_closed BOOLEAN DEFAULT false;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS closed_reason TEXT DEFAULT 'Monsoon season / government advisory';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS closed_from DATE;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS closed_until DATE;
+
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_closed BOOLEAN DEFAULT false;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS closed_reason TEXT DEFAULT 'Off-season maintenance';
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS closed_from DATE;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS closed_until DATE;
+
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS is_closed BOOLEAN DEFAULT false;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS closed_reason TEXT DEFAULT 'Weather constraints / maintenance';
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS closed_from DATE;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS closed_until DATE;
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
