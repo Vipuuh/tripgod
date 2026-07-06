@@ -4430,66 +4430,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               </div>
             </div>
 
-            {/* Seasonal Availability & Closing Settings */}
-            <div className="space-y-4 pt-4 border-t border-slate-900">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Seasonal Availability & Closings</label>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Is Closed checkbox */}
-                <div className="flex items-center gap-3 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                  <input
-                    type="checkbox"
-                    id="is_closed"
-                    checked={formData.is_closed || false}
-                    onChange={(e) => setFormData(prev => ({ ...prev, is_closed: e.target.checked }))}
-                    className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
-                  />
-                  <div>
-                    <label htmlFor="is_closed" className="text-xs font-black text-white cursor-pointer select-none block uppercase tracking-wide">
-                      Temporarily Closed / Block Bookings
-                    </label>
-                    <span className="text-[10px] text-gray-500">Checking this will immediately stop bookings and show a notification on the frontend.</span>
-                  </div>
-                </div>
-
-                {/* Closed Reason */}
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closure Reason / Reopening Notice</label>
-                  <input
-                    type="text"
-                    value={formData.closed_reason || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, closed_reason: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none"
-                    placeholder="e.g. Monsoon season / Government advisory / Off-season maintenance"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Closed From */}
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closed From Date</label>
-                  <input
-                    type="date"
-                    value={formData.closed_from || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, closed_from: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none"
-                  />
-                </div>
-
-                {/* Closed Until */}
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closed Until / Reopening Date</label>
-                  <input
-                    type="date"
-                    value={formData.closed_until || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, closed_until: e.target.value }))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Statistics & Tour Type Section */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Seats Left */}
@@ -5209,6 +5149,66 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </div>
         </div>
       )}
+
+      {/* Seasonal Availability & Closing Settings */}
+      <div className="space-y-4 border-t border-slate-900 pt-4">
+        <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Seasonal Availability & Closings</label>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Is Closed checkbox */}
+          <div className="flex items-center gap-3 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+            <input
+              type="checkbox"
+              id="is_closed"
+              checked={formData.is_closed || false}
+              onChange={(e) => setFormData(prev => ({ ...prev, is_closed: e.target.checked }))}
+              className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+            />
+            <div>
+              <label htmlFor="is_closed" className="text-xs font-black text-white cursor-pointer select-none block uppercase tracking-wide">
+                Temporarily Closed / Block Bookings
+              </label>
+              <span className="text-[10px] text-gray-500">Checking this will immediately stop bookings and show a notification on the frontend.</span>
+            </div>
+          </div>
+
+          {/* Closed Reason */}
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closure Reason / Reopening Notice</label>
+            <input
+              type="text"
+              value={formData.closed_reason || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, closed_reason: e.target.value }))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none"
+              placeholder="e.g. Monsoon season / Government advisory / Off-season maintenance"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Closed From */}
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closed From Date</label>
+            <input
+              type="date"
+              value={formData.closed_from || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, closed_from: e.target.value }))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none"
+            />
+          </div>
+
+          {/* Closed Until */}
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Closed Until / Reopening Date</label>
+            <input
+              type="date"
+              value={formData.closed_until || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, closed_until: e.target.value }))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Cancellation Policy */}
       <div className="space-y-1">
