@@ -157,6 +157,16 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
         // Save bookings to Supabase SQL Database
         try {
           const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+          const generateUUID = () => {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+              return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+          };
+
           const insertedBookingIds = [];
           const bookingPromises = cart.map(async (item) => {
             const itemPct = item.commission_percentage || 10.0;
@@ -164,7 +174,11 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
               ? Math.min(item.fixed_advance_amount || 0, item.totalPrice)
               : Math.round(item.totalPrice * (itemPct / 100));
 
+            const dbBookingId = generateUUID();
+            insertedBookingIds.push(dbBookingId);
+
             const bookingInsertData = {
+              id: dbBookingId,
               city_id: item.city_id && isValidUUID(item.city_id) ? item.city_id : null,
               vendor_id: item.vendor_id && isValidUUID(item.vendor_id) ? item.vendor_id : null,
               customer_name: name,
@@ -179,11 +193,9 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
               remaining_amount: paymentOption === 'full' ? 0 : item.remainingPayment,
               commission_earned: commissionEarned
             };
-            const { data: insertedList, error } = await supabase.from('bookings').insert([bookingInsertData]).select();
+            const { error } = await supabase.from('bookings').insert([bookingInsertData]);
             if (error) {
               console.error('Error inserting booking to Supabase from cart:', error);
-            } else if (insertedList && insertedList[0]) {
-              insertedBookingIds.push(insertedList[0].id);
             }
           });
 

@@ -256,8 +256,21 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
           ? `${checkInDate.split('-').reverse().join('/')} to ${checkOutDate.split('-').reverse().join('/')} (${nights} Night${nights > 1 ? 's' : ''})`
           : date.split('-').reverse().join('/');
 
+        const generateUUID = () => {
+          if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID();
+          }
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+        };
+        const dbBookingId = generateUUID();
+        const simpleBookingCode = getSimpleBookingId(dbBookingId);
+
         const message = `*BOOKING SUCCESSFUL & PAID - TRIPGOD*
 ----------------------------------
+*Booking ID:* ${simpleBookingCode}
 *Payment Confirmation ID:* ${paymentId}
 *Status:* ${effectivePaymentOption === 'full' ? 'Paid 100% Full Payment Online' : `Paid ${advanceLabel}`}
 ----------------------------------
@@ -283,7 +296,7 @@ My payment ID is verified. Please confirm my slots.`;
             ? JSON.parse(localStorage.getItem(`tripgod_bookings_${email}`)) 
             : [];
           const newBooking = {
-            id: paymentId,
+            id: dbBookingId,
             date: new Date().toLocaleDateString('en-IN'),
             activities: [{
               name: activity.name,
@@ -307,6 +320,7 @@ My payment ID is verified. Please confirm my slots.`;
         try {
           const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
           const bookingInsertData = {
+            id: dbBookingId,
             city_id: activity.city_id && isValidUUID(activity.city_id) ? activity.city_id : null,
             vendor_id: activity.vendor_id && isValidUUID(activity.vendor_id) ? activity.vendor_id : null,
             customer_name: name,
@@ -323,11 +337,10 @@ My payment ID is verified. Please confirm my slots.`;
               ? Math.min(fixedAdvanceAmount, totalPrice)
               : Math.round(totalPrice * (commissionPercentage / 100))
           };
-          supabase.from('bookings').insert([bookingInsertData]).select().then(({ data: insertedList, error }) => {
+          supabase.from('bookings').insert([bookingInsertData]).then(({ error }) => {
             if (error) {
               console.error('Error inserting booking to Supabase:', error);
             }
-            const dbBookingId = insertedList && insertedList[0] ? insertedList[0].id : paymentId;
             const opPhone = activity.category === 'hotels'
               ? (activity.whatsapp_number || activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341')
               : (activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341');
@@ -472,41 +485,104 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
 
                 {/* Booking Details Card */}
-                <div className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-4 text-left space-y-2.5">
-                  <div className="flex justify-between items-center text-[10px] border-b border-slate-200/60 pb-2">
-                    <span className="text-gray-400 font-bold uppercase tracking-widest">Booking ID</span>
-                    <span className="font-black text-black text-xs">{getSimpleBookingId(bookingSuccessData.bookingId)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500 font-bold">Stay / Activity</span>
-                    <span className="font-extrabold text-neutral-800 truncate max-w-[200px]" title={activity.name}>{activity.name}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500 font-bold">Date</span>
-                    <span className="font-extrabold text-neutral-800">{(activity.category === 'hotels' ? checkInDate : date).split('-').reverse().join('/')}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500 font-bold">Total Price</span>
-                    <span className="font-extrabold text-neutral-800 font-sans">₹{bookingSuccessData.totalPrice.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-[#10B981] font-black">Paid Online</span>
-                    <span className="font-black text-[#10B981] font-sans">₹{bookingSuccessData.advancePaid.toLocaleString('en-IN')}</span>
-                  </div>
-                  {bookingSuccessData.remainingPaid > 0 && (
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[#FF5F00] font-black">Pay at Venue</span>
-                      <span className="font-black text-[#FF5F00] font-sans">₹{bookingSuccessData.remainingPaid.toLocaleString('en-IN')}</span>
+                {activity.category === 'hotels' ? (
+                  <div className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-4 text-left space-y-2">
+                    <div className="flex justify-between items-center text-[10px] border-b border-slate-200/60 pb-2">
+                      <span className="text-gray-400 font-bold uppercase tracking-widest">Booking ID</span>
+                      <span className="font-black text-black text-xs">{getSimpleBookingId(bookingSuccessData.bookingId)}</span>
                     </div>
-                  )}
-                </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Stay / Hotel</span>
+                      <span className="font-extrabold text-neutral-800 truncate max-w-[200px]" title={activity.name}>{activity.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Address</span>
+                      <span className="font-extrabold text-neutral-800 text-right max-w-[200px] truncate" title={activity.address}>{activity.address}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Dates</span>
+                      <span className="font-extrabold text-neutral-800">{checkInDate.split('-').reverse().join('/')} to {checkOutDate.split('-').reverse().join('/')} ({nights} Night{nights > 1 ? 's' : ''})</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Timings</span>
+                      <span className="font-extrabold text-neutral-800">Check-in: {activity.check_in || '12:00 PM'} | Check-out: {activity.check_out || '11:00 AM'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Hotel Contact</span>
+                      <span className="font-extrabold text-[#FF5F00] font-sans">+{bookingSuccessData.operatorPhone}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Total Price</span>
+                      <span className="font-extrabold text-neutral-800 font-sans">₹{bookingSuccessData.totalPrice.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-[#10B981] font-black">Paid Online</span>
+                      <span className="font-black text-[#10B981] font-sans">₹{bookingSuccessData.advancePaid.toLocaleString('en-IN')}</span>
+                    </div>
+                    {bookingSuccessData.remainingPaid > 0 && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-[#FF5F00] font-black">Pay at Hotel</span>
+                        <span className="font-black text-[#FF5F00] font-sans">₹{bookingSuccessData.remainingPaid.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-4 text-left space-y-2">
+                    <div className="flex justify-between items-center text-[10px] border-b border-slate-200/60 pb-2">
+                      <span className="text-gray-400 font-bold uppercase tracking-widest">Booking ID</span>
+                      <span className="font-black text-black text-xs">{getSimpleBookingId(bookingSuccessData.bookingId)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Activity / Tour</span>
+                      <span className="font-extrabold text-neutral-800 truncate max-w-[200px]" title={activity.name}>{activity.name}</span>
+                    </div>
+                    {activity.stretch && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-500 font-bold">Stretch/Route</span>
+                        <span className="font-extrabold text-neutral-800 truncate max-w-[200px]" title={activity.stretch}>{activity.stretch}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Date & Slot</span>
+                      <span className="font-extrabold text-neutral-800">{date.split('-').reverse().join('/')} ({slot})</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Guests</span>
+                      <span className="font-extrabold text-neutral-800">{guests} {unitLabel}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Local Contact</span>
+                      <span className="font-extrabold text-[#FF5F00] font-sans">+{bookingSuccessData.operatorPhone}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500 font-bold">Total Price</span>
+                      <span className="font-extrabold text-neutral-800 font-sans">₹{bookingSuccessData.totalPrice.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-[#10B981] font-black">Paid Online</span>
+                      <span className="font-black text-[#10B981] font-sans">₹{bookingSuccessData.advancePaid.toLocaleString('en-IN')}</span>
+                    </div>
+                    {bookingSuccessData.remainingPaid > 0 && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-[#FF5F00] font-black">Pay at Venue</span>
+                        <span className="font-black text-[#FF5F00] font-sans">₹{bookingSuccessData.remainingPaid.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Next Steps Container */}
-                <div className="w-full p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-1.5">
+                <div className="w-full p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-2">
                   <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">✨ What happens next?</h4>
                   <ul className="text-[10px] text-emerald-850 font-semibold space-y-1.5 list-none pl-0">
-                    <li className="flex items-start gap-1.5"><span>📩</span> <span>Booking tickets have been sent to your email and WhatsApp number.</span></li>
-                    <li className="flex items-start gap-1.5"><span>📞</span> <span>The local guide/hotel front desk will reach out to you shortly to coordinate slot/check-in.</span></li>
+                    <li className="flex items-start gap-1.5">
+                      <span>📩</span> 
+                      <span>Confirmation tickets containing full booking ticket layout have been sent to your registered Gmail and WhatsApp.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span>📞</span> 
+                      <span>You can directly contact the Host/Hotel desk at <strong>+{bookingSuccessData.operatorPhone}</strong> to coordinate check-in or booking slots.</span>
+                    </li>
                   </ul>
                 </div>
 

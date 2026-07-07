@@ -78,10 +78,29 @@ export default async function handler(req, res) {
     const remainingPaid = data.remainingPaid || 0;
     const paymentId = data.paymentId || "N/A";
     
+    const getSimpleBookingId = (id) => {
+      if (!id || id === 'N/A') return 'TG-000000';
+      if (id.includes('-') || id.length >= 32) {
+        const cleanHex = id.replace(/-/g, '').substring(0, 8);
+        const num = parseInt(cleanHex, 16);
+        if (!isNaN(num)) {
+          return `TG-${String(num).slice(-6)}`;
+        }
+      }
+      const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+      let hash = 0;
+      for (let i = 0; i < cleanStr.length; i++) {
+        hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+        hash = hash & hash;
+      }
+      return `TG-${String(Math.abs(hash)).slice(-6)}`;
+    };
+    const simpleBookingCode = getSimpleBookingId(paymentId);
+    
     const category = data.category || "rafting";
     
     const locationLink = LOCATION_MAPS[category] || LOCATION_MAPS.rafting;
-    const agencyPhone = formatPhone(AGENCY_PHONES[category] || ADMIN_PHONE);
+    const agencyPhone = formatPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
     const upiDiscount = Number(data.upiDiscount || 0);
@@ -107,6 +126,7 @@ export default async function handler(req, res) {
     
     Hi *${customerName}*, your booking is confirmed!
     
+    🎫 *Booking ID:* ${simpleBookingCode}
     🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
     ⏰ *Date:* ${date}
     ⏰ *Time/Slot:* ${slot}
@@ -137,6 +157,7 @@ export default async function handler(req, res) {
 
 Hi Team, a new client has booked your service via TripGod. Please reserve the slot:
 
+🎫 *Booking ID:* ${simpleBookingCode}
 🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
 👤 *Customer Name:* ${customerName}
 📞 *Customer Phone:* +${customerPhone}
@@ -155,6 +176,7 @@ _Please ensure premium service. Thank you!_`;
 
 New booking completed successfully:
 
+- 🎫 *Booking ID:* ${simpleBookingCode}
 - 🎒 *Activity:* ${activityName}
 - 👤 *Customer:* ${customerName} (+${customerPhone})
 - ⏰ *Date:* ${date}
@@ -262,6 +284,25 @@ async function sendEmailAlert(data) {
   const isBikeRent = data.category === 'bikerent';
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
+  const getSimpleBookingId = (id) => {
+    if (!id || id === 'N/A') return 'TG-000000';
+    if (id.includes('-') || id.length >= 32) {
+      const cleanHex = id.replace(/-/g, '').substring(0, 8);
+      const num = parseInt(cleanHex, 16);
+      if (!isNaN(num)) {
+        return `TG-${String(num).slice(-6)}`;
+      }
+    }
+    const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+    let hash = 0;
+    for (let i = 0; i < cleanStr.length; i++) {
+      hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return `TG-${String(Math.abs(hash)).slice(-6)}`;
+  };
+  const simpleBookingCode = getSimpleBookingId(data.paymentId);
+
   const paymentOption = data.paymentOption || (data.totalPrice > 0 && data.remainingPaid === 0 ? 'full' : 'advance');
   const upiDiscount = Number(data.upiDiscount || 0);
   const commissionPercentage = Number(data.commissionPercentage || 10);
@@ -290,7 +331,11 @@ async function sendEmailAlert(data) {
         <h3 style="color: #111; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 0;">Adventure Details</h3>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr style="background-color: #f9f9f9;">
-            <td style="padding: 12px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Activity:</td>
+            <td style="padding: 12px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Booking ID:</td>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee; color: #FF6B00;">${simpleBookingCode}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Activity:</td>
             <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.activityName} ${data.stretch ? `(${data.stretch})` : ''}</td>
           </tr>
           <tr>
