@@ -211,7 +211,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     }
 
     const options = {
-      key: "rzp_live_SwElxrZFXDUFIx",
+      key: "rzp_live_TAd3hYpU1J84mE",
       amount: finalAmountToPay * 100, // paise
       currency: "INR",
       name: "TripGod Rishikesh",

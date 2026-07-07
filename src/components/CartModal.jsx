@@ -53,7 +53,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
     }
 
     const options = {
-      key: "rzp_live_SwElxrZFXDUFIx",
+      key: "rzp_live_TAd3hYpU1J84mE",
       amount: amountToPayNow * 100, // paise
       currency: "INR",
       name: "TripGod Rishikesh",
