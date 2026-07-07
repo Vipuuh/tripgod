@@ -3,12 +3,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trash2, Calendar, Clock, Users, ShieldAlert, CheckCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../supabase';
 
-export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
+export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClearCart }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [paymentOption, setPaymentOption] = useState('advance');
+  const [bookingSuccessData, setBookingSuccessData] = useState(null);
+
+  const getSimpleBookingId = (id) => {
+    if (!id) return 'TG-000000';
+    if (id.includes('-') || id.length >= 32) {
+      const cleanHex = id.replace(/-/g, '').substring(0, 8);
+      const num = parseInt(cleanHex, 16);
+      if (!isNaN(num)) {
+        return `TG-${String(num).slice(-6)}`;
+      }
+    }
+    const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+    let hash = 0;
+    for (let i = 0; i < cleanStr.length; i++) {
+      hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return `TG-${String(Math.abs(hash)).slice(-6)}`;
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -138,7 +157,8 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
         // Save bookings to Supabase SQL Database
         try {
           const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-          cart.forEach(async (item) => {
+          const insertedBookingIds = [];
+          const bookingPromises = cart.map(async (item) => {
             const itemPct = item.commission_percentage || 10.0;
             const commissionEarned = item.payment_mode === 'fixed_advance'
               ? Math.min(item.fixed_advance_amount || 0, item.totalPrice)
@@ -159,45 +179,66 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
               remaining_amount: paymentOption === 'full' ? 0 : item.remainingPayment,
               commission_earned: commissionEarned
             };
-            const { error } = await supabase.from('bookings').insert([bookingInsertData]);
-            if (error) console.error('Error inserting booking to Supabase from cart:', error);
+            const { data: insertedList, error } = await supabase.from('bookings').insert([bookingInsertData]).select();
+            if (error) {
+              console.error('Error inserting booking to Supabase from cart:', error);
+            } else if (insertedList && insertedList[0]) {
+              insertedBookingIds.push(insertedList[0].id);
+            }
+          });
+
+          Promise.all(bookingPromises).then(() => {
+            const dbBookingId = insertedBookingIds[0] || paymentId;
+
+            // Trigger background automated WhatsApp notifications for each cart item
+            cart.forEach((item) => {
+              const opPhone = item.category === 'hotels'
+                ? (item.whatsapp_number || item.vendors?.whatsapp || item.vendors?.phone || '8630027341')
+                : (item.vendors?.whatsapp || item.vendors?.phone || '8630027341');
+
+              fetch('/api/send-booking-whatsapp', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  name: name,
+                  email: email,
+                  phone: phone,
+                  activityName: item.name,
+                  stretch: item.stretch || '',
+                  date: item.date.split('-').reverse().join('/'),
+                  slot: item.slot,
+                  guests: item.guests,
+                  totalPrice: item.totalPrice,
+                  advancePaid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
+                  remainingPaid: paymentOption === 'full' ? 0 : item.remainingPayment,
+                  paymentId: dbBookingId,
+                  category: item.category || 'rafting',
+                  paymentOption: paymentOption,
+                  upiDiscount: 0,
+                  commissionPercentage: item.commission_percentage || 10,
+                  operatorPhone: opPhone
+                })
+              }).catch(err => console.error('Error triggering WhatsApp notification for cart item:', err));
+            });
+
+            // Set booking success state
+            setBookingSuccessData({
+              bookingId: dbBookingId,
+              totalPrice: totalCost,
+              advancePaid: amountToPayNow,
+              remainingPaid: remainingPayment
+            });
+
+            // Clear cart
+            if (onClearCart) {
+              onClearCart();
+            }
           });
         } catch (err) {
           console.error('Supabase cart bookings insertion failed:', err);
         }
-
-        // Trigger background automated WhatsApp notifications for each cart item
-        cart.forEach((item) => {
-          const itemPct = item.commission_percentage || 10.0;
-          fetch('/api/send-booking-whatsapp', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              name: name,
-              email: email,
-              phone: phone,
-              activityName: item.name,
-              stretch: item.stretch || '',
-              date: item.date.split('-').reverse().join('/'),
-              slot: item.slot,
-              guests: item.guests,
-              totalPrice: item.totalPrice,
-              advancePaid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
-              remainingPaid: paymentOption === 'full' ? 0 : item.remainingPayment,
-              paymentId: paymentId,
-              category: item.category || 'rafting',
-              paymentOption: paymentOption,
-              upiDiscount: 0,
-              commissionPercentage: item.commission_percentage || 10
-            })
-          }).catch(err => console.error('Error triggering WhatsApp notification for cart item:', err));
-        });
-
-        const encoded = encodeURIComponent(message);
-        window.open(`https://wa.me/918630027341?text=${encoded}`, '_blank');
-        onClose();
       },
       prefill: {
         name: name,
@@ -238,8 +279,69 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
             className="relative w-full max-w-md h-full bg-white/80 border-l border-white/40 shadow-2xl z-10 flex flex-col backdrop-blur-2xl text-black"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 bg-transparent border-b border-black/5 text-black">
+             {bookingSuccessData ? (
+               <div className="p-8 text-center flex flex-col items-center justify-center h-full space-y-6">
+                 {/* Success Animation Checkmark */}
+                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 shadow-3xs animate-bounce">
+                   <svg className="w-8 h-8 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
+                   </svg>
+                 </div>
+
+                 <div className="space-y-1">
+                   <h3 className="text-2xl font-black font-display tracking-tight text-neutral-900">
+                     Booking Confirmed! 🎉
+                   </h3>
+                   <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+                     All items in your cart are reserved
+                   </p>
+                 </div>
+
+                 {/* Booking Details Card */}
+                 <div className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-5 text-left space-y-3">
+                   <div className="flex justify-between items-center text-[10px] border-b border-slate-200/60 pb-2">
+                     <span className="text-gray-400 font-bold uppercase tracking-widest">Main Booking ID</span>
+                     <span className="font-black text-black text-xs">{getSimpleBookingId(bookingSuccessData.bookingId)}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-xs">
+                     <span className="text-gray-500 font-bold">Total Price</span>
+                     <span className="font-extrabold text-neutral-800 font-sans text-sm">₹{bookingSuccessData.totalPrice.toLocaleString('en-IN')}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-xs">
+                     <span className="text-[#10B981] font-black">Paid Online</span>
+                     <span className="font-black text-[#10B981] font-sans text-sm">₹{bookingSuccessData.advancePaid.toLocaleString('en-IN')}</span>
+                   </div>
+                   {bookingSuccessData.remainingPaid > 0 && (
+                     <div className="flex justify-between items-center text-xs">
+                       <span className="text-[#FF5F00] font-black">Pay at Venue</span>
+                       <span className="font-black text-[#FF5F00] font-sans text-sm">₹{bookingSuccessData.remainingPaid.toLocaleString('en-IN')}</span>
+                     </div>
+                   )}
+                 </div>
+
+                 {/* Next Steps Container */}
+                 <div className="w-full p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-2">
+                   <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">✨ What happens next?</h4>
+                   <ul className="text-[10px] text-emerald-850 font-semibold space-y-1.5 list-none pl-0">
+                     <li className="flex items-start gap-1.5"><span>📩</span> <span>Booking tickets have been sent to your email and WhatsApp number.</span></li>
+                     <li className="flex items-start gap-1.5"><span>📞</span> <span>The local guides/hotels will contact you shortly to coordinate slot details.</span></li>
+                   </ul>
+                 </div>
+
+                 <button
+                   onClick={() => {
+                     setBookingSuccessData(null);
+                     onClose();
+                   }}
+                   className="w-full py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer font-display"
+                 >
+                   Close & Continue
+                 </button>
+               </div>
+             ) : (
+               <>
+                 {/* Header */}
+                 <div className="flex items-center justify-between p-6 bg-transparent border-b border-black/5 text-black">
               <div className="flex items-center gap-2">
                 <span className="font-display font-bold text-xl tracking-tight text-black">Your Booking Cart</span>
                 <span className="bg-[#FF5F00] text-white font-black text-xs rounded-full px-2.5 py-0.5 min-w-[22px] text-center shadow-[0_0_10px_rgba(255,95,0,0.4)]">
@@ -485,6 +587,8 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
                   <span>{paymentOption === 'full' ? 'Pay Full & Book All' : 'Pay Advances & Book All'}</span>
                 </button>
               </div>
+            )}
+              </>
             )}
           </motion.div>
         </div>

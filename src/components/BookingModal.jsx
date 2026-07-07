@@ -20,6 +20,26 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
 
+  const [bookingSuccessData, setBookingSuccessData] = useState(null);
+
+  const getSimpleBookingId = (id) => {
+    if (!id) return 'TG-000000';
+    if (id.includes('-') || id.length >= 32) {
+      const cleanHex = id.replace(/-/g, '').substring(0, 8);
+      const num = parseInt(cleanHex, 16);
+      if (!isNaN(num)) {
+        return `TG-${String(num).slice(-6)}`;
+      }
+    }
+    const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+    let hash = 0;
+    for (let i = 0; i < cleanStr.length; i++) {
+      hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return `TG-${String(Math.abs(hash)).slice(-6)}`;
+  };
+
   // Default slots based on activity category
   let defaultSlots = ['08:00 AM', '10:30 AM', '01:30 PM', '04:00 PM'];
   if (activity) {
@@ -303,42 +323,53 @@ My payment ID is verified. Please confirm my slots.`;
               ? Math.min(fixedAdvanceAmount, totalPrice)
               : Math.round(totalPrice * (commissionPercentage / 100))
           };
-          supabase.from('bookings').insert([bookingInsertData]).then(({ error }) => {
-            if (error) console.error('Error inserting booking to Supabase:', error);
+          supabase.from('bookings').insert([bookingInsertData]).select().then(({ data: insertedList, error }) => {
+            if (error) {
+              console.error('Error inserting booking to Supabase:', error);
+            }
+            const dbBookingId = insertedList && insertedList[0] ? insertedList[0].id : paymentId;
+            const opPhone = activity.category === 'hotels'
+              ? (activity.whatsapp_number || activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341')
+              : (activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341');
+
+            // Trigger background automated WhatsApp notifications
+            fetch('/api/send-booking-whatsapp', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                name: name,
+                email: email,
+                phone: phone,
+                activityName: activity.name,
+                stretch: activity.stretch || '',
+                date: date.split('-').reverse().join('/'),
+                slot: slot,
+                guests: guests,
+                totalPrice: totalPrice,
+                advancePaid: finalAmountToPay,
+                remainingPaid: remainingPayment,
+                paymentId: dbBookingId,
+                category: activity.category,
+                paymentOption: effectivePaymentOption,
+                upiDiscount: upiDiscountVal,
+                commissionPercentage: commissionPercentage,
+                operatorPhone: opPhone
+              })
+            }).catch(err => console.error('WhatsApp notification error:', err));
+
+            setBookingSuccessData({
+              bookingId: dbBookingId,
+              totalPrice: totalPrice,
+              advancePaid: finalAmountToPay,
+              remainingPaid: remainingPayment,
+              operatorPhone: opPhone
+            });
           });
         } catch (err) {
           console.error('Supabase booking insertion failed:', err);
         }
-
-        // Trigger background automated WhatsApp notifications
-        fetch('/api/send-booking-whatsapp', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: name,
-            email: email,
-            phone: phone,
-            activityName: activity.name,
-            stretch: activity.stretch || '',
-            date: date.split('-').reverse().join('/'),
-            slot: slot,
-            guests: guests,
-            totalPrice: totalPrice,
-            advancePaid: finalAmountToPay,
-            remainingPaid: remainingPayment,
-            paymentId: paymentId,
-            category: activity.category,
-            paymentOption: effectivePaymentOption,
-            upiDiscount: upiDiscountVal,
-            commissionPercentage: commissionPercentage
-          })
-        }).catch(err => console.error('WhatsApp notification error:', err));
-
-        const encoded = encodeURIComponent(message);
-        window.open(`https://wa.me/918630027341?text=${encoded}`, '_blank');
-        onClose();
       },
       prefill: {
         name: name,
@@ -422,7 +453,76 @@ My payment ID is verified. Please confirm my slots.`;
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
             className="relative w-full max-w-lg overflow-hidden bg-white/80 border border-white/40 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] z-10 flex flex-col max-h-[90vh] backdrop-blur-2xl text-black"
           >
-            {/* Header */}
+            {bookingSuccessData ? (
+              <div className="p-8 text-center flex flex-col items-center space-y-5">
+                {/* Success Animation Checkmark */}
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 shadow-3xs animate-bounce mt-2">
+                  <svg className="w-8 h-8 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black font-display tracking-tight text-neutral-900">
+                    Booking Confirmed! 🎉
+                  </h3>
+                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+                    Your stay has been reserved successfully
+                  </p>
+                </div>
+
+                {/* Booking Details Card */}
+                <div className="w-full bg-slate-50 border border-slate-200/60 rounded-2xl p-4 text-left space-y-2.5">
+                  <div className="flex justify-between items-center text-[10px] border-b border-slate-200/60 pb-2">
+                    <span className="text-gray-400 font-bold uppercase tracking-widest">Booking ID</span>
+                    <span className="font-black text-black text-xs">{getSimpleBookingId(bookingSuccessData.bookingId)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500 font-bold">Stay / Activity</span>
+                    <span className="font-extrabold text-neutral-800 truncate max-w-[200px]" title={activity.name}>{activity.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500 font-bold">Date</span>
+                    <span className="font-extrabold text-neutral-800">{(activity.category === 'hotels' ? checkInDate : date).split('-').reverse().join('/')}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500 font-bold">Total Price</span>
+                    <span className="font-extrabold text-neutral-800 font-sans">₹{bookingSuccessData.totalPrice.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[#10B981] font-black">Paid Online</span>
+                    <span className="font-black text-[#10B981] font-sans">₹{bookingSuccessData.advancePaid.toLocaleString('en-IN')}</span>
+                  </div>
+                  {bookingSuccessData.remainingPaid > 0 && (
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-[#FF5F00] font-black">Pay at Venue</span>
+                      <span className="font-black text-[#FF5F00] font-sans">₹{bookingSuccessData.remainingPaid.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Next Steps Container */}
+                <div className="w-full p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-1.5">
+                  <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">✨ What happens next?</h4>
+                  <ul className="text-[10px] text-emerald-850 font-semibold space-y-1.5 list-none pl-0">
+                    <li className="flex items-start gap-1.5"><span>📩</span> <span>Booking tickets have been sent to your email and WhatsApp number.</span></li>
+                    <li className="flex items-start gap-1.5"><span>📞</span> <span>The local guide/hotel front desk will reach out to you shortly to coordinate slot/check-in.</span></li>
+                  </ul>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setBookingSuccessData(null);
+                    onClose();
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer font-display"
+                >
+                  Close & Continue
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-black/5 bg-transparent text-black">
               <div>
                 <span className="text-[9px] tracking-wider uppercase text-[#FF5F00] font-black px-2 py-0.5 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded">
@@ -812,6 +912,8 @@ My payment ID is verified. Please confirm my slots.`;
                 </button>
               )}
             </div>
+              </>
+            )}
           </motion.div>
         </div>
       )}

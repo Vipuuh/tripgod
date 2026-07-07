@@ -115,7 +115,7 @@ export default async function handler(req, res) {
     📍 *Pickup / Activity Location (Google Maps):*
     ${locationLink}
     
-    📞 *Operator Helpdesk:* +${agencyPhone}
+    📞 *Local Contact / Host:* +${agencyPhone}
     
     ${customerPaymentText}
     
@@ -310,7 +310,7 @@ async function sendEmailAlert(data) {
             <td style="padding: 12px; border-bottom: 1px solid #eee;"><a href="${data.locationLink}" style="color: #FF6B00; font-weight: bold; text-decoration: none;">Open in Google Maps 📍</a></td>
           </tr>
           <tr>
-            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Operator Contact:</td>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Local Contact / Host:</td>
             <td style="padding: 12px; border-bottom: 1px solid #eee;">+${data.agencyPhone}</td>
           </tr>
         </table>

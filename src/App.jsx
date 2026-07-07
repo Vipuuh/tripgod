@@ -202,6 +202,11 @@ export default function App() {
     setCart((prev) => prev.filter((item) => item.cartId !== cartId));
   };
 
+  const handleClearCart = () => {
+    setCart([]);
+    localStorage.removeItem('tripgod_cart');
+  };
+
   const openBookingModal = (activity, customDate = '', customGuests = 1) => {
     setBookingActivity(activity);
     setInitialBookingDate(customDate || prefDate || '');
@@ -535,6 +540,7 @@ export default function App() {
         onClose={() => setIsCartOpen(false)}
         cart={cart}
         onRemoveItem={handleRemoveFromCart}
+        onClearCart={handleClearCart}
       />
 
       {/* 8. Search Drawer Overlay */}

@@ -8,6 +8,24 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
+const getSimpleBookingId = (id) => {
+  if (!id) return 'TG-000000';
+  if (id.includes('-') || id.length >= 32) {
+    const cleanHex = id.replace(/-/g, '').substring(0, 8);
+    const num = parseInt(cleanHex, 16);
+    if (!isNaN(num)) {
+      return `TG-${String(num).slice(-6)}`;
+    }
+  }
+  const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+  let hash = 0;
+  for (let i = 0; i < cleanStr.length; i++) {
+    hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `TG-${String(Math.abs(hash)).slice(-6)}`;
+};
+
 const STANDARD_ADVENTURE_NAMES = {
   rafting: [
     "12 KM Rafting",
@@ -433,7 +451,7 @@ export default function AdminDashboard({ setRoute }) {
   // BOOKINGS FILTERS APPLICATION
   // =========================================================================
   const filteredBookings = bookings.filter(b => {
-    const searchString = `${b.customer_name} ${b.customer_phone} ${b.customer_email} ${b.id}`.toLowerCase();
+    const searchString = `${b.customer_name} ${b.customer_phone} ${b.customer_email} ${b.id} ${getSimpleBookingId(b.id)}`.toLowerCase();
     const matchesSearch = searchString.includes(bookingSearch.toLowerCase());
     const matchesStatus = bookingStatusFilter === 'all' || b.status === bookingStatusFilter;
     const matchesService = bookingServiceFilter === 'all' || b.service_type === bookingServiceFilter;
@@ -719,7 +737,7 @@ export default function AdminDashboard({ setRoute }) {
                         {/* Upper row */}
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-2 border-b border-slate-900 pb-3">
                           <div>
-                            <span className="block text-[9px] font-black text-slate-500 uppercase tracking-widest">Booking ID: {b.id.substring(0,8)}...</span>
+                            <span className="block text-[9px] font-black text-slate-500 uppercase tracking-widest">Booking ID: {getSimpleBookingId(b.id)}</span>
                             <h4 className="font-black text-sm text-slate-200 mt-0.5">{b.customer_name}</h4>
                           </div>
 
