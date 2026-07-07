@@ -451,19 +451,28 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         if (hotelIds.length > 0) {
           const { data: hotelsData } = await supabase
             .from('hotels')
-            .select('id, name, price, images, rating, reviews_count, address')
+            .select('id, name, price, images, rating, reviews_count, address, rules, landmarks')
             .in('id', hotelIds);
           if (hotelsData && hotelsData.length > 0) {
             const ordered = hotelIds.map(id => hotelsData.find(h => h.id === id)).filter(Boolean);
-            setFeaturedHotels(ordered.map(h => ({
-              id: h.id,
-              name: h.name,
-              price: Number(h.price),
-              img: h.images && h.images[0] ? h.images[0] : '/aloha_resort.png',
-              rating: h.rating ? Number(h.rating) : 4.5,
-              reviewsCount: h.reviews_count ? Number(h.reviews_count) : 100,
-              location: h.address || 'Rishikesh'
-            })));
+            setFeaturedHotels(ordered.map(h => {
+              const rules = typeof h.rules === 'string' ? JSON.parse(h.rules) : h.rules || {};
+              const tags = [];
+              if (rules.unmarried_couples) {
+                tags.push('Couple Friendly');
+              }
+              return {
+                id: h.id,
+                name: h.name,
+                price: Number(h.price),
+                img: h.images && h.images[0] ? h.images[0] : '/aloha_resort.png',
+                rating: h.rating ? Number(h.rating) : 4.5,
+                reviewsCount: h.reviews_count ? Number(h.reviews_count) : 100,
+                location: h.address || 'Rishikesh',
+                distance: h.landmarks && h.landmarks[0] ? h.landmarks[0] : null,
+                tags: tags
+              };
+            }));
           }
         }
 
