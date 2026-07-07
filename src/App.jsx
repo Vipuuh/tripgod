@@ -389,7 +389,7 @@ export default function App() {
             {/* Partner With Us */}
             <div className="flex flex-col gap-1.5">
               <a
-                href="https://wa.me/919837371137?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
+                href="https://wa.me/918630027341?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 group w-fit"
@@ -409,7 +409,7 @@ export default function App() {
             </p>
             {/* Embedded WhatsApp block */}
             <a 
-              href="https://wa.me/919837371137"
+              href="https://wa.me/918630027341"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#D5F538] text-black font-black text-xs px-4 py-2.5 rounded-xl uppercase tracking-wider hover-glow transition-all"
@@ -476,7 +476,7 @@ export default function App() {
           <div className="space-y-3">
             <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Contact</h4>
             <ul className="space-y-2 text-xs font-medium text-gray-400">
-              <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: 9837371137</li>
+              <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: 8630027341</li>
               <li className="flex items-center gap-2"><Mail size={12} /> Email: Tripgod.in@gmail.com</li>
               <li className="flex items-center gap-2"><MapPin size={12} /> Rishikesh, Uttarakhand, India</li>
             </ul>
@@ -499,7 +499,7 @@ export default function App() {
 
       {/* 5. Floating WhatsApp Pulsing Button */}
       <a
-        href="https://wa.me/919837371137"
+        href="https://wa.me/918630027341"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-20 right-6 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform group cursor-pointer"

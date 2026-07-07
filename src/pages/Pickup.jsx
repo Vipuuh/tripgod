@@ -89,7 +89,7 @@ export default function Pickup() {
       `🛺 Vehicle: ${vehicleName}\n\n` +
       `Please let me know the price and availability.`
     );
-    window.open(`https://wa.me/919837371137?text=${text}`, '_blank');
+    window.open(`https://wa.me/918630027341?text=${text}`, '_blank');
   };
 
   return (
@@ -227,7 +227,7 @@ export default function Pickup() {
                 Want to book directly over a phone call? Skip the selector tool and talk directly to our booking manager to discuss pricing and schedule.
               </p>
               <a
-                href="tel:+919837371137"
+                href="tel:+918630027341"
                 className="inline-flex items-center gap-2 py-3 px-6 bg-black text-white text-xs font-black uppercase rounded-xl hover:scale-102 transition-transform"
               >
                 <Phone size={14} /> Call Manager Now

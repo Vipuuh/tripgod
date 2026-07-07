@@ -1055,7 +1055,7 @@ export default function AdminDashboard({ setRoute }) {
                         required
                         value={newVendor.phone}
                         onChange={(e) => setNewVendor(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="e.g. 9837371137"
+                        placeholder="e.g. 8630027341"
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
                       />
                     </div>
@@ -1067,7 +1067,7 @@ export default function AdminDashboard({ setRoute }) {
                         required
                         value={newVendor.whatsapp}
                         onChange={(e) => setNewVendor(prev => ({ ...prev, whatsapp: e.target.value }))}
-                        placeholder="e.g. 9837371137"
+                        placeholder="e.g. 8630027341"
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
                       />
                     </div>
@@ -1652,6 +1652,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
   const [activitiesOperators, setActivitiesOperators] = useState({});
   const [bikesOperators, setBikesOperators] = useState({});
   const [toursOperators, setToursOperators] = useState({});
+  const [uploadingImageIndices, setUploadingImageIndices] = useState({});
 
   // Initialize adventures/activities operators state (covers rafting, swing, paragliding, zipline, camping)
   useEffect(() => {
@@ -2323,18 +2324,40 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         return;
       }
 
-      // Default submit for hotels, bikes, tours
-      const submitData = {
-        ...formData,
+      // Default submit payload builder for hotels/bikes
+      let submitData = {
+        city_id: formData.city_id,
+        vendor_id: formData.vendor_id,
+        name: formData.name,
+        description: formData.description || '',
+        price: Number(formData.price),
+        whatsapp_number: formData.whatsapp_number || null,
+        images: formData.images || [],
+        is_closed: !!formData.is_closed,
+        closed_reason: formData.closed_reason || '',
+        closed_from: formData.closed_from || null,
+        closed_until: formData.closed_until || null,
         original_price: formData.original_price === '' || formData.original_price === null || formData.original_price === undefined ? null : Number(formData.original_price),
         payment_mode: formData.payment_mode || 'commission_advance',
         commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage === '' || formData.commission_percentage === null || formData.commission_percentage === undefined ? null : Number(formData.commission_percentage)) : null,
         fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null || formData.fixed_advance_amount === undefined ? null : Number(formData.fixed_advance_amount)) : null,
-        is_limited_offer: !!formData.is_limited_offer
+        is_limited_offer: !!formData.is_limited_offer,
+        upi_discount: formData.upi_discount !== null && formData.upi_discount !== undefined && formData.upi_discount !== '' ? Number(formData.upi_discount) : null
       };
+
       if (type === 'hotels') {
-        delete submitData.phone_number;
-        delete submitData.popular_badge_text;
+        submitData.address = formData.address || '';
+        submitData.maps_link = formData.maps_link || '';
+        submitData.check_in = formData.check_in || '12:00 PM';
+        submitData.check_out = formData.check_out || '11:00 AM';
+        submitData.cancellation_policy = formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.';
+        submitData.amenities = formData.amenities || {};
+        submitData.rules = formData.rules || {};
+        submitData.landmarks = formData.landmarks || [];
+      } else if (type === 'bikes') {
+        submitData.deposit = Number(formData.deposit || 0);
+        submitData.documents = formData.documents || [];
+        submitData.pickup_location = formData.pickup_location || '';
       }
       if (data) {
         // Edit Row
@@ -2366,6 +2389,28 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
   const removeArrayItem = (field, index) => {
     setFormData(prev => ({ ...prev, [field]: (prev[field] || []).filter((_, i) => i !== index) }));
+  };
+
+  const handleImageFileUpload = async (e, idx) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImageIndices(prev => ({ ...prev, [idx]: true }));
+    try {
+      const ext = file.name.split('.').pop();
+      const randName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
+      const filePath = `listings/${randName}`;
+
+      const { error } = await supabase.storage.from('media').upload(filePath, file);
+      if (error) throw error;
+
+      const { data } = supabase.storage.from('media').getPublicUrl(filePath);
+      handleArrayChange('images', idx, data.publicUrl);
+    } catch (err) {
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      setUploadingImageIndices(prev => ({ ...prev, [idx]: false }));
+    }
   };
 
   if (!formData.name && formData.price === undefined) return null;
@@ -2516,7 +2561,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 value={formData.whatsapp_number || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder="e.g. 9837371137"
+                placeholder="e.g. 8630027341"
               />
             </div>
 
@@ -2571,7 +2616,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         </div>
         <div className="space-y-2">
           {(formData.images || []).map((img, idx) => (
-            <div key={idx} className="flex gap-2">
+            <div key={idx} className="flex gap-2 items-center">
               <input
                 type="text"
                 required
@@ -2580,6 +2625,23 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none"
                 placeholder="https://..."
               />
+              
+              {/* Image Upload Button */}
+              <label className="py-2.5 px-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 rounded-xl cursor-pointer flex items-center justify-center shrink-0">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageFileUpload(e, idx)}
+                  className="hidden"
+                  disabled={uploadingImageIndices[idx]}
+                />
+                {uploadingImageIndices[idx] ? (
+                  <span className="text-[10px] animate-pulse">Uploading...</span>
+                ) : (
+                  <span className="text-[10px] font-bold">Upload</span>
+                )}
+              </label>
+
               <button
                 type="button"
                 onClick={() => removeArrayItem('images', idx)}

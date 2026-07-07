@@ -330,7 +330,7 @@ My payment ID is verified. Please confirm my slots.`;
         }).catch(err => console.error('WhatsApp notification error:', err));
 
         const encoded = encodeURIComponent(message);
-        window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
+        window.open(`https://wa.me/918630027341?text=${encoded}`, '_blank');
         onClose();
       },
       prefill: {

@@ -1233,7 +1233,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
           <div className="flex items-center gap-2 shrink-0">
             {/* Call desk */}
             <a
-              href="tel:+919837371137"
+              href="tel:+918630027341"
               className="p-3 bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#FF5722] rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
             >
               <Phone size={16} />
@@ -1241,7 +1241,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
             
             {/* WhatsApp */}
             <a
-              href={`https://wa.me/919837371137?text=Hi%2C%20I'm%20interested%20in%2520booking%2520the%2520${encodeURIComponent(selectedTour.name)}`}
+              href={`https://wa.me/918630027341?text=Hi%2C%20I'm%20interested%20in%2520booking%2520the%2520${encodeURIComponent(selectedTour.name)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="p-3 bg-slate-50 border border-slate-200 text-slate-700 hover:text-emerald-500 rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"

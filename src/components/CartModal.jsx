@@ -193,7 +193,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
         });
 
         const encoded = encodeURIComponent(message);
-        window.open(`https://wa.me/919837371137?text=${encoded}`, '_blank');
+        window.open(`https://wa.me/918630027341?text=${encoded}`, '_blank');
         onClose();
       },
       prefill: {
