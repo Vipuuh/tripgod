@@ -148,7 +148,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   // Calculate pricing
   const basePrice = activity.price || 0;
   const pricePerPerson = basePrice;
-  const totalPrice = pricePerPerson * guests * (activity.category === 'hotels' ? nights : 1);
+  const rawTotalPrice = pricePerPerson * guests * (activity.category === 'hotels' ? nights : 1);
+  
+  // Calculate 12% tax dynamically for hotel bookings
+  const taxes = activity.category === 'hotels' ? Math.round(rawTotalPrice * 0.12) : 0;
+  const totalPrice = rawTotalPrice + taxes;
   
   // Calculate dynamic advance amount
   const calculatedAdvance = paymentMode === 'fixed_advance'
@@ -725,7 +729,17 @@ My payment ID is verified. Please confirm my slots.`;
                   </div>
                 )}
                 <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
-                  <span>Total price ({guests} {isBikeRent ? `vehicle${guests > 1 ? 's' : ''}` : `guest${guests > 1 ? 's' : ''}`})</span>
+                  <span>{activity.category === 'hotels' ? 'Room price' : 'Base price'} ({guests} {isBikeRent ? `vehicle${guests > 1 ? 's' : ''}` : `guest${guests > 1 ? 's' : ''}`})</span>
+                  <span>₹{rawTotalPrice.toLocaleString('en-IN')}</span>
+                </div>
+                {activity.category === 'hotels' && (
+                  <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                    <span>GST & Service Taxes (12%)</span>
+                    <span>₹{taxes.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-xs text-emerald-950 font-black">
+                  <span>Total price (incl. taxes)</span>
                   <span>₹{totalPrice.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">

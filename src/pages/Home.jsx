@@ -999,7 +999,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 img: '/aloha_resort.png',
                 rating: 4.8,
                 reviewsCount: 345,
-                location: 'Tapovan, Near Laxman Jhula'
+                location: 'Tapovan, Rishikesh',
+                distance: '2.1 km drive to Lakshman Jhula',
+                tags: ['Couple Friendly', 'River View']
               },
               {
                 id: 'ganga-kinare',
@@ -1008,7 +1010,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 img: '/ganga_kinare.png',
                 rating: 4.7,
                 reviewsCount: 218,
-                location: 'Barrage Road, Rishikesh'
+                location: 'Barrage Road, Rishikesh',
+                distance: '3.5 km drive to Ram Jhula',
+                tags: ['Couple Friendly', 'Private Ganga Ghat']
               },
               {
                 id: 'divine',
@@ -1017,7 +1021,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 img: '/divine_resort.png',
                 rating: 4.6,
                 reviewsCount: 195,
-                location: 'Laxman Jhula Road, Tapovan'
+                location: 'Laxman Jhula Road, Tapovan',
+                distance: '0.5 km walk to Lakshman Jhula',
+                tags: ['Couple Friendly', 'Infinity Pool']
               }
             ]).map((hotel, idx) => (
               <motion.div
@@ -1044,6 +1050,20 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     </div>
                     <h3 className="font-extrabold text-base font-display text-slate-900 leading-snug text-left uppercase">{hotel.name}</h3>
                     <p className="text-xs text-slate-450 font-bold flex items-center gap-1"><MapPin size={11} className="text-[#FF5F00] shrink-0" /> {hotel.location}</p>
+                    {hotel.distance && (
+                      <p className="text-[10px] text-slate-500 font-bold text-left pl-4 leading-none">
+                        🚗 {hotel.distance}
+                      </p>
+                    )}
+                    {hotel.tags && (
+                      <div className="flex flex-wrap gap-1 pt-1.5 justify-start">
+                        {hotel.tags.map((tag, tagIdx) => (
+                          <span key={tagIdx} className={`text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${tag === 'Couple Friendly' ? 'bg-rose-50 border border-rose-200/60 text-rose-600' : 'bg-slate-50 border border-slate-200/60 text-slate-600'}`}>
+                            {tag === 'Couple Friendly' ? '👩‍❤️‍👨 ' : ''}{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="pt-3 border-t border-slate-100">

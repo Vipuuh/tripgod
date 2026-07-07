@@ -737,6 +737,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                               {/* Trust Tag Accent Pills */}
                               <div className="flex flex-row flex-wrap gap-2 items-center mt-1 select-none">
+                                {hotel.rules?.unmarried_couples && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-600 font-black uppercase tracking-wider bg-rose-50 px-2.5 py-0.5 rounded border border-rose-200 shadow-3xs">
+                                    👩‍❤️‍👨 Couple Friendly
+                                  </span>
+                                )}
                                 <span className="inline-flex items-center gap-1 text-[10px] text-[#10B981] font-black uppercase tracking-wider bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="w-2.5 h-2.5 stroke-[3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
