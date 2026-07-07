@@ -164,12 +164,12 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const remainingPayment = totalPrice - amountToPayNow;
 
   // Calculate dynamic UPI Discount
-  const customUpiDiscount = activity.upi_discount !== undefined && activity.upi_discount !== null
+  const customUpiDiscount = activity.upi_discount !== undefined && activity.upi_discount !== null && activity.upi_discount !== ''
     ? Number(activity.upi_discount)
     : null;
 
   const getUPIDiscount = (price) => {
-    if (customUpiDiscount !== null && customUpiDiscount > 0) return customUpiDiscount;
+    if (customUpiDiscount !== null && !isNaN(customUpiDiscount)) return customUpiDiscount;
     const p = Number(price);
     if (p <= 1000) return 50;
     if (p <= 2000) return 120;
@@ -481,7 +481,7 @@ My payment ID is verified. Please confirm my slots.`;
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Mobile Number</label>
                     <input
@@ -523,7 +523,7 @@ My payment ID is verified. Please confirm my slots.`;
 
               {/* Date selection */}
               {activity.category === 'hotels' ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
                       <Calendar size={14} className="text-[#FF5F00]" /> Check-in Date
@@ -583,7 +583,7 @@ My payment ID is verified. Please confirm my slots.`;
               )}
 
               {/* Time slot and Guests */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
                     <Clock size={14} className="text-[#FF5F00]" /> {getSlotLabel()}
@@ -733,13 +733,15 @@ My payment ID is verified. Please confirm my slots.`;
                   <span>₹{amountToPayNow.toLocaleString('en-IN')}</span>
                 </div>
                 {effectivePaymentOption === 'full' ? (
-                  <div className="flex justify-between items-center text-xs text-[#10B981] font-black">
-                    <span className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
-                      UPI Discount Applied
-                    </span>
-                    <span>- ₹{upiDiscountVal.toLocaleString('en-IN')}</span>
-                  </div>
+                  upiDiscountVal > 0 && (
+                    <div className="flex justify-between items-center text-xs text-[#10B981] font-black">
+                      <span className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping" />
+                        UPI Discount Applied
+                      </span>
+                      <span>- ₹{upiDiscountVal.toLocaleString('en-IN')}</span>
+                    </div>
+                  )
                 ) : (
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-xs text-gray-400 font-semibold line-through">
