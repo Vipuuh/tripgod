@@ -187,7 +187,10 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem }) {
               advancePaid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
               remainingPaid: paymentOption === 'full' ? 0 : item.remainingPayment,
               paymentId: paymentId,
-              category: item.category || 'rafting'
+              category: item.category || 'rafting',
+              paymentOption: paymentOption,
+              upiDiscount: 0,
+              commissionPercentage: item.commission_percentage || 10
             })
           }).catch(err => console.error('Error triggering WhatsApp notification for cart item:', err));
         });

@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 
 const ULTRAMSG_INSTANCE = "instance180883";
 const ULTRAMSG_TOKEN = "dl5l1lya95t54rtt";
-const ADMIN_PHONE = "919837371137"; // TripGod Admin Number
+const ADMIN_PHONE = "918630027341"; // TripGod Admin Number
 
 // Helper to format phone number to E.164 (without plus sign) for UltraMsg
 function formatPhone(phone) {
@@ -31,15 +31,15 @@ const LOCATION_MAPS = {
 
 // Mapping of categories to Agency/Vendor Phone numbers
 const AGENCY_PHONES = {
-  rafting: "918630027341", // Testing agency number
-  bungee: "919837371137",
-  camping: "919837371137",
-  bikerent: "919837371137",
-  zipline: "919837371137",
-  paragliding: "919837371137",
-  swing: "919837371137",
-  pickup: "919837371137",
-  hotels: "919837371137"
+  rafting: "918630027341",
+  bungee: "918630027341",
+  camping: "918630027341",
+  bikerent: "918630027341",
+  zipline: "918630027341",
+  paragliding: "918630027341",
+  swing: "918630027341",
+  pickup: "918630027341",
+  hotels: "918630027341"
 };
 
 export default async function handler(req, res) {
@@ -83,46 +83,51 @@ export default async function handler(req, res) {
     const locationLink = LOCATION_MAPS[category] || LOCATION_MAPS.rafting;
     const agencyPhone = formatPhone(AGENCY_PHONES[category] || ADMIN_PHONE);
 
-    const pctPaid = totalPrice > 0 ? Math.round((advancePaid / totalPrice) * 100) : 10;
+    const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
+    const upiDiscount = Number(data.upiDiscount || 0);
+    const commissionPercentage = Number(data.commissionPercentage || 10);
+
+    const isFullPayment = paymentOption === 'full' || remainingPaid <= 0;
+    const pctPaid = isFullPayment ? 100 : commissionPercentage;
     const remainingPct = 100 - pctPaid;
 
     let customerPaymentText = '';
-    if (pctPaid === 100) {
-      customerPaymentText = `💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
+    if (isFullPayment) {
+      customerPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
 ✅ *Paid Online (100%):* ₹${advancePaid.toLocaleString('en-IN')}
 ⏳ *Remaining Balance:* Paid in Full (₹0)`;
     } else {
-      customerPaymentText = `💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
+      customerPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
 ✅ *Paid Advance (${pctPaid}%):* ₹${advancePaid.toLocaleString('en-IN')}
-⏳ *Remaining Balance (${remainingPct}%):* ₹${remainingPaid.toLocaleString('en-IN')}`;
+⏳ *Remaining Balance (${remainingPct}%):* ₹${remainingPaid.toLocaleString('en-IN')} (To be paid at venue)`;
     }
 
     // --- Message 1: To Customer ---
     const customerMsg = `*TripGod Booking Confirmed!* 🏔️
     
-Hi *${customerName}*, your booking is confirmed!
-
-🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
-⏰ *Date:* ${date}
-⏰ *Time/Slot:* ${slot}
-👥 *Guests:* ${guests} ${unitLabel}
-
-📍 *Pickup / Activity Location (Google Maps):*
-${locationLink}
-
-📞 *Operator Helpdesk:* +${agencyPhone}
-
-${customerPaymentText}
-
-_Thank you for booking with TripGod! See you in Rishikesh!_`;
+    Hi *${customerName}*, your booking is confirmed!
+    
+    🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
+    ⏰ *Date:* ${date}
+    ⏰ *Time/Slot:* ${slot}
+    👥 *Guests:* ${guests} ${unitLabel}
+    
+    📍 *Pickup / Activity Location (Google Maps):*
+    ${locationLink}
+    
+    📞 *Operator Helpdesk:* +${agencyPhone}
+    
+    ${customerPaymentText}
+    
+    _Thank you for booking with TripGod! See you in Rishikesh!_`;
 
     let agencyPaymentText = '';
-    if (pctPaid === 100) {
-      agencyPaymentText = `💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
+    if (isFullPayment) {
+      agencyPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
 ✅ *Paid Online (100%):* ₹${advancePaid.toLocaleString('en-IN')}
 ⏳ *Remaining Balance:* ₹0 (Paid in Full online)`;
     } else {
-      agencyPaymentText = `💵 *Total Amount:* ₹${totalPrice.toLocaleString('en-IN')}
+      agencyPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
 ✅ *Paid Advance (${pctPaid}%):* ₹${advancePaid.toLocaleString('en-IN')}
 ⏳ *Remaining Balance (${remainingPct}%):* ₹${remainingPaid.toLocaleString('en-IN')} (To be collected from customer)`;
     }
@@ -141,7 +146,7 @@ Hi Team, a new client has booked your service via TripGod. Please reserve the sl
 
 ${agencyPaymentText}
 
-🔒 *Booking Status:* ${pctPaid === 100 ? '100% Full Payment Paid' : `${pctPaid}% Advance Paid`} (TripGod ID: ${paymentId})
+🔒 *Booking Status:* ${isFullPayment ? '100% Full Payment Paid' : `${pctPaid}% Advance Paid`} (TripGod ID: ${paymentId})
 
 _Please ensure premium service. Thank you!_`;
 
@@ -154,9 +159,9 @@ New booking completed successfully:
 - 👤 *Customer:* ${customerName} (+${customerPhone})
 - ⏰ *Date:* ${date}
 - ⏰ *Slot/Time:* ${slot}
-- 💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}
-- ✅ *${pctPaid === 100 ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:* ₹${advancePaid.toLocaleString('en-IN')}
-- ⏳ *${pctPaid === 100 ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:* ₹${remainingPaid.toLocaleString('en-IN')}
+- 💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n- 🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
+- ✅ *${isFullPayment ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:* ₹${advancePaid.toLocaleString('en-IN')}
+- ⏳ *${isFullPayment ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:* ₹${remainingPaid.toLocaleString('en-IN')}
 - 🔑 *Razorpay ID:* ${paymentId}`;
 
     // Helper to send message using UltraMsg
@@ -257,7 +262,12 @@ async function sendEmailAlert(data) {
   const isBikeRent = data.category === 'bikerent';
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
-  const pctPaid = data.totalPrice > 0 ? Math.round((data.advancePaid / data.totalPrice) * 100) : 10;
+  const paymentOption = data.paymentOption || (data.totalPrice > 0 && data.remainingPaid === 0 ? 'full' : 'advance');
+  const upiDiscount = Number(data.upiDiscount || 0);
+  const commissionPercentage = Number(data.commissionPercentage || 10);
+
+  const isFullPayment = paymentOption === 'full' || data.remainingPaid <= 0;
+  const pctPaid = isFullPayment ? 100 : commissionPercentage;
   const remainingPct = 100 - pctPaid;
 
   // --- Email 1: To Customer (Booking Confirmation / Ticket) ---
@@ -311,22 +321,28 @@ async function sendEmailAlert(data) {
             <td style="padding: 12px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Total Price:</td>
             <td style="padding: 12px; font-weight: bold; color: #111; border-bottom: 1px solid #eee;">₹${data.totalPrice.toLocaleString('en-IN')}</td>
           </tr>
+          ${upiDiscount > 0 ? `
           <tr>
-            <td style="padding: 12px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">${pctPaid === 100 ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:</td>
+            <td style="padding: 12px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">UPI Discount:</td>
+            <td style="padding: 12px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">- ₹${upiDiscount.toLocaleString('en-IN')}</td>
+          </tr>
+          ` : ''}
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 12px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">${isFullPayment ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:</td>
             <td style="padding: 12px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">₹${data.advancePaid.toLocaleString('en-IN')}</td>
           </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">${pctPaid === 100 ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:</td>
-            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">₹${data.remainingPaid.toLocaleString('en-IN')} ${pctPaid === 100 ? '(Paid in Full)' : '(To be paid at venue)'}</td>
-          </tr>
           <tr>
-            <td style="padding: 12px; font-weight: bold;">Booking Transaction ID:</td>
-            <td style="padding: 12px; font-family: monospace; font-size: 13px;">${data.paymentId}</td>
+            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">${isFullPayment ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:</td>
+            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">₹${data.remainingPaid.toLocaleString('en-IN')} ${isFullPayment ? '(Paid in Full)' : '(To be paid at venue)'}</td>
+          </tr>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Booking Transaction ID:</td>
+            <td style="padding: 12px; font-family: monospace; font-size: 13px; border-bottom: 1px solid #eee;">${data.paymentId}</td>
           </tr>
         </table>
         
         <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center; font-size: 12px; color: #888;">
-          <p style="margin: 0 0 5px 0;">Need help? Contact TripGod Support at +91 9837371137 or reply to this email.</p>
+          <p style="margin: 0 0 5px 0;">Need help? Contact TripGod Support at +91 8630027341 or reply to this email.</p>
           <p style="margin: 0;">© 2026 TripGod Rishikesh. All rights reserved.</p>
         </div>
       </div>
@@ -380,17 +396,23 @@ async function sendEmailAlert(data) {
             <td style="padding: 10px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Total Amount:</td>
             <td style="padding: 10px; font-weight: bold; color: #111; border-bottom: 1px solid #eee;">₹${data.totalPrice.toLocaleString('en-IN')}</td>
           </tr>
+          ${upiDiscount > 0 ? `
           <tr>
-            <td style="padding: 10px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">${pctPaid === 100 ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:</td>
+            <td style="padding: 10px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">UPI Discount:</td>
+            <td style="padding: 10px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">- ₹${upiDiscount.toLocaleString('en-IN')}</td>
+          </tr>
+          ` : ''}
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">${isFullPayment ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:</td>
             <td style="padding: 10px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">₹${data.advancePaid.toLocaleString('en-IN')}</td>
           </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">${pctPaid === 100 ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:</td>
+          <tr>
+            <td style="padding: 10px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">${isFullPayment ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:</td>
             <td style="padding: 10px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">₹${data.remainingPaid.toLocaleString('en-IN')}</td>
           </tr>
-          <tr>
-            <td style="padding: 10px; font-weight: bold;">Razorpay Payment ID:</td>
-            <td style="padding: 10px; font-family: monospace; font-size: 13px;">${data.paymentId}</td>
+          <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Razorpay Payment ID:</td>
+            <td style="padding: 10px; font-family: monospace; font-size: 13px; border-bottom: 1px solid #eee;">${data.paymentId}</td>
           </tr>
         </table>
         

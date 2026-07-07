@@ -329,7 +329,10 @@ My payment ID is verified. Please confirm my slots.`;
             advancePaid: finalAmountToPay,
             remainingPaid: remainingPayment,
             paymentId: paymentId,
-            category: activity.category
+            category: activity.category,
+            paymentOption: effectivePaymentOption,
+            upiDiscount: upiDiscountVal,
+            commissionPercentage: commissionPercentage
           })
         }).catch(err => console.error('WhatsApp notification error:', err));
 
