@@ -368,7 +368,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                           setError('');
                         }}
                         className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 font-semibold text-sm transition-all duration-200 placeholder-gray-400 font-sans"
-                        placeholder="name@email.com or 10-digit number"
+                        placeholder="Email or Phone Number"
                       />
                     </div>
 
