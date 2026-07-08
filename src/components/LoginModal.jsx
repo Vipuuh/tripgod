@@ -7,6 +7,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [loginInput, setLoginInput] = useState('');
   
   // OTP States
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -48,6 +49,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
       setName('');
       setEmail('');
       setPhone('');
+      setLoginInput('');
       setGeneratedOtp('');
       setOtpInputs(['', '', '', '', '', '']);
       setCountdown(60);
@@ -58,7 +60,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
   }, [isOpen]);
 
   // Generate 6-digit OTP and send via backend API
-  const triggerOtpSend = async (targetEmail, targetName) => {
+  const triggerOtpSend = async (targetEmail, targetPhone, targetName) => {
     setLoading(true);
     setError('');
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -71,6 +73,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
         },
         body: JSON.stringify({
           email: targetEmail,
+          phone: targetPhone,
           name: targetName,
           otp: code
         }),
@@ -81,6 +84,12 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
       if (response.ok && result.success) {
         setGeneratedOtp(code);
         setCountdown(60);
+        
+        // Save details in states to track in verification step
+        setEmail(targetEmail || '');
+        setPhone(targetPhone || '');
+        setName(targetName || '');
+        
         setMode('otp');
         setOtpInputs(['', '', '', '', '', '']);
         
@@ -93,7 +102,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
         setError(`OTP send failed: ${result.error || 'Check backend configuration'}`);
       }
     } catch (err) {
-      console.error('Email sending failed:', err);
+      console.error('OTP sending failed:', err);
       setError(`Connection error: ${err.message || 'Check your internet connection'}`);
     } finally {
       setLoading(false);
@@ -102,17 +111,45 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    if (!email.trim() || !email.includes('@')) {
-      setError('Please enter a valid email address.');
+    const cleanInput = loginInput.trim();
+    if (!cleanInput) {
+      setError('Please enter your email or mobile number.');
       return;
     }
-    
-    // Simulate finding the registered user, default name to email prefix if not found
-    const savedName = localStorage.getItem(`tripgod_profile_${email}`) 
-      ? JSON.parse(localStorage.getItem(`tripgod_profile_${email}`)).name 
-      : email.split('@')[0];
 
-    triggerOtpSend(email, savedName);
+    const isPhone = /^\d{10}$/.test(cleanInput);
+    const isEmail = cleanInput.includes('@');
+
+    if (!isPhone && !isEmail) {
+      setError('Please enter a valid email address or 10-digit mobile number.');
+      return;
+    }
+
+    // Find saved profile info from localStorage
+    let savedName = '';
+    if (isPhone) {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith('tripgod_profile_')) {
+            const profile = JSON.parse(localStorage.getItem(key));
+            if (profile && profile.phone === cleanInput) {
+              savedName = profile.name;
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      if (!savedName) savedName = 'User';
+      triggerOtpSend(null, cleanInput, savedName);
+    } else {
+      savedName = localStorage.getItem(`tripgod_profile_${cleanInput}`)
+        ? JSON.parse(localStorage.getItem(`tripgod_profile_${cleanInput}`)).name
+        : cleanInput.split('@')[0];
+      triggerOtpSend(cleanInput, null, savedName);
+    }
   };
 
   const handleSignupSubmit = (e) => {
@@ -133,7 +170,8 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
     // Save profile details to localStorage (mock signup registration)
     localStorage.setItem(`tripgod_profile_${email}`, JSON.stringify({ name, email, phone }));
     
-    triggerOtpSend(email, name);
+    // Verify phone via WhatsApp OTP directly
+    triggerOtpSend(null, phone, name);
   };
 
   const handleOtpInput = (val, idx) => {
@@ -176,9 +214,33 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
       setError('');
 
       // Perform actual login
-      const registeredUser = localStorage.getItem(`tripgod_profile_${email}`)
-        ? JSON.parse(localStorage.getItem(`tripgod_profile_${email}`))
-        : { name: email.split('@')[0], email };
+      const registeredUser = email 
+        ? (localStorage.getItem(`tripgod_profile_${email}`)
+            ? JSON.parse(localStorage.getItem(`tripgod_profile_${email}`))
+            : { name: name || email.split('@')[0], email, phone })
+        : { name: name || 'User', phone, email: '' };
+
+      // Save phone-only registration profile if profile doesn't exist
+      if (phone && !email) {
+        let found = false;
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('tripgod_profile_')) {
+              const p = JSON.parse(localStorage.getItem(key));
+              if (p && p.phone === phone) {
+                found = true;
+                break;
+              }
+            }
+          }
+          if (!found) {
+            localStorage.setItem(`tripgod_profile_phone_${phone}`, JSON.stringify({ name, phone, email: '' }));
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
 
       setTimeout(() => {
         onLogin(registeredUser);
@@ -294,26 +356,26 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                 {mode === 'login' && (
                   <form onSubmit={handleLoginSubmit} className="space-y-5 font-sans text-left">
                     <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-                        <Mail size={12} className="text-gray-500" /> Email Address
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5 font-display">
+                        <User size={12} className="text-gray-500" /> Email or Mobile Number
                       </label>
                       <input
-                        type="email"
+                        type="text"
                         required
-                        value={email}
+                        value={loginInput}
                         onChange={(e) => {
-                          setEmail(e.target.value);
+                          setLoginInput(e.target.value);
                           setError('');
                         }}
-                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 font-semibold text-sm transition-all duration-200 placeholder-gray-400"
-                        placeholder="name@example.com"
+                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl text-black focus:outline-none focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 font-semibold text-sm transition-all duration-200 placeholder-gray-400 font-sans"
+                        placeholder="name@email.com or 10-digit number"
                       />
                     </div>
 
                     <div className="flex gap-2.5 p-3.5 bg-gray-50 text-gray-500 rounded-xl text-[10px] leading-relaxed border border-gray-200/50 font-semibold">
                       <ShieldCheck size={16} className="text-black flex-shrink-0" />
                       <span>
-                        Enter your registered email. We will send a 6-digit OTP code to verify and log you in.
+                        Enter your registered email or 10-digit mobile number. We will send a 6-digit OTP code to verify and log you in (sent to Gmail or WhatsApp).
                       </span>
                     </div>
 
@@ -400,7 +462,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                         OTP verification code sent to
                       </p>
                       <p className="text-sm font-bold text-black font-mono select-all bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm inline-block">
-                        {email}
+                        {email || `+91 ${phone}`}
                       </p>
                     </div>
 
@@ -429,10 +491,10 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                       ) : (
                         <button
                           disabled={loading}
-                          onClick={() => triggerOtpSend(email, name || email.split('@')[0])}
+                          onClick={() => triggerOtpSend(email || null, phone || null, name || 'User')}
                           className="text-[11px] font-black text-[#FF6B00] hover:underline disabled:opacity-50"
                         >
-                          {loading ? 'Resending...' : "Didn't receive the email? Resend OTP"}
+                          {loading ? 'Resending...' : (email ? "Didn't receive the email? Resend OTP" : "Didn't receive the WhatsApp? Resend OTP")}
                         </button>
                       )}
                     </div>

@@ -17,11 +17,76 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, name, otp } = req.body;
-    if (!email || !otp) {
-      return res.status(400).json({ error: 'Email and OTP are required' });
+    const { email, phone, name, otp } = req.body;
+    if (!otp || (!email && !phone)) {
+      return res.status(400).json({ error: 'OTP and either Email or Phone are required' });
     }
 
+    const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "EAAVjnkkrc1ABRx7tqeQxh4ReK63Tg0tykVMmuDedHRvLrMSv0F3cZBRLxGoPVjqgxJT9Of0DD9GeFxWer5htjej2yGimEjUwTQzPaQYaVTZBiopxJue3RVyKqxKd66jIYGfJA6z3qYQ58LaAq9NEDmsP8wHfXeE2pYN511TF6yNw9b85lVEXcGWFYGoMAZA3U5fzx3CM0Ho231r5UYRahhNCMYxZCVrHkDb1kfR6wsZAWB35pZAABUtsB7ragxile49hNdKJScb30Jw1ZBIB51a";
+    const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID || "1242547802272575";
+
+    // 1. Send via WhatsApp if Phone Number is provided
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const formattedPhone = cleanPhone.length === 10 ? "91" + cleanPhone : cleanPhone;
+
+      const url = `https://graph.facebook.com/v20.0/${META_PHONE_NUMBER_ID}/messages`;
+      const payload = {
+        messaging_product: "whatsapp",
+        to: formattedPhone,
+        type: "template",
+        template: {
+          name: "otp_verification",
+          language: {
+            code: "en"
+          },
+          components: [
+            {
+              type: "body",
+              parameters: [
+                {
+                  type: "text",
+                  text: otp
+                }
+              ]
+            },
+            {
+              type: "button",
+              sub_type: "url",
+              index: "0",
+              parameters: [
+                {
+                  type: "text",
+                  text: otp
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      console.log(`Sending OTP WhatsApp message to +${formattedPhone}...`);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${META_ACCESS_TOKEN}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      console.log(`Meta OTP API response for +${formattedPhone}:`, result);
+
+      if (response.ok && !result.error) {
+        return res.status(200).json({ success: true, message: 'OTP sent via WhatsApp successfully' });
+      } else {
+        console.error('Meta OTP sending failed:', result.error);
+        return res.status(500).json({ error: result.error?.message || 'Failed to send OTP via WhatsApp' });
+      }
+    }
+
+    // 2. Otherwise send via Email using Nodemailer
     const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
     const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_PASS;
 
