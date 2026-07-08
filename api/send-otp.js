@@ -22,7 +22,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'OTP and either Email or Phone are required' });
     }
 
-    const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "EAAVjnkkrc1ABR0aIJMZC3BeypPWwlTBfhDXsPzkJx8ZB1BgxeJZBXT2gPEUIz1zKO6UD7lTzqtyg78vtpQnZBe1UQk6ahaOwNId6MhyNTZC9zXqsAATR0JKn62rXPwNoUD4WWjythZCkp4deKkTYS2NZA0ehn5xWMCIVZAEhl1Mq9DhHiy0noERNSbsp8OcrtZCAynJYAy2vaE0r4wXiBZCwk46ZCwW1jMWabORqjRgyNFaxZAM021YhF0cRWwLd6DOYgytJjBRjklIGZBl0jkxbSDU8x";
+    const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "EAAVjnkkrc1ABR0CzprLuR7dFOZClD3yfQ2vhZC39tQjAI7PLL1ZCRSEzc9ZCDZCwxoDZBh6G4N2SafXr4a1KQQtZBJMh1ypMXxB2wZBPoufA83MjR5xdr4yOVEaptkvdgZBnPOxkVM5cP5HlNiI51brQi305GkVegMR67AVjZAMCPZBytCvUqPCcbQZB5OeBxcVi6wZDZD";
     const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID || "1242547802272575";
 
     // 1. Send via WhatsApp if Phone Number is provided
