@@ -2,9 +2,10 @@
 // Vercel Serverless Function to send WhatsApp notifications and Gmail Alerts
 import nodemailer from 'nodemailer';
 
-const ULTRAMSG_INSTANCE = "instance180883";
-const ULTRAMSG_TOKEN = "dl5l1lya95t54rtt";
 const ADMIN_PHONE = "918630027341"; // TripGod Admin Number
+
+const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "EAAVjnkkrc1ABRx7tqeQxh4ReK63Tg0tykVMmuDedHRvLrMSv0F3cZBRLxGoPVjqgxJT9Of0DD9GeFxWer5htjej2yGimEjUwTQzPaQYaVTZBiopxJue3RVyKqxKd66jIYGfJA6z3qYQ58LaAq9NEDmsP8wHfXeE2pYN511TF6yNw9b85lVEXcGWFYGoMAZA3U5fzx3CM0Ho231r5UYRahhNCMYxZCVrHkDb1kfR6wsZAWB35pZAABUtsB7ragxile49hNdKJScb30Jw1ZBIB51a";
+const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID || "1242547802272575";
 
 // Helper to format phone number to E.164 (without plus sign) for UltraMsg
 function formatPhone(phone) {
@@ -110,103 +111,109 @@ export default async function handler(req, res) {
     const pctPaid = isFullPayment ? 100 : commissionPercentage;
     const remainingPct = 100 - pctPaid;
 
-    let customerPaymentText = '';
-    if (isFullPayment) {
-      customerPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
-✅ *Paid Online (100%):* ₹${advancePaid.toLocaleString('en-IN')}
-⏳ *Remaining Balance:* Paid in Full (₹0)`;
-    } else {
-      customerPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
-✅ *Paid Advance (${pctPaid}%):* ₹${advancePaid.toLocaleString('en-IN')}
-⏳ *Remaining Balance (${remainingPct}%):* ₹${remainingPaid.toLocaleString('en-IN')} (To be paid at venue)`;
-    }
+    const checkInDate = data.checkInDate || "";
+    const checkOutDate = data.checkOutDate || "";
+    const nights = data.nights || "";
 
-    // --- Message 1: To Customer ---
-    const customerMsg = `*TripGod Booking Confirmed!* 🏔️
+    const isHotel = category === 'hotels';
+    const paramDate = isHotel && checkInDate ? checkInDate.split('-').reverse().join('/') : date;
+    const paramTime = isHotel && checkOutDate ? checkOutDate.split('-').reverse().join('/') : slot;
     
-    Hi *${customerName}*, your booking is confirmed!
-    
-    🎫 *Booking ID:* ${simpleBookingCode}
-    🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
-    ⏰ *Date:* ${date}
-    ⏰ *Time/Slot:* ${slot}
-    👥 *Guests:* ${guests} ${unitLabel}
-    
-    📍 *Pickup / Activity Location (Google Maps):*
-    ${locationLink}
-    
-    📞 *Local Contact / Host:* +${agencyPhone}
-    
-    ${customerPaymentText}
-    
-    _Thank you for booking with TripGod! See you in Rishikesh!_`;
+    const paramDetails = isHotel 
+      ? `${guests} Guest(s), ${nights} Night(s) [Room: ${slot}]` 
+      : `${guests} ${unitLabel}`;
 
-    let agencyPaymentText = '';
-    if (isFullPayment) {
-      agencyPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
-✅ *Paid Online (100%):* ₹${advancePaid.toLocaleString('en-IN')}
-⏳ *Remaining Balance:* ₹0 (Paid in Full online)`;
-    } else {
-      agencyPaymentText = `💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
-✅ *Paid Advance (${pctPaid}%):* ₹${advancePaid.toLocaleString('en-IN')}
-⏳ *Remaining Balance (${remainingPct}%):* ₹${remainingPaid.toLocaleString('en-IN')} (To be collected from customer)`;
-    }
+    const cleanAgencyPhone = formatPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
 
-    // --- Message 2: To Agency/Vendor ---
-    const agencyMsg = `*New Booking from TripGod!* ⚡
+    // Dynamic Parameter Mappings for Meta WhatsApp API:
 
-Hi Team, a new client has booked your service via TripGod. Please reserve the slot:
+    // 1. Customer Parameters
+    const customerParams = [
+      simpleBookingCode,                                                // {{1}}
+      customerName,                                                     // {{2}}
+      `${activityName}${stretch ? ` (${stretch})` : ''}`,                // {{3}}
+      paramDate,                                                        // {{4}}
+      paramTime,                                                        // {{5}}
+      paramDetails,                                                     // {{6}}
+      locationLink,                                                     // {{7}}
+      `+${cleanAgencyPhone}`,                                           // {{8}}
+      isFullPayment 
+        ? `₹${totalPrice.toLocaleString('en-IN')} (Paid 100% Online)`
+        : `Paid: ₹${advancePaid.toLocaleString('en-IN')}, Bal: ₹${remainingPaid.toLocaleString('en-IN')} (Pay at venue)`, // {{9}}
+      "Confirmed!"                                                      // {{10}}
+    ];
 
-🎫 *Booking ID:* ${simpleBookingCode}
-🎒 *Activity:* ${activityName} ${stretch ? `(${stretch})` : ''}
-👤 *Customer Name:* ${customerName}
-📞 *Customer Phone:* +${customerPhone}
-⏰ *Arrival Date:* ${date}
-⏰ *Arrival Time:* ${slot}
-👥 *Total Booked:* ${guests} ${unitLabel}
+    // 2. Vendor Parameters
+    const vendorParams = [
+      simpleBookingCode,                                                // {{1}}
+      `${customerName} (+${customerPhone})`,                            // {{2}}
+      `${activityName}${stretch ? ` (${stretch})` : ''}`,                // {{3}}
+      paramDate,                                                        // {{4}}
+      paramTime,                                                        // {{5}}
+      paramDetails,                                                     // {{6}}
+      locationLink,                                                     // {{7}}
+      `+918630027341 (TripGod Support)`,                                // {{8}}
+      isFullPayment 
+        ? `₹${totalPrice.toLocaleString('en-IN')} (Paid 100% Online)`
+        : `Paid: ₹${advancePaid.toLocaleString('en-IN')}, Collect: ₹${remainingPaid.toLocaleString('en-IN')} at venue`, // {{9}}
+      "Reserved. Please provide premium service."                      // {{10}}
+    ];
 
-${agencyPaymentText}
+    // 3. Admin Parameters
+    const adminParams = [
+      simpleBookingCode,                                                // {{1}}
+      `${customerName} (+${customerPhone})`,                            // {{2}}
+      `${activityName}${stretch ? ` (${stretch})` : ''}`,                // {{3}}
+      paramDate,                                                        // {{4}}
+      paramTime,                                                        // {{5}}
+      paramDetails,                                                     // {{6}}
+      locationLink,                                                     // {{7}}
+      `+${cleanAgencyPhone} (Operator)`,                                // {{8}}
+      isFullPayment 
+        ? `₹${totalPrice.toLocaleString('en-IN')} (Paid 100% Online)`
+        : `Paid: ₹${advancePaid.toLocaleString('en-IN')}, Bal: ₹${remainingPaid.toLocaleString('en-IN')} (Razorpay ID: ${paymentId})`, // {{9}}
+      "New Booking Alert"                                               // {{10}}
+    ];
 
-🔒 *Booking Status:* ${isFullPayment ? '100% Full Payment Paid' : `${pctPaid}% Advance Paid`} (TripGod ID: ${paymentId})
+    // Helper to send message using Meta Cloud API
+    const sendWhatsAppMeta = async (to, parameters) => {
+      const cleanTo = to.replace(/\D/g, ''); 
+      if (!cleanTo) return null;
 
-_Please ensure premium service. Thank you!_`;
-
-    // --- Message 3: To Admin (Aapke Personal Number Par Alert) ---
-    const adminMsg = `*TripGod Booking Alert!* 🔔
-
-New booking completed successfully:
-
-- 🎫 *Booking ID:* ${simpleBookingCode}
-- 🎒 *Activity:* ${activityName}
-- 👤 *Customer:* ${customerName} (+${customerPhone})
-- ⏰ *Date:* ${date}
-- ⏰ *Slot/Time:* ${slot}
-- 💵 *Total Price:* ₹${totalPrice.toLocaleString('en-IN')}${upiDiscount > 0 ? `\n- 🎁 *UPI Discount:* - ₹${upiDiscount.toLocaleString('en-IN')}` : ''}
-- ✅ *${isFullPayment ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:* ₹${advancePaid.toLocaleString('en-IN')}
-- ⏳ *${isFullPayment ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:* ₹${remainingPaid.toLocaleString('en-IN')}
-- 🔑 *Razorpay ID:* ${paymentId}`;
-
-    // Helper to send message using UltraMsg
-    const sendWhatsApp = async (to, body) => {
-      const url = `https://api.ultramsg.com/${ULTRAMSG_INSTANCE}/messages/chat`;
+      const url = `https://graph.facebook.com/v20.0/${META_PHONE_NUMBER_ID}/messages`;
       const payload = {
-        token: ULTRAMSG_TOKEN,
-        to: to,
-        body: body,
-        priority: 10
+        messaging_product: "whatsapp",
+        to: cleanTo,
+        type: "template",
+        template: {
+          name: "booking_notification",
+          language: {
+            code: "en"
+          },
+          components: [
+            {
+              type: "body",
+              parameters: parameters.map(p => ({
+                type: "text",
+                text: String(p).substring(0, 1024)
+              }))
+            }
+          ]
+        }
       };
 
-      console.log(`Sending WhatsApp message to ${to}...`);
+      console.log(`Sending Meta WhatsApp template to ${cleanTo}...`);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${META_ACCESS_TOKEN}`
         },
-        body: new URLSearchParams(payload).toString()
+        body: JSON.stringify(payload)
       });
       
       const result = await response.json();
-      console.log(`UltraMsg response for ${to}:`, result);
+      console.log(`Meta API response for ${cleanTo}:`, result);
       return result;
     };
 
@@ -215,15 +222,15 @@ New booking completed successfully:
     
     // 1. Send to Customer
     if (customerPhone) {
-      promises.push(sendWhatsApp(customerPhone, customerMsg).catch(err => console.error("Error sending to customer:", err)));
+      promises.push(sendWhatsAppMeta(customerPhone, customerParams).catch(err => console.error("Error sending to customer:", err)));
     }
     
     // 2. Send to Admin
-    promises.push(sendWhatsApp(ADMIN_PHONE, adminMsg).catch(err => console.error("Error sending to admin:", err)));
+    promises.push(sendWhatsAppMeta(ADMIN_PHONE, adminParams).catch(err => console.error("Error sending to admin:", err)));
     
-    // 3. Send to Agency (if different from Admin)
-    if (agencyPhone && agencyPhone !== ADMIN_PHONE) {
-      promises.push(sendWhatsApp(agencyPhone, agencyMsg).catch(err => console.error("Error sending to agency:", err)));
+    // 3. Send to Agency/Vendor
+    if (cleanAgencyPhone && cleanAgencyPhone !== ADMIN_PHONE) {
+      promises.push(sendWhatsAppMeta(cleanAgencyPhone, vendorParams).catch(err => console.error("Error sending to agency:", err)));
     }
 
     // 4. Send Gmail Alerts (to Admin and Customer) via Nodemailer

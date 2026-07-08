@@ -219,7 +219,12 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
                   phone: phone,
                   activityName: item.name,
                   stretch: item.stretch || '',
-                  date: item.date.split('-').reverse().join('/'),
+                  date: item.category === 'hotels' && item.checkInDate && item.checkOutDate
+                    ? `${item.checkInDate.split('-').reverse().join('/')} to ${item.checkOutDate.split('-').reverse().join('/')} (${item.nights} Night${item.nights > 1 ? 's' : ''})`
+                    : item.date.split('-').reverse().join('/'),
+                  checkInDate: item.checkInDate || null,
+                  checkOutDate: item.checkOutDate || null,
+                  nights: item.nights || null,
                   slot: item.slot,
                   guests: item.guests,
                   totalPrice: item.totalPrice,
@@ -484,7 +489,11 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
                       <div className="grid grid-cols-3 gap-2 text-[10px] font-bold text-gray-600 bg-black/5 p-2 rounded-xl border border-black/5">
                         <div className="flex items-center gap-1">
                           <Calendar size={12} className="text-[#FF5F00]" />
-                          <span>{item.date.split('-').reverse().join('/')}</span>
+                          <span>
+                            {item.category === 'hotels' && item.checkInDate && item.checkOutDate
+                              ? `${item.checkInDate.split('-').reverse().join('/')} to ${item.checkOutDate.split('-').reverse().join('/')} (${item.nights} Night${item.nights > 1 ? 's' : ''})`
+                              : item.date.split('-').reverse().join('/')}
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock size={12} className="text-[#FF5F00]" />
