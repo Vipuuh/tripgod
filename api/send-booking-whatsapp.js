@@ -186,7 +186,7 @@ export default async function handler(req, res) {
         to: cleanTo,
         type: "template",
         template: {
-          name: "booking_notification",
+          name: "booking_alert",
           language: {
             code: "en"
           },
