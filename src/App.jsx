@@ -127,9 +127,19 @@ export default function App() {
       const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund', 'tour-partner-selection'];
 
       const isTourPartners = path.startsWith('tours/') && path.endsWith('/partners');
+      const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('swing/') || path.startsWith('camping/') || (path.startsWith('tours/') && !path.endsWith('/partners'));
 
-      if (validRoutes.includes(path) || path.startsWith('hotels/') || isTourPartners) {
-        const resolvedRoute = path.startsWith('hotels/') ? 'hotels' : (isTourPartners ? 'tour-partner-selection' : path);
+      if (validRoutes.includes(path) || isSubRoute || isTourPartners) {
+        let resolvedRoute = path;
+        if (path.startsWith('hotels/')) resolvedRoute = 'hotels';
+        else if (path.startsWith('rafting/')) resolvedRoute = 'rafting';
+        else if (path.startsWith('zipline/')) resolvedRoute = 'zipline';
+        else if (path.startsWith('paragliding/')) resolvedRoute = 'paragliding';
+        else if (path.startsWith('swing/')) resolvedRoute = 'swing';
+        else if (path.startsWith('camping/')) resolvedRoute = 'camping';
+        else if (path.startsWith('tours/') && !path.endsWith('/partners')) resolvedRoute = 'tours';
+        else if (isTourPartners) resolvedRoute = 'tour-partner-selection';
+
         setRoute(resolvedRoute);
         if (resolvedRoute === 'home') {
           const savedScroll = sessionStorage.getItem('home_scroll_pos');

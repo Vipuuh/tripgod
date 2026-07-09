@@ -17,6 +17,21 @@ function formatPhone(phone) {
   return digits;
 }
 
+function formatDisplayPhone(phone) {
+  if (!phone) return "";
+  let clean = phone.replace(/\D/g, '');
+  if (clean.length === 10) {
+    return `+91 ${clean.substring(0, 5)} ${clean.substring(5)}`;
+  }
+  if (clean.length === 12 && clean.startsWith('91')) {
+    return `+91 ${clean.substring(2, 7)} ${clean.substring(7)}`;
+  }
+  if (clean.startsWith('91') && clean.length > 2) {
+    return `+91 ${clean.substring(2)}`;
+  }
+  return `+${clean}`;
+}
+
 // Mapping of categories to Location links
 const LOCATION_MAPS = {
   rafting: "https://maps.app.goo.gl/81zn6x9SS9pDg6bF7",
@@ -129,50 +144,50 @@ export default async function handler(req, res) {
 
     // 1. Customer Parameters
     const customerParams = [
-      simpleBookingCode,                                                // {{1}}
-      customerName,                                                     // {{2}}
-      `${activityName}${stretch ? ` (${stretch})` : ''}`,                // {{3}}
-      paramDate,                                                        // {{4}}
-      paramTime,                                                        // {{5}}
-      paramDetails,                                                     // {{6}}
-      locationLink,                                                     // {{7}}
-      `+${cleanAgencyPhone}`,                                           // {{8}}
+      `*${simpleBookingCode}*`,                                                // {{1}}
+      `*${customerName}*`,                                                     // {{2}}
+      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}}
+      `*${paramDate}*`,                                                        // {{4}}
+      `*${paramTime}*`,                                                        // {{5}}
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}}
+      locationLink,                                                            // {{7}}
+      `*${formatDisplayPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE)}*`, // {{8}}
       isFullPayment 
-        ? `₹${totalPrice.toLocaleString('en-IN')} (Paid 100% Online)`
-        : `Paid: ₹${advancePaid.toLocaleString('en-IN')}, Bal: ₹${remainingPaid.toLocaleString('en-IN')} (Pay at venue)`, // {{9}}
-      "Confirmed!"                                                      // {{10}}
+        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
+        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{9}}
+      `*Confirmed!* Have a great time! 🌟`                                     // {{10}}
     ];
 
     // 2. Vendor Parameters
     const vendorParams = [
-      simpleBookingCode,                                                // {{1}}
-      `${customerName} (+${customerPhone})`,                            // {{2}}
-      `${activityName}${stretch ? ` (${stretch})` : ''}`,                // {{3}}
-      paramDate,                                                        // {{4}}
-      paramTime,                                                        // {{5}}
-      paramDetails,                                                     // {{6}}
-      locationLink,                                                     // {{7}}
-      `+918630027341 (TripGod Support)`,                                // {{8}}
+      `*${simpleBookingCode}*`,                                                // {{1}}
+      `*${customerName}* (${formatDisplayPhone(customerPhone)})`,              // {{2}}
+      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}}
+      `*${paramDate}*`,                                                        // {{4}}
+      `*${paramTime}*`,                                                        // {{5}}
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}}
+      locationLink,                                                            // {{7}}
+      `*${formatDisplayPhone(ADMIN_PHONE)}* (TripGod Support)`,                 // {{8}}
       isFullPayment 
-        ? `₹${totalPrice.toLocaleString('en-IN')} (Paid 100% Online)`
-        : `Paid: ₹${advancePaid.toLocaleString('en-IN')}, Collect: ₹${remainingPaid.toLocaleString('en-IN')} at venue`, // {{9}}
-      "Reserved. Please provide premium service."                      // {{10}}
+        ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Payment)`
+        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Collect: *₹${remainingPaid.toLocaleString('en-IN')}* at venue`, // {{9}}
+      `*New Booking Alert!* Please provide premium service.`                  // {{10}}
     ];
 
     // 3. Admin Parameters
     const adminParams = [
-      simpleBookingCode,                                                // {{1}}
-      `${customerName} (+${customerPhone})`,                            // {{2}}
-      `${activityName}${stretch ? ` (${stretch})` : ''}`,                // {{3}}
-      paramDate,                                                        // {{4}}
-      paramTime,                                                        // {{5}}
-      paramDetails,                                                     // {{6}}
-      locationLink,                                                     // {{7}}
-      `+${cleanAgencyPhone} (Operator)`,                                // {{8}}
+      `*${simpleBookingCode}*`,                                                // {{1}}
+      `*${customerName}* (${formatDisplayPhone(customerPhone)})`,              // {{2}}
+      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}}
+      `*${paramDate}*`,                                                        // {{4}}
+      `*${paramTime}*`,                                                        // {{5}}
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}}
+      locationLink,                                                            // {{7}}
+      `*${formatDisplayPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE)}* (Operator)`, // {{8}}
       isFullPayment 
-        ? `₹${totalPrice.toLocaleString('en-IN')} (Paid 100% Online)`
-        : `Paid: ₹${advancePaid.toLocaleString('en-IN')}, Bal: ₹${remainingPaid.toLocaleString('en-IN')} (Razorpay ID: ${paymentId})`, // {{9}}
-      "New Booking Alert"                                               // {{10}}
+        ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Payment)`
+        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Balance: *₹${remainingPaid.toLocaleString('en-IN')}* (Razorpay ID: ${paymentId})`, // {{9}}
+      `*New Booking Alert* - Have a great time!`                               // {{10}}
     ];
 
     // Helper to send message using Meta Cloud API

@@ -138,8 +138,38 @@ export default function Paragliding({ currentCity, openBookingModal }) {
     );
   }
 
+  const handleSelectPara = (para) => {
+    setSelectedPara(para);
+    if (para) {
+      window.history.pushState(null, '', `/paragliding/${para.id}`);
+    } else {
+      window.history.pushState(null, '', '/paragliding');
+    }
+  };
+
+  useEffect(() => {
+    const handleRouteSync = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/paragliding/')) {
+        const paraId = path.substring('/paragliding/'.length);
+        if (paraData.length > 0) {
+          const matched = paraData.find(p => p.id === paraId);
+          if (matched) {
+            setSelectedPara(matched);
+          }
+        }
+      } else {
+        setSelectedPara(null);
+      }
+    };
+
+    handleRouteSync();
+    window.addEventListener('popstate', handleRouteSync);
+    return () => window.removeEventListener('popstate', handleRouteSync);
+  }, [paraData]);
+
   // If only one option exists, show details directly
-  if (paraData.length === 1 && !selectedPara) {
+  if (paraData.length === 1 && !selectedPara && window.location.pathname === '/paragliding') {
     setSelectedPara(paraData[0]);
   }
 
@@ -228,7 +258,7 @@ export default function Paragliding({ currentCity, openBookingModal }) {
                           <span className="text-lg font-black text-black">₹{opt.price.toLocaleString('en-IN')}</span>
                         </div>
                         <button
-                          onClick={() => setSelectedPara(opt)}
+                          onClick={() => handleSelectPara(opt)}
                           className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
                         >
                           View Details <ChevronLeft className="rotate-180" size={14} />
@@ -253,7 +283,7 @@ export default function Paragliding({ currentCity, openBookingModal }) {
             {paraData.length > 1 && (
               <div className="max-w-4xl mx-auto px-6 pt-6">
                 <button
-                  onClick={() => setSelectedPara(null)}
+                  onClick={() => handleSelectPara(null)}
                   className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
                 >
                   <ChevronLeft size={16} /> Back to Flight Packages

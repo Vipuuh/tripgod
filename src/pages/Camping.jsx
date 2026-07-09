@@ -139,8 +139,38 @@ export default function Camping({ currentCity, openBookingModal }) {
     );
   }
 
+  const handleSelectCamp = (camp) => {
+    setSelectedCamp(camp);
+    if (camp) {
+      window.history.pushState(null, '', `/camping/${camp.id}`);
+    } else {
+      window.history.pushState(null, '', '/camping');
+    }
+  };
+
+  useEffect(() => {
+    const handleRouteSync = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/camping/')) {
+        const campId = path.substring('/camping/'.length);
+        if (campsData.length > 0) {
+          const matched = campsData.find(c => c.id === campId);
+          if (matched) {
+            setSelectedCamp(matched);
+          }
+        }
+      } else {
+        setSelectedCamp(null);
+      }
+    };
+
+    handleRouteSync();
+    window.addEventListener('popstate', handleRouteSync);
+    return () => window.removeEventListener('popstate', handleRouteSync);
+  }, [campsData]);
+
   // If there is only one camp package, show its detail view directly to save a click
-  if (campsData.length === 1 && !selectedCamp) {
+  if (campsData.length === 1 && !selectedCamp && window.location.pathname === '/camping') {
     setSelectedCamp(campsData[0]);
   }
 
@@ -229,7 +259,7 @@ export default function Camping({ currentCity, openBookingModal }) {
                           <span className="text-lg font-black text-black">₹{camp.price.toLocaleString('en-IN')}</span>
                         </div>
                         <button
-                          onClick={() => setSelectedCamp(camp)}
+                          onClick={() => handleSelectCamp(camp)}
                           className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
                         >
                           View Details <ChevronLeft className="rotate-180" size={14} />
@@ -254,7 +284,7 @@ export default function Camping({ currentCity, openBookingModal }) {
             {campsData.length > 1 && (
               <div className="max-w-4xl mx-auto px-6 pt-6">
                 <button
-                  onClick={() => setSelectedCamp(null)}
+                  onClick={() => handleSelectCamp(null)}
                   className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
                 >
                   <ChevronLeft size={16} /> Back to Camp Packages

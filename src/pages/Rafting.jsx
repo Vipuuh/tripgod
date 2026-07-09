@@ -318,6 +318,36 @@ export default function Rafting({ currentCity, openBookingModal }) {
     fetchRafting();
   }, [currentCity]);
 
+  const handleSelectStretch = (str) => {
+    setSelectedStretch(str);
+    if (str) {
+      window.history.pushState(null, '', `/rafting/${str.id}`);
+    } else {
+      window.history.pushState(null, '', '/rafting');
+    }
+  };
+
+  useEffect(() => {
+    const handleRouteSync = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/rafting/')) {
+        const stretchId = path.substring('/rafting/'.length);
+        if (stretchesData.length > 0) {
+          const matched = stretchesData.find(s => s.id === stretchId);
+          if (matched) {
+            setSelectedStretch(matched);
+          }
+        }
+      } else {
+        setSelectedStretch(null);
+      }
+    };
+
+    handleRouteSync();
+    window.addEventListener('popstate', handleRouteSync);
+    return () => window.removeEventListener('popstate', handleRouteSync);
+  }, [stretchesData]);
+
   const reviews = [
     { name: 'Amit Sharma', stars: 5, text: 'The 12km stretch was perfect! We did body surfing in the Ganga. Absolutely thrilling and safe.' },
     { name: 'Gaurav K.', stars: 5, text: 'We chose the 26km Marine Drive stretch. It was heavy on rapids! The DSLR video quality was outstanding.' },
@@ -412,7 +442,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     variants={fadeInUp}
                     whileHover={{ y: -5 }}
                     onClick={() => {
-                      setSelectedStretch(str);
+                      handleSelectStretch(str);
                       setCurrentImgIdx(0);
                       window.scrollTo(0, 0);
                     }}
@@ -494,7 +524,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
             {/* Back Button and Title */}
             <div className="max-w-4xl mx-auto px-6 space-y-6">
               <button
-                onClick={() => { setSelectedStretch(null); setShowOperatorModal(false); }}
+                onClick={() => { handleSelectStretch(null); setShowOperatorModal(false); }}
                 className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-600 hover:text-black hover:border-black transition-colors"
               >
                 <ChevronLeft size={16} /> Back to Stretches

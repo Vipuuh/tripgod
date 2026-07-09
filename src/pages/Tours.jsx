@@ -207,8 +207,15 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
     setExpandedFAQs(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
+  const handleSelectTour = (tour) => {
+    setSelectedTour(tour);
+    window.history.pushState(null, '', `/tours/${tour.id}`);
+  };
+
   useEffect(() => {
-    setSelectedTour(null);
+    if (window.location.pathname === '/tours' || window.location.pathname === '/tours/') {
+      setSelectedTour(null);
+    }
     const fetchTours = async () => {
       setLoading(true);
       try {
@@ -337,6 +344,29 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
 
     fetchTours();
   }, [currentCity]);
+
+  useEffect(() => {
+    const handleRouteSync = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/tours/')) {
+        const tourId = path.substring('/tours/'.length);
+        if (tourId && tourId !== 'partners') {
+          if (tours.length > 0) {
+            const matched = tours.find(t => t.id === tourId);
+            if (matched) {
+              setSelectedTour(matched);
+            }
+          }
+        }
+      } else {
+        setSelectedTour(null);
+      }
+    };
+
+    handleRouteSync();
+    window.addEventListener('popstate', handleRouteSync);
+    return () => window.removeEventListener('popstate', handleRouteSync);
+  }, [tours]);
 
   if (loading) {
     return (
@@ -511,7 +541,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         <div className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-30 shadow-sm">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <button
-              onClick={() => setSelectedTour(null)}
+              onClick={() => {
+                setSelectedTour(null);
+                window.history.pushState(null, '', '/tours');
+              }}
               className="flex items-center gap-2 text-xs font-black text-slate-700 uppercase tracking-wider hover:text-[#FF5722] cursor-pointer border-none bg-transparent"
             >
               <ChevronLeft size={16} /> Back to Packages
@@ -1386,7 +1419,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 key={tour.name || idx}
                 whileHover={{ y: -5 }}
                 className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md border border-slate-100 transition-all duration-300 group cursor-pointer relative"
-                onClick={() => setSelectedTour(tour)}
+                onClick={() => handleSelectTour(tour)}
               >
                 {/* Image & Badges overlay */}
                 <div className="h-52 overflow-hidden relative bg-slate-100">
@@ -1543,7 +1576,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedTour(tour);
+                      handleSelectTour(tour);
                     }}
                     className="px-4 py-3 bg-[#FF5722] hover:bg-[#E54A18] text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all border-none cursor-pointer text-center font-display whitespace-nowrap shadow-sm hover:shadow-md"
                   >

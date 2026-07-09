@@ -137,8 +137,38 @@ export default function Zipline({ currentCity, openBookingModal }) {
     );
   }
 
+  const handleSelectZip = (zip) => {
+    setSelectedZip(zip);
+    if (zip) {
+      window.history.pushState(null, '', `/zipline/${zip.id}`);
+    } else {
+      window.history.pushState(null, '', '/zipline');
+    }
+  };
+
+  useEffect(() => {
+    const handleRouteSync = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/zipline/')) {
+        const zipId = path.substring('/zipline/'.length);
+        if (zipData.length > 0) {
+          const matched = zipData.find(z => z.id === zipId);
+          if (matched) {
+            setSelectedZip(matched);
+          }
+        }
+      } else {
+        setSelectedZip(null);
+      }
+    };
+
+    handleRouteSync();
+    window.addEventListener('popstate', handleRouteSync);
+    return () => window.removeEventListener('popstate', handleRouteSync);
+  }, [zipData]);
+
   // If only one option exists, show details directly
-  if (zipData.length === 1 && !selectedZip) {
+  if (zipData.length === 1 && !selectedZip && window.location.pathname === '/zipline') {
     setSelectedZip(zipData[0]);
   }
 
@@ -227,7 +257,7 @@ export default function Zipline({ currentCity, openBookingModal }) {
                           <span className="text-lg font-black text-black">₹{opt.price.toLocaleString('en-IN')}</span>
                         </div>
                         <button
-                          onClick={() => setSelectedZip(opt)}
+                          onClick={() => handleSelectZip(opt)}
                           className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
                         >
                           View Details <ChevronLeft className="rotate-180" size={14} />
@@ -252,7 +282,7 @@ export default function Zipline({ currentCity, openBookingModal }) {
             {zipData.length > 1 && (
               <div className="max-w-4xl mx-auto px-6 pt-6">
                 <button
-                  onClick={() => setSelectedZip(null)}
+                  onClick={() => handleSelectZip(null)}
                   className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
                 >
                   <ChevronLeft size={16} /> Back to Zipline Packages

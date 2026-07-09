@@ -138,8 +138,38 @@ export default function Swing({ currentCity, openBookingModal }) {
     );
   }
 
+  const handleSelectSwing = (swing) => {
+    setSelectedSwing(swing);
+    if (swing) {
+      window.history.pushState(null, '', `/swing/${swing.id}`);
+    } else {
+      window.history.pushState(null, '', '/swing');
+    }
+  };
+
+  useEffect(() => {
+    const handleRouteSync = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/swing/')) {
+        const swingId = path.substring('/swing/'.length);
+        if (swingData.length > 0) {
+          const matched = swingData.find(s => s.id === swingId);
+          if (matched) {
+            setSelectedSwing(matched);
+          }
+        }
+      } else {
+        setSelectedSwing(null);
+      }
+    };
+
+    handleRouteSync();
+    window.addEventListener('popstate', handleRouteSync);
+    return () => window.removeEventListener('popstate', handleRouteSync);
+  }, [swingData]);
+
   // If only one option exists, show details directly
-  if (swingData.length === 1 && !selectedSwing) {
+  if (swingData.length === 1 && !selectedSwing && window.location.pathname === '/swing') {
     setSelectedSwing(swingData[0]);
   }
 
@@ -228,7 +258,7 @@ export default function Swing({ currentCity, openBookingModal }) {
                           <span className="text-lg font-black text-black">₹{opt.price.toLocaleString('en-IN')}</span>
                         </div>
                         <button
-                          onClick={() => setSelectedSwing(opt)}
+                          onClick={() => handleSelectSwing(opt)}
                           className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
                         >
                           View Details <ChevronLeft className="rotate-180" size={14} />
@@ -253,7 +283,7 @@ export default function Swing({ currentCity, openBookingModal }) {
             {swingData.length > 1 && (
               <div className="max-w-4xl mx-auto px-6 pt-6">
                 <button
-                  onClick={() => setSelectedSwing(null)}
+                  onClick={() => handleSelectSwing(null)}
                   className="flex items-center gap-1.5 py-2 px-3 border border-black/10 rounded-lg text-xs font-bold text-gray-650 hover:text-black hover:border-black transition-colors bg-white cursor-pointer"
                 >
                   <ChevronLeft size={16} /> Back to Swing Packages
