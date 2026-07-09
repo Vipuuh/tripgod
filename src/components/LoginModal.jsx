@@ -27,6 +27,85 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
     };
   }, []);
 
+  // Initialize and load Google Identity Services SDK
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const scriptId = 'google-gsi-script';
+    let script = document.getElementById(scriptId);
+
+    const handleCredentialResponse = (response) => {
+      const jwt = response.credential;
+      try {
+        const base64Url = jwt.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        const user = JSON.parse(jsonPayload);
+
+        const registeredUser = {
+          name: user.name,
+          email: user.email,
+          phone: '',
+          picture: user.picture
+        };
+
+        // Save session locally
+        localStorage.setItem(`tripgod_profile_${user.email}`, JSON.stringify(registeredUser));
+        localStorage.setItem('tripgod_logged_in', 'true');
+        localStorage.setItem('tripgod_user_name', user.name);
+        localStorage.setItem('tripgod_user_email', user.email);
+
+        setSuccess(true);
+        setError('');
+
+        setTimeout(() => {
+          onLogin(registeredUser);
+          onClose();
+        }, 1500);
+      } catch (err) {
+        console.error("Failed to parse Google login token:", err);
+        setError("Google authentication failed. Please try again.");
+      }
+    };
+
+    const initGoogleSignIn = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: "877599761223-ov1sqih9m9or9c6kgb3gevpjcdi8h07k.apps.googleusercontent.com",
+          callback: handleCredentialResponse
+        });
+
+        const btnContainer = document.getElementById("google-signin-btn");
+        if (btnContainer) {
+          window.google.accounts.id.renderButton(
+            btnContainer,
+            { 
+              theme: "outline", 
+              size: "large", 
+              width: "340", // Match layout width
+              logo_alignment: "left",
+              shape: "pill"
+            }
+          );
+        }
+      }
+    };
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogleSignIn;
+      document.body.appendChild(script);
+    } else {
+      setTimeout(initGoogleSignIn, 200);
+    }
+  }, [isOpen, mode]);
+
   // Handle OTP countdown timer
   useEffect(() => {
     if (mode === 'otp' && countdown > 0) {
@@ -452,6 +531,20 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                       {loading ? 'Sending OTP...' : 'Create Account & Verify'} {!loading && <ArrowRight size={14} className="inline ml-1" />}
                     </button>
                   </form>
+                )}
+
+                {/* Google Sign-In Button wrapper */}
+                {mode !== 'otp' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center my-3">
+                      <div className="flex-grow border-t border-gray-150"></div>
+                      <span className="px-3 text-[9px] font-black text-gray-400 uppercase tracking-widest">or</span>
+                      <div className="flex-grow border-t border-gray-150"></div>
+                    </div>
+                    <div className="flex justify-center w-full min-h-[44px]">
+                      <div id="google-signin-btn"></div>
+                    </div>
+                  </div>
                 )}
 
                 {/* 4. OTP VERIFICATION FORM */}
