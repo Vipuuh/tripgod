@@ -297,7 +297,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
         : (paymentMode === 'fixed_advance'
             ? `${activity.name} - ₹${fixedAdvanceAmount} Advance`
             : `${activity.name} - ${commissionPercentage}% Advance`),
-      image: "/tripgod-logo.png",
+      image: "/tripgod-logo-padded.jpg",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
 

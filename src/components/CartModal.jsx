@@ -119,7 +119,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       currency: "INR",
       name: "TripGod",
       description: `Cart Checkout (${cart.length} Activities) - ${paymentOption === 'full' ? '100% Full Payment' : 'Advances'}`,
-      image: "/tripgod-logo.png",
+      image: "/tripgod-logo-padded.jpg",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
 
