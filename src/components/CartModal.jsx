@@ -10,6 +10,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
   const [error, setError] = useState('');
   const [paymentOption, setPaymentOption] = useState('advance');
   const [bookingSuccessData, setBookingSuccessData] = useState(null);
+  const [checkoutLogId, setCheckoutLogId] = useState(null);
 
   const getSimpleBookingId = (id) => {
     if (!id) return 'TG-000000';
@@ -71,6 +72,47 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       return;
     }
 
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+
+    const logId = checkoutLogId || generateUUID();
+    if (!checkoutLogId) {
+      setCheckoutLogId(logId);
+    }
+
+    const logCheckoutAttempt = async () => {
+      try {
+        const formattedItems = cart.map(item => ({
+          name: item.name || item.title || 'Adventure Item',
+          category: item.category || 'rafting',
+          price: item.price || 0,
+          date: item.travelDate || item.date || '',
+          guests: item.guests || 1,
+          slot: item.slot || ''
+        }));
+
+        await supabase.from('abandoned_carts').upsert([{
+          id: logId,
+          customer_name: name,
+          customer_email: email || '',
+          customer_phone: phone,
+          cart_items: formattedItems,
+          status: 'abandoned',
+          updated_at: new Date().toISOString()
+        }]);
+      } catch (err) {
+        console.error("Cart checkout database log error:", err);
+      }
+    };
+    logCheckoutAttempt();
+
     const options = {
       key: "rzp_live_TAd3hYpU1J84mE",
       amount: amountToPayNow * 100, // paise
@@ -80,6 +122,11 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       image: "/tripgod-logo.png",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
+
+        // Mark log completed in database
+        supabase.from('abandoned_carts').update({ status: 'completed' }).eq('id', logId).then(({ error }) => {
+          if (error) console.error("Database update cart status error:", error);
+        });
 
         let message = `*BOOKING CART SUCCESSFUL & PAID - TRIPGOD*\n`;
         message += `*Payment Confirmation ID:* ${paymentId}\n`;

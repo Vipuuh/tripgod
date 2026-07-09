@@ -33,6 +33,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [email, setEmail] = useState('');
 
   const [bookingSuccessData, setBookingSuccessData] = useState(null);
+  const [checkoutLogId, setCheckoutLogId] = useState(null);
 
   const getSimpleBookingId = (id) => {
     if (!id) return 'TG-000000';
@@ -246,6 +247,46 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       return;
     }
 
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+
+    const logId = checkoutLogId || generateUUID();
+    if (!checkoutLogId) {
+      setCheckoutLogId(logId);
+    }
+
+    const logCheckoutAttempt = async () => {
+      try {
+        const itemDetails = {
+          name: activity.name,
+          category: activity.category,
+          price: finalAmountToPay,
+          date: activity.category === 'hotels' ? `${checkInDate} to ${checkOutDate}` : date,
+          guests: guests || 1,
+          slot: slot || ''
+        };
+        await supabase.from('abandoned_carts').upsert([{
+          id: logId,
+          customer_name: name,
+          customer_email: email || '',
+          customer_phone: phone,
+          cart_items: [itemDetails],
+          status: 'abandoned',
+          updated_at: new Date().toISOString()
+        }]);
+      } catch (err) {
+        console.error("Database upsert cart log error:", err);
+      }
+    };
+    logCheckoutAttempt();
+
     const options = {
       key: "rzp_live_TAd3hYpU1J84mE",
       amount: finalAmountToPay * 100, // paise
@@ -259,6 +300,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       image: "/tripgod-logo.png",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
+
+        // Mark log completed in database
+        supabase.from('abandoned_carts').update({ status: 'completed' }).eq('id', logId).then(({ error }) => {
+          if (error) console.error("Database update cart status error:", error);
+        });
 
         const advanceLabel = paymentMode === 'fixed_advance'
           ? 'Fixed Advance Booking'

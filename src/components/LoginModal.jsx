@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion as motionImport, AnimatePresence as AnimatePresenceImport } from 'framer-motion';
 import { X, Mail, User, Phone, ShieldCheck, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
+import { supabase } from '../supabase';
 
 export default function LoginModal({ isOpen, onClose, onLogin }) {
   const [mode, setMode] = useState('login'); // 'login' | 'signup' | 'otp'
@@ -56,6 +57,30 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
         localStorage.setItem('tripgod_logged_in', 'true');
         localStorage.setItem('tripgod_user_name', user.name);
         localStorage.setItem('tripgod_user_email', user.email);
+
+        // Sync lead & cart details to database
+        const syncUserSessionToDb = async (profile) => {
+          try {
+            await supabase.from('leads').insert([{
+              name: profile.name,
+              email: profile.email || '',
+              phone: profile.phone || ''
+            }]);
+            const localCart = JSON.parse(localStorage.getItem('tripgod_cart') || '[]');
+            if (localCart.length > 0) {
+              await supabase.from('abandoned_carts').insert([{
+                customer_name: profile.name,
+                customer_email: profile.email || '',
+                customer_phone: profile.phone || '',
+                cart_items: localCart,
+                status: 'abandoned'
+              }]);
+            }
+          } catch (err) {
+            console.error("Database sync error:", err);
+          }
+        };
+        syncUserSessionToDb(registeredUser);
 
         setSuccess(true);
         setError('');
@@ -320,6 +345,30 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
           console.error(err);
         }
       }
+
+      // Sync lead & cart details to database
+      const syncUserSessionToDb = async (profile) => {
+        try {
+          await supabase.from('leads').insert([{
+            name: profile.name,
+            email: profile.email || '',
+            phone: profile.phone || ''
+          }]);
+          const localCart = JSON.parse(localStorage.getItem('tripgod_cart') || '[]');
+          if (localCart.length > 0) {
+            await supabase.from('abandoned_carts').insert([{
+              customer_name: profile.name,
+              customer_email: profile.email || '',
+              customer_phone: profile.phone || '',
+              cart_items: localCart,
+              status: 'abandoned'
+            }]);
+          }
+        } catch (err) {
+          console.error("Database sync error:", err);
+        }
+      };
+      syncUserSessionToDb(registeredUser);
 
       setTimeout(() => {
         onLogin(registeredUser);

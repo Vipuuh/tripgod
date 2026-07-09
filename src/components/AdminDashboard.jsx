@@ -7,6 +7,7 @@ import {
   LayoutDashboard, GripVertical, Star
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import RetargetingTab from './RetargetingTab';
 
 const getSimpleBookingId = (id) => {
   if (!id) return 'TG-000000';
@@ -481,6 +482,7 @@ export default function AdminDashboard({ setRoute }) {
               { id: 'tours', label: 'Tour Packages', icon: MapPinned },
               { id: 'cities', label: 'Cities List', icon: MapPin },
               { id: 'vendors', label: 'Vendors DB', icon: Users },
+              { id: 'retargeting', label: 'Retargeting (Carts)', icon: Sparkles },
               { id: 'media', label: 'Media Library', icon: Image },
               { id: 'homepage', label: 'Manage Homepage', icon: LayoutDashboard }
             ].map(tab => (
@@ -802,6 +804,10 @@ export default function AdminDashboard({ setRoute }) {
                 )}
               </div>
             </div>
+          )}
+
+          {activeTab === 'retargeting' && (
+            <RetargetingTab />
           )}
 
           {['hotels', 'adventures', 'bikes', 'tours'].includes(activeTab) && (
