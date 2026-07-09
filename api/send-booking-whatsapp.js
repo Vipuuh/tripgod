@@ -142,23 +142,23 @@ export default async function handler(req, res) {
 
     // Dynamic Parameter Mappings for Meta WhatsApp API:
 
-    // 1. Customer Parameters
+    // 1. Customer Parameters (for new sequential template: tripgod_booking_confirmed)
     const customerParams = [
-      `*${simpleBookingCode}*`,                                                // {{1}}
-      `*${customerName}*`,                                                     // {{2}}
-      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}}
-      `*${paramDate}*`,                                                        // {{4}}
-      `*${paramTime}*`,                                                        // {{5}}
-      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}}
-      locationLink,                                                            // {{7}}
-      `*${formatDisplayPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE)}*`, // {{8}}
+      customerName,                                                            // {{1}} - Name
+      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
+      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Your Trip
+      `*${paramDate}*`,                                                        // {{4}} - Check-in
+      `*${paramTime}*`,                                                        // {{5}} - Check-out
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Booking Details
+      locationLink,                                                            // {{7}} - Location
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
-        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{9}}
-      `*Confirmed!* Have a great time! 🌟`                                     // {{10}}
+        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment Status
+      `*Confirmed!*`,                                                          // {{9}} - Booking Status
+      `*${formatDisplayPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE)}*` // {{10}} - Helpline Contact
     ];
 
-    // 2. Vendor Parameters
+    // 2. Vendor Parameters (still uses booking_alert template)
     const vendorParams = [
       `*${simpleBookingCode}*`,                                                // {{1}}
       `*${customerName}* (${formatDisplayPhone(customerPhone)})`,              // {{2}}
@@ -174,7 +174,7 @@ export default async function handler(req, res) {
       `*New Booking Alert!* Please provide premium service.`                  // {{10}}
     ];
 
-    // 3. Admin Parameters
+    // 3. Admin Parameters (still uses booking_alert template)
     const adminParams = [
       `*${simpleBookingCode}*`,                                                // {{1}}
       `*${customerName}* (${formatDisplayPhone(customerPhone)})`,              // {{2}}
@@ -191,7 +191,7 @@ export default async function handler(req, res) {
     ];
 
     // Helper to send message using Meta Cloud API
-    const sendWhatsAppMeta = async (to, parameters) => {
+    const sendWhatsAppMeta = async (to, templateName, parameters) => {
       const cleanTo = to.replace(/\D/g, ''); 
       if (!cleanTo) return null;
 
@@ -201,7 +201,7 @@ export default async function handler(req, res) {
         to: cleanTo,
         type: "template",
         template: {
-          name: "booking_alert",
+          name: templateName,
           language: {
             code: "en"
           },
@@ -217,7 +217,7 @@ export default async function handler(req, res) {
         }
       };
 
-      console.log(`Sending Meta WhatsApp template to ${cleanTo}...`);
+      console.log(`Sending Meta WhatsApp template ${templateName} to ${cleanTo}...`);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -237,15 +237,15 @@ export default async function handler(req, res) {
     
     // 1. Send to Customer
     if (customerPhone) {
-      promises.push(sendWhatsAppMeta(customerPhone, customerParams).catch(err => console.error("Error sending to customer:", err)));
+      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParams).catch(err => console.error("Error sending to customer:", err)));
     }
     
     // 2. Send to Admin
-    promises.push(sendWhatsAppMeta(ADMIN_PHONE, adminParams).catch(err => console.error("Error sending to admin:", err)));
+    promises.push(sendWhatsAppMeta(ADMIN_PHONE, "booking_alert", adminParams).catch(err => console.error("Error sending to admin:", err)));
     
     // 3. Send to Agency/Vendor
     if (cleanAgencyPhone && cleanAgencyPhone !== ADMIN_PHONE) {
-      promises.push(sendWhatsAppMeta(cleanAgencyPhone, vendorParams).catch(err => console.error("Error sending to agency:", err)));
+      promises.push(sendWhatsAppMeta(cleanAgencyPhone, "booking_alert", vendorParams).catch(err => console.error("Error sending to agency:", err)));
     }
 
     // 4. Send Gmail Alerts (to Admin and Customer) via Nodemailer
