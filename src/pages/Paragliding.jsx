@@ -100,6 +100,7 @@ export default function Paragliding({ currentCity, openBookingModal }) {
                 closed_reason: item.closed_reason,
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
+                free_video_type: item.free_video_type || 'none',
                 operators: []
               };
             }
@@ -295,6 +296,7 @@ export default function Paragliding({ currentCity, openBookingModal }) {
               closed_reason={selectedPara.closed_reason}
               closed_from={selectedPara.closed_from}
               closed_until={selectedPara.closed_until}
+              free_video_type={selectedPara.free_video_type}
             />
           </motion.div>
         )}

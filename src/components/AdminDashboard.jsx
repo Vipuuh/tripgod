@@ -1862,6 +1862,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         best_for: data.best_for || [],
         benefits: data.benefits || [],
         upi_discount: data.upi_discount !== null && data.upi_discount !== undefined ? Number(data.upi_discount) : null,
+        free_video_type: data.free_video_type || 'none',
         featured_image: data.featured_image || '',
         payment_mode: data.payment_mode || 'commission_advance',
         fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : ''
@@ -1881,7 +1882,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         whatsapp_number: '',
         cancellation_policy: '100% refund up to 24 hours prior to arrival.',
         payment_mode: 'commission_advance',
-        fixed_advance_amount: 0
+        fixed_advance_amount: 0,
+        upi_discount: null,
+        free_video_type: 'none'
       };
 
       if (type === 'hotels') {
@@ -2021,6 +2024,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount),
+          free_video_type: formData.free_video_type || 'none',
           is_closed: !!formData.is_closed,
           closed_reason: formData.closed_reason || '',
           closed_from: formData.closed_from || null,
@@ -2258,6 +2262,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           closed_reason: formData.closed_reason || '',
           closed_from: formData.closed_from || null,
           closed_until: formData.closed_until || null,
+          upi_discount: formData.upi_discount !== null && formData.upi_discount !== undefined && formData.upi_discount !== '' ? Number(formData.upi_discount) : null,
           seats_left: formData.seats_left !== undefined && formData.seats_left !== null && formData.seats_left !== '' ? Number(formData.seats_left) : 10,
           bookings_count: formData.bookings_count !== undefined && formData.bookings_count !== null && formData.bookings_count !== '' ? Number(formData.bookings_count) : 150,
           hotel_included: formData.hotel_included !== undefined ? !!formData.hotel_included : true,
@@ -2572,16 +2577,18 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">WhatsApp Number</label>
-              <input
-                type="text"
-                value={formData.whatsapp_number || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder="e.g. 8630027341"
-              />
-            </div>
+            {['hotels', 'bikes'].includes(type) && (
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">WhatsApp Number</label>
+                <input
+                  type="text"
+                  value={formData.whatsapp_number || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                  placeholder="e.g. 8630027341"
+                />
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Override (%)</label>
@@ -2607,6 +2614,20 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Custom UPI Discount (INR)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="e.g. 100 (Leave blank for no discount)"
+            value={formData.upi_discount === undefined || formData.upi_discount === null ? '' : formData.upi_discount}
+            onChange={(e) => setFormData(prev => ({ ...prev, upi_discount: e.target.value === '' ? null : Number(e.target.value) }))}
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+          />
+        </div>
       </div>
 
       <div className="space-y-1">
@@ -2772,29 +2793,15 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Custom UPI Discount (INR)</label>
-              <input
-                type="number"
-                min="0"
-                placeholder="Leave blank for tier default"
-                value={formData.upi_discount === undefined || formData.upi_discount === null ? '' : formData.upi_discount}
-                onChange={(e) => setFormData(prev => ({ ...prev, upi_discount: e.target.value === '' ? null : Number(e.target.value) }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Featured Image URL (Slider Cover)</label>
-              <input
-                type="text"
-                placeholder="Defaults to first image if blank"
-                value={formData.featured_image || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, featured_image: e.target.value }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
-            </div>
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Featured Image URL (Slider Cover)</label>
+            <input
+              type="text"
+              placeholder="Defaults to first image if blank"
+              value={formData.featured_image || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, featured_image: e.target.value }))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+            />
           </div>
 
           <div className="flex gap-6 py-2">
@@ -3328,34 +3335,32 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 text-slate-300">
-            <label className="flex items-center gap-2 cursor-pointer">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center text-slate-350 bg-slate-900/10 p-3.5 rounded-2xl border border-slate-800/40">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={!!formData.pickup_included}
                 onChange={(e) => setFormData(prev => ({ ...prev, pickup_included: e.target.checked }))}
                 className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
               />
-              <span>Pickup Included</span>
+              <span className="text-xs font-semibold">Pickup Included</span>
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={!!formData.drop_included}
                 onChange={(e) => setFormData(prev => ({ ...prev, drop_included: e.target.checked }))}
                 className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
               />
-              <span>Drop Included</span>
+              <span className="text-xs font-semibold">Drop Included</span>
             </label>
 
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                {formData.activity_type === 'camping' ? 'Age Limit' : 'Age Limit'}
-              </label>
+              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Age Limit</label>
               {formData.activity_type === 'camping' ? (
-                <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-400 text-xs font-semibold leading-tight">
-                  Min 18+ (Primary Guest)
+                <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-400 text-[11px] font-semibold">
+                  18+ (Primary Guest)
                 </div>
               ) : (
                 <input
@@ -3363,9 +3368,22 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                   required
                   value={formData.age_limit || 12}
                   onChange={(e) => setFormData(prev => ({ ...prev, age_limit: Number(e.target.value) }))}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white focus:outline-none text-xs"
                 />
               )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Free Video Option</label>
+              <select
+                value={formData.free_video_type || 'none'}
+                onChange={(e) => setFormData(prev => ({ ...prev, free_video_type: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white focus:outline-none text-[11px] font-bold"
+              >
+                <option value="none">No Video Included</option>
+                <option value="gopro">GoPro Video Included</option>
+                <option value="dslr">DSLR Video Included</option>
+              </select>
             </div>
           </div>
 

@@ -289,6 +289,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 closed_reason: item.closed_reason,
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
+                free_video_type: item.free_video_type || 'none',
                 operators: []
               };
             }
@@ -818,6 +819,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                               vendor_id: raw.vendor_id,
                               commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
                               vendors: raw.vendors,
+                              free_video_type: raw.free_video_type || selectedStretch.free_video_type || 'none',
                               is_closed: selectedStretch.is_closed || raw.is_closed,
                               closed_reason: selectedStretch.closed_reason || raw.closed_reason,
                               closed_from: selectedStretch.closed_from || raw.closed_from,
@@ -909,6 +911,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                       category: 'rafting',
                       city_id: selectedStretch.city_id,
                       vendor_id: selectedStretch.vendor_id,
+                      free_video_type: selectedStretch.free_video_type || 'none',
                       is_closed: selectedStretch.is_closed,
                       closed_reason: selectedStretch.closed_reason,
                       closed_from: selectedStretch.closed_from,

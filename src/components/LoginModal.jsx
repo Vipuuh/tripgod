@@ -282,7 +282,7 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
                     {mode === 'otp' ? 'Verify Code' : 'TripGod Account'}
                   </h3>
                   <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wider">
-                    {mode === 'otp' ? 'Check your email inbox' : 'Adventure awaits you'}
+                    {mode === 'otp' ? (/^\d{10}$/.test(loginInput.trim()) ? 'Check your WhatsApp chat' : 'Check your email inbox') : 'Adventure awaits you'}
                   </p>
                 </div>
               </div>

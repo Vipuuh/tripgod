@@ -101,6 +101,7 @@ export default function Camping({ currentCity, openBookingModal }) {
                 closed_reason: item.closed_reason,
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
+                free_video_type: item.free_video_type || 'none',
                 operators: []
               };
             }
@@ -294,6 +295,7 @@ export default function Camping({ currentCity, openBookingModal }) {
               closed_reason={selectedCamp.closed_reason}
               closed_from={selectedCamp.closed_from}
               closed_until={selectedCamp.closed_until}
+              free_video_type={selectedCamp.free_video_type}
             />
           </motion.div>
         )}

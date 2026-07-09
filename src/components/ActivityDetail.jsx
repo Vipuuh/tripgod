@@ -29,7 +29,8 @@ export default function ActivityDetail({
   is_closed = false,
   closed_reason = '',
   closed_from = '',
-  closed_until = ''
+  closed_until = '',
+  free_video_type = 'none'
 }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
 
@@ -68,6 +69,7 @@ export default function ActivityDetail({
         price,
         category,
         videoIncluded: isVideo,
+        free_video_type: free_video_type || 'none',
         is_closed,
         closed_reason,
         closed_from,
@@ -444,7 +446,8 @@ export default function ActivityDetail({
                       vendor_id: raw.vendor_id,
                       commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
                       vendors: raw.vendors,
-                      videoIncluded: isVideo
+                      videoIncluded: isVideo,
+                      free_video_type: raw.free_video_type || free_video_type || 'none'
                     });
                   }}
                   activityName={title}

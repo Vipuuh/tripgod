@@ -3,6 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Users, Clock, ShieldCheck, CreditCard, MessageSquare } from 'lucide-react';
 import { supabase } from '../supabase';
 
+const formatDisplayPhone = (phone) => {
+  if (!phone) return '';
+  let clean = phone.replace(/\D/g, '');
+  if (clean.length === 10) {
+    return `+91 ${clean.substring(0, 5)} ${clean.substring(5)}`;
+  }
+  if (clean.length === 12 && clean.startsWith('91')) {
+    return `+91 ${clean.substring(2, 7)} ${clean.substring(7)}`;
+  }
+  return `+${clean}`;
+};
+
 export default function BookingModal({ isOpen, onClose, activity, onAddToCart, initialDate, initialGuests }) {
   if (!activity) return null;
 
@@ -108,8 +120,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       today.setDate(today.getDate() + 1); // default to tomorrow
       setDate(initialDate || today.toISOString().split('T')[0]);
       setSlot(slots[0]);
-      setGuests(initialGuests || 1);
-      setHasVideoOption(activity.category === 'rafting');
+      const freeVideo = activity.free_video_type !== undefined ? activity.free_video_type : (activity.category === 'rafting' ? 'dslr' : 'none');
+      setHasVideoOption(freeVideo !== 'none');
       setError('');
       // Initialize payment option based on mode
       const mode = activity.payment_mode || 'commission_advance';
@@ -282,7 +294,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 *Date:* ${dateRangeStr}
 *${activity.category === 'hotels' ? 'Room Type' : (isBikeRent ? 'Select Vehicle' : 'Slot')}:* ${slot}
 *${isBikeRent ? 'No. of Vehicles' : 'Guests'}:* ${guests} ${unitLabel}
-${hasVideoOption ? `*Add-ons:* DSLR Video Included\n` : ''}
+${hasVideoOption ? `*Add-ons:* ${((activity.free_video_type || (activity.category === 'rafting' ? 'dslr' : 'none')) === 'gopro') ? 'GoPro Video Included' : 'DSLR Video Included'}\n` : ''}
 *Price Summary:*
 - Total Price: ₹${totalPrice.toLocaleString('en-IN')}
 - *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${finalAmountToPay.toLocaleString('en-IN')}${upiDiscountVal > 0 ? ` (UPI Discount of ₹${upiDiscountVal} applied)` : ''}
@@ -515,7 +527,7 @@ My payment ID is verified. Please confirm my slots.`;
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-500 font-bold">Hotel Contact</span>
-                      <span className="font-extrabold text-[#FF5F00] font-sans">+{bookingSuccessData.operatorPhone}</span>
+                      <span className="font-extrabold text-[#FF5F00] font-sans">{formatDisplayPhone(bookingSuccessData.operatorPhone)}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-500 font-bold">Total Price</span>
@@ -558,7 +570,7 @@ My payment ID is verified. Please confirm my slots.`;
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-500 font-bold">Local Contact</span>
-                      <span className="font-extrabold text-[#FF5F00] font-sans">+{bookingSuccessData.operatorPhone}</span>
+                      <span className="font-extrabold text-[#FF5F00] font-sans">{formatDisplayPhone(bookingSuccessData.operatorPhone)}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-500 font-bold">Total Price</span>
@@ -587,7 +599,7 @@ My payment ID is verified. Please confirm my slots.`;
                     </li>
                     <li className="flex items-start gap-1.5">
                       <span>📞</span> 
-                      <span>You can directly contact the Host/Hotel desk at <strong>+{bookingSuccessData.operatorPhone}</strong> to coordinate check-in or booking slots.</span>
+                      <span>You can directly contact the Host/Hotel desk at <strong>{formatDisplayPhone(bookingSuccessData.operatorPhone)}</strong> to coordinate check-in or booking slots.</span>
                     </li>
                   </ul>
                 </div>
@@ -809,17 +821,23 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
               </div>
 
-              {/* Optional extras depending on category */}
-              {activity.category === 'rafting' && (
-                <div className="flex items-start gap-3 p-3.5 border border-green-500/20 bg-green-50/50 rounded-xl">
+              {/* Optional extras depending on category & free video selection */}
+              {((activity.free_video_type !== undefined ? activity.free_video_type !== 'none' : activity.category === 'rafting')) && (
+                <div className="flex items-start gap-3 p-3.5 border border-green-500/20 bg-green-50/50 rounded-xl text-left">
                   <div className="mt-0.5 text-green-600 bg-green-100 p-1 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div>
-                    <span className="block text-sm font-bold text-green-900">Free DSLR Video & Photos Included</span>
-                    <span className="block text-xs text-green-700/80">Get high-quality cinematic footage and photos of your experience delivered directly via WhatsApp.</span>
+                    <span className="block text-sm font-bold text-green-900">
+                      {((activity.free_video_type || (activity.category === 'rafting' ? 'dslr' : 'none')) === 'gopro') ? 'Free GoPro Video & Photos Included' : 'Free DSLR Video & Photos Included'}
+                    </span>
+                    <span className="block text-xs text-green-700/80">
+                      {((activity.free_video_type || (activity.category === 'rafting' ? 'dslr' : 'none')) === 'gopro') 
+                        ? 'Get high-quality action footage of your experience shot with GoPro, delivered directly via WhatsApp.'
+                        : 'Get high-quality cinematic photos and footage of your experience, delivered directly via WhatsApp.'}
+                    </span>
                   </div>
                 </div>
               )}
