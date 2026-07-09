@@ -1,6 +1,6 @@
 // src/components/OperatorSelector.jsx
 import React from 'react';
-import { Star, MapPin, Check, ShieldCheck, MessageSquare } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 
 const formatLandmarkDistance = (landmark) => {
   if (!landmark) return null;
@@ -92,39 +92,35 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
   return (
     <div className="w-full space-y-5 font-sans text-slate-800">
       
-      {/* 1. TripGod Booking Info Card (Shown FIRST) */}
-      <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/15 rounded-2xl p-4.5 space-y-3">
-        <div className="flex items-center gap-2 text-[#FF5F00]">
-          <ShieldCheck size={18} className="stroke-[2.5]" />
-          <span className="font-black text-xs uppercase tracking-wider">TripGod Booking Guarantee</span>
-        </div>
-        
-        <div className="space-y-1">
-          <p className="text-[11px] font-extrabold text-slate-700 leading-normal">
-            All options provide the same adventure route and activity duration.
-          </p>
-          <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
-            Every option is fully licensed, govt-approved, and includes certified safety guides. Simply choose the pickup location and price that works best for you.
-          </p>
+      {/* 1. Premium Horizontal Flat Banner */}
+      <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-2xl p-4 space-y-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 className="text-xs font-black text-[#FF5F00] uppercase tracking-wider">
+              Why choose an option?
+            </h4>
+            <p className="text-[11px] font-extrabold text-slate-700 mt-0.5">
+              All options provide the same adventure route and quality standards.
+            </p>
+          </div>
+          <span className="text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider self-start sm:self-center shrink-0">
+            {operators.length} Options Available
+          </span>
         </div>
 
-        {/* 4 Checkmarks in simple row */}
-        <div className="grid grid-cols-2 gap-2 text-[9px] font-black text-slate-600 uppercase tracking-wide pt-1 border-t border-[#FF5F00]/10">
-          <div className="flex items-center gap-1.5">
-            <Check size={12} className="text-emerald-600 stroke-[3]" />
-            <span>Licensed Crew</span>
+        {/* Horizontal Row of differences */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#FF5F00]/10 text-[9px] font-black text-slate-600 uppercase tracking-wide">
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50">
+            <span>💰 Best Prices</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Check size={12} className="text-emerald-600 stroke-[3]" />
-            <span>Safety Gear Included</span>
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50">
+            <span>📍 Pickup Office</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Check size={12} className="text-emerald-600 stroke-[3]" />
-            <span>Certified Guides</span>
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50">
+            <span>⭐ Crew Ratings</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Check size={12} className="text-emerald-600 stroke-[3]" />
-            <span>Instant Confirmation</span>
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50">
+            <span>✔ Safety Verified</span>
           </div>
         </div>
       </div>
@@ -186,6 +182,17 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                   </div>
                 )}
 
+                {/* Activity name/stretch KM info under pickup */}
+                <div className="text-[10px] font-extrabold text-[#FF5F00] flex items-center gap-1.5">
+                  <span>⚡</span>
+                  <span>
+                    {op.stretchRoute 
+                      ? `${op.stretchRoute} ${op.distanceKm ? `(${op.distanceKm} KM)` : ''}`
+                      : (activityName || 'Adventure Stretch')
+                    }
+                  </span>
+                </div>
+
                 {contextHelper && (
                   <span className="block text-[10px] font-extrabold text-emerald-600">
                     ✨ {contextHelper}
@@ -232,20 +239,6 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
             </div>
           );
         })}
-      </div>
-
-      {/* 3. Bottom Help Desk */}
-      <div className="pt-2 border-t border-slate-150 flex items-center justify-between text-xs font-semibold text-slate-500">
-        <span>Need help?</span>
-        <a
-          href={`https://wa.me/918630027341?text=${encodeURIComponent(`Hi, I'm booking ${activityName || 'activities'} on TripGod and need help choosing the best option!`)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-extrabold no-underline"
-        >
-          <MessageSquare size={13} className="fill-emerald-600/10" />
-          <span>Chat with a TripGod Expert</span>
-        </a>
       </div>
     </div>
   );
