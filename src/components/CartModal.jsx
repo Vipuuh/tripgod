@@ -177,10 +177,6 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
             const dbBookingId = generateUUID();
             insertedBookingIds.push(dbBookingId);
 
-            const opPhone = item.category === 'hotels'
-              ? (item.whatsapp_number || item.vendors?.whatsapp || item.vendors?.phone || '8630027341')
-              : (item.vendors?.whatsapp || item.vendors?.phone || '8630027341');
-
             const bookingInsertData = {
               id: dbBookingId,
               city_id: item.city_id && isValidUUID(item.city_id) ? item.city_id : null,
@@ -195,17 +191,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
               payment_type: paymentOption === 'full' ? 'full_online' : 'advance_custom',
               amount_paid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
               remaining_amount: paymentOption === 'full' ? 0 : item.remainingPayment,
-              commission_earned: commissionEarned,
-              metadata: {
-                activity_name: item.name,
-                stretch: item.stretch || '',
-                check_out_date: item.category === 'hotels' ? item.checkOutDate : null,
-                nights: item.category === 'hotels' ? item.nights : null,
-                slot: item.slot,
-                guests: item.guests,
-                total_price: item.totalPrice,
-                operator_phone: opPhone
-              }
+              commission_earned: commissionEarned
             };
             const { error } = await supabase.from('bookings').insert([bookingInsertData]);
             if (error) {

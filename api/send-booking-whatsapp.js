@@ -155,7 +155,7 @@ export default async function handler(req, res) {
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
         : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{9}}
-      `*Confirmed!* Have a great time! 🌟\n\n*Download PDF Ticket:* https://tripgod.in/ticket/${paymentId}`                                     // {{10}}
+      `*Confirmed!* Have a great time! 🌟`                                     // {{10}}
     ];
 
     // 2. Vendor Parameters
@@ -171,7 +171,7 @@ export default async function handler(req, res) {
       isFullPayment 
         ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Payment)`
         : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Collect: *₹${remainingPaid.toLocaleString('en-IN')}* at venue`, // {{9}}
-      `*New Booking Alert!* Please provide premium service.\n\n*View Ticket Details:* https://tripgod.in/ticket/${paymentId}`                  // {{10}}
+      `*New Booking Alert!* Please provide premium service.`                  // {{10}}
     ];
 
     // 3. Admin Parameters
@@ -187,7 +187,7 @@ export default async function handler(req, res) {
       isFullPayment 
         ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Payment)`
         : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Balance: *₹${remainingPaid.toLocaleString('en-IN')}* (Razorpay ID: ${paymentId})`, // {{9}}
-      `*New Booking Alert* - Verified!\n\n*View Booking Log:* https://tripgod.in/ticket/${paymentId}`                               // {{10}}
+      `*New Booking Alert* - Have a great time!`                               // {{10}}
     ];
 
     // Helper to send message using Meta Cloud API
