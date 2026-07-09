@@ -393,7 +393,7 @@ export default function ActivityDetail({
                 <X size={18} />
               </button>
 
-              <div className="space-y-2 text-left">
+              <div className="space-y-2 text-left pr-8">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-xl font-black text-slate-900 tracking-tight">
                     Choose Your Booking Option
