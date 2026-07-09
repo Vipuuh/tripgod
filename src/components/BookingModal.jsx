@@ -331,6 +331,10 @@ My payment ID is verified. Please confirm my slots.`;
         // Save booking to Supabase SQL Database
         try {
           const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+          const opPhone = activity.category === 'hotels'
+            ? (activity.whatsapp_number || activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341')
+            : (activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341');
+
           const bookingInsertData = {
             id: dbBookingId,
             city_id: activity.city_id && isValidUUID(activity.city_id) ? activity.city_id : null,
@@ -347,15 +351,22 @@ My payment ID is verified. Please confirm my slots.`;
             remaining_amount: remainingPayment,
             commission_earned: paymentMode === 'fixed_advance'
               ? Math.min(fixedAdvanceAmount, totalPrice)
-              : Math.round(totalPrice * (commissionPercentage / 100))
+              : Math.round(totalPrice * (commissionPercentage / 100)),
+            metadata: {
+              activity_name: activity.name,
+              stretch: activity.stretch || '',
+              check_out_date: activity.category === 'hotels' ? checkOutDate : null,
+              nights: activity.category === 'hotels' ? nights : null,
+              slot: slot,
+              guests: guests,
+              total_price: totalPrice,
+              operator_phone: opPhone
+            }
           };
           supabase.from('bookings').insert([bookingInsertData]).then(({ error }) => {
             if (error) {
-              console.error('Error inserting booking to Supabase:', error);
+               console.error('Error inserting booking to Supabase:', error);
             }
-            const opPhone = activity.category === 'hotels'
-              ? (activity.whatsapp_number || activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341')
-              : (activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341');
 
             // Trigger background automated WhatsApp notifications
             fetch('/api/send-booking-whatsapp', {
