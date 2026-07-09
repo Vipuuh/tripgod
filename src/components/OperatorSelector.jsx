@@ -1,6 +1,6 @@
 // src/components/OperatorSelector.jsx
 import React from 'react';
-import { Star, MapPin, ShieldCheck } from 'lucide-react';
+import { Star, MapPin, HelpCircle } from 'lucide-react';
 
 const formatLandmarkDistance = (landmark) => {
   if (!landmark) return null;
@@ -92,38 +92,38 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
   return (
     <div className="w-full space-y-5 font-sans text-slate-800">
       
-      {/* 1. Premium Horizontal Flat Banner (Original trust wording) */}
-      <div className="bg-slate-50 border border-slate-200/65 rounded-2xl p-4.5 space-y-3">
+      {/* 1. Premium Horizontal Flat Banner */}
+      <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4.5 space-y-3 shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2 text-[#FF5F00]">
-              <ShieldCheck size={18} className="stroke-[2.5]" />
-              <h4 className="font-black text-xs uppercase tracking-wider text-slate-800">
-                Verified by TripGod
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-1.5 text-[#FF5F00]">
+              <HelpCircle size={16} className="stroke-[2.5]" />
+              <h4 className="font-black text-xs uppercase tracking-wider">
+                Why choose an option?
               </h4>
             </div>
             <p className="text-[11px] font-extrabold text-slate-600 leading-relaxed">
-              All operators provide the same activity. The main differences are:
+              All operators provide the same adventure route. The main differences are:
             </p>
           </div>
-          <span className="text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider self-start sm:self-center shrink-0">
+          <span className="text-[10px] font-black text-slate-500 bg-slate-150 border border-slate-200/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider self-start sm:self-center shrink-0">
             {operators.length} Options Available
           </span>
         </div>
 
         {/* Horizontal Row of differences */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-200/60 text-[9px] font-black text-slate-600 uppercase tracking-wide">
-          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50 shadow-2xs">
-            <span>💰 Price & Offers</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-200/50 text-[9px] font-black text-slate-600 uppercase tracking-wide">
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-250/50 shadow-3xs">
+            <span>💰 Best Prices</span>
           </div>
-          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50 shadow-2xs">
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-250/50 shadow-3xs">
             <span>📍 Pickup Office</span>
           </div>
-          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50 shadow-2xs">
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-250/50 shadow-3xs">
             <span>⭐ Crew Ratings</span>
           </div>
-          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200/50 shadow-2xs">
-            <span>✔ Safety Standards</span>
+          <div className="flex items-center justify-center sm:justify-start gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-250/50 shadow-3xs">
+            <span>✔ Safety Verified</span>
           </div>
         </div>
       </div>
@@ -154,7 +154,11 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
           return (
             <div
               key={op.id || idx}
-              className="bg-white border border-slate-200/70 rounded-2xl p-4.5 hover:border-slate-400 transition-colors shadow-xs relative space-y-3.5"
+              className={`bg-white border rounded-2xl p-4.5 hover:shadow-md transition-all relative space-y-3.5 ${
+                idx === 0 
+                  ? 'border-[#FF5F00]/30 shadow-xs ring-1 ring-[#FF5F00]/5' 
+                  : 'border-slate-200/70'
+              }`}
             >
               {/* Badges / Rating Row */}
               <div className="flex items-center justify-between gap-2">
