@@ -393,16 +393,17 @@ export default function ActivityDetail({
                 <X size={18} />
               </button>
 
-              {/* Header */}
-              <div className="space-y-1 pr-8 text-left">
-                <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] font-black tracking-widest px-2 py-0.5 rounded-full uppercase border border-[#FF5F00]/20">
-                  Comparison Desk
-                </span>
-                <h3 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">
-                  Select Your Operator
-                </h3>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                  Choose from certified local safety crews for {title}
+              <div className="space-y-2 text-left">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                    Choose Your Booking Option
+                  </h3>
+                  <span className="text-[9px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    {operators.length} Options Available
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                  All operators provide the same adventure. Simply choose the option that works best for you.
                 </p>
               </div>
 

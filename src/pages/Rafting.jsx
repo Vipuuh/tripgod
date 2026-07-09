@@ -767,16 +767,17 @@ export default function Rafting({ currentCity, openBookingModal }) {
                         <X size={18} />
                       </button>
 
-                      {/* Header */}
-                      <div className="space-y-1 pr-8">
-                        <span className="text-[10px] text-accent font-black uppercase tracking-wider block">
-                          Comparison Desk
-                        </span>
-                        <h3 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">
-                          Select Your Operator
-                        </h3>
-                        <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                          Choose from certified local safety crews for {selectedStretch.name}
+                      <div className="space-y-2 text-left">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                            Choose Your Booking Option
+                          </h3>
+                          <span className="text-[9px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            {(selectedStretch.operators?.length || 2)} Options Available
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                          All operators provide the same adventure. Simply choose the option that works best for you.
                         </p>
                       </div>
 
@@ -992,7 +993,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 onClick={() => setShowOperatorModal(true)}
                 className="py-3.5 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
               >
-                Choose Operator
+                View Options
               </button>
             </div>
           </motion.div>

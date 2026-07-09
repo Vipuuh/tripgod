@@ -277,11 +277,18 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
           {/* Operator Selector Component */}
           <div className="bg-slate-50 rounded-3xl p-6 md:p-8 border border-slate-100 space-y-6">
-            <div className="space-y-1">
-              <span className="text-[10px] text-accent font-black uppercase tracking-wider block">Comparison Desk</span>
-              <h3 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">
-                Select Your Operator
-              </h3>
+            <div className="space-y-2 text-left">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  Choose Your Booking Option
+                </h3>
+                <span className="text-[9px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  {(selectedVehicle.operators?.length || 1)} Options Available
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                All providers deliver the same vehicle model. Simply choose the pickup location and price option that works best for you.
+              </p>
             </div>
             
             {checkIfClosed(selectedVehicle).closed ? (
