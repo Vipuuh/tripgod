@@ -398,7 +398,7 @@ export default function App() {
           <div className="space-y-5 md:col-span-1">
             <div className="flex items-center select-none">
               <span className="font-black text-2xl tracking-tighter text-white">TRIP</span>
-              <span className="font-black text-2xl tracking-tighter text-accent bg-white/10 px-1.5 py-0.5 rounded ml-0.5">GOD</span>
+              <span className="font-black text-2xl tracking-tighter text-white bg-accent-gradient px-2 py-0.5 rounded-lg ml-1 shadow-sm">GOD</span>
             </div>
 
             {/* Partner With Us */}

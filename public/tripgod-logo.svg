@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B00" />
+      <stop offset="100%" stop-color="#FF3D00" />
+    </linearGradient>
+  </defs>
+  <!-- Circular container for premium look in checkout window -->
+  <circle cx="256" cy="256" r="240" fill="#FFFFFF" stroke="#F1F5F9" stroke-width="8" />
+  
+  <!-- Group for Logo Text Centered -->
+  <g transform="translate(256, 256)" text-anchor="middle" dominant-baseline="central">
+    <!-- "TRIP" Text in bold sans-serif -->
+    <text x="-95" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="110" font-weight="900" letter-spacing="-4" fill="#0F172A">TRIP</text>
+    
+    <!-- Background rounded box for "GOD" -->
+    <rect x="25" y="-70" width="165" height="135" rx="28" fill="url(#orangeGrad)" />
+    
+    <!-- "GOD" Text in white bold sans-serif -->
+    <text x="108" y="-3" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="110" font-weight="900" letter-spacing="-4" fill="#FFFFFF">GOD</text>
+  </g>
+</svg>

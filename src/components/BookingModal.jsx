@@ -250,7 +250,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       key: "rzp_live_TAd3hYpU1J84mE",
       amount: finalAmountToPay * 100, // paise
       currency: "INR",
-      name: "TripGod Rishikesh",
+      name: "TripGod",
       description: effectivePaymentOption === 'full' 
         ? `${activity.name} - 100% Full Payment` 
         : (paymentMode === 'fixed_advance'
