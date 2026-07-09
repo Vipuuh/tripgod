@@ -341,7 +341,7 @@ async function sendEmailAlert(data) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #eee; border-radius: 12px; background-color: #ffffff; color: #333333; line-height: 1.6;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #FF6B00; margin: 0; font-size: 28px; font-weight: 900;">TRIP<span style="background-color: #f3f4f6; padding: 2px 8px; border-radius: 4px; color: #111; margin-left: 2px;">GOD</span></h1>
+          <h1 style="color: #0F172A; margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -1.5px;">TRIP<span style="background: #FF6B00; background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%); padding: 3px 10px; border-radius: 6px; color: #ffffff; margin-left: 4px;">GOD</span></h1>
           <p style="color: #666; font-size: 14px; margin-top: 5px;">Rishikesh's #1 Adventure Booking Partner</p>
         </div>
         
