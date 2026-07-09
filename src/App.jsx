@@ -492,7 +492,7 @@ export default function App() {
             <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Contact</h4>
             <ul className="space-y-2 text-xs font-medium text-gray-400">
               <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: 8630027341</li>
-              <li className="flex items-center gap-2"><Mail size={12} /> Email: Tripgod.in@gmail.com</li>
+              <li className="flex items-center gap-2"><Mail size={12} /> Email: hello@tripgod.in</li>
               <li className="flex items-center gap-2"><MapPin size={12} /> Rishikesh, Uttarakhand, India</li>
             </ul>
           </div>

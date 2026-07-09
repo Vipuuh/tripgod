@@ -106,9 +106,9 @@ export default function Privacy() {
               <span>+91 8630027341</span>
             </div>
             
-            <a href="mailto:Tripgod.in@gmail.com" className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 hover:border-[#FF5F00]/35 rounded-xl text-center gap-1.5 transition-all text-white">
+            <a href="mailto:hello@tripgod.in" className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 hover:border-[#FF5F00]/35 rounded-xl text-center gap-1.5 transition-all text-white">
               <Mail size={14} className="text-[#FF5F00]" />
-              <span>Tripgod.in@gmail.com</span>
+              <span>hello@tripgod.in</span>
             </a>
 
             <div className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 rounded-xl text-center gap-1.5">
