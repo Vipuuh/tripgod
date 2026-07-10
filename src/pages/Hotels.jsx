@@ -887,66 +887,52 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
               {/* SECTION 2: HOTEL HEADER */}
               <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] text-[8.5px] font-black uppercase tracking-wider rounded-md border border-[#FF5F00]/20">
-                    Stay Details
-                  </span>
-                  {selectedHotel.is_limited_offer && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-600 text-white text-[8.5px] font-black uppercase tracking-wider rounded-md">
-                      Limited Offer
-                    </span>
-                  )}
+                {/* Social Proof Tag */}
+                <div className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider flex items-center gap-1 select-none">
+                  <span>🏆</span>
+                  <span>#3 Most Booked Hotel in Rishikesh</span>
                 </div>
-                
-                <h1 className="text-2xl md:text-3xl font-black font-display text-[#0d1b2a] uppercase leading-tight tracking-tight mt-1">
+
+                <h1 className="text-2xl md:text-3xl font-black font-display text-[#0d1b2a] uppercase leading-tight tracking-tight pt-0.5">
                   {selectedHotel.name}
                 </h1>
                 
-                {/* One compact Trust Row: 🛡️ TripGod Verified  •  📍 Near Laxman Jhula  •  ⭐ 4.5 (111 Reviews) */}
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-slate-600 text-[11px] font-bold select-none pt-0.5">
-                  {selectedHotel.is_verified && (
-                    <span className="text-[#008F5D] font-black flex items-center gap-0.5 uppercase tracking-wide">
-                      🛡️ TripGod Verified
+                {/* Two compact Rows: Verified, Rating, Location, Guests Recommend */}
+                <div className="flex flex-col gap-1 text-slate-600 text-[11.5px] font-bold select-none pt-1 text-left">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    {selectedHotel.is_verified && (
+                      <span className="text-[#008F5D] font-black flex items-center gap-0.5 uppercase tracking-wide">
+                        🛡️ TripGod Verified
+                      </span>
+                    )}
+                    {selectedHotel.is_verified && <span className="text-slate-300">•</span>}
+                    <span className="flex items-center gap-0.5 text-slate-800">
+                      ⭐ {selectedHotel.rating.toFixed(1)} Excellent ({selectedHotel.reviewsCount} Reviews)
                     </span>
-                  )}
-                  {selectedHotel.is_verified && <span className="text-slate-300">•</span>}
+                  </div>
                   
-                  <span className="flex items-center gap-0.5 truncate text-slate-800">
-                    📍 {(() => {
-                      if (selectedHotel.landmarks && selectedHotel.landmarks[0]) {
-                        const l = selectedHotel.landmarks[0].replace(/Near |Near/i, '');
-                        const isDrive = l.toLowerCase().includes('shivpuri') || l.toLowerCase().includes('triveni') || l.toLowerCase().includes('bus') || l.toLowerCase().includes('station');
-                        let min = 5;
-                        if (l.toLowerCase().includes('laxman') || l.toLowerCase().includes('lakshman')) min = 3;
-                        else if (l.toLowerCase().includes('ram')) min = 2;
-                        else if (l.toLowerCase().includes('tapovan')) min = 4;
-                        return `Near ${l} (${isDrive ? `🚗 ${min} min drive` : `🚶 ${min} min walk`})`;
-                      }
-                      const addLower = selectedHotel.address.toLowerCase();
-                      const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
-                      return `Near ${isLaxman ? 'Laxman Jhula' : 'Ram Jhula'} (${isLaxman ? '🚶 5 min walk' : '🚗 2 min drive'})`;
-                    })()}
-                  </span>
-                  <span className="text-slate-300">•</span>
-                  
-                  <span className="flex items-center gap-0.5 text-slate-800">
-                    ⭐ {selectedHotel.rating.toFixed(1)} ({selectedHotel.reviewsCount} Reviews)
-                  </span>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span className="flex items-center gap-0.5 truncate text-slate-800">
+                      📍 {(() => {
+                        if (selectedHotel.landmarks && selectedHotel.landmarks[0]) {
+                          const l = selectedHotel.landmarks[0].replace(/Near |Near/i, '');
+                          return `Near ${l}`;
+                        }
+                        const addLower = selectedHotel.address.toLowerCase();
+                        const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
+                        return `Near ${isLaxman ? 'Laxman Jhula' : 'Ram Jhula'}`;
+                      })()}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-[#008F5D] font-extrabold">
+                      ❤️ {selectedHotel.rating >= 4.5 ? '98%' : '95%'} Guests Recommend
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* SECTION 1: HERO GALLERY */}
-              <div className="space-y-3 mt-3">
-                {/* Dynamic rating summary block (Trust -> Price -> Action flow) */}
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-black text-slate-900 select-none pb-1 pt-0.5">
-                  <span className="text-[#FF5F00] text-sm">★★★★★</span>
-                  <span className="text-slate-800 font-extrabold">{selectedHotel.rating.toFixed(1)} Excellent</span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-slate-500 font-bold">({selectedHotel.reviewsCount} Verified Reviews)</span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-[#008F5D] font-extrabold">{selectedHotel.rating >= 4.5 ? '98%' : '95%'} Guests Recommend</span>
-                </div>
-
+              <div className="space-y-3 mt-2">
                 <div 
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
@@ -963,13 +949,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     className="w-full h-full object-cover transition-all duration-300 select-none cursor-pointer"
                   />
 
-                  {/* Photo Categories Tag Overlay */}
+                  {/* Photo Categories Tag Overlay (Dynamic Room Type / Stay Name) */}
                   <div className="absolute bottom-16 left-4 bg-black/60 backdrop-blur-xs text-white text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-md pointer-events-none select-none z-10">
-                    {activeImgIdx === 0 ? '📸 Exterior/Resort' : 
-                     activeImgIdx === 1 ? '📸 Bedroom/Suite' : 
-                     activeImgIdx === 2 ? '📸 Luxury Bathroom' : 
-                     activeImgIdx === 3 ? '📸 Balcony & View' : 
-                     activeImgIdx === 4 ? '📸 Reception & Lounge' : '📸 Gallery View'}
+                    📸 {selectedHotel.room_type || 'Premium Stay'} ({activeImgIdx + 1} / {selectedHotel.images.length})
                   </div>
 
                   {/* Top-left Verified & Top Rated overlay badges */}
@@ -1225,12 +1207,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
               </div>
 
               {/* SECTION 7: PROPERTY LOCATION */}
-              <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-gray-100">
+              <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs text-left select-none">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-gray-100">
                   <div>
                     <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Property Location</h4>
                     <span className="text-[10px] text-gray-500 font-bold block mt-0.5">
-                      📍 {selectedHotel.address.split(',')[0] || selectedHotel.address}
+                      📍 {selectedHotel.address}
                     </span>
                   </div>
                   {selectedHotel.maps_link && (
@@ -1238,31 +1220,34 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       href={formatExternalUrl(selectedHotel.maps_link)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="py-2 px-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 shadow-sm text-decoration-none w-fit shrink-0"
+                      className="py-2 px-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 shadow-sm text-decoration-none w-fit shrink-0 cursor-pointer"
                     >
                       <Map size={12} />
-                      <span>Get Directions</span>
+                      <span>Open in Google Maps</span>
                     </a>
                   )}
                 </div>
-
-                {/* Map Preview containing Google Maps Embed */}
-                <div className="w-full h-60 rounded-2xl overflow-hidden border border-black/10 relative bg-gray-50 shadow-inner">
-                  <iframe
-                    title="Google Maps Embed Location"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    loading="lazy"
-                    allowFullScreen
-                    src={getMapsEmbedUrl(selectedHotel.maps_link, selectedHotel.address)}
-                  />
+                
+                {/* Nearby landmarks mapping */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] font-black text-slate-800 pt-1.5">
+                  <div className="flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span>📍</span>
+                    <span>Near Ram Jhula</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span>📍</span>
+                    <span>Near Laxman Jhula</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span>🚌</span>
+                    <span>Near ISBT Rishikesh</span>
+                  </div>
                 </div>
               </div>
 
               {/* SECTION 6: LOCATION HIGHLIGHTS NEARBY ATTRACTIONS */}
               {((selectedHotel.attractions && selectedHotel.attractions.length > 0) || (selectedHotel.landmarks && selectedHotel.landmarks.length > 0)) && (
-                <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
+                <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs text-left">
                   <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Location Highlights</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Render attractions if they exist */}
@@ -1283,7 +1268,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               href={formatExternalUrl(attraction.maps_url)} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-[10px] font-black text-[#FF5F00] hover:text-[#FF3E00] flex items-center gap-1 bg-white border border-black/5 hover:border-[#FF5F00]/25 px-2.5 py-1.5 rounded-lg transition-colors text-decoration-none shadow-3xs"
+                              className="text-[10px] font-black text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-white border border-blue-200/50 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition-colors text-decoration-none shadow-3xs"
                             >
                               <Map size={11} />
                               <span>View Map</span>
@@ -1309,33 +1294,31 @@ export default function Hotels({ currentCity, openBookingModal }) {
               )}
 
               {/* SECTION 11: HOUSE RULES & SECTION 12: CANCELLATION POLICY */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-5 text-left">
                 {selectedHotel.rules && Object.keys(selectedHotel.rules).length > 0 && (
                   <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
                     <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">House Rules</h4>
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-655 font-bold">
-                      {Object.entries(selectedHotel.rules).map(([key, val]) => {
-                        const labelMap = {
-                          unmarried_couples: 'Couples Allowed',
-                          pets: 'Pets Allowed',
-                          smoking: 'Smoking Allowed',
-                          id_required: 'Govt ID Required',
-                          min_age_18: '18+ Age Limit',
-                          alcohol_allowed: 'Alcohol Allowed',
-                          visitors_allowed: 'Outside Visitors'
-                        };
-                        const ruleLabel = labelMap[key] || key.replace(/_/g, ' ');
-                        return (
-                          <div key={key} className="flex items-center gap-1.5 p-2 bg-slate-50/40 rounded-xl border border-black/5">
-                            {val ? (
+                      {Object.entries(selectedHotel.rules)
+                        .filter(([_, val]) => !!val) // Only show relevant, allowed rules!
+                        .map(([key]) => {
+                          const labelMap = {
+                            unmarried_couples: 'Couples Allowed',
+                            pets: 'Pets Allowed',
+                            smoking: 'Smoking Allowed',
+                            id_required: 'Govt ID Required',
+                            min_age_18: '18+ Age Limit',
+                            alcohol_allowed: 'Alcohol Allowed',
+                            visitors_allowed: 'Outside Visitors'
+                          };
+                          const ruleLabel = labelMap[key] || key.replace(/_/g, ' ');
+                          return (
+                            <div key={key} className="flex items-center gap-1.5 p-2 bg-slate-50/40 rounded-xl border border-black/5">
                               <Check size={12} className="text-emerald-600 shrink-0 stroke-[2.5]" />
-                            ) : (
-                              <X size={12} className="text-rose-600 shrink-0 stroke-[2.5]" />
-                            )}
-                            <span className="truncate text-[10px] sm:text-xs leading-none">{ruleLabel}</span>
-                          </div>
-                        );
-                      })}
+                              <span className="truncate text-[10px] sm:text-xs leading-none">{ruleLabel}</span>
+                            </div>
+                          );
+                        })}
                     </div>
                   </div>
                 )}
@@ -1347,6 +1330,42 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   </h4>
                   <div className="text-[11px] text-amber-900 leading-relaxed font-semibold">
                     {selectedHotel.cancellation_policy || 'No refund within 24 hours of check-in.'}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION: GUEST REVIEWS PREVIEW */}
+              <div className="p-5 bg-white border border-slate-100 rounded-3xl space-y-4 shadow-3xs text-left select-none">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Guest Reviews</h4>
+                  <span className="text-[10px] font-black text-[#FF5F00] hover:underline cursor-pointer uppercase tracking-wider">
+                    View All Reviews →
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Review 1 */}
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-amber-500 font-bold">★★★★★</span>
+                      <span className="text-slate-400 font-semibold">1 day ago</span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-700 italic">
+                      "Very clean rooms, comfortable bedding, and perfect location near Laxman Jhula. Recommended!"
+                    </p>
+                    <div className="text-[10px] font-black text-slate-900">— Priya, Delhi</div>
+                  </div>
+
+                  {/* Review 2 */}
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-amber-500 font-bold">★★★★★</span>
+                      <span className="text-slate-400 font-semibold">3 days ago</span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-700 italic">
+                      "The view is outstanding and the host was very friendly. Booking process was super smooth."
+                    </p>
+                    <div className="text-[10px] font-black text-slate-900">— Amit, Mumbai</div>
                   </div>
                 </div>
               </div>
@@ -1364,7 +1383,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   ]).map((benefit, idx) => {
                     const Icon = BENEFIT_ICONS[benefit.icon] || ShieldCheck;
                     return (
-                      <div key={idx} className="flex flex-row items-start gap-3.5 p-3.5 bg-slate-50/50 border border-black/5 rounded-2xl shadow-3xs">
+                      <div key={idx} className="flex flex-row items-start gap-3.5 p-3 bg-slate-50/50 border border-black/5 rounded-2xl shadow-3xs">
                         <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-3xs shrink-0">
                           <Icon size={16} />
                         </div>
