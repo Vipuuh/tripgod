@@ -2928,7 +2928,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             {/* Best For list */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Quick Facts: Best For</label>
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Listing Card Badges / Quick Facts (Best For)</label>
                 <button
                   type="button"
                   onClick={() => {

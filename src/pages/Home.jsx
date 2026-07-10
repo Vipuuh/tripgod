@@ -79,6 +79,11 @@ const heroSlides = [
   }
 ];
 
+// Module-level caches to avoid navigation hydration glitches
+let cachedFeaturedHotels = null;
+let cachedFeaturedTours = null;
+let cachedFeaturedBikes = null;
+
 export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate, prefGuests, setPrefGuests }) {
   // Slideshow state
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
@@ -431,9 +436,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   }, [isHoveringReviews, reviews.length]);
 
   // Fetch admin-curated homepage sections from Supabase
-  const [featuredHotels, setFeaturedHotels] = useState(null);
-  const [featuredTours, setFeaturedTours] = useState(null);
-  const [featuredBikes, setFeaturedBikes] = useState(null);
+  const [featuredHotels, setFeaturedHotels] = useState(cachedFeaturedHotels);
+  const [featuredTours, setFeaturedTours] = useState(cachedFeaturedTours);
+  const [featuredBikes, setFeaturedBikes] = useState(cachedFeaturedBikes);
 
   useEffect(() => {
     const fetchHomepageSections = async () => {
@@ -451,11 +456,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         if (hotelIds.length > 0) {
           const { data: hotelsData } = await supabase
             .from('hotels')
-            .select('id, name, price, images, rating, reviews_count, address, rules, landmarks')
+            .select('id, name, price, original_price, is_limited_offer, is_verified, best_for, images, rating, reviews_count, address, rules, landmarks')
             .in('id', hotelIds);
           if (hotelsData && hotelsData.length > 0) {
             const ordered = hotelIds.map(id => hotelsData.find(h => h.id === id)).filter(Boolean);
-            setFeaturedHotels(ordered.map(h => {
+            const mappedHotels = ordered.map(h => {
               const rules = typeof h.rules === 'string' ? JSON.parse(h.rules) : h.rules || {};
               const tags = [];
               if (rules.unmarried_couples) {
@@ -465,6 +470,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 id: h.id,
                 name: h.name,
                 price: Number(h.price),
+                original_price: h.original_price ? Number(h.original_price) : null,
+                is_limited_offer: !!h.is_limited_offer,
+                is_verified: h.is_verified !== undefined ? !!h.is_verified : true,
+                best_for: h.best_for || [],
                 img: h.images && h.images[0] ? h.images[0] : '/aloha_resort.png',
                 rating: h.rating ? Number(h.rating) : 4.5,
                 reviewsCount: h.reviews_count ? Number(h.reviews_count) : 100,
@@ -472,7 +481,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 distance: h.landmarks && h.landmarks[0] ? h.landmarks[0] : null,
                 tags: tags
               };
-            }));
+            });
+            cachedFeaturedHotels = mappedHotels;
+            setFeaturedHotels(mappedHotels);
           }
         }
 
@@ -485,7 +496,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             .in('id', tourIds);
           if (toursData && toursData.length > 0) {
             const ordered = tourIds.map(id => toursData.find(t => t.id === id)).filter(Boolean);
-            setFeaturedTours(ordered.map(t => ({
+            const mappedTours = ordered.map(t => ({
               id: t.id,
               name: t.name,
               price: Number(t.price),
@@ -493,7 +504,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               duration: t.duration || '5 Days',
               rating: 4.9,
               reviewsCount: 100
-            })));
+            }));
+            cachedFeaturedTours = mappedTours;
+            setFeaturedTours(mappedTours);
           }
         }
 
@@ -506,13 +519,15 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             .in('id', bikeIds);
           if (bikesData && bikesData.length > 0) {
             const ordered = bikeIds.map(id => bikesData.find(b => b.id === id)).filter(Boolean);
-            setFeaturedBikes(ordered.map(b => ({
+            const mappedBikes = ordered.map(b => ({
               id: b.id,
               name: b.name,
               price: Number(b.price),
               img: b.images && b.images[0] ? b.images[0] : '/scooty-rent.jpg',
               type: b.description || 'Motorcycle'
-            })));
+            }));
+            cachedFeaturedBikes = mappedBikes;
+            setFeaturedBikes(mappedBikes);
           }
         }
       } catch (err) {
@@ -1034,58 +1049,114 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 distance: '0.5 km walk to Lakshman Jhula',
                 tags: ['Couple Friendly', 'Infinity Pool']
               }
-            ]).map((hotel, idx) => (
-              <motion.div
-                key={idx}
-                variants={fadeInUp}
-                onClick={() => setRoute('hotels')}
-                className="group bg-white border border-slate-100 rounded-3xl overflow-hidden flex flex-col justify-between shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
-              >
-                <div className="h-52 bg-slate-100 overflow-hidden relative border-b border-slate-100">
-                  <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute bottom-4 left-4 bg-accent-gradient text-white text-xs font-black py-1.5 px-3.5 rounded-full shadow-[0_4px_12px_rgba(255,95,0,0.25)]">
-                    FROM ₹{hotel.price}/NIGHT
-                  </div>
-                </div>
+            ]).map((hotel, idx) => {
+              const originalPrice = hotel.original_price || Math.round(hotel.price * 1.4);
+              const savings = originalPrice - hotel.price;
+              const ratingLabel = hotel.rating >= 4.5 ? 'Excellent' : 'Very Good';
+              const cleanLocation = hotel.location ? hotel.location.replace(/Rishikesh|, Rishikesh/gi, '').trim() : '';
 
-                <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="flex flex-col text-left mb-1.5">
-                      <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
-                        <Star size={14} className="fill-amber-500 text-amber-500" />
-                        <span>{hotel.rating}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{hotel.reviewsCount} Reviews</span>
+              return (
+                <motion.div
+                  key={idx}
+                  variants={fadeInUp}
+                  onClick={() => {
+                    window.history.pushState(null, '', `/hotels/${hotel.id}`);
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
+                  className="group bg-white border border-slate-150 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                >
+                  <div className="h-52 bg-slate-100 overflow-hidden relative">
+                    <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    
+                    {/* Top Left Overlay Chip */}
+                    {hotel.is_limited_offer && (
+                      <span className="absolute top-2.5 left-2.5 bg-[#FF5F00] text-white text-[7.5px] font-black py-0.5 px-1.5 rounded tracking-wider uppercase z-10 pointer-events-none shadow-xs">
+                        🔥 Limited Offer
+                      </span>
+                    )}
+
+                    {/* Top Right Overlay Chip */}
+                    <span className="absolute top-2.5 right-2.5 bg-black/55 backdrop-blur-xs text-white text-[9px] font-black py-0.5 px-2 rounded-md tracking-wider z-10 pointer-events-none flex items-center gap-0.5">
+                      ⭐ {hotel.rating.toFixed(1)}
+                    </span>
+
+                    {/* Bottom Left Overlay Badge: Price & Savings */}
+                    <div className="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-xs text-white p-2 rounded-xl text-left pointer-events-none select-none z-10 flex flex-col border border-white/5 shadow-md">
+                      <span className="text-[10.5px] font-black leading-tight">
+                        From ₹{hotel.price.toLocaleString('en-IN')} <span className="text-[8px] opacity-75 font-bold font-sans">/ Night</span>
+                      </span>
+                      {savings > 0 && (
+                        <span className="text-[8.5px] text-[#10B981] font-black uppercase tracking-wide mt-0.5">
+                          Save ₹{savings.toLocaleString('en-IN')} Today
+                        </span>
+                      )}
                     </div>
-                    <h3 className="font-extrabold text-base font-display text-slate-900 leading-snug text-left uppercase">{hotel.name}</h3>
-                    <p className="text-xs text-slate-450 font-bold flex items-center gap-1"><MapPin size={11} className="text-[#FF5F00] shrink-0" /> {hotel.location}</p>
-                    {hotel.distance && (
-                      <p className="text-[10px] text-slate-500 font-bold text-left pl-4 leading-none">
-                        🚗 {hotel.distance}
-                      </p>
-                    )}
-                    {hotel.tags && (
-                      <div className="flex flex-wrap gap-1 pt-1.5 justify-start">
-                        {hotel.tags.map((tag, tagIdx) => (
-                          <span key={tagIdx} className={`text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${tag === 'Couple Friendly' ? 'bg-rose-50 border border-rose-200/60 text-rose-600' : 'bg-slate-50 border border-slate-200/60 text-slate-600'}`}>
-                            {tag === 'Couple Friendly' ? '👩‍❤️‍👨 ' : ''}{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setRoute('hotels'); }}
-                      className="w-full py-3 bg-accent-gradient text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 border-none cursor-pointer font-display"
-                    >
-                      View Stays
-                    </button>
+                  <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                    <div className="space-y-2 text-left">
+                      <h3 className="font-extrabold text-sm sm:text-base font-display text-slate-900 leading-snug uppercase line-clamp-1">{hotel.name}</h3>
+                      
+                      {/* Reviews row - single line */}
+                      <div className="text-[10px] font-extrabold text-slate-800 flex items-center gap-1 select-none whitespace-nowrap">
+                        <span className="text-[#FF5F00]">⭐</span>
+                        <span>{hotel.rating.toFixed(1)} {ratingLabel} ({hotel.reviewsCount} Verified Reviews)</span>
+                      </div>
+
+                      {/* Verified tag */}
+                      {hotel.is_verified !== false && (
+                        <div className="text-[10px] font-black text-[#008F5D] flex items-center gap-1 uppercase tracking-wider select-none">
+                          <span>✔</span> Verified by TripGod
+                        </div>
+                      )}
+
+                      {/* Location */}
+                      <p className="text-[10.5px] text-slate-650 font-bold flex items-center gap-1">
+                        <span>📍</span> {hotel.distance ? `Near ${hotel.distance.replace(/Near |Near/gi, '')}` : (cleanLocation || 'Near Lakshman Jhula')}
+                      </p>
+
+                      {/* Badges Row */}
+                      <div className="flex flex-wrap gap-1.5 select-none pt-0.5">
+                        {(() => {
+                          const badges = (hotel.best_for && hotel.best_for.length > 0)
+                            ? hotel.best_for.slice(0, 2)
+                            : ['Best Value', 'Couple Friendly'];
+                          return badges.map((badge, bIdx) => {
+                            const isCouple = badge.toLowerCase().includes('couple');
+                            return (
+                              <span 
+                                key={bIdx} 
+                                className={`inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] ${
+                                  isCouple 
+                                    ? 'bg-rose-50 border-rose-100 text-rose-600' 
+                                    : 'bg-slate-50 border border-slate-200 text-slate-800'
+                                }`}
+                              >
+                                {isCouple ? '💕' : '🏆'} {badge}
+                              </span>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 text-center flex flex-col items-center">
+                      <button 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          window.history.pushState(null, '', `/hotels/${hotel.id}`);
+                          window.dispatchEvent(new Event('popstate'));
+                        }}
+                        className="w-full py-2.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-[12px] uppercase tracking-wider rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer text-center font-display h-[44px] flex items-center justify-center"
+                      >
+                        BOOK NOW →
+                      </button>
+                      <span className="text-[9px] text-gray-550 font-bold mt-1.5 select-none">Instant Confirmation</span>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </div>
