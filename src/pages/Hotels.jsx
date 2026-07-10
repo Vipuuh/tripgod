@@ -672,21 +672,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       else if (l.toLowerCase().includes('ram')) min = 2;
                       else if (l.toLowerCase().includes('tapovan')) min = 4;
                       
-                      return (
-                        <div className="flex flex-col text-[11px] font-bold text-slate-700 leading-normal">
-                          <span className="text-slate-900 font-extrabold">📍 Near {l}</span>
-                          <span className="text-slate-400 font-semibold mt-0.5">{isDrive ? `🚗 ${min} min drive` : `🚶 ${min} min walk`}</span>
-                        </div>
-                      );
+                      return `📍 Near ${l} • ${isDrive ? `🚗 ${min} min drive` : `🚶 ${min} min walk`}`;
                     }
                     const addLower = hotel.address.toLowerCase();
                     const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
-                    return (
-                      <div className="flex flex-col text-[11px] font-bold text-slate-700 leading-normal">
-                        <span className="text-slate-900 font-extrabold">📍 Near {isLaxman ? 'Laxman Jhula' : 'Ram Jhula'}</span>
-                        <span className="text-slate-400 font-semibold mt-0.5">{isLaxman ? '🚶 5 min walk' : '🚗 2 min drive'}</span>
-                      </div>
-                    );
+                    return `📍 Near ${isLaxman ? 'Laxman Jhula' : 'Ram Jhula'} • ${isLaxman ? '🚶 5 min walk' : '🚗 2 min drive'}`;
                   };
 
                   const landmarkText = getLandmarkText();
@@ -694,16 +684,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   const getDynamicBadges = () => {
                     const badges = [];
                     if (displayPrice <= 2500) {
-                      badges.push('🏆 Best Value');
+                      badges.push('Best Value');
                     } else if (displayPrice >= 4500) {
-                      badges.push('💎 Premium Pick');
+                      badges.push('Premium Pick');
                     } else {
-                      badges.push('🔥 Most Booked');
+                      badges.push('Most Booked');
                     }
                     if (hotel.rules?.unmarried_couples) {
-                      badges.push('💕 Couple Friendly');
+                      badges.push('Couple Friendly');
                     } else {
-                      badges.push('👨‍👩‍👧 Family Choice');
+                      badges.push('Family Choice');
                     }
                     return badges;
                   };
@@ -718,7 +708,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     >
                       <div>
                         {/* Airbnb-style Image Carousel with overlay chips */}
-                        <div className="relative">
+                        <div className="relative h-[200px] overflow-hidden">
                           <HotelCardCarousel 
                              images={hotel.images} 
                              hotelName={hotel.name} 
@@ -732,63 +722,57 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             </div>
                           )}
                           
-                          {/* Left Overlay Chip */}
+                          {/* Top Left Overlay Chip */}
                           {hotel.is_limited_offer && (
-                            <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded tracking-wider uppercase z-10 pointer-events-none shadow-sm">
-                              🔥 Limited Time Offer
+                            <span className="absolute top-2.5 left-2.5 bg-[#FF5F00] text-white text-[7.5px] font-black py-0.5 px-1.5 rounded tracking-wider uppercase z-10 pointer-events-none shadow-xs">
+                              🔥 Limited Offer
                             </span>
                           )}
 
-                          {/* Right Overlay Chip */}
-                          <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-xs text-white text-[8px] font-black py-1 px-2.5 rounded tracking-wider uppercase z-10 pointer-events-none">
-                            {hotel.images && hotel.images.length > 0 ? `${hotel.images.length} Photos` : 'Verified'}
+                          {/* Top Right Overlay Chip */}
+                          <span className="absolute top-2.5 right-2.5 bg-black/55 backdrop-blur-xs text-white text-[7.5px] font-black py-0.5 px-1.5 rounded tracking-wider uppercase z-10 pointer-events-none flex items-center gap-1">
+                            <span>📷</span>
+                            <span>{hotel.images && hotel.images.length > 0 ? hotel.images.length : '1'}</span>
                           </span>
+
+                          {/* Bottom Left Overlay Badge: Rating & Verified */}
+                          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 z-10">
+                            <span className="bg-black/65 backdrop-blur-xs text-white text-[8.5px] font-black py-0.5 px-2 rounded-md shadow-xs flex items-center gap-1">
+                              <span>⭐</span>
+                              <span>{hotel.rating.toFixed(1)}</span>
+                              <span>•</span>
+                              <span>{hotel.reviewsCount}</span>
+                            </span>
+                            {hotel.is_verified && (
+                              <span className="bg-emerald-600/90 text-white text-[8px] font-black py-0.5 px-1.5 rounded-md shadow-xs flex items-center gap-0.5">
+                                <span>✓</span>
+                                <span>Verified</span>
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Redesigned Card Body */}
-                        <div className="px-4 py-4.5 space-y-3.5 text-left">
+                        <div className="px-3.5 py-3.5 space-y-2.5 text-left">
+                          
+                          {/* Title / Hotel Name */}
+                          <h3 className="font-extrabold text-sm sm:text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-1">
+                            {displayHotelName}
+                          </h3>
 
-                          {/* Rating row: ⭐ 4.5 Excellent (111 Verified Reviews) */}
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-1 text-[11px] font-black text-slate-800 leading-none">
-                              <Star size={11} className="fill-amber-500 text-amber-500" />
-                              <span>{hotel.rating.toFixed(1)}</span>
-                              <span className="text-[#FF5F00] font-black">{ratingLabel}</span>
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-bold">
-                              ({hotel.reviewsCount} Verified Reviews)
-                            </div>
+                          {/* Landmark/Location (Single line) */}
+                          <div className="text-[10px] font-extrabold text-slate-600 truncate">
+                            {landmarkText}
                           </div>
 
-                          {/* Title / Hotel Name & TripGod Verified banner */}
-                          <div className="space-y-1">
-                            <h3 className="font-extrabold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-1">
-                              {displayHotelName}
-                            </h3>
-                            <div className="text-[10px] font-black text-emerald-600 flex items-center gap-1 uppercase tracking-wide">
-                              <span>✓</span>
-                              <span>Verified by TripGod</span>
-                            </div>
-                          </div>
-
-                          {/* Landmark/Location */}
-                          <div className="flex items-start gap-1">
-                            <div className="flex-1">
-                              {landmarkText}
-                            </div>
-                          </div>
-
-                          {/* Divider 1 */}
-                          <hr className="border-t border-slate-100 my-2" />
-
-                          {/* Price Row: Aligned Side-by-Side */}
-                          <div className="flex flex-col space-y-1">
+                          {/* Price Row: Aligned Side-by-Side with small gap */}
+                          <div className="flex flex-col space-y-0.5">
                             <div className="flex items-baseline justify-between w-full">
-                              <div className="flex items-baseline gap-0.5">
-                                <span className="text-2xl font-black text-slate-900 leading-none">
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-xl font-black text-slate-900 leading-none">
                                   ₹{displayPrice.toLocaleString('en-IN')}
                                 </span>
-                                <span className="text-xs text-gray-500 font-bold">/night</span>
+                                <span className="text-[10px] text-gray-500 font-bold">/night</span>
                               </div>
                               {isDiscounted && (
                                 <span className="text-xs text-gray-400 line-through font-semibold">
@@ -798,55 +782,45 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             </div>
                             {savings > 0 && (
                               <span className="inline-flex items-center text-[10px] font-black text-emerald-600 tracking-wide mt-0.5 uppercase">
-                                🟢 SAVE ₹{savings.toLocaleString('en-IN')} TODAY
+                                🟢 Save ₹{savings.toLocaleString('en-IN')} Today
                               </span>
                             )}
                           </div>
 
-                          {/* Divider 2 */}
-                          <hr className="border-t border-slate-100 my-2" />
+                          {/* Only ONE Divider after price */}
+                          <hr className="border-t border-slate-100 my-1.5" />
 
-                          {/* Badges Row */}
-                          <div className="flex flex-wrap gap-2 pt-0.5">
+                          {/* Badges Row (Height 30px adjusted with px-2/py-0.5) */}
+                          <div className="flex flex-wrap gap-1.5">
                             {dynamicBadges.map((badge, bIdx) => (
-                              <span key={bIdx} className="inline-flex items-center text-[9px] text-slate-700 font-black uppercase tracking-wider bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200 shadow-3xs">
+                              <span key={bIdx} className="inline-flex items-center text-[8.5px] text-slate-700 font-black uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200 shadow-3xs leading-none h-[22px]">
                                 {badge}
                               </span>
                             ))}
                           </div>
 
                           {/* Cancellation / Refund badges (No Emojis) */}
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[9px] font-black text-emerald-650 uppercase tracking-wider">
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[8.5px] font-black text-emerald-655 uppercase tracking-wider leading-none">
                             <span>✓ Free Cancellation</span>
-                            <span>✓ 100% Refund Guarantee</span>
+                            <span>✓ 100% Refund</span>
                           </div>
-
-                          {/* Divider 3 */}
-                          <hr className="border-t border-slate-100 my-2" />
 
                           {/* UPI Discount banner */}
-                          <div className="text-[10px] text-slate-700 font-black flex items-center gap-1.5 py-0.5">
+                          <div className="text-[9.5px] text-slate-700 font-black flex items-center gap-1 leading-none">
                             <span>⚡</span>
-                            <span>Pay via UPI & Save ₹{upiDiscount} Instantly</span>
+                            <span>Save ₹{upiDiscount} with UPI</span>
                           </div>
-
-                          {/* Divider 4 */}
-                          <hr className="border-t border-slate-100 my-2" />
                         </div>
                       </div>
 
-                      {/* Check Availability button with Tiny Trust line */}
-                      <div className="px-4 pb-4.5 pt-0 space-y-2">
-                        {/* Tiny Trust Line */}
-                        <div className="text-center text-[9px] font-extrabold text-slate-400 select-none uppercase tracking-wider">
-                          ✓ Instant Confirmation  •  ✓ Secure Booking
-                        </div>
+                      {/* Check Availability button */}
+                      <div className="px-3.5 pb-3.5 pt-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectHotel(hotel);
                           }}
-                          className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer text-center font-display"
+                          className="w-full py-2.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-[11px] uppercase tracking-wider rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer text-center font-display h-[44px] flex items-center justify-center"
                         >
                           Check Availability
                         </button>
