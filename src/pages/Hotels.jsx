@@ -1094,27 +1094,27 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* SECTION: ROOM UPGRADES & CATEGORIES */}
               {selectedHotel.rules?.room_categories && selectedHotel.rules.room_categories.length > 0 && (
                 <div className="text-left" style={{
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+                  background: 'white',
                   borderRadius: '1.5rem',
                   padding: '1.25rem',
-                  border: '1px solid rgba(255,95,0,0.15)',
-                  boxShadow: '0 4px 32px rgba(255,95,0,0.08), inset 0 1px 0 rgba(255,255,255,0.05)'
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 2px 16px rgba(0,0,0,0.06)'
                 }}>
                   {/* Header */}
-                  <div className="flex items-center gap-2.5 mb-4">
+                  <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
                     <div style={{
                       width: 28, height: 28, borderRadius: '8px',
                       background: 'linear-gradient(135deg, #FF5F00, #ff8533)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 4px 12px rgba(255,95,0,0.4)'
+                      boxShadow: '0 4px 12px rgba(255,95,0,0.3)'
                     }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-[11px] font-black uppercase tracking-widest" style={{color:'rgba(255,255,255,0.9)'}}>Select Room</h3>
-                      <p className="text-[9px] font-semibold" style={{color:'rgba(255,255,255,0.4)'}}>Choose your ideal room type</p>
+                      <h3 style={{ fontSize:11, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', color:'#1e293b', margin:0 }}>Select Room</h3>
+                      <p style={{ fontSize:9, color:'#94a3b8', fontWeight:600, margin:0 }}>Choose your ideal room type</p>
                     </div>
                   </div>
 
@@ -1130,16 +1130,14 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         <button
                           onClick={() => { setSelectedRoomIdx(null); setActiveImgIdx(0); }}
                           style={{
-                            background: isSelected
-                              ? 'linear-gradient(135deg, rgba(255,95,0,0.18) 0%, rgba(255,95,0,0.06) 100%)'
-                              : 'rgba(255,255,255,0.04)',
-                            border: isSelected ? '1.5px solid rgba(255,95,0,0.7)' : '1.5px solid rgba(255,255,255,0.08)',
+                            background: isSelected ? 'linear-gradient(135deg, #fff7f3, #fff3ee)' : '#f8fafc',
+                            border: isSelected ? '2px solid #FF5F00' : '1.5px solid #e2e8f0',
                             borderRadius: '1rem',
                             padding: '0.875rem',
                             cursor: 'pointer',
                             textAlign: 'left',
-                            transition: 'all 0.25s ease',
-                            boxShadow: isSelected ? '0 0 20px rgba(255,95,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                            transition: 'all 0.22s ease',
+                            boxShadow: isSelected ? '0 4px 20px rgba(255,95,0,0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
                             transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                             position: 'relative',
                             overflow: 'hidden'
@@ -1155,25 +1153,24 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           {discount && (
                             <div style={{
                               position:'absolute', top: isSelected ? 28 : 8, right:8,
-                              background:'rgba(16,185,129,0.15)', border:'1px solid rgba(16,185,129,0.3)',
+                              background:'#dcfce7', border:'1px solid #86efac',
                               borderRadius:999, padding:'2px 7px',
-                              fontSize:8, fontWeight:900, color:'#34d399', letterSpacing:'0.05em'
+                              fontSize:8, fontWeight:900, color:'#16a34a', letterSpacing:'0.05em'
                             }}>{discount}% OFF</div>
                           )}
                           <div style={{marginBottom:'0.5rem'}}>
-                            <span style={{display:'block', fontSize:10, fontWeight:900, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4}}>Standard Room</span>
+                            <span style={{display:'block', fontSize:10, fontWeight:900, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4}}>Standard Room</span>
                             <div style={{display:'flex', alignItems:'baseline', gap:6}}>
-                              <span style={{fontSize:18, fontWeight:900, color:'white', letterSpacing:'-0.02em'}}>₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
+                              <span style={{fontSize:18, fontWeight:900, color:'#0f172a', letterSpacing:'-0.02em'}}>₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
                               {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
-                                <span style={{fontSize:11, color:'rgba(255,255,255,0.3)', textDecoration:'line-through'}}>₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}</span>
+                                <span style={{fontSize:11, color:'#cbd5e1', textDecoration:'line-through'}}>₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}</span>
                               )}
                             </div>
-                            <span style={{display:'block', fontSize:9, fontWeight:800, color:'#34d399', textTransform:'uppercase', letterSpacing:'0.06em', marginTop:4}}>Base Price Stay</span>
+                            <span style={{display:'block', fontSize:9, fontWeight:800, color:'#16a34a', textTransform:'uppercase', letterSpacing:'0.06em', marginTop:4}}>Base Price Stay</span>
                           </div>
-                          {/* Room image if available */}
                           {selectedHotel.images && selectedHotel.images.length > 0 && (
                             <div style={{borderRadius:'0.6rem', overflow:'hidden', height:72, marginTop:6}}>
-                              <img src={selectedHotel.images[0]} alt="Standard Room" style={{width:'100%', height:'100%', objectFit:'cover', opacity:0.85}} />
+                              <img src={selectedHotel.images[0]} alt="Standard Room" style={{width:'100%', height:'100%', objectFit:'cover'}} />
                             </div>
                           )}
                         </button>
@@ -1191,16 +1188,14 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           key={rIdx}
                           onClick={() => { setSelectedRoomIdx(rIdx); setActiveImgIdx(0); }}
                           style={{
-                            background: isSelected
-                              ? 'linear-gradient(135deg, rgba(255,95,0,0.18) 0%, rgba(255,95,0,0.06) 100%)'
-                              : 'rgba(255,255,255,0.04)',
-                            border: isSelected ? '1.5px solid rgba(255,95,0,0.7)' : '1.5px solid rgba(255,255,255,0.08)',
+                            background: isSelected ? 'linear-gradient(135deg, #fff7f3, #fff3ee)' : '#f8fafc',
+                            border: isSelected ? '2px solid #FF5F00' : '1.5px solid #e2e8f0',
                             borderRadius: '1rem',
                             padding: '0.875rem',
                             cursor: 'pointer',
                             textAlign: 'left',
-                            transition: 'all 0.25s ease',
-                            boxShadow: isSelected ? '0 0 20px rgba(255,95,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                            transition: 'all 0.22s ease',
+                            boxShadow: isSelected ? '0 4px 20px rgba(255,95,0,0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
                             transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                             position: 'relative',
                             overflow: 'hidden'
@@ -1216,24 +1211,24 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           {discount && (
                             <div style={{
                               position:'absolute', top: isSelected ? 28 : 8, right:8,
-                              background:'rgba(16,185,129,0.15)', border:'1px solid rgba(16,185,129,0.3)',
+                              background:'#dcfce7', border:'1px solid #86efac',
                               borderRadius:999, padding:'2px 7px',
-                              fontSize:8, fontWeight:900, color:'#34d399', letterSpacing:'0.05em'
+                              fontSize:8, fontWeight:900, color:'#16a34a', letterSpacing:'0.05em'
                             }}>{discount}% OFF</div>
                           )}
                           <div style={{marginBottom:'0.5rem'}}>
-                            <span style={{display:'block', fontSize:10, fontWeight:900, color:'rgba(255,255,255,0.5)', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4}}>{room.name}</span>
+                            <span style={{display:'block', fontSize:10, fontWeight:900, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4}}>{room.name}</span>
                             <div style={{display:'flex', alignItems:'baseline', gap:6}}>
-                              <span style={{fontSize:18, fontWeight:900, color:'white', letterSpacing:'-0.02em'}}>₹{Number(room.price).toLocaleString('en-IN')}</span>
+                              <span style={{fontSize:18, fontWeight:900, color:'#0f172a', letterSpacing:'-0.02em'}}>₹{Number(room.price).toLocaleString('en-IN')}</span>
                               {room.original_price && Number(room.original_price) > Number(room.price) && (
-                                <span style={{fontSize:11, color:'rgba(255,255,255,0.3)', textDecoration:'line-through'}}>₹{Number(room.original_price).toLocaleString('en-IN')}</span>
+                                <span style={{fontSize:11, color:'#cbd5e1', textDecoration:'line-through'}}>₹{Number(room.original_price).toLocaleString('en-IN')}</span>
                               )}
                             </div>
                             <span style={{display:'block', fontSize:9, fontWeight:800, color:'#FF5F00', textTransform:'uppercase', letterSpacing:'0.06em', marginTop:4}}>Upgrade Room</span>
                           </div>
                           {roomImages.length > 0 && (
                             <div style={{borderRadius:'0.6rem', overflow:'hidden', height:72, marginTop:6}}>
-                              <img src={roomImages[0]} alt={room.name} style={{width:'100%', height:'100%', objectFit:'cover', opacity:0.85}} />
+                              <img src={roomImages[0]} alt={room.name} style={{width:'100%', height:'100%', objectFit:'cover'}} />
                             </div>
                           )}
                         </button>
