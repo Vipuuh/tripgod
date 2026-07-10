@@ -611,7 +611,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* Compact Title Section */}
               <div className="text-center space-y-1.5 py-2">
                 <h1 className="text-2xl md:text-3xl font-black font-display text-black flex items-center justify-center gap-2">
-                  🏨 Hotels in Rishikesh
+                  Hotels in Rishikesh
                 </h1>
                 <p className="text-slate-400 max-w-lg mx-auto text-[11px] font-extrabold tracking-wide uppercase">
                   Verified stays near Ram Jhula, Laxman Jhula & Tapovan
@@ -739,9 +739,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           )}
 
                           {/* Top Right Overlay Chip */}
-                          <span className="absolute top-2.5 right-2.5 bg-black/55 backdrop-blur-xs text-white text-[7.5px] font-black py-0.5 px-1.5 rounded tracking-wider uppercase z-10 pointer-events-none flex items-center gap-1">
-                            <span>📷</span>
-                            <span>{hotel.images && hotel.images.length > 0 ? hotel.images.length : '1'}</span>
+                          <span className="absolute top-2.5 right-2.5 bg-black/55 backdrop-blur-xs text-white text-[8px] font-black py-0.5 px-1.5 rounded tracking-wider z-10 pointer-events-none flex items-center">
+                            <span>{hotel.images && hotel.images.length > 0 ? hotel.images.length : '1'} Photos</span>
                           </span>
 
                           {/* Bottom Left Overlay Badge: Rating & Verified */}
@@ -916,7 +915,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     )}
                     {selectedHotel.is_verified && <span className="text-slate-300">•</span>}
                     <span className="flex items-center gap-0.5 text-slate-800">
-                      ⭐ {selectedHotel.rating.toFixed(1)} Excellent ({selectedHotel.reviewsCount} Reviews)
+                      ⭐ {selectedHotel.rating.toFixed(1)} Excellent ({selectedHotel.reviewsCount} Verified Reviews)
                     </span>
                     <span className="text-slate-300">•</span>
                     <span className="flex items-center gap-0.5 text-slate-800">
@@ -952,51 +951,17 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     className="w-full h-full object-cover transition-all duration-300 select-none cursor-pointer"
                   />
 
-                  {/* Top-left TripGod Choice overlay badge */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
-                    {selectedHotel.high_demand && (
-                      <span className="bg-[#FF5F00] text-white text-[8.5px] font-black py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider border border-[#FF5F00]/20 flex items-center gap-1">
-                        🏆 TripGod Choice
+                  {/* Top-left popular badge */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10 select-none">
+                    {selectedHotel.popular_badge_text ? (
+                      <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider border border-[#FF5F00]/10 flex items-center gap-1">
+                        {selectedHotel.popular_badge_text.toLowerCase().includes('choice') ? '🏆' : '🔥'} {selectedHotel.popular_badge_text}
                       </span>
-                    )}
-                  </div>
-
-                  {/* Top-right action buttons (Share / Wishlist) */}
-                  <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-                    {/* Share button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShare();
-                      }}
-                      className="w-9 h-9 rounded-full bg-white/95 hover:bg-white text-slate-800 hover:text-[#FF5F00] flex items-center justify-center border-none shadow-md cursor-pointer transition-all relative"
-                      title="Share Stay"
-                    >
-                      <Share2 size={16} />
-                      {shareFeedback && (
-                        <span className="absolute -bottom-8 right-0 bg-black text-white text-[8px] font-black uppercase py-1 px-2.5 rounded shadow tracking-wider whitespace-nowrap z-20">
-                          Link Copied!
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Wishlist Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setWishlistedHotels(prev => ({
-                          ...prev,
-                          [selectedHotel.id]: !prev[selectedHotel.id]
-                        }));
-                      }}
-                      className="w-9 h-9 rounded-full bg-white/95 hover:bg-white flex items-center justify-center border-none shadow-md cursor-pointer transition-all"
-                      title="Add to Wishlist"
-                    >
-                      <Heart 
-                        size={16} 
-                        className={wishlistedHotels[selectedHotel.id] ? 'text-rose-550 fill-rose-500' : 'text-slate-800'} 
-                      />
-                    </button>
+                    ) : selectedHotel.high_demand ? (
+                      <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider border border-[#FF5F00]/10 flex items-center gap-1">
+                        🏆 Traveler's Choice
+                      </span>
+                    ) : null}
                   </div>
 
                   {selectedHotel.images.length > 1 && (
@@ -1018,7 +983,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                   {/* Photo count indicator overlay */}
                   <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-black py-1.5 px-3 rounded-xl border border-white/10 shadow-lg tracking-wider pointer-events-none select-none z-10">
-                    📷 {selectedHotel.images && selectedHotel.images.length > 4 ? `${selectedHotel.images.length} Photos` : 'Gallery'} ({activeImgIdx + 1} / {selectedHotel.images.length})
+                    {activeImgIdx + 1} / {selectedHotel.images.length}
                   </div>
                 </div>
 
@@ -1080,7 +1045,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Extra Discount Card (UPI) */}
                 <div className="bg-[#008F5D]/5 border border-[#008F5D]/10 rounded-2xl p-3.5 flex items-start gap-2.5 shadow-3xs max-w-xs text-left">
                   <div className="flex flex-col">
-                    <span className="inline-flex items-center gap-1 bg-[#008F5D]/10 text-[#008F5D] text-[9px] font-black uppercase px-2 py-0.5 rounded-md border border-[#008F5D]/20 w-fit">
+                    <span className="inline-flex items-center gap-1 bg-[#008F5D]/10 text-[#008F5D] text-[10px] font-black uppercase px-2.5 py-1 rounded-md border border-[#008F5D]/20 w-fit">
                       🟢 UPI OFFER
                     </span>
                     <span className="text-[13px] font-black text-slate-900 leading-snug mt-1.5">
@@ -1101,20 +1066,20 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs font-bold text-slate-800">
                   <span className="flex items-center gap-2 text-slate-700">
-                    <Check size={14} className="text-[#FF5F00] shrink-0" />
-                    <span>Near Laxman Jhula & Tapovan</span>
+                    <Check size={14} className="text-[#008F5D] shrink-0 stroke-[2.5]" />
+                    <span>Prime Location</span>
                   </span>
                   <span className="flex items-center gap-2 text-slate-700">
-                    <Check size={14} className="text-[#FF5F00] shrink-0" />
-                    <span>Free Cancellation Available</span>
+                    <Check size={14} className="text-[#008F5D] shrink-0 stroke-[2.5]" />
+                    <span>Free Cancellation</span>
+                  </span>
+                  <span className="flex items-center gap-2 text-slate-700">
+                    <Check size={14} className="text-[#008F5D] shrink-0 stroke-[2.5]" />
+                    <span>Best Value Stay</span>
                   </span>
                   <span className="flex items-center gap-2 text-[#008F5D]">
-                    <Check size={14} className="text-[#FF5F00] shrink-0" />
-                    <span>Excellent Reviews (4.5 Star Rating)</span>
-                  </span>
-                  <span className="flex items-center gap-2 text-slate-700">
-                    <Check size={14} className="text-[#FF5F00] shrink-0" />
-                    <span>Best Budget Value Guaranteed</span>
+                    <Check size={14} className="text-[#008F5D] shrink-0 stroke-[2.5]" />
+                    <span>Verified by TripGod</span>
                   </span>
                 </div>
               </div>
@@ -1204,13 +1169,15 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
-              {/* SECTION 7: PROPERTY LOCATION */}
-              <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs text-left select-none">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-gray-100">
+              {/* SECTION 7: PROPERTY LOCATION & ATTRACTIONS MERGED (EXPLORE NEARBY) */}
+              <div className="space-y-4 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs text-left select-none">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
                   <div>
-                    <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Property Location</h4>
+                    <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display flex items-center gap-1">
+                      <span>📍</span> Explore Nearby
+                    </h4>
                     <span className="text-[10px] text-gray-500 font-bold block mt-0.5">
-                      📍 {selectedHotel.address}
+                      {selectedHotel.address}
                     </span>
                   </div>
                   {selectedHotel.maps_link && (
@@ -1218,78 +1185,74 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       href={formatExternalUrl(selectedHotel.maps_link)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="py-2 px-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 shadow-sm text-decoration-none w-fit shrink-0 cursor-pointer"
+                      className="py-2 px-3.5 bg-[#008F5D] hover:bg-[#007A4F] text-white font-black text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 shadow-sm text-decoration-none w-fit shrink-0 cursor-pointer animate-none"
                     >
-                      <Map size={12} />
+                      <MapPin size={12} />
                       <span>Open in Google Maps</span>
                     </a>
                   )}
                 </div>
                 
-                {/* Nearby landmarks mapping */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px] font-black text-slate-800 pt-1.5">
-                  <div className="flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                    <span>📍</span>
-                    <span>Near Ram Jhula</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                    <span>📍</span>
-                    <span>Near Laxman Jhula</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-xl">
-                    <span>🚌</span>
-                    <span>Near ISBT Rishikesh</span>
-                  </div>
+                {/* List of attractions with distances */}
+                <div className="divide-y divide-slate-100">
+                  {(() => {
+                    const attractionsList = (selectedHotel.attractions && selectedHotel.attractions.length > 0)
+                      ? selectedHotel.attractions
+                      : (selectedHotel.landmarks && selectedHotel.landmarks.length > 0
+                        ? selectedHotel.landmarks.map(l => {
+                            const name = sanitizeHighlightText(l);
+                            let distance = '1.5 km';
+                            if (name.toLowerCase().includes('ram')) distance = '1.8 km';
+                            else if (name.toLowerCase().includes('laxman')) distance = '2.4 km';
+                            else if (name.toLowerCase().includes('isbt')) distance = '4.9 km';
+                            else if (name.toLowerCase().includes('triveni')) distance = '3.1 km';
+                            else if (name.toLowerCase().includes('parmarth')) distance = '3.4 km';
+                            else if (name.toLowerCase().includes('beatles')) distance = '4.0 km';
+                            else if (name.toLowerCase().includes('neelkanth')) distance = '18 km';
+                            return { name, distance };
+                          })
+                        : [
+                            { name: 'Ram Jhula', distance: '1.8 km' },
+                            { name: 'Laxman Jhula', distance: '2.4 km' },
+                            { name: 'Triveni Ghat', distance: '3.1 km' },
+                            { name: 'Parmarth Niketan', distance: '3.4 km' },
+                            { name: 'Beatles Ashram', distance: '4.0 km' },
+                            { name: 'Neelkanth Temple', distance: '18 km' }
+                          ]);
+
+                    const getEmoji = (name) => {
+                      const n = name.toLowerCase();
+                      if (n.includes('jhula')) return '🌉';
+                      if (n.includes('ghat')) return '🌅';
+                      if (n.includes('niketan') || n.includes('parmarth')) return '🕉';
+                      if (n.includes('beatles') || n.includes('ashram')) return '🎸';
+                      if (n.includes('temple') || n.includes('neelkanth')) return '🛕';
+                      if (n.includes('isbt') || n.includes('bus') || n.includes('station')) return '🚌';
+                      return '📍';
+                    };
+
+                    return attractionsList.map((attraction, idx) => (
+                      <div key={idx} className="flex items-center justify-between py-3 first:pt-1 last:pb-1">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-sm select-none">{getEmoji(attraction.name)}</span>
+                          <div>
+                            <span className="text-xs font-bold text-slate-800 block leading-tight">{attraction.name}</span>
+                            <span className="text-[10px] text-gray-400 font-bold block mt-0.5">{attraction.distance}</span>
+                          </div>
+                        </div>
+                        <a 
+                          href={formatExternalUrl(attraction.maps_url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(attraction.name + ' Rishikesh')}`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-black text-[#008F5D] border border-[#008F5D]/30 hover:border-[#008F5D] hover:bg-[#008F5D]/5 px-3 py-1.5 rounded-lg transition-colors text-decoration-none shadow-3xs"
+                        >
+                          View Map →
+                        </a>
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
-
-              {/* SECTION 6: LOCATION HIGHLIGHTS NEARBY ATTRACTIONS */}
-              {((selectedHotel.attractions && selectedHotel.attractions.length > 0) || (selectedHotel.landmarks && selectedHotel.landmarks.length > 0)) && (
-                <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs text-left">
-                  <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Location Highlights</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Render attractions if they exist */}
-                    {selectedHotel.attractions && selectedHotel.attractions.length > 0 ? (
-                      selectedHotel.attractions.map((attraction, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-50/70 rounded-2xl border border-black/5 hover:border-[#FF5F00]/25 hover:bg-white transition-all shadow-3xs">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-[#FF5F00]/5 flex items-center justify-center border border-[#FF5F00]/10 text-[#FF5F00]">
-                              <MapPin size={14} />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-black leading-snug">{attraction.name}</p>
-                              <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{attraction.distance}</p>
-                            </div>
-                          </div>
-                          {attraction.maps_url && (
-                            <a 
-                              href={formatExternalUrl(attraction.maps_url)} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-[10px] font-black text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-white border border-blue-200/50 hover:border-blue-300 px-2.5 py-1.5 rounded-lg transition-colors text-decoration-none shadow-3xs"
-                            >
-                              <Map size={11} />
-                              <span>View Map</span>
-                            </a>
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      /* Fallback to original landmarks array if attractions JSON is empty */
-                      selectedHotel.landmarks.map((landmark, idx) => (
-                        <div key={idx} className="flex items-center gap-3 p-3.5 bg-slate-50/70 rounded-2xl border border-black/5 shadow-3xs">
-                          <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center border border-black/5 text-gray-400">
-                            <MapPin size={14} />
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-black leading-snug">{sanitizeHighlightText(landmark)}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* SECTION 11: HOUSE RULES & SECTION 12: CANCELLATION POLICY */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-5 text-left">
@@ -1332,17 +1295,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
-              {/* SECTION: GUEST REVIEWS PREVIEW */}
-              <div className="p-5 bg-white border border-slate-100 rounded-3xl space-y-4 shadow-3xs text-left select-none">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Guest Reviews</h4>
-                </div>
-                <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl text-center space-y-1">
-                  <div className="text-xl">✍️</div>
-                  <p className="text-xs font-black text-slate-800">Reviews Coming Soon</p>
-                  <p className="text-[10px] font-bold text-slate-400">Recently added on TripGod. Real guest reviews will be visible here soon.</p>
-                </div>
-              </div>
+
 
               {/* SECTION 13: TRIPGOD TRUST BENEFITS */}
               <div className="border-t border-gray-100 pt-4 pb-2">
@@ -1357,9 +1310,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   ]).map((benefit, idx) => {
                     const Icon = BENEFIT_ICONS[benefit.icon] || ShieldCheck;
                     return (
-                      <div key={idx} className="flex flex-row items-center gap-2.5 p-2.5 bg-slate-50/50 border border-black/5 rounded-xl shadow-3xs">
-                        <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-3xs shrink-0">
-                          <Icon size={13} />
+                      <div key={idx} className="flex flex-row items-center gap-2.5 p-2 bg-slate-50/50 border border-black/5 rounded-xl shadow-3xs">
+                        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-3xs shrink-0">
+                          <Icon size={16} />
                         </div>
                         <div className="flex flex-col text-left">
                           <span className="text-[11px] font-black text-black leading-none mb-0.5">{benefit.title}</span>
@@ -1407,7 +1360,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       className="w-full bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-[13px] uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer text-center font-display flex flex-col items-center justify-center h-[54px] pt-1"
                     >
                       <span className="leading-tight">BOOK NOW →</span>
-                      <span className="text-[9px] opacity-90 font-bold leading-tight mt-0.5">Instant Confirmation • Free Cancellation</span>
+                      <span className="text-[9px] opacity-90 font-bold leading-tight mt-0.5">Instant Confirmation</span>
                     </button>
                   </>
                 )}
