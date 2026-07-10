@@ -907,7 +907,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 
                 {/* Micro info rows */}
                 <div className="flex flex-col gap-1.5 text-slate-600 text-[11px] font-extrabold select-none pt-1">
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <div className="flex flex-wrap items-center gap-x-4.5 gap-y-1.5">
                     {selectedHotel.is_verified && (
                       <span className="text-[#008F5D] font-black flex items-center gap-0.5 uppercase tracking-wide">
                         🛡️ Verified by TripGod
@@ -983,7 +983,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                   {/* Photo count indicator overlay */}
                   <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-black py-1.5 px-3 rounded-xl border border-white/10 shadow-lg tracking-wider pointer-events-none select-none z-10">
-                    {activeImgIdx + 1} / {selectedHotel.images.length}
+                    {selectedHotel.images.length} Photos ({activeImgIdx + 1} / {selectedHotel.images.length})
                   </div>
                 </div>
 
@@ -1009,7 +1009,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               <div className="p-5 bg-slate-50 border border-slate-200/60 rounded-3xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-3xs select-none">
                 <div className="space-y-1 text-left">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[8.5px] font-black uppercase text-slate-500 tracking-wider">💰 SPECIAL PRICE</span>
+                    <span className="text-[8.5px] font-black uppercase text-slate-500 tracking-wider">SPECIAL PRICE</span>
                     {selectedHotel.rooms_left !== null && selectedHotel.rooms_left > 0 && selectedHotel.rooms_left <= 5 && (
                       <span className="text-[8.5px] font-black uppercase text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded animate-pulse">
                         Only {selectedHotel.rooms_left} Rooms Left!
@@ -1017,38 +1017,37 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     )}
                   </div>
                   
-                  <div className="flex items-baseline gap-2 pt-1">
+                  <div className="flex items-baseline gap-3 pt-1">
                     <span className="text-3xl font-black text-slate-900 leading-none">
                       ₹{Number(selectedHotel.price).toLocaleString('en-IN')}
+                      <span className="text-xs text-slate-500 font-extrabold ml-1.5 uppercase tracking-wider">/ night</span>
                     </span>
-                    <span className="text-xs text-slate-500 font-bold ml-1">/night</span>
+                    {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                      <span className="text-[16px] text-slate-400 font-bold line-through">
+                        ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
+                      </span>
+                    )}
                   </div>
 
                   {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
-                    <div className="text-[14px] font-black text-[#008F5D] pt-0.5 uppercase tracking-wide">
-                      🟢 SAVE ₹{(selectedHotel.original_price - selectedHotel.price).toLocaleString('en-IN')} TODAY
-                    </div>
-                  )}
-
-                  {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
-                    <div className="text-xs text-gray-400 line-through font-semibold pt-0.5">
-                      ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
+                    <div className="text-[13px] font-black text-[#008F5D] pt-1 uppercase tracking-wide">
+                      You Save ₹{(selectedHotel.original_price - selectedHotel.price).toLocaleString('en-IN')}
                     </div>
                   )}
 
                   {/* Social Proof booking helper */}
-                  <div className="text-[9.5px] text-slate-500 font-bold pt-1">
-                    🔥 Booked {selectedHotel.bookings_count || 9} times this week • Last booked 3 hours ago
+                  <div className="text-[9.5px] text-slate-500 font-bold pt-1.5">
+                    🔥 {selectedHotel.bookings_count || 18} bookings in the last 7 days • Last booked 3 hours ago
                   </div>
                 </div>
 
                 {/* Extra Discount Card (UPI) */}
                 <div className="bg-[#008F5D]/5 border border-[#008F5D]/10 rounded-2xl p-3.5 flex items-start gap-2.5 shadow-3xs max-w-xs text-left">
                   <div className="flex flex-col">
-                    <span className="inline-flex items-center gap-1 bg-[#008F5D]/10 text-[#008F5D] text-[10px] font-black uppercase px-2.5 py-1 rounded-md border border-[#008F5D]/20 w-fit">
-                      🟢 UPI OFFER
+                    <span className="inline-flex items-center bg-[#008F5D]/10 text-[#008F5D] text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-md border border-[#008F5D]/20 w-fit">
+                      UPI OFFER
                     </span>
-                    <span className="text-[13px] font-black text-slate-900 leading-snug mt-1.5">
+                    <span className="text-[14px] font-black text-slate-950 leading-snug mt-1.5">
                       ₹{selectedHotel.upi_discount || 120} Instant Discount
                     </span>
                     <span className="text-[9.5px] text-slate-500 font-bold mt-0.5">
@@ -1169,12 +1168,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
-              {/* SECTION 7: PROPERTY LOCATION & ATTRACTIONS MERGED (EXPLORE NEARBY) */}
+              {/* SECTION 7: PROPERTY LOCATION & ATTRACTIONS MERGED (FAMOUS PLACES NEAR HOTEL) */}
               <div className="space-y-4 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs text-left select-none">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
                   <div>
                     <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display flex items-center gap-1">
-                      <span>📍</span> Explore Nearby
+                      <span>📍</span> Famous Places Near Hotel
                     </h4>
                     <span className="text-[10px] text-gray-500 font-bold block mt-0.5">
                       {selectedHotel.address}
@@ -1220,21 +1219,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             { name: 'Neelkanth Temple', distance: '18 km' }
                           ]);
 
-                    const getEmoji = (name) => {
-                      const n = name.toLowerCase();
-                      if (n.includes('jhula')) return '🌉';
-                      if (n.includes('ghat')) return '🌅';
-                      if (n.includes('niketan') || n.includes('parmarth')) return '🕉';
-                      if (n.includes('beatles') || n.includes('ashram')) return '🎸';
-                      if (n.includes('temple') || n.includes('neelkanth')) return '🛕';
-                      if (n.includes('isbt') || n.includes('bus') || n.includes('station')) return '🚌';
-                      return '📍';
-                    };
-
                     return attractionsList.map((attraction, idx) => (
                       <div key={idx} className="flex items-center justify-between py-3 first:pt-1 last:pb-1">
                         <div className="flex items-center gap-2.5">
-                          <span className="text-sm select-none">{getEmoji(attraction.name)}</span>
+                          <MapPin size={14} className="text-[#008F5D] shrink-0" />
                           <div>
                             <span className="text-xs font-bold text-slate-800 block leading-tight">{attraction.name}</span>
                             <span className="text-[10px] text-gray-400 font-bold block mt-0.5">{attraction.distance}</span>
@@ -1300,7 +1288,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* SECTION 13: TRIPGOD TRUST BENEFITS */}
               <div className="border-t border-gray-100 pt-4 pb-2">
                 <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider font-display mb-4">TripGod Trust Benefits</h4>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
                   {(selectedHotel.benefits && selectedHotel.benefits.length > 0 ? selectedHotel.benefits : [
                     { icon: 'Lock', title: 'Secure Payment', desc: 'Protected by Razorpay SECURE payment gateway' },
                     { icon: 'CalendarCheck', title: 'Instant Booking', desc: 'Hotel room voucher sent immediately to WhatsApp/Email' },
@@ -1360,7 +1348,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       className="w-full bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-[13px] uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer text-center font-display flex flex-col items-center justify-center h-[54px] pt-1"
                     >
                       <span className="leading-tight">BOOK NOW →</span>
-                      <span className="text-[9px] opacity-90 font-bold leading-tight mt-0.5">Instant Confirmation</span>
+                      <span className="text-[9px] text-orange-200 font-bold leading-tight mt-0.5">Instant Confirmation</span>
                     </button>
                   </>
                 )}
@@ -1423,7 +1411,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     className="py-3.5 px-6 sm:px-8 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display h-[48px] flex flex-col items-center justify-center pt-1"
                   >
                     <span className="leading-none">BOOK NOW →</span>
-                    <span className="text-[8px] opacity-90 font-bold leading-none mt-0.5">Instant Confirmation</span>
+                    <span className="text-[8px] text-orange-200 font-bold leading-none mt-0.5">Instant Confirmation</span>
                   </button>
                 )}
               </div>
