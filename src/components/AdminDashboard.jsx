@@ -3778,21 +3778,94 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                       </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Room Image URLs (Comma separated list)</label>
-                      <textarea
-                        placeholder="Paste image URLs separated by commas..."
-                        value={Array.isArray(room.images) ? room.images.join(', ') : (room.images || '')}
-                        onChange={(e) => {
-                          const rooms = [...(formData.rules?.room_categories || [])];
-                          rooms[rIdx].images = e.target.value.split(',').map(url => url.trim()).filter(Boolean);
-                          setFormData(prev => ({
-                            ...prev,
-                            rules: { ...prev.rules, room_categories: rooms }
-                          }));
-                        }}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none h-[50px] font-mono resize-none"
-                      />
+                    {/* Room Images — Multi-upload + Thumbnails + URL Paste */}
+                    <div className="space-y-2">
+                      <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Room Images</label>
+
+                      {/* Existing image thumbnails */}
+                      {Array.isArray(room.images) && room.images.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {room.images.map((url, imgIdx) => (
+                            <div key={imgIdx} className="relative group w-16 h-16 rounded-lg overflow-hidden border border-slate-700 flex-shrink-0">
+                              <img src={url} alt={`Room ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const rooms = [...(formData.rules?.room_categories || [])];
+                                  rooms[rIdx].images = rooms[rIdx].images.filter((_, i) => i !== imgIdx);
+                                  setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                                }}
+                                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity border-0"
+                                title="Remove image"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Upload button */}
+                      <div>
+                        <label className="flex items-center gap-2 py-2 px-3 bg-[#FF5F00]/10 hover:bg-[#FF5F00]/20 border border-[#FF5F00]/30 rounded-lg cursor-pointer transition-all w-fit">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF5F00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                          </svg>
+                          <span className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider">Upload Images</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files);
+                              if (!files.length) return;
+                              const uploadedUrls = [];
+                              for (const file of files) {
+                                const ext = file.name.split('.').pop();
+                                const randName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
+                                const filePath = `listings/${randName}`;
+                                const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
+                                if (uploadError) { alert('Upload failed: ' + uploadError.message); continue; }
+                                const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath);
+                                uploadedUrls.push(urlData.publicUrl);
+                              }
+                              if (uploadedUrls.length > 0) {
+                                const rooms = [...(formData.rules?.room_categories || [])];
+                                const existingImages = Array.isArray(rooms[rIdx].images) ? rooms[rIdx].images : [];
+                                rooms[rIdx].images = [...existingImages, ...uploadedUrls];
+                                setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        <p className="text-[8px] text-gray-500 mt-1">Select multiple files at once. Uploads directly to storage.</p>
+                      </div>
+
+                      {/* Manual URL paste */}
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-black text-gray-500 uppercase tracking-wider">Or paste URL(s) — comma separated</label>
+                        <textarea
+                          placeholder="https://... , https://..."
+                          value=""
+                          onChange={(e) => {
+                            const newUrls = e.target.value.split(',').map(url => url.trim()).filter(Boolean);
+                            if (newUrls.length > 0) {
+                              const rooms = [...(formData.rules?.room_categories || [])];
+                              const existingImages = Array.isArray(rooms[rIdx].images) ? rooms[rIdx].images : [];
+                              rooms[rIdx].images = [...existingImages, ...newUrls];
+                              setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                              e.target.value = '';
+                            }
+                          }}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none h-[40px] font-mono resize-none"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
