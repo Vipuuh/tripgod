@@ -4704,8 +4704,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </div>
 
           {/* Premium Experience Details Section Card */}
-          {type === 'tours' && (
-            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 md:p-6 space-y-6 mt-4">
+          <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 md:p-6 space-y-6 mt-4">
             <div className="border-b border-slate-900 pb-3">
               <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">
                 Premium Experience & FAQ Matrix
