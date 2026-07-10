@@ -1871,7 +1871,21 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         free_video_type: data.free_video_type || 'none',
         featured_image: data.featured_image || '',
         payment_mode: data.payment_mode || 'commission_advance',
-        fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : ''
+        fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : '',
+        rules: {
+          unmarried_couples: false,
+          pets: false,
+          smoking: false,
+          id_required: false,
+          min_age_18: false,
+          alcohol_allowed: false,
+          visitors_allowed: false,
+          breakfast_included: false,
+          breakfast_price: '',
+          room_categories: [],
+          badge_settings: { home: '', list: '', detail: '' },
+          ...(typeof data.rules === 'string' ? JSON.parse(data.rules) : (data.rules || {}))
+        }
       });
     } else {
       // Set defaults for empty forms
@@ -1899,7 +1913,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.check_in = '12:00 PM';
         defaults.check_out = '11:00 AM';
         defaults.amenities = { wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false, river_view: false, room_service: false, power_backup: false, geyser: false };
-        defaults.rules = { unmarried_couples: false, pets: false, smoking: false, id_required: false, min_age_18: false, alcohol_allowed: false, visitors_allowed: false };
+        defaults.rules = { unmarried_couples: false, pets: false, smoking: false, id_required: false, min_age_18: false, alcohol_allowed: false, visitors_allowed: false, breakfast_included: false, breakfast_price: '', room_categories: [], badge_settings: { home: '', list: '', detail: '' } };
         defaults.landmarks = [];
         defaults.rating = 4.5;
         defaults.reviews_count = 100;
@@ -3239,6 +3253,289 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </div>
 
+          {/* Breakfast Configuration */}
+          <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-3">
+            <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Breakfast Policy</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-300 text-xs font-bold">
+                <input
+                  type="checkbox"
+                  checked={!!formData.rules?.breakfast_included}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    rules: { ...prev.rules, breakfast_included: e.target.checked }
+                  }))}
+                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+                />
+                <span>Free Breakfast Included</span>
+              </label>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider">Breakfast Price (if not free/included)</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 150 (Extra cost per night per guest)"
+                  value={formData.rules?.breakfast_price || ''}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    rules: { ...prev.rules, breakfast_price: e.target.value === '' ? '' : Number(e.target.value) }
+                  }))}
+                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Unified Badge Configuration */}
+          <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-3">
+            <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Custom Badge & Tags Settings</label>
+            <p className="text-[9.5px] text-gray-550">Specify exactly which badge shows up in different parts of the application (Homepage, Hotel List, and Hotel Details page).</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Homepage Card Badge */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Homepage Card Badge</label>
+                <select
+                  value={formData.rules?.badge_settings?.home || ''}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    rules: { 
+                      ...prev.rules, 
+                      badge_settings: { ...(prev.rules?.badge_settings || {}), home: e.target.value }
+                    }
+                  }))}
+                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent cursor-pointer"
+                >
+                  <option value="">None (Falls back to tags)</option>
+                  <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                  <option value="🏆 Best Value">🏆 Best Value</option>
+                  <option value="⭐ Top Rated">⭐ Top Rated</option>
+                  <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                  <option value="👪 Family Choice">👪 Family Choice</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Or type custom badge..."
+                  value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.home) ? '' : (formData.rules?.badge_settings?.home || '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      rules: { 
+                        ...prev.rules, 
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), home: val }
+                      }
+                    }));
+                  }}
+                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent mt-1"
+                />
+              </div>
+
+              {/* Hotels Listing Card Badge */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Hotels Listing Card Badge</label>
+                <select
+                  value={formData.rules?.badge_settings?.list || ''}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    rules: { 
+                      ...prev.rules, 
+                      badge_settings: { ...(prev.rules?.badge_settings || {}), list: e.target.value }
+                    }
+                  }))}
+                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent cursor-pointer"
+                >
+                  <option value="">None (Falls back to tags)</option>
+                  <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                  <option value="🏆 Best Value">🏆 Best Value</option>
+                  <option value="⭐ Top Rated">⭐ Top Rated</option>
+                  <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                  <option value="👪 Family Choice">👪 Family Choice</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Or type custom badge..."
+                  value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.list) ? '' : (formData.rules?.badge_settings?.list || '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      rules: { 
+                        ...prev.rules, 
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), list: val }
+                      }
+                    }));
+                  }}
+                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent mt-1"
+                />
+              </div>
+
+              {/* Hotel Details Page Badge */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Hotel Details Page Badge</label>
+                <select
+                  value={formData.rules?.badge_settings?.detail || ''}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    rules: { 
+                      ...prev.rules, 
+                      badge_settings: { ...(prev.rules?.badge_settings || {}), detail: e.target.value }
+                    }
+                  }))}
+                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent cursor-pointer"
+                >
+                  <option value="">None</option>
+                  <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                  <option value="🏆 Best Value">🏆 Best Value</option>
+                  <option value="⭐ Top Rated">⭐ Top Rated</option>
+                  <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                  <option value="👪 Family Choice">👪 Family Choice</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Or type custom badge..."
+                  value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.detail) ? '' : (formData.rules?.badge_settings?.detail || '')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      rules: { 
+                        ...prev.rules, 
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), detail: val }
+                      }
+                    }));
+                  }}
+                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent mt-1"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Room Categories Configuration */}
+          <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+              <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Room Categories (Multiple Rooms Setup)</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentRooms = formData.rules?.room_categories || [];
+                  setFormData(prev => ({
+                    ...prev,
+                    rules: {
+                      ...prev.rules,
+                      room_categories: [
+                        ...currentRooms,
+                        { name: 'Suite Room', price: 3500, original_price: '', images: [] }
+                      ]
+                    }
+                  }));
+                }}
+                className="text-[10px] font-bold text-accent hover:text-white bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                + Add Room Category
+              </button>
+            </div>
+
+            {(!formData.rules?.room_categories || formData.rules.room_categories.length === 0) ? (
+              <p className="text-[10px] text-gray-500 italic">No alternative room categories defined. Only the primary pricing (₹{formData.price || 0}/Night) will be selectable.</p>
+            ) : (
+              <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-1">
+                {formData.rules.room_categories.map((room, rIdx) => (
+                  <div key={rIdx} className="bg-slate-950 border border-slate-850 p-3 rounded-xl relative space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentRooms = [...(formData.rules?.room_categories || [])];
+                        currentRooms.splice(rIdx, 1);
+                        setFormData(prev => ({
+                          ...prev,
+                          rules: { ...prev.rules, room_categories: currentRooms }
+                        }));
+                      }}
+                      className="absolute top-2.5 right-2.5 text-red-500 hover:text-red-400 font-black text-[10px] bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                    >
+                      Delete Room
+                    </button>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-20">
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Room Name</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Executive Suite Room"
+                          value={room.name || ''}
+                          onChange={(e) => {
+                            const rooms = [...(formData.rules?.room_categories || [])];
+                            rooms[rIdx].name = e.target.value;
+                            setFormData(prev => ({
+                              ...prev,
+                              rules: { ...prev.rules, room_categories: rooms }
+                            }));
+                          }}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Price / Night (₹)</label>
+                        <input
+                          type="number"
+                          required
+                          placeholder="Price per night"
+                          value={room.price || ''}
+                          onChange={(e) => {
+                            const rooms = [...(formData.rules?.room_categories || [])];
+                            rooms[rIdx].price = e.target.value === '' ? '' : Number(e.target.value);
+                            setFormData(prev => ({
+                              ...prev,
+                              rules: { ...prev.rules, room_categories: rooms }
+                            }));
+                          }}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Original Price (₹ - Optional)</label>
+                        <input
+                          type="number"
+                          placeholder="Strikethrough Price"
+                          value={room.original_price || ''}
+                          onChange={(e) => {
+                            const rooms = [...(formData.rules?.room_categories || [])];
+                            rooms[rIdx].original_price = e.target.value === '' ? '' : Number(e.target.value);
+                            setFormData(prev => ({
+                              ...prev,
+                              rules: { ...prev.rules, room_categories: rooms }
+                            }));
+                          }}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Room Image URLs (Comma separated list)</label>
+                      <textarea
+                        placeholder="Paste image URLs separated by commas..."
+                        value={Array.isArray(room.images) ? room.images.join(', ') : (room.images || '')}
+                        onChange={(e) => {
+                          const rooms = [...(formData.rules?.room_categories || [])];
+                          rooms[rIdx].images = e.target.value.split(',').map(url => url.trim()).filter(Boolean);
+                          setFormData(prev => ({
+                            ...prev,
+                            rules: { ...prev.rules, room_categories: rooms }
+                          }));
+                        }}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none h-[50px] font-mono resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Landmarks Dynamic List */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -4407,7 +4704,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </div>
 
           {/* Premium Experience Details Section Card */}
-          <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 md:p-6 space-y-6 mt-4">
+          {type === 'tours' && (
+            <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 md:p-6 space-y-6 mt-4">
             <div className="border-b border-slate-900 pb-3">
               <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">
                 Premium Experience & FAQ Matrix

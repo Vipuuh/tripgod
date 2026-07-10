@@ -684,6 +684,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   const landmarkText = getLandmarkText();
 
                   const getListingBadges = () => {
+                    const customBadge = hotel.rules?.badge_settings?.list;
+                    if (customBadge && customBadge.trim() !== '') {
+                      return [customBadge];
+                    }
                     if (hotel.best_for && hotel.best_for.length > 0) {
                       return hotel.best_for.slice(0, 2);
                     }
@@ -776,20 +780,24 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             <span>📍</span> {landmarkText}
                           </div>
 
-                          {/* Badges Row (Styled exactly like mockup: Couple Friendly in pink theme, Best Value in slate theme) */}
+                          {/* Badges Row */}
                           <div className="flex flex-wrap gap-1.5 select-none pt-0.5">
                             {listingBadges.map((badge, bIdx) => {
                               const isCouple = badge.toLowerCase().includes('couple');
+                              const isLimited = badge.toLowerCase().includes('limited');
+                              const isBestseller = badge.toLowerCase().includes('best');
+                              const isTop = badge.toLowerCase().includes('top');
+                              const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
                               return (
                                 <span 
                                   key={bIdx} 
                                   className={`inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] ${
                                     isCouple 
                                       ? 'bg-rose-50 border-rose-100 text-rose-600' 
-                                      : 'bg-slate-50 border border-slate-200 text-slate-800'
+                                      : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
                                   }`}
                                 >
-                                  {isCouple ? '💕' : '🏆'} {badge}
+                                  {badge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {badge}
                                 </span>
                               );
                             })}
@@ -860,11 +868,33 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
               {/* SECTION 2: HOTEL HEADER */}
               <div className="space-y-2 text-left">
-                {selectedHotel.is_limited_offer && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm">
-                    🔥 Limited Time Offer
-                  </span>
-                )}
+                {/* Dynamic Detail Page Badge */}
+                {(() => {
+                  const detailBadge = selectedHotel.rules?.badge_settings?.detail;
+                  if (detailBadge && detailBadge.trim() !== '') {
+                    const isCouple = detailBadge.toLowerCase().includes('couple');
+                    const isLimited = detailBadge.toLowerCase().includes('limited');
+                    const isBestseller = detailBadge.toLowerCase().includes('best');
+                    const isTop = detailBadge.toLowerCase().includes('top');
+                    const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
+                    return (
+                      <span 
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[9.5px] font-black uppercase tracking-wider rounded-xl border select-none ${
+                          isCouple 
+                            ? 'bg-rose-50 border-rose-100 text-rose-600' 
+                            : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
+                        }`}
+                      >
+                        {detailBadge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {detailBadge}
+                      </span>
+                    );
+                  }
+                  return selectedHotel.is_limited_offer ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-sm">
+                      🔥 Limited Time Offer
+                    </span>
+                  ) : null;
+                })()}
 
                 <h1 className="text-2xl md:text-3xl font-black font-display text-[#0d1b2a] uppercase leading-tight tracking-tight">
                   {selectedHotel.name}

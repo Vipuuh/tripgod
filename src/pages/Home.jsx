@@ -479,7 +479,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 reviewsCount: h.reviews_count ? Number(h.reviews_count) : 100,
                 location: h.address || 'Rishikesh',
                 distance: h.landmarks && h.landmarks[0] ? h.landmarks[0] : null,
-                tags: tags
+                tags: tags,
+                rules: rules
               };
             });
             cachedFeaturedHotels = mappedHotels;
@@ -1118,6 +1119,25 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                       {/* Badges Row */}
                       <div className="flex flex-wrap gap-1.5 select-none pt-0.5">
                         {(() => {
+                          const customBadge = hotel.rules?.badge_settings?.home;
+                          if (customBadge && customBadge.trim() !== '') {
+                            const isCouple = customBadge.toLowerCase().includes('couple');
+                            const isLimited = customBadge.toLowerCase().includes('limited');
+                            const isBestseller = customBadge.toLowerCase().includes('best');
+                            const isTop = customBadge.toLowerCase().includes('top');
+                            const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
+                            return (
+                              <span 
+                                className={`inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] ${
+                                  isCouple 
+                                    ? 'bg-rose-50 border-rose-100 text-rose-600' 
+                                    : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
+                                }`}
+                              >
+                                {customBadge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {customBadge}
+                              </span>
+                            );
+                          }
                           const badges = (hotel.best_for && hotel.best_for.length > 0)
                             ? hotel.best_for.slice(0, 2)
                             : ['Best Value', 'Couple Friendly'];
