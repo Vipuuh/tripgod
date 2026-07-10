@@ -104,12 +104,15 @@ export default function LoginModal({ isOpen, onClose, onLogin }) {
 
         const btnContainer = document.getElementById("google-signin-btn");
         if (btnContainer) {
+          // Calculate available width based on screen size (min 250px, max 340px)
+          const dynamicWidth = String(Math.max(250, Math.min(340, window.innerWidth - 64)));
+          
           window.google.accounts.id.renderButton(
             btnContainer,
             { 
               theme: "outline", 
               size: "large", 
-              width: "340", // Match layout width
+              width: dynamicWidth, 
               logo_alignment: "left",
               shape: "pill"
             }

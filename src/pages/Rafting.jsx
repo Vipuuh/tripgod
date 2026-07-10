@@ -385,6 +385,15 @@ export default function Rafting({ currentCity, openBookingModal }) {
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80, damping: 15 } }
   };
 
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen bg-white flex flex-col items-center justify-center gap-3">
+        <div className="w-8 h-8 border-4 border-[#FF5F00] border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-[10px] uppercase font-black tracking-widest text-slate-400">Loading Rafting Adventures...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-white">
       <AnimatePresence mode="wait">
