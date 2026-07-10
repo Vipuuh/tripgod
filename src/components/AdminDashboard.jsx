@@ -2385,6 +2385,17 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.landmarks = formData.landmarks || [];
         submitData.rating = formData.rating === undefined ? 4.5 : Number(formData.rating);
         submitData.reviews_count = formData.reviews_count === undefined ? 100 : Number(formData.reviews_count);
+        submitData.rooms_left = formData.rooms_left === undefined ? 5 : Number(formData.rooms_left);
+        submitData.high_demand = !!formData.high_demand;
+        submitData.is_verified = formData.is_verified !== undefined ? !!formData.is_verified : true;
+        submitData.bookings_count = formData.bookings_count === undefined ? 18 : Number(formData.bookings_count);
+        submitData.property_type = formData.property_type || 'Hotel';
+        submitData.room_type = formData.room_type || 'Deluxe Double Room';
+        submitData.why_guests_love = formData.why_guests_love || [];
+        submitData.best_for = formData.best_for || [];
+        submitData.perfect_for = formData.perfect_for || [];
+        submitData.benefits = formData.benefits || [];
+        submitData.featured_image = formData.featured_image || '';
       } else if (type === 'bikes') {
         submitData.deposit = Number(formData.deposit || 0);
         submitData.documents = formData.documents || [];
