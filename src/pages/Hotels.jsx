@@ -760,7 +760,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             {displayHotelName}
                           </h3>
 
-                          {/* Landmark/Location (Single line) */}
+                          {/* Landmark/Location (Omit walk/drive helper) */}
                           <div className="text-[10px] font-extrabold text-slate-600 truncate">
                             {landmarkText}
                           </div>
@@ -781,7 +781,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               )}
                             </div>
                             {savings > 0 && (
-                              <span className="inline-flex items-center text-[10px] font-black text-emerald-600 tracking-wide mt-0.5 uppercase">
+                              <span className="inline-flex items-center text-[10px] font-black text-[#10B981] tracking-wide mt-0.5 uppercase">
                                 🟢 Save ₹{savings.toLocaleString('en-IN')} Today
                               </span>
                             )}
@@ -790,25 +790,37 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           {/* Only ONE Divider after price */}
                           <hr className="border-t border-slate-100 my-1.5" />
 
-                          {/* Badges Row (Height 30px adjusted with px-2/py-0.5) */}
-                          <div className="flex flex-wrap gap-1.5">
-                            {dynamicBadges.map((badge, bIdx) => (
-                              <span key={bIdx} className="inline-flex items-center text-[8.5px] text-slate-700 font-black uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200 shadow-3xs leading-none h-[22px]">
-                                {badge}
-                              </span>
-                            ))}
+                          {/* Badges Row (Styled exactly like mockup: Couple Friendly in pink theme, Best Value in slate theme) */}
+                          <div className="flex flex-wrap gap-1.5 select-none">
+                            {dynamicBadges.map((badge, bIdx) => {
+                              const isCouple = badge === 'Couple Friendly';
+                              return (
+                                <span 
+                                  key={bIdx} 
+                                  className={`inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] ${
+                                    isCouple 
+                                      ? 'bg-rose-50 border-rose-100 text-rose-600' 
+                                      : 'bg-slate-50 border border-slate-200 text-slate-800'
+                                  }`}
+                                >
+                                  {isCouple ? '💕' : '🏆'} {badge}
+                                </span>
+                              );
+                            })}
                           </div>
 
-                          {/* Cancellation / Refund badges (No Emojis) */}
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[8.5px] font-black text-emerald-655 uppercase tracking-wider leading-none">
-                            <span>✓ Free Cancellation</span>
-                            <span>✓ 100% Refund</span>
+                          {/* Cancellation / Refund badges (Green text with emojis from mockup) */}
+                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[8.5px] font-black text-[#008F5D] uppercase tracking-wider leading-none select-none">
+                            <span className="flex items-center gap-1">✅ Free Cancellation</span>
+                            <span className="flex items-center gap-1">🛡️ 100% Refund Guarantee</span>
                           </div>
 
-                          {/* UPI Discount banner */}
-                          <div className="text-[9.5px] text-slate-700 font-black flex items-center gap-1 leading-none">
-                            <span>⚡</span>
-                            <span>Save ₹{upiDiscount} with UPI</span>
+                          {/* UPI Discount banner (Light grey/beige box with orange % icon from mockup) */}
+                          <div className="bg-slate-50 border border-slate-200/50 rounded-xl p-2 flex items-center justify-between text-[9px] text-[#374151] font-bold w-full min-w-0 mt-1 select-none">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="w-4 h-4 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 flex items-center justify-center shrink-0 text-[#FF5F00] text-[9px] font-black">%</span>
+                              <span className="break-words text-left flex-1 font-semibold">Pay via UPI & get flat ₹{upiDiscount} instant discount</span>
+                            </div>
                           </div>
                         </div>
                       </div>

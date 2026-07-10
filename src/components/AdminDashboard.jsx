@@ -2383,6 +2383,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.amenities = formData.amenities || {};
         submitData.rules = formData.rules || {};
         submitData.landmarks = formData.landmarks || [];
+        submitData.rating = formData.rating === undefined ? 4.5 : Number(formData.rating);
+        submitData.reviews_count = formData.reviews_count === undefined ? 100 : Number(formData.reviews_count);
       } else if (type === 'bikes') {
         submitData.deposit = Number(formData.deposit || 0);
         submitData.documents = formData.documents || [];
