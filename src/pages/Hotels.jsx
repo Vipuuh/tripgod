@@ -511,8 +511,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
             return keywords.some(kw => textToSearch.includes(kw.toLowerCase()));
           };
 
+          let finalMapped = mapped;
+
           if (sortBy === 'near-ramjhula') {
-            mapped.sort((a, b) => {
+            finalMapped.sort((a, b) => {
               const aNear = hasKeyword(a, ['ram jhula', 'ramjhula']);
               const bNear = hasKeyword(b, ['ram jhula', 'ramjhula']);
               if (aNear && !bNear) return -1;
@@ -520,7 +522,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               return 0;
             });
           } else if (sortBy === 'near-laxmanjhula') {
-            mapped.sort((a, b) => {
+            finalMapped.sort((a, b) => {
               const aNear = hasKeyword(a, ['laxman jhula', 'laxmanjhula', 'janki jhula', 'jankijhula']);
               const bNear = hasKeyword(b, ['laxman jhula', 'laxmanjhula', 'janki jhula', 'jankijhula']);
               if (aNear && !bNear) return -1;
@@ -528,7 +530,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               return 0;
             });
           } else if (sortBy === 'near-yognagri') {
-            mapped.sort((a, b) => {
+            finalMapped.sort((a, b) => {
               const aNear = hasKeyword(a, ['yog nagri', 'yognagri', 'yog nagari', 'yognagari', 'railway station', 'station']);
               const bNear = hasKeyword(b, ['yog nagri', 'yognagri', 'yog nagari', 'yognagari', 'railway station', 'station']);
               if (aNear && !bNear) return -1;
@@ -536,16 +538,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
               return 0;
             });
           } else if (sortBy === 'near-busstand') {
-            mapped.sort((a, b) => {
+            finalMapped.sort((a, b) => {
               const aNear = hasKeyword(a, ['bus stand', 'busstand', 'bus stop', 'shrinagar bypass', 'roadways']);
               const bNear = hasKeyword(b, ['bus stand', 'busstand', 'bus stop', 'shrinagar bypass', 'roadways']);
               if (aNear && !bNear) return -1;
               if (!aNear && bNear) return 1;
               return 0;
             });
+          } else if (sortBy === 'couple-friendly') {
+            finalMapped = mapped.filter(h => h.rules?.unmarried_couples === true);
           }
 
-          setHotels(mapped);
+          setHotels(finalMapped);
         }
       } catch (err) {
         console.error('Error fetching hotels:', err);
@@ -591,28 +595,24 @@ export default function Hotels({ currentCity, openBookingModal }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full min-h-[80vh] bg-white flex flex-col py-16 font-sans"
+            className="w-full min-h-[80vh] bg-white flex flex-col py-8 font-sans"
           >
-            <div className="w-full px-4 overflow-x-hidden space-y-12 max-w-6xl mx-auto">
-              {/* Title Section */}
-              <div className="text-center space-y-2 py-4">
-                <div className="flex items-center justify-center gap-1.5">
-                  <span className="px-2.5 py-0.5 bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 text-[9px] font-black uppercase tracking-wider rounded-full">
-                    Premium Stays
-                  </span>
-                </div>
-                <h1 className="text-2xl md:text-3xl font-black font-display text-black uppercase tracking-tight">
-                  Rishikesh Resorts & Hotels
+            <div className="w-full px-4 overflow-x-hidden space-y-8 max-w-6xl mx-auto">
+              
+              {/* Compact Title Section */}
+              <div className="text-center space-y-1.5 py-2">
+                <h1 className="text-2xl md:text-3xl font-black font-display text-black flex items-center justify-center gap-2">
+                  🏨 Hotels in Rishikesh
                 </h1>
-                <p className="text-gray-400 max-w-lg mx-auto text-[11px] font-bold leading-relaxed">
-                  Handpicked cottages, luxury stays, and ashrams verified in Rishikesh.
+                <p className="text-slate-400 max-w-lg mx-auto text-[11px] font-extrabold tracking-wide uppercase">
+                  Verified stays near Ram Jhula, Laxman Jhula & Tapovan
                 </p>
               </div>
 
               {/* Premium Sorting Bar Upgrade */}
               <div className="sticky top-4 z-30 w-full max-w-full bg-gradient-to-r from-blue-950 to-blue-900 border border-blue-800 rounded-2xl p-4 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden">
                 {/* Result Counter */}
-                <div className="text-white text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                <div className="text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shrink-0">
                   <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
                   Showing {hotels.length} Stays
                 </div>
@@ -620,20 +620,21 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Horizontal Scrollable Chips UI */}
                 <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
-                    { val: 'rating-desc', label: 'Top Rated' },
-                    { val: 'price-asc', label: 'Price: Low to High' },
-                    { val: 'price-desc', label: 'Price: High to Low' },
-                    { val: 'near-ramjhula', label: 'Near Ram Jhula' },
-                    { val: 'near-laxmanjhula', label: 'Near Laxman Jhula' },
-                    { val: 'near-yognagri', label: 'Near Yog Nagri Station' },
-                    { val: 'near-busstand', label: 'Near Bus Stand' }
+                    { val: 'rating-desc', label: '⭐ Recommended' },
+                    { val: 'top-rated', label: '🔥 Top Rated' },
+                    { val: 'near-ramjhula', label: '📍 Ram Jhula' },
+                    { val: 'near-laxmanjhula', label: '📍 Laxman Jhula' },
+                    { val: 'near-busstand', label: '🚌 ISBT' },
+                    { val: 'price-asc', label: '💰 Cheapest' },
+                    { val: 'price-desc', label: '💎 Premium' },
+                    { val: 'couple-friendly', label: '💕 Couple Friendly' }
                   ].map(chip => (
                     <button
                       key={chip.val}
                       type="button"
                       onClick={() => setSortBy(chip.val)}
-                      className={`px-4.5 py-2 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 transition-all border cursor-pointer ${
-                        sortBy === chip.val
+                      className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 transition-all border cursor-pointer ${
+                        sortBy === chip.val || (chip.val === 'top-rated' && sortBy === 'rating-desc')
                           ? 'bg-[#FF5F00] text-white border-[#FF5F00] shadow-[0_4px_12px_rgba(255,95,0,0.3)]'
                           : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
                       }`}
@@ -665,24 +666,58 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     if (hotel.landmarks && hotel.landmarks[0]) {
                       const l = hotel.landmarks[0].replace(/Near |Near/i, '');
                       const isDrive = l.toLowerCase().includes('shivpuri') || l.toLowerCase().includes('triveni') || l.toLowerCase().includes('bus') || l.toLowerCase().includes('station');
-                      return `5 min ${isDrive ? 'drive' : 'walk'} from ${l}`;
+                      
+                      let min = 5;
+                      if (l.toLowerCase().includes('laxman') || l.toLowerCase().includes('lakshman')) min = 3;
+                      else if (l.toLowerCase().includes('ram')) min = 2;
+                      else if (l.toLowerCase().includes('tapovan')) min = 4;
+                      
+                      return (
+                        <div className="flex flex-col text-[11px] font-bold text-slate-700 leading-normal">
+                          <span className="text-slate-900 font-extrabold">📍 Near {l}</span>
+                          <span className="text-slate-400 font-semibold mt-0.5">{isDrive ? `🚗 ${min} min drive` : `🚶 ${min} min walk`}</span>
+                        </div>
+                      );
                     }
                     const addLower = hotel.address.toLowerCase();
                     const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
-                    return `5 min ${isLaxman ? 'walk' : 'drive'} from ${isLaxman ? 'Laxman Jhula' : 'Ram Jhula'}`;
+                    return (
+                      <div className="flex flex-col text-[11px] font-bold text-slate-700 leading-normal">
+                        <span className="text-slate-900 font-extrabold">📍 Near {isLaxman ? 'Laxman Jhula' : 'Ram Jhula'}</span>
+                        <span className="text-slate-400 font-semibold mt-0.5">{isLaxman ? '🚶 5 min walk' : '🚗 2 min drive'}</span>
+                      </div>
+                    );
                   };
 
                   const landmarkText = getLandmarkText();
 
+                  const getDynamicBadges = () => {
+                    const badges = [];
+                    if (displayPrice <= 2500) {
+                      badges.push('🏆 Best Value');
+                    } else if (displayPrice >= 4500) {
+                      badges.push('💎 Premium Pick');
+                    } else {
+                      badges.push('🔥 Most Booked');
+                    }
+                    if (hotel.rules?.unmarried_couples) {
+                      badges.push('💕 Couple Friendly');
+                    } else {
+                      badges.push('👨‍👩‍👧 Family Choice');
+                    }
+                    return badges;
+                  };
+                  const dynamicBadges = getDynamicBadges();
+
                   return (
                     <motion.div
                       key={hotel.id}
-                      whileHover={{ y: -4 }}
+                      whileHover={{ y: -2 }}
                       onClick={() => handleSelectHotel(hotel)}
-                      className="w-full max-w-full border border-slate-200 bg-white rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between hover:shadow-md transition-all duration-300 group cursor-pointer"
+                      className="w-full max-w-full border border-slate-150 bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-300 group cursor-pointer flex flex-col justify-between"
                     >
                       <div>
-                        {/* Airbnb-style Image Carousel */}
+                        {/* Airbnb-style Image Carousel with overlay chips */}
                         <div className="relative">
                           <HotelCardCarousel 
                              images={hotel.images} 
@@ -696,37 +731,51 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               </span>
                             </div>
                           )}
-                        </div>
-
-                        {/* Redesigned Card Body */}
-                        <div className="px-4 py-4.5 space-y-3 text-left">
                           
-                          {/* Optional Top Badge for Limited Time Offer */}
+                          {/* Left Overlay Chip */}
                           {hotel.is_limited_offer && (
-                            <span className="inline-flex items-center text-[9px] font-black uppercase tracking-wider text-[#FF5F00] bg-[#FF5F00]/5 border border-[#FF5F00]/10 px-2.5 py-0.5 rounded">
+                            <span className="absolute top-3 left-3 bg-[#FF5F00] text-white text-[8px] font-black py-1 px-2.5 rounded tracking-wider uppercase z-10 pointer-events-none shadow-sm">
                               🔥 Limited Time Offer
                             </span>
                           )}
 
+                          {/* Right Overlay Chip */}
+                          <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-xs text-white text-[8px] font-black py-1 px-2.5 rounded tracking-wider uppercase z-10 pointer-events-none">
+                            {hotel.images && hotel.images.length > 0 ? `${hotel.images.length} Photos` : 'Verified'}
+                          </span>
+                        </div>
+
+                        {/* Redesigned Card Body */}
+                        <div className="px-4 py-4.5 space-y-3.5 text-left">
+
                           {/* Rating row: ⭐ 4.5 Excellent (111 Verified Reviews) */}
-                          <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-800 leading-none">
-                            <Star size={11} className="fill-amber-500 text-amber-500" />
-                            <span>{hotel.rating.toFixed(1)}</span>
-                            <span className="text-[#FF5F00]">{ratingLabel}</span>
-                            <span className="text-slate-400">({hotel.reviewsCount} Verified Reviews)</span>
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-1 text-[11px] font-black text-slate-800 leading-none">
+                              <Star size={11} className="fill-amber-500 text-amber-500" />
+                              <span>{hotel.rating.toFixed(1)}</span>
+                              <span className="text-[#FF5F00] font-black">{ratingLabel}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-bold">
+                              ({hotel.reviewsCount} Verified Reviews)
+                            </div>
                           </div>
 
-                          {/* Title / Hotel Name */}
-                          <h3 className="font-extrabold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-1">
-                            {displayHotelName}
-                          </h3>
+                          {/* Title / Hotel Name & TripGod Verified banner */}
+                          <div className="space-y-1">
+                            <h3 className="font-extrabold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-1">
+                              {displayHotelName}
+                            </h3>
+                            <div className="text-[10px] font-black text-emerald-600 flex items-center gap-1 uppercase tracking-wide">
+                              <span>✓</span>
+                              <span>Verified by TripGod</span>
+                            </div>
+                          </div>
 
-                          {/* Landmark/Location (Prominent) */}
-                          <div className="flex items-center gap-1 text-[11px] font-extrabold text-slate-655">
-                            <MapPin size={12} className="text-[#FF5F00] shrink-0" />
-                            <span className="truncate">
+                          {/* Landmark/Location */}
+                          <div className="flex items-start gap-1">
+                            <div className="flex-1">
                               {landmarkText}
-                            </span>
+                            </div>
                           </div>
 
                           {/* Divider 1 */}
@@ -736,19 +785,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           <div className="flex flex-col space-y-1">
                             <div className="flex items-baseline justify-between w-full">
                               <div className="flex items-baseline gap-0.5">
-                                <span className="text-2xl font-black text-black leading-none">
+                                <span className="text-2xl font-black text-slate-900 leading-none">
                                   ₹{displayPrice.toLocaleString('en-IN')}
                                 </span>
-                                <span className="text-xs text-gray-500 font-bold">/ night</span>
+                                <span className="text-xs text-gray-500 font-bold">/night</span>
                               </div>
                               {isDiscounted && (
-                                <span className="text-sm text-gray-400 line-through font-semibold">
+                                <span className="text-xs text-gray-400 line-through font-semibold">
                                   ₹{displayOriginalPrice.toLocaleString('en-IN')}
                                 </span>
                               )}
                             </div>
                             {savings > 0 && (
-                              <span className="inline-flex items-center text-[10px] font-black uppercase text-emerald-600 tracking-wide mt-0.5">
+                              <span className="inline-flex items-center text-[10px] font-black text-emerald-600 tracking-wide mt-0.5 uppercase">
                                 🟢 SAVE ₹{savings.toLocaleString('en-IN')} TODAY
                               </span>
                             )}
@@ -757,22 +806,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           {/* Divider 2 */}
                           <hr className="border-t border-slate-100 my-2" />
 
-                          {/* Badges and Highlights Row */}
-                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-0.5">
-                            <span className="inline-flex items-center gap-1 text-[9px] text-slate-700 font-black uppercase tracking-wider">
-                              🏆 Best Value
-                            </span>
-                            {hotel.rules?.unmarried_couples && (
-                              <span className="inline-flex items-center gap-1 text-[9px] text-rose-600 font-black uppercase tracking-wider">
-                                💕 Couple Friendly
+                          {/* Badges Row */}
+                          <div className="flex flex-wrap gap-2 pt-0.5">
+                            {dynamicBadges.map((badge, bIdx) => (
+                              <span key={bIdx} className="inline-flex items-center text-[9px] text-slate-700 font-black uppercase tracking-wider bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200 shadow-3xs">
+                                {badge}
                               </span>
-                            )}
+                            ))}
                           </div>
 
-                          {/* Cancellation / Refund badges */}
-                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-wider">
-                            <span>✅ Free Cancellation</span>
-                            <span>🛡️ 100% Refund Guarantee</span>
+                          {/* Cancellation / Refund badges (No Emojis) */}
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[9px] font-black text-emerald-650 uppercase tracking-wider">
+                            <span>✓ Free Cancellation</span>
+                            <span>✓ 100% Refund Guarantee</span>
                           </div>
 
                           {/* Divider 3 */}
@@ -780,8 +826,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                           {/* UPI Discount banner */}
                           <div className="text-[10px] text-slate-700 font-black flex items-center gap-1.5 py-0.5">
-                            <span>💸</span>
-                            <span>Flat ₹{upiDiscount} Instant UPI Discount</span>
+                            <span>⚡</span>
+                            <span>Pay via UPI & Save ₹{upiDiscount} Instantly</span>
                           </div>
 
                           {/* Divider 4 */}
@@ -789,14 +835,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         </div>
                       </div>
 
-                      {/* Check Availability button */}
-                      <div className="px-4 pb-4.5 pt-0">
+                      {/* Check Availability button with Tiny Trust line */}
+                      <div className="px-4 pb-4.5 pt-0 space-y-2">
+                        {/* Tiny Trust Line */}
+                        <div className="text-center text-[9px] font-extrabold text-slate-400 select-none uppercase tracking-wider">
+                          ✓ Instant Confirmation  •  ✓ Secure Booking
+                        </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectHotel(hotel);
                           }}
-                          className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.25)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
+                          className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.25)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer text-center font-display"
                         >
                           Check Availability
                         </button>
