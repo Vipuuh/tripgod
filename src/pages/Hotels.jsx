@@ -292,6 +292,14 @@ export default function Hotels({ currentCity, openBookingModal }) {
   };
 
   const [selectedHotel, setSelectedHotel] = useState(null);
+  const [selectedRoomIdx, setSelectedRoomIdx] = useState(null);
+  const [selectedMeals, setSelectedMeals] = useState({ breakfast: false, lunch: false, dinner: false });
+
+  useEffect(() => {
+    setSelectedRoomIdx(null);
+    setSelectedMeals({ breakfast: false, lunch: false, dinner: false });
+  }, [selectedHotel]);
+
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImgIdx, setLightboxImgIdx] = useState(0);
@@ -314,14 +322,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
   };
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd || !selectedHotel || !selectedHotel.images) return;
+    if (!touchStart || !touchEnd || !selectedHotel) return;
+    const activeImages = (selectedRoomIdx !== null && selectedHotel.rules?.room_categories?.[selectedRoomIdx]?.images?.length > 0)
+      ? selectedHotel.rules.room_categories[selectedRoomIdx].images
+      : (selectedHotel.images || []);
+    if (activeImages.length === 0) return;
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-    if (isLeftSwipe && selectedHotel.images.length > 1) {
-      setActiveImgIdx(prev => (prev + 1) % selectedHotel.images.length);
-    } else if (isRightSwipe && selectedHotel.images.length > 1) {
-      setActiveImgIdx(prev => (prev - 1 + selectedHotel.images.length) % selectedHotel.images.length);
+    if (isLeftSwipe && activeImages.length > 1) {
+      setActiveImgIdx(prev => (prev + 1) % activeImages.length);
+    } else if (isRightSwipe && activeImages.length > 1) {
+      setActiveImgIdx(prev => (prev - 1 + activeImages.length) % activeImages.length);
     }
   };
 
@@ -684,9 +696,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   const landmarkText = getLandmarkText();
 
                   const getListingBadges = () => {
-                    const customBadge = hotel.rules?.badge_settings?.list;
-                    if (customBadge && customBadge.trim() !== '') {
-                      return [customBadge];
+                    const customBadge1 = hotel.rules?.badge_settings?.list_badge1;
+                    const customBadge2 = hotel.rules?.badge_settings?.list_badge2;
+                    const activeBadges = [customBadge1, customBadge2].filter(b => b && b.trim() !== '');
+                    if (activeBadges.length > 0) {
+                      return activeBadges;
                     }
                     if (hotel.best_for && hotel.best_for.length > 0) {
                       return hotel.best_for.slice(0, 2);
@@ -836,6 +850,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
             className="pb-24 pt-6 bg-white w-full"
           >
             <div className="max-w-4xl mx-auto px-6 space-y-6 text-left">
+              {(() => {
+                // Initialize local helpers for room categories
+                window._activeImages = (selectedRoomIdx !== null && selectedHotel.rules?.room_categories?.[selectedRoomIdx]?.images?.length > 0)
+                  ? selectedHotel.rules.room_categories[selectedRoomIdx].images
+                  : (selectedHotel.images || []);
+                window._activeRoomPrice = selectedRoomIdx !== null
+                  ? Number(selectedHotel.rules?.room_categories?.[selectedRoomIdx]?.price || selectedHotel.price)
+                  : Number(selectedHotel.price);
+                window._activeRoomOriginalPrice = selectedRoomIdx !== null
+                  ? (selectedHotel.rules?.room_categories?.[selectedRoomIdx]?.original_price ? Number(selectedHotel.rules.room_categories[selectedRoomIdx].original_price) : null)
+                  : (selectedHotel.original_price ? Number(selectedHotel.original_price) : null);
+                return null;
+              })()}
               {/* Back Button */}
               <button
                 onClick={() => {
@@ -868,25 +895,35 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
               {/* SECTION 2: HOTEL HEADER */}
               <div className="space-y-2 text-left">
-                {/* Dynamic Detail Page Badge */}
+                {/* Dynamic Detail Page Badges */}
                 {(() => {
-                  const detailBadge = selectedHotel.rules?.badge_settings?.detail;
-                  if (detailBadge && detailBadge.trim() !== '') {
-                    const isCouple = detailBadge.toLowerCase().includes('couple');
-                    const isLimited = detailBadge.toLowerCase().includes('limited');
-                    const isBestseller = detailBadge.toLowerCase().includes('best');
-                    const isTop = detailBadge.toLowerCase().includes('top');
-                    const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
+                  const badge1 = selectedHotel.rules?.badge_settings?.detail_badge1;
+                  const badge2 = selectedHotel.rules?.badge_settings?.detail_badge2;
+                  const activeBadges = [badge1, badge2].filter(b => b && b.trim() !== '');
+
+                  if (activeBadges.length > 0) {
                     return (
-                      <span 
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[9.5px] font-black uppercase tracking-wider rounded-xl border select-none ${
-                          isCouple 
-                            ? 'bg-rose-50 border-rose-100 text-rose-600' 
-                            : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
-                        }`}
-                      >
-                        {detailBadge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {detailBadge}
-                      </span>
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {activeBadges.map((badge, idx) => {
+                          const isCouple = badge.toLowerCase().includes('couple');
+                          const isLimited = badge.toLowerCase().includes('limited');
+                          const isBestseller = badge.toLowerCase().includes('best');
+                          const isTop = badge.toLowerCase().includes('top');
+                          const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
+                          return (
+                            <span 
+                              key={idx}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[9.5px] font-black uppercase tracking-wider rounded-xl border select-none ${
+                                isCouple 
+                                  ? 'bg-rose-50 border-rose-100 text-rose-600' 
+                                  : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
+                              }`}
+                            >
+                              {badge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {badge}
+                            </span>
+                          );
+                        })}
+                      </div>
                     );
                   }
                   return selectedHotel.is_limited_offer ? (
@@ -937,7 +974,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   className="relative h-60 sm:h-[420px] w-full rounded-3xl overflow-hidden bg-gray-100 group border border-black/5 shadow-md"
                 >
                   <img
-                    src={selectedHotel.images[activeImgIdx]}
+                    src={window._activeImages[activeImgIdx] || window._activeImages[0]}
                     alt={`${selectedHotel.name} view`}
                     onClick={() => {
                       setLightboxImgIdx(activeImgIdx);
@@ -959,16 +996,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     ) : null}
                   </div>
 
-                  {selectedHotel.images.length > 1 && (
+                  {window._activeImages.length > 1 && (
                     <>
                       <button
-                        onClick={() => setActiveImgIdx(prev => (prev - 1 + selectedHotel.images.length) % selectedHotel.images.length)}
+                        onClick={() => setActiveImgIdx(prev => (prev - 1 + window._activeImages.length) % window._activeImages.length)}
                         className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"
                       >
                         <ChevronLeft size={20} />
                       </button>
                       <button
-                        onClick={() => setActiveImgIdx(prev => (prev + 1) % selectedHotel.images.length)}
+                        onClick={() => setActiveImgIdx(prev => (prev + 1) % window._activeImages.length)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center text-black border-none cursor-pointer shadow-md transition-all opacity-0 group-hover:opacity-100 z-10"
                       >
                         <ChevronRight size={20} />
@@ -978,14 +1015,14 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                   {/* Photo count indicator overlay */}
                   <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-black py-1.5 px-3 rounded-xl border border-white/10 shadow-lg tracking-wider pointer-events-none select-none z-10">
-                    {selectedHotel.images.length} Photos ({activeImgIdx + 1} / {selectedHotel.images.length})
+                    {window._activeImages.length} Photos ({activeImgIdx + 1} / {window._activeImages.length})
                   </div>
                 </div>
 
                 {/* Thumbnails preview strip below slider */}
-                {selectedHotel.images && selectedHotel.images.length > 1 && (
+                {window._activeImages && window._activeImages.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto py-1 pr-2 scrollbar-none">
-                    {selectedHotel.images.map((img, idx) => (
+                    {window._activeImages.map((img, idx) => (
                       <button
                         key={idx}
                         onClick={() => setActiveImgIdx(idx)}
@@ -1004,7 +1041,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               <div className="p-5 bg-slate-50 border border-slate-200/60 rounded-3xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-3xs select-none">
                 <div className="space-y-1 text-left">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[8.5px] font-black uppercase text-slate-500 tracking-wider">SPECIAL PRICE</span>
+                    <span className="text-[8.5px] font-black uppercase text-slate-500 tracking-wider">SPECIAL STAY PRICE</span>
                     {selectedHotel.rooms_left !== null && selectedHotel.rooms_left > 0 && selectedHotel.rooms_left <= 5 && (
                       <span className="text-[8.5px] font-black uppercase text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded animate-pulse">
                         Only {selectedHotel.rooms_left} Rooms Left!
@@ -1014,19 +1051,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   
                   <div className="flex items-baseline gap-3 pt-1">
                     <span className="text-3xl font-black text-slate-900 leading-none">
-                      ₹{Number(selectedHotel.price).toLocaleString('en-IN')}
+                      ₹{window._activeRoomPrice.toLocaleString('en-IN')}
                       <span className="text-xs text-slate-500 font-extrabold ml-1.5 uppercase tracking-wider">/ night</span>
                     </span>
-                    {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                    {window._activeRoomOriginalPrice && window._activeRoomOriginalPrice > window._activeRoomPrice && (
                       <span className="text-[16px] text-slate-400 font-bold line-through">
-                        ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
+                        ₹{window._activeRoomOriginalPrice.toLocaleString('en-IN')}
                       </span>
                     )}
                   </div>
 
-                  {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                  {window._activeRoomOriginalPrice && window._activeRoomOriginalPrice > window._activeRoomPrice && (
                     <div className="text-[13px] font-black text-[#008F5D] pt-1 uppercase tracking-wide">
-                      You Save ₹{(selectedHotel.original_price - selectedHotel.price).toLocaleString('en-IN')}
+                      You Save ₹{(window._activeRoomOriginalPrice - window._activeRoomPrice).toLocaleString('en-IN')}
                     </div>
                   )}
 
@@ -1051,6 +1088,140 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   </div>
                 </div>
               </div>
+
+              {/* SECTION: ROOM UPGRADES & CATEGORIES */}
+              {selectedHotel.rules?.room_categories && selectedHotel.rules.room_categories.length > 0 && (
+                <div className="bg-slate-50 border border-slate-200/50 rounded-3xl p-5 space-y-3.5 text-left">
+                  <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider font-display">
+                    🛏️ Select Room Upgrade
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {/* Default Room */}
+                    <button
+                      onClick={() => {
+                        setSelectedRoomIdx(null);
+                        setActiveImgIdx(0);
+                      }}
+                      className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left cursor-pointer transition-all ${
+                        selectedRoomIdx === null 
+                          ? 'bg-white border-[#FF5F00] shadow-md scale-[1.01]' 
+                          : 'bg-white border-slate-200 hover:border-slate-350 hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="flex-1 space-y-1">
+                        <span className="block text-xs font-black text-slate-850 uppercase tracking-wide">Standard Room</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-sm font-black text-slate-900">₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
+                          {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
+                            <span className="text-[10px] text-gray-450 line-through">₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}</span>
+                          )}
+                        </div>
+                        <span className="block text-[8px] font-black uppercase text-emerald-600 tracking-wide mt-1">Base Price Stay</span>
+                      </div>
+                    </button>
+
+                    {/* Room upgrades */}
+                    {selectedHotel.rules.room_categories.map((room, rIdx) => {
+                      const isSelected = selectedRoomIdx === rIdx;
+                      return (
+                        <button
+                          key={rIdx}
+                          onClick={() => {
+                            setSelectedRoomIdx(rIdx);
+                            setActiveImgIdx(0);
+                          }}
+                          className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left cursor-pointer transition-all ${
+                            isSelected 
+                              ? 'bg-white border-[#FF5F00] shadow-md scale-[1.01]' 
+                              : 'bg-white border-slate-200 hover:border-slate-350 hover:shadow-xs'
+                          }`}
+                        >
+                          <div className="flex-1 space-y-1">
+                            <span className="block text-xs font-black text-slate-850 uppercase tracking-wide">{room.name}</span>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-sm font-black text-slate-900">₹{Number(room.price).toLocaleString('en-IN')}</span>
+                              {room.original_price && Number(room.original_price) > Number(room.price) && (
+                                <span className="text-[10px] text-gray-450 line-through">₹{Number(room.original_price).toLocaleString('en-IN')}</span>
+                              )}
+                            </div>
+                            <span className="block text-[8px] font-black uppercase text-[#FF5F00] tracking-wide mt-1">Upgrade Room</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* SECTION: MEALS POLICY & ADD-ONS */}
+              {(() => {
+                const meals = selectedHotel.rules?.meals;
+                const hasMeals = meals && (
+                  meals.breakfast?.status !== 'none' ||
+                  meals.lunch?.status !== 'none' ||
+                  meals.dinner?.status !== 'none'
+                );
+                if (!hasMeals) return null;
+
+                const freeMealsList = [];
+                if (meals.breakfast?.status === 'free') freeMealsList.push('Breakfast');
+                if (meals.lunch?.status === 'free') freeMealsList.push('Lunch');
+                if (meals.dinner?.status === 'free') freeMealsList.push('Dinner');
+
+                const paidMealsList = [];
+                if (meals.breakfast?.status === 'paid') paidMealsList.push({ name: 'breakfast', label: 'Breakfast 🍳', price: meals.breakfast.price || 150 });
+                if (meals.lunch?.status === 'paid') paidMealsList.push({ name: 'lunch', label: 'Lunch 🍲', price: meals.lunch.price || 250 });
+                if (meals.dinner?.status === 'paid') paidMealsList.push({ name: 'dinner', label: 'Dinner 🍽️', price: meals.dinner.price || 300 });
+
+                return (
+                  <div className="bg-slate-50 border border-slate-200/50 rounded-3xl p-5 space-y-3.5 text-left">
+                    <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider font-display">
+                      🍽️ Dining Options & Meal Add-ons
+                    </h3>
+
+                    {freeMealsList.length > 0 && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-950 p-3 rounded-2xl flex items-center gap-2 text-xs font-black">
+                        <span>✅</span>
+                        <span>Complimentary Free Meals Included: {freeMealsList.join(', ')}</span>
+                      </div>
+                    )}
+
+                    {paidMealsList.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-wide">Add meals per person / night to stay:</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {paidMealsList.map((meal, idx) => {
+                            const isChecked = selectedMeals[meal.name];
+                            return (
+                              <label
+                                key={idx}
+                                className={`flex flex-col p-3 rounded-2xl border cursor-pointer select-none transition-all ${
+                                  isChecked
+                                    ? 'bg-[#FF5F00]/5 border-[#FF5F00] shadow-xs'
+                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => setSelectedMeals(prev => ({ ...prev, [meal.name]: e.target.checked }))}
+                                    className="rounded border-slate-350 text-[#FF5F00] focus:ring-0 cursor-pointer"
+                                  />
+                                  <span className="text-xs font-black text-slate-800">{meal.label}</span>
+                                </div>
+                                <span className="text-[9.5px] font-extrabold text-slate-500 mt-1.5 ml-6">
+                                  + ₹{meal.price} / guest / night
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* SECTION 4: WHY GUESTS CHOOSE THIS HOTEL CARD */}
               <div className="p-5 bg-white border border-slate-200 rounded-3xl space-y-3.5 shadow-3xs text-left select-none">

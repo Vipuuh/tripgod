@@ -1119,25 +1119,32 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                       {/* Badges Row */}
                       <div className="flex flex-wrap gap-1.5 select-none pt-0.5">
                         {(() => {
-                          const customBadge = hotel.rules?.badge_settings?.home;
-                          if (customBadge && customBadge.trim() !== '') {
-                            const isCouple = customBadge.toLowerCase().includes('couple');
-                            const isLimited = customBadge.toLowerCase().includes('limited');
-                            const isBestseller = customBadge.toLowerCase().includes('best');
-                            const isTop = customBadge.toLowerCase().includes('top');
-                            const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
-                            return (
-                              <span 
-                                className={`inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] ${
-                                  isCouple 
-                                    ? 'bg-rose-50 border-rose-100 text-rose-600' 
-                                    : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
-                                }`}
-                              >
-                                {customBadge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {customBadge}
-                              </span>
-                            );
+                          const badge1 = hotel.rules?.badge_settings?.home_badge1;
+                          const badge2 = hotel.rules?.badge_settings?.home_badge2;
+                          const activeBadges = [badge1, badge2].filter(b => b && b.trim() !== '');
+
+                          if (activeBadges.length > 0) {
+                            return activeBadges.map((badge, idx) => {
+                              const isCouple = badge.toLowerCase().includes('couple');
+                              const isLimited = badge.toLowerCase().includes('limited');
+                              const isBestseller = badge.toLowerCase().includes('best');
+                              const isTop = badge.toLowerCase().includes('top');
+                              const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
+                              return (
+                                <span 
+                                  key={idx}
+                                  className={`inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] ${
+                                    isCouple 
+                                      ? 'bg-rose-50 border-rose-100 text-rose-600' 
+                                      : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
+                                  }`}
+                                >
+                                  {badge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {badge}
+                                </span>
+                              );
+                            });
                           }
+
                           const badges = (hotel.best_for && hotel.best_for.length > 0)
                             ? hotel.best_for.slice(0, 2)
                             : ['Best Value', 'Couple Friendly'];

@@ -3253,159 +3253,423 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           </div>
 
-          {/* Breakfast Configuration */}
-          <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-3">
-            <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Breakfast Policy</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-300 text-xs font-bold">
-                <input
-                  type="checkbox"
-                  checked={!!formData.rules?.breakfast_included}
+          {/* Meal Policy & Add-ons Configuration */}
+          <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Meal Policy & Add-ons</label>
+              <p className="text-[9px] text-gray-550">Configure dining choices for guests. If a meal is paid, it will be offered as an add-on check box during booking and calculated per person per night.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Breakfast Policy */}
+              <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 space-y-2">
+                <label className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider">🍳 Breakfast</label>
+                <select
+                  value={formData.rules?.meals?.breakfast?.status || 'none'}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    rules: { ...prev.rules, breakfast_included: e.target.checked }
+                    rules: {
+                      ...prev.rules,
+                      meals: {
+                        ...(prev.rules?.meals || {}),
+                        breakfast: {
+                          status: e.target.value,
+                          price: e.target.value === 'paid' ? (prev.rules?.meals?.breakfast?.price || 150) : 0
+                        }
+                      }
+                    }
                   }))}
-                  className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
-                />
-                <span>Free Breakfast Included</span>
-              </label>
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs cursor-pointer focus:outline-none"
+                >
+                  <option value="none">Not Available</option>
+                  <option value="free">Free / Included</option>
+                  <option value="paid">Paid Add-on</option>
+                </select>
+                {formData.rules?.meals?.breakfast?.status === 'paid' && (
+                  <div className="space-y-1 pt-1 animate-fadeIn">
+                    <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Price / Guest / Night (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="e.g. 150"
+                      value={formData.rules?.meals?.breakfast?.price || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          meals: {
+                            ...(prev.rules?.meals || {}),
+                            breakfast: {
+                              status: 'paid',
+                              price: e.target.value === '' ? '' : Number(e.target.value)
+                            }
+                          }
+                        }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                )}
+              </div>
 
-              <div className="space-y-1">
-                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider">Breakfast Price (if not free/included)</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 150 (Extra cost per night per guest)"
-                  value={formData.rules?.breakfast_price || ''}
+              {/* Lunch Policy */}
+              <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 space-y-2">
+                <label className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider">🍲 Lunch</label>
+                <select
+                  value={formData.rules?.meals?.lunch?.status || 'none'}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    rules: { ...prev.rules, breakfast_price: e.target.value === '' ? '' : Number(e.target.value) }
+                    rules: {
+                      ...prev.rules,
+                      meals: {
+                        ...(prev.rules?.meals || {}),
+                        lunch: {
+                          status: e.target.value,
+                          price: e.target.value === 'paid' ? (prev.rules?.meals?.lunch?.price || 250) : 0
+                        }
+                      }
+                    }
                   }))}
-                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
-                />
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs cursor-pointer focus:outline-none"
+                >
+                  <option value="none">Not Available</option>
+                  <option value="free">Free / Included</option>
+                  <option value="paid">Paid Add-on</option>
+                </select>
+                {formData.rules?.meals?.lunch?.status === 'paid' && (
+                  <div className="space-y-1 pt-1 animate-fadeIn">
+                    <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Price / Guest / Night (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="e.g. 250"
+                      value={formData.rules?.meals?.lunch?.price || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          meals: {
+                            ...(prev.rules?.meals || {}),
+                            lunch: {
+                              status: 'paid',
+                              price: e.target.value === '' ? '' : Number(e.target.value)
+                            }
+                          }
+                        }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Dinner Policy */}
+              <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 space-y-2">
+                <label className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider">🍽️ Dinner</label>
+                <select
+                  value={formData.rules?.meals?.dinner?.status || 'none'}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    rules: {
+                      ...prev.rules,
+                      meals: {
+                        ...(prev.rules?.meals || {}),
+                        dinner: {
+                          status: e.target.value,
+                          price: e.target.value === 'paid' ? (prev.rules?.meals?.dinner?.price || 300) : 0
+                        }
+                      }
+                    }
+                  }))}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs cursor-pointer focus:outline-none"
+                >
+                  <option value="none">Not Available</option>
+                  <option value="free">Free / Included</option>
+                  <option value="paid">Paid Add-on</option>
+                </select>
+                {formData.rules?.meals?.dinner?.status === 'paid' && (
+                  <div className="space-y-1 pt-1 animate-fadeIn">
+                    <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Price / Guest / Night (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      placeholder="e.g. 300"
+                      value={formData.rules?.meals?.dinner?.price || ''}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          meals: {
+                            ...(prev.rules?.meals || {}),
+                            dinner: {
+                              status: 'paid',
+                              price: e.target.value === '' ? '' : Number(e.target.value)
+                            }
+                          }
+                        }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Unified Badge Configuration */}
-          <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-3">
-            <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Custom Badge & Tags Settings</label>
-            <p className="text-[9.5px] text-gray-550">Specify exactly which badge shows up in different parts of the application (Homepage, Hotel List, and Hotel Details page).</p>
+          {/* Unified Badge & Tag Settings (Multiple Badges) */}
+          <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-4">
+            <div>
+              <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Custom Badge & Tags Settings (Dual Badges)</label>
+              <p className="text-[9px] text-gray-550">Configure up to two distinct highlights or labels to display across the application to increase conversion.</p>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Homepage Card Badge */}
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Homepage Card Badge</label>
-                <select
-                  value={formData.rules?.badge_settings?.home || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    rules: { 
-                      ...prev.rules, 
-                      badge_settings: { ...(prev.rules?.badge_settings || {}), home: e.target.value }
-                    }
-                  }))}
-                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent cursor-pointer"
-                >
-                  <option value="">None (Falls back to tags)</option>
-                  <option value="💕 Couple Friendly">💕 Couple Friendly</option>
-                  <option value="🏆 Best Value">🏆 Best Value</option>
-                  <option value="⭐ Top Rated">⭐ Top Rated</option>
-                  <option value="🔥 Limited Offer">🔥 Limited Offer</option>
-                  <option value="👪 Family Choice">👪 Family Choice</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Or type custom badge..."
-                  value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.home) ? '' : (formData.rules?.badge_settings?.home || '')}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData(prev => ({
+              {/* Homepage Card Badges */}
+              <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 space-y-3">
+                <label className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider">🏠 Homepage Card</label>
+                
+                {/* Badge 1 */}
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Badge 1</label>
+                  <select
+                    value={formData.rules?.badge_settings?.home_badge1 || ''}
+                    onChange={(e) => setFormData(prev => ({
                       ...prev,
-                      rules: { 
-                        ...prev.rules, 
-                        badge_settings: { ...(prev.rules?.badge_settings || {}), home: val }
+                      rules: {
+                        ...prev.rules,
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), home_badge1: e.target.value }
                       }
-                    }));
-                  }}
-                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent mt-1"
-                />
+                    }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs cursor-pointer focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                    <option value="🏆 Best Value">🏆 Best Value</option>
+                    <option value="⭐ Top Rated">⭐ Top Rated</option>
+                    <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                    <option value="👪 Family Choice">👪 Family Choice</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or type custom badge 1..."
+                    value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.home_badge1) ? '' : (formData.rules?.badge_settings?.home_badge1 || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          badge_settings: { ...(prev.rules?.badge_settings || {}), home_badge1: val }
+                        }
+                      }));
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none mt-1"
+                  />
+                </div>
+
+                {/* Badge 2 */}
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Badge 2</label>
+                  <select
+                    value={formData.rules?.badge_settings?.home_badge2 || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      rules: {
+                        ...prev.rules,
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), home_badge2: e.target.value }
+                      }
+                    }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs cursor-pointer focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                    <option value="🏆 Best Value">🏆 Best Value</option>
+                    <option value="⭐ Top Rated">⭐ Top Rated</option>
+                    <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                    <option value="👪 Family Choice">👪 Family Choice</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or type custom badge 2..."
+                    value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.home_badge2) ? '' : (formData.rules?.badge_settings?.home_badge2 || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          badge_settings: { ...(prev.rules?.badge_settings || {}), home_badge2: val }
+                        }
+                      }));
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none mt-1"
+                  />
+                </div>
               </div>
 
-              {/* Hotels Listing Card Badge */}
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Hotels Listing Card Badge</label>
-                <select
-                  value={formData.rules?.badge_settings?.list || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    rules: { 
-                      ...prev.rules, 
-                      badge_settings: { ...(prev.rules?.badge_settings || {}), list: e.target.value }
-                    }
-                  }))}
-                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent cursor-pointer"
-                >
-                  <option value="">None (Falls back to tags)</option>
-                  <option value="💕 Couple Friendly">💕 Couple Friendly</option>
-                  <option value="🏆 Best Value">🏆 Best Value</option>
-                  <option value="⭐ Top Rated">⭐ Top Rated</option>
-                  <option value="🔥 Limited Offer">🔥 Limited Offer</option>
-                  <option value="👪 Family Choice">👪 Family Choice</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Or type custom badge..."
-                  value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.list) ? '' : (formData.rules?.badge_settings?.list || '')}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData(prev => ({
+              {/* Hotels List Card Badges */}
+              <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 space-y-3">
+                <label className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider">🏨 Hotels Search List</label>
+                
+                {/* Badge 1 */}
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Badge 1</label>
+                  <select
+                    value={formData.rules?.badge_settings?.list_badge1 || ''}
+                    onChange={(e) => setFormData(prev => ({
                       ...prev,
-                      rules: { 
-                        ...prev.rules, 
-                        badge_settings: { ...(prev.rules?.badge_settings || {}), list: val }
+                      rules: {
+                        ...prev.rules,
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), list_badge1: e.target.value }
                       }
-                    }));
-                  }}
-                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent mt-1"
-                />
+                    }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs cursor-pointer focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                    <option value="🏆 Best Value">🏆 Best Value</option>
+                    <option value="⭐ Top Rated">⭐ Top Rated</option>
+                    <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                    <option value="👪 Family Choice">👪 Family Choice</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or type custom badge 1..."
+                    value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.list_badge1) ? '' : (formData.rules?.badge_settings?.list_badge1 || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          badge_settings: { ...(prev.rules?.badge_settings || {}), list_badge1: val }
+                        }
+                      }));
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none mt-1"
+                  />
+                </div>
+
+                {/* Badge 2 */}
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Badge 2</label>
+                  <select
+                    value={formData.rules?.badge_settings?.list_badge2 || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      rules: {
+                        ...prev.rules,
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), list_badge2: e.target.value }
+                      }
+                    }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs cursor-pointer focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                    <option value="🏆 Best Value">🏆 Best Value</option>
+                    <option value="⭐ Top Rated">⭐ Top Rated</option>
+                    <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                    <option value="👪 Family Choice">👪 Family Choice</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or type custom badge 2..."
+                    value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.list_badge2) ? '' : (formData.rules?.badge_settings?.list_badge2 || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          badge_settings: { ...(prev.rules?.badge_settings || {}), list_badge2: val }
+                        }
+                      }));
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none mt-1"
+                  />
+                </div>
               </div>
 
-              {/* Hotel Details Page Badge */}
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider">Hotel Details Page Badge</label>
-                <select
-                  value={formData.rules?.badge_settings?.detail || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    rules: { 
-                      ...prev.rules, 
-                      badge_settings: { ...(prev.rules?.badge_settings || {}), detail: e.target.value }
-                    }
-                  }))}
-                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent cursor-pointer"
-                >
-                  <option value="">None</option>
-                  <option value="💕 Couple Friendly">💕 Couple Friendly</option>
-                  <option value="🏆 Best Value">🏆 Best Value</option>
-                  <option value="⭐ Top Rated">⭐ Top Rated</option>
-                  <option value="🔥 Limited Offer">🔥 Limited Offer</option>
-                  <option value="👪 Family Choice">👪 Family Choice</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Or type custom badge..."
-                  value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.detail) ? '' : (formData.rules?.badge_settings?.detail || '')}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setFormData(prev => ({
+              {/* Hotel Details drawer Header Badges */}
+              <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-850 space-y-3">
+                <label className="block text-[9.5px] font-black text-gray-400 uppercase tracking-wider">📄 Details Page Header</label>
+                
+                {/* Badge 1 */}
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Badge 1</label>
+                  <select
+                    value={formData.rules?.badge_settings?.detail_badge1 || ''}
+                    onChange={(e) => setFormData(prev => ({
                       ...prev,
-                      rules: { 
-                        ...prev.rules, 
-                        badge_settings: { ...(prev.rules?.badge_settings || {}), detail: val }
+                      rules: {
+                        ...prev.rules,
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), detail_badge1: e.target.value }
                       }
-                    }));
-                  }}
-                  className="w-full bg-slate-900 border border-slate-850 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent mt-1"
-                />
+                    }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs cursor-pointer focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                    <option value="🏆 Best Value">🏆 Best Value</option>
+                    <option value="⭐ Top Rated">⭐ Top Rated</option>
+                    <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                    <option value="👪 Family Choice">👪 Family Choice</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or type custom badge 1..."
+                    value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.detail_badge1) ? '' : (formData.rules?.badge_settings?.detail_badge1 || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          badge_settings: { ...(prev.rules?.badge_settings || {}), detail_badge1: val }
+                        }
+                      }));
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none mt-1"
+                  />
+                </div>
+
+                {/* Badge 2 */}
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-black text-slate-500 uppercase tracking-wider">Badge 2</label>
+                  <select
+                    value={formData.rules?.badge_settings?.detail_badge2 || ''}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      rules: {
+                        ...prev.rules,
+                        badge_settings: { ...(prev.rules?.badge_settings || {}), detail_badge2: e.target.value }
+                      }
+                    }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs cursor-pointer focus:outline-none"
+                  >
+                    <option value="">None</option>
+                    <option value="💕 Couple Friendly">💕 Couple Friendly</option>
+                    <option value="🏆 Best Value">🏆 Best Value</option>
+                    <option value="⭐ Top Rated">⭐ Top Rated</option>
+                    <option value="🔥 Limited Offer">🔥 Limited Offer</option>
+                    <option value="👪 Family Choice">👪 Family Choice</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or type custom badge 2..."
+                    value={['', '💕 Couple Friendly', '🏆 Best Value', '⭐ Top Rated', '🔥 Limited Offer', '👪 Family Choice'].includes(formData.rules?.badge_settings?.detail_badge2) ? '' : (formData.rules?.badge_settings?.detail_badge2 || '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          badge_settings: { ...(prev.rules?.badge_settings || {}), detail_badge2: val }
+                        }
+                      }));
+                    }}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none mt-1"
+                  />
+                </div>
               </div>
             </div>
           </div>
