@@ -296,10 +296,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(null);
   const [selectedMeals, setSelectedMeals] = useState({ breakfast: false, lunch: false, dinner: false });
+  const [numRooms, setNumRooms] = useState(1);
+  const [numAdults, setNumAdults] = useState(2);
+  const [numKids, setNumKids] = useState(1);
 
   useEffect(() => {
     setSelectedRoomIdx(null);
     setSelectedMeals({ breakfast: false, lunch: false, dinner: false });
+    setNumRooms(1);
+    setNumAdults(2);
+    setNumKids(1);
   }, [selectedHotel]);
 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
@@ -863,6 +869,22 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 window._activeRoomOriginalPrice = selectedRoomIdx !== null
                   ? (selectedHotel.rules?.room_categories?.[selectedRoomIdx]?.original_price ? Number(selectedHotel.rules.room_categories[selectedRoomIdx].original_price) : null)
                   : (selectedHotel.original_price ? Number(selectedHotel.original_price) : null);
+
+                // NEW: Correct pricing — room price is per room, NOT per person
+                const _meals = selectedHotel.rules?.meals || {};
+                const _totalGuests = numAdults + numKids;
+                let _mealCostPerNight = 0;
+                if (selectedMeals.breakfast && _meals.breakfast?.status === 'paid')
+                  _mealCostPerNight += (_meals.breakfast?.price || 150) * _totalGuests;
+                if (selectedMeals.lunch && _meals.lunch?.status === 'paid')
+                  _mealCostPerNight += (_meals.lunch?.price || 250) * _totalGuests;
+                if (selectedMeals.dinner && _meals.dinner?.status === 'paid')
+                  _mealCostPerNight += (_meals.dinner?.price || 300) * _totalGuests;
+
+                window._roomCostPerNight = window._activeRoomPrice * numRooms;
+                window._mealCostPerNight = _mealCostPerNight;
+                window._totalPricePerNight = window._roomCostPerNight + _mealCostPerNight;
+                window._totalGuests = _totalGuests;
                 return null;
               })()}
               {/* Back Button */}
@@ -1241,6 +1263,161 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* SECTION: MEALS POLICY & ADD-ONS */}
               <DiningAndMealPanel selectedHotel={selectedHotel} selectedMeals={selectedMeals} setSelectedMeals={setSelectedMeals} />
 
+              {/* SECTION: GUESTS & ROOMS */}
+              <div style={{
+                background: 'white',
+                borderRadius: '1.5rem',
+                padding: '1.25rem',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+                textAlign: 'left'
+              }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: 'linear-gradient(135deg, #FF5F00, #ff8533)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(255,95,0,0.3)', flexShrink: 0
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#1e293b', margin: 0 }}>Guests &amp; Rooms</h3>
+                    <p style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600, margin: 0 }}>Customize your stay</p>
+                  </div>
+                </div>
+
+                {/* Counter rows */}
+                {[
+                  { label: 'Rooms', sub: 'Number of rooms needed', val: numRooms, min: 1, max: 10, set: setNumRooms, icon: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF5F00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
+                    </svg>
+                  )},
+                  { label: 'Adults', sub: '12+ years', val: numAdults, min: 1, max: 20, set: setNumAdults, icon: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+                    </svg>
+                  )},
+                  { label: 'Children', sub: 'Under 12 years', val: numKids, min: 0, max: 10, set: setNumKids, icon: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="9" r="3"/><path d="M12 12v3"/><path d="M9.5 17.5 12 15l2.5 2.5"/>
+                    </svg>
+                  )},
+                ].map(({ label, sub, val, min, max, set, icon }, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.625rem 0',
+                    borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{
+                        width: 28, height: 28, borderRadius: 8,
+                        background: '#f8fafc', border: '1px solid #e2e8f0',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                      }}>{icon}</div>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: '#1e293b' }}>{label}</div>
+                        <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600 }}>{sub}</div>
+                      </div>
+                    </div>
+                    {/* +/- Control */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                      <button
+                        onClick={() => set(v => Math.max(min, v - 1))}
+                        style={{
+                          width: 32, height: 32, borderRadius: '8px 0 0 8px',
+                          border: '1.5px solid #e2e8f0', borderRight: 'none',
+                          background: val <= min ? '#f8fafc' : 'white',
+                          cursor: val <= min ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: val <= min ? '#cbd5e1' : '#475569',
+                          fontSize: 16, fontWeight: 900, transition: 'all 0.15s ease'
+                        }}
+                      >−</button>
+                      <div style={{
+                        minWidth: 36, height: 32, background: 'white',
+                        border: '1.5px solid #e2e8f0', borderLeft: 'none', borderRight: 'none',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 13, fontWeight: 900, color: '#0f172a'
+                      }}>{val}</div>
+                      <button
+                        onClick={() => set(v => Math.min(max, v + 1))}
+                        style={{
+                          width: 32, height: 32, borderRadius: '0 8px 8px 0',
+                          border: '1.5px solid #e2e8f0', borderLeft: 'none',
+                          background: val >= max ? '#f8fafc' : 'white',
+                          cursor: val >= max ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: val >= max ? '#cbd5e1' : '#FF5F00',
+                          fontSize: 16, fontWeight: 900, transition: 'all 0.15s ease'
+                        }}
+                      >+</button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Capacity hint */}
+                {(() => {
+                  const maxPerRoom = selectedHotel.rules?.max_guests_per_room || 3;
+                  const totalGuests = numAdults + numKids;
+                  const neededRooms = Math.ceil(totalGuests / maxPerRoom);
+                  const isUnder = numRooms < neededRooms;
+                  return (
+                    <div style={{
+                      marginTop: 12, padding: '0.625rem 0.75rem',
+                      borderRadius: '0.75rem',
+                      background: isUnder ? '#fff7ed' : '#f0fdf4',
+                      border: `1px solid ${isUnder ? '#fed7aa' : '#bbf7d0'}`,
+                      display: 'flex', alignItems: 'flex-start', gap: 7
+                    }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isUnder ? '#ea580c' : '#16a34a'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4"/><path d="M12 16h.01"/>
+                      </svg>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: isUnder ? '#c2410c' : '#15803d', lineHeight: 1.4 }}>
+                        {isUnder
+                          ? `${totalGuests} guests need at least ${neededRooms} room${neededRooms > 1 ? 's' : ''} — please add ${neededRooms - numRooms} more room${neededRooms - numRooms > 1 ? 's' : ''}.`
+                          : `${numRooms} room${numRooms > 1 ? 's' : ''} · ${numAdults} adult${numAdults > 1 ? 's' : ''} · ${numKids} child${numKids !== 1 ? 'ren' : ''} — looks good!`
+                        }
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {/* Price breakdown */}
+                <div style={{
+                  marginTop: 12, padding: '0.75rem',
+                  background: '#f8fafc', borderRadius: '0.75rem',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                    Price Breakdown / Night
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#475569', fontWeight: 700, marginBottom: 4 }}>
+                    <span>₹{window._activeRoomPrice?.toLocaleString('en-IN')} × {numRooms} room{numRooms > 1 ? 's' : ''}</span>
+                    <span>₹{window._roomCostPerNight?.toLocaleString('en-IN')}</span>
+                  </div>
+                  {window._mealCostPerNight > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#475569', fontWeight: 700, marginBottom: 4 }}>
+                      <span>Meal add-ons × {numAdults + numKids} guests</span>
+                      <span>₹{window._mealCostPerNight?.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  <div style={{ borderTop: '1px solid #e2e8f0', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#0f172a', fontWeight: 900 }}>
+                    <span>Total / night</span>
+                    <span style={{ color: '#FF5F00' }}>₹{window._totalPricePerNight?.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600, marginTop: 3, textAlign: 'right' }}>
+                    + taxes &amp; fees at checkout
+                  </div>
+                </div>
+              </div>
+
               {/* SECTION 4: WHY GUESTS CHOOSE THIS HOTEL CARD */}
               <div className="p-5 bg-white border border-slate-200 rounded-3xl space-y-3.5 shadow-3xs text-left select-none">
                 <div className="flex items-center gap-2">
@@ -1513,7 +1690,13 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         openBookingModal({
                           id: hotelToBook.id,
                           name: hotelToBook.name,
-                          price: hotelToBook.price,
+                          price: window._totalPricePerNight || window._activeRoomPrice || Number(hotelToBook.price),
+                          room_price: window._activeRoomPrice || Number(hotelToBook.price),
+                          num_rooms: numRooms,
+                          num_adults: numAdults,
+                          num_kids: numKids,
+                          meal_cost_per_night: window._mealCostPerNight || 0,
+                          selected_meals: selectedMeals,
                           category: 'hotels',
                           city_id: hotelToBook.city_id,
                           vendor_id: hotelToBook.vendor_id,
@@ -1542,20 +1725,17 @@ export default function Hotels({ currentCity, openBookingModal }) {
             {/* Sticky Bottom Bar for booking stay */}
             <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
               <div>
-                <span className="block text-[9px] text-gray-550 uppercase font-black tracking-wider truncate max-w-[120px] sm:max-w-[220px]">{selectedHotel.name}</span>
+                <span className="block text-[9px] text-gray-550 uppercase font-black tracking-wider truncate max-w-[120px] sm:max-w-[220px]">
+                  {selectedHotel.name} · {numRooms} room{numRooms > 1 ? 's' : ''} · {numAdults + numKids} guest{numAdults + numKids !== 1 ? 's' : ''}
+                </span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-base sm:text-lg font-black text-black">
-                    ₹{Number(selectedHotel.price).toLocaleString('en-IN')}
+                    ₹{(window._totalPricePerNight || Number(selectedHotel.price)).toLocaleString('en-IN')}
                   </span>
-                  {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
-                    <>
-                      <span className="text-xs text-gray-400 line-through">
-                        ₹{Number(selectedHotel.original_price).toLocaleString('en-IN')}
-                      </span>
-                      <span className="text-[9px] bg-emerald-600 text-white font-bold px-1.5 py-0.5 rounded">
-                        {Math.round(((selectedHotel.original_price - selectedHotel.price) / selectedHotel.original_price) * 105)}% OFF
-                      </span>
-                    </>
+                  {window._mealCostPerNight > 0 && (
+                    <span className="text-[9px] bg-orange-100 text-orange-700 font-bold px-1.5 py-0.5 rounded">
+                      incl. meals
+                    </span>
                   )}
                 </div>
                 <span className="text-[9px] text-gray-450 font-semibold block -mt-0.5">per night + taxes</span>
@@ -1576,7 +1756,13 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       openBookingModal({
                         id: hotelToBook.id,
                         name: hotelToBook.name,
-                        price: hotelToBook.price,
+                        price: window._totalPricePerNight || window._activeRoomPrice || Number(hotelToBook.price),
+                        room_price: window._activeRoomPrice || Number(hotelToBook.price),
+                        num_rooms: numRooms,
+                        num_adults: numAdults,
+                        num_kids: numKids,
+                        meal_cost_per_night: window._mealCostPerNight || 0,
+                        selected_meals: selectedMeals,
                         category: 'hotels',
                         city_id: hotelToBook.city_id,
                         vendor_id: hotelToBook.vendor_id,
