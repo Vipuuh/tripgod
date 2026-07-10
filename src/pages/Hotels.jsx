@@ -647,13 +647,33 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* Listings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {hotels.map(hotel => {
-                  const taxes = Math.round(Number(hotel.price) * 0.12);
                   const displayPrice = Number(hotel.price);
                   const displayOriginalPrice = hotel.original_price ? Number(hotel.original_price) : Math.round(displayPrice * 1.4);
                   const isDiscounted = displayOriginalPrice && displayOriginalPrice > displayPrice;
                   const savings = displayOriginalPrice - displayPrice;
                   const upiDiscount = hotel.upi_discount || 120;
-                  
+
+                  const ratingLabel = hotel.rating >= 4.5 ? 'Excellent' : 
+                                      hotel.rating >= 4.0 ? 'Very Good' : 
+                                      hotel.rating >= 3.5 ? 'Good' : 'Recommended';
+
+                  const displayHotelName = hotel.name.toLowerCase().includes('rishikesh') 
+                    ? hotel.name 
+                    : `${hotel.name} Rishikesh`;
+
+                  const getLandmarkText = () => {
+                    if (hotel.landmarks && hotel.landmarks[0]) {
+                      const l = hotel.landmarks[0].replace(/Near |Near/i, '');
+                      const isDrive = l.toLowerCase().includes('shivpuri') || l.toLowerCase().includes('triveni') || l.toLowerCase().includes('bus') || l.toLowerCase().includes('station');
+                      return `5 min ${isDrive ? 'drive' : 'walk'} from ${l}`;
+                    }
+                    const addLower = hotel.address.toLowerCase();
+                    const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
+                    return `5 min ${isLaxman ? 'walk' : 'drive'} from ${isLaxman ? 'Laxman Jhula' : 'Ram Jhula'}`;
+                  };
+
+                  const landmarkText = getLandmarkText();
+
                   return (
                     <motion.div
                       key={hotel.id}
@@ -688,77 +708,84 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             </span>
                           )}
 
-                          {/* Price Row: Large Current Price / Suffix / Save Tag */}
-                          <div className="flex flex-col space-y-0.5">
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-2xl font-black text-black leading-none">
-                                ₹{displayPrice.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-xs text-gray-500 font-bold">/ night</span>
+                          {/* Rating row: ⭐ 4.5 Excellent (111 Verified Reviews) */}
+                          <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-800 leading-none">
+                            <Star size={11} className="fill-amber-500 text-amber-500" />
+                            <span>{hotel.rating.toFixed(1)}</span>
+                            <span className="text-[#FF5F00]">{ratingLabel}</span>
+                            <span className="text-slate-400">({hotel.reviewsCount} Verified Reviews)</span>
+                          </div>
+
+                          {/* Title / Hotel Name */}
+                          <h3 className="font-extrabold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-1">
+                            {displayHotelName}
+                          </h3>
+
+                          {/* Landmark/Location (Prominent) */}
+                          <div className="flex items-center gap-1 text-[11px] font-extrabold text-slate-655">
+                            <MapPin size={12} className="text-[#FF5F00] shrink-0" />
+                            <span className="truncate">
+                              {landmarkText}
+                            </span>
+                          </div>
+
+                          {/* Divider 1 */}
+                          <hr className="border-t border-slate-100 my-2" />
+
+                          {/* Price Row: Aligned Side-by-Side */}
+                          <div className="flex flex-col space-y-1">
+                            <div className="flex items-baseline justify-between w-full">
+                              <div className="flex items-baseline gap-0.5">
+                                <span className="text-2xl font-black text-black leading-none">
+                                  ₹{displayPrice.toLocaleString('en-IN')}
+                                </span>
+                                <span className="text-xs text-gray-500 font-bold">/ night</span>
+                              </div>
                               {isDiscounted && (
-                                <span className="text-xs text-gray-400 line-through font-semibold ml-2">
+                                <span className="text-sm text-gray-400 line-through font-semibold">
                                   ₹{displayOriginalPrice.toLocaleString('en-IN')}
                                 </span>
                               )}
                             </div>
                             {savings > 0 && (
-                              <span className="inline-flex self-start text-[9px] font-black uppercase text-emerald-600 tracking-wide mt-0.5">
-                                Save ₹{savings.toLocaleString('en-IN')}
+                              <span className="inline-flex items-center text-[10px] font-black uppercase text-emerald-600 tracking-wide mt-0.5">
+                                🟢 SAVE ₹{savings.toLocaleString('en-IN')} TODAY
                               </span>
                             )}
                           </div>
 
-                          {/* Rating row: ⭐ 4.5 (111 Reviews) */}
-                          <div className="flex items-center gap-1 text-[11px] font-black text-slate-800 leading-none">
-                            <Star size={12} className="fill-amber-500 text-amber-500" />
-                            <span>{hotel.rating.toFixed(1)}</span>
-                            <span className="text-slate-400 font-bold">({hotel.reviewsCount} Reviews)</span>
-                          </div>
-
-                          {/* Title / Hotel Name */}
-                          <h3 className="font-extrabold text-base font-display text-black leading-snug group-hover:text-[#FF5F00] transition-colors line-clamp-1">
-                            {hotel.name}
-                          </h3>
-
-                          {/* Landmark/Location (Prominent) */}
-                          <div className="flex items-center gap-1 text-[11px] font-extrabold text-slate-700">
-                            <MapPin size={12} className="text-[#FF5F00] shrink-0" />
-                            <span className="truncate">
-                              {hotel.landmarks && hotel.landmarks[0] 
-                                ? `5 min from ${hotel.landmarks[0].replace(/Near |Near/i, '')}`
-                                : `Nearby ${hotel.address.replace(', Rishikesh', '').split(',')[0]}`
-                              }
-                            </span>
-                          </div>
+                          {/* Divider 2 */}
+                          <hr className="border-t border-slate-100 my-2" />
 
                           {/* Badges and Highlights Row */}
-                          <div className="flex flex-wrap gap-1.5 pt-0.5">
-                            <span className="inline-flex items-center gap-1 text-[9px] text-slate-700 font-black uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-0.5">
+                            <span className="inline-flex items-center gap-1 text-[9px] text-slate-700 font-black uppercase tracking-wider">
                               🏆 Best Value
                             </span>
                             {hotel.rules?.unmarried_couples && (
-                              <span className="inline-flex items-center gap-1 text-[9px] text-rose-600 font-black uppercase tracking-wider bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
+                              <span className="inline-flex items-center gap-1 text-[9px] text-rose-600 font-black uppercase tracking-wider">
                                 💕 Couple Friendly
                               </span>
                             )}
                           </div>
 
                           {/* Cancellation / Refund badges */}
-                          <div className="flex flex-wrap gap-2 text-[9px] font-black text-emerald-600 uppercase tracking-wider">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[9px] font-black text-emerald-600 uppercase tracking-wider">
                             <span>✅ Free Cancellation</span>
                             <span>🛡️ 100% Refund Guarantee</span>
                           </div>
 
-                          {/* Amenities Row */}
-                          <div className="flex flex-wrap gap-3 text-xs font-bold text-slate-500 pt-0.5">
-                            {hotel.amenities?.ac && <span>❄️ AC</span>}
-                            {hotel.amenities?.wifi && <span>📶 WiFi</span>}
-                          </div>
+                          {/* Divider 3 */}
+                          <hr className="border-t border-slate-100 my-2" />
 
                           {/* UPI Discount banner */}
-                          <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/10 rounded-xl p-2.5 flex items-center justify-between text-[10px] text-[#FF5F00] font-black w-full min-w-0">
-                            <span className="break-words text-left">💸 Save ₹{upiDiscount} instantly with UPI</span>
+                          <div className="text-[10px] text-slate-700 font-black flex items-center gap-1.5 py-0.5">
+                            <span>💸</span>
+                            <span>Flat ₹{upiDiscount} Instant UPI Discount</span>
                           </div>
+
+                          {/* Divider 4 */}
+                          <hr className="border-t border-slate-100 my-2" />
                         </div>
                       </div>
 
@@ -769,7 +796,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             e.stopPropagation();
                             handleSelectHotel(hotel);
                           }}
-                          className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.25)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
+                          className="w-full py-3 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.25)] hover:scale-[1.01] transition-all border-none cursor-pointer text-center font-display"
                         >
                           Check Availability
                         </button>
