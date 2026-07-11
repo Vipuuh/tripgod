@@ -1007,18 +1007,31 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     className="w-full h-full object-cover transition-all duration-300 select-none cursor-pointer"
                   />
 
-                  {/* Top-left popular badge */}
+                  {/* Top-left popular badge — dynamic from bookings_count or popular_badge_text */}
                   <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10 select-none">
-                    {selectedHotel.popular_badge_text ? (
-                      <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider border border-[#FF5F00]/10 flex items-center gap-1">
-                        {selectedHotel.popular_badge_text.toLowerCase().includes('choice') ? '🏆' : '🔥'} {selectedHotel.popular_badge_text}
-                      </span>
-                    ) : selectedHotel.high_demand ? (
-                      <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider border border-[#FF5F00]/10 flex items-center gap-1">
-                        🏆 Traveler's Choice
-                      </span>
-                    ) : null}
+                    {(() => {
+                      const count = selectedHotel.bookings_count;
+                      const badgeText = selectedHotel.popular_badge_text
+                        || (count ? `${count} bookings this week` : null);
+                      if (badgeText) {
+                        const isChoice = badgeText.toLowerCase().includes('choice');
+                        return (
+                          <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider border border-[#FF5F00]/10 flex items-center gap-1">
+                            {isChoice ? '🏆' : '🔥'} {badgeText}
+                          </span>
+                        );
+                      }
+                      if (selectedHotel.high_demand) {
+                        return (
+                          <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md uppercase tracking-wider border border-[#FF5F00]/10 flex items-center gap-1">
+                            🏆 Traveler's Choice
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
+
 
                   {window._activeImages.length > 1 && (
                     <>
