@@ -1311,12 +1311,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
                     </svg>
                   )},
-                  { label: 'Adults', sub: '12+ years', val: numAdults, min: 1, max: 20, set: setNumAdults, icon: (
+                  { label: 'Adults', sub: '18+ years', val: numAdults, min: 1, max: 20, set: setNumAdults, icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
                     </svg>
                   )},
-                  { label: 'Children', sub: 'Under 12 years', val: numKids, min: 0, max: 10, set: setNumKids, icon: (
+                  { label: 'Children', sub: 'Under 18 years', val: numKids, min: 0, max: 10, set: setNumKids, icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="9" r="3"/><path d="M12 12v3"/><path d="M9.5 17.5 12 15l2.5 2.5"/>
                     </svg>
@@ -1623,7 +1623,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">House Rules</h4>
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-655 font-bold">
                       {Object.entries(selectedHotel.rules)
-                        .filter(([_, val]) => !!val) // Only show relevant, allowed rules!
+                        .filter(([key, val]) => {
+                          // Only show known rule keys that are enabled
+                          const knownKeys = ['unmarried_couples', 'pets', 'smoking', 'id_required', 'min_age_18', 'alcohol_allowed', 'visitors_allowed'];
+                          return knownKeys.includes(key) && !!val;
+                        })
                         .map(([key]) => {
                           const labelMap = {
                             unmarried_couples: 'Couples Allowed',
@@ -1634,7 +1638,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             alcohol_allowed: 'Alcohol Allowed',
                             visitors_allowed: 'Outside Visitors'
                           };
-                          const ruleLabel = labelMap[key] || key.replace(/_/g, ' ');
+                          const ruleLabel = labelMap[key];
                           return (
                             <div key={key} className="flex items-center gap-1.5 p-2 bg-slate-50/40 rounded-xl border border-black/5">
                               <Check size={12} className="text-emerald-600 shrink-0 stroke-[2.5]" />
