@@ -136,6 +136,13 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
         const dayAfterStr = dayAfter.toISOString().split('T')[0];
         setCheckInDate(tomorrowStr);
         setCheckOutDate(dayAfterStr);
+
+        // For hotels: set guests = total guests passed from hotel page
+        const totalFromHotel = (activity.num_adults || 2) + (activity.num_kids || 1);
+        setGuests(totalFromHotel);
+      } else {
+        // For other categories: use initialGuests or default 1
+        setGuests(initialGuests || 1);
       }
 
       // Prefill user details if logged in
@@ -181,7 +188,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   // Calculate pricing
   const basePrice = activity.price || 0;
   const pricePerPerson = basePrice;
-  const rawTotalPrice = pricePerPerson * guests * (activity.category === 'hotels' ? nights : 1);
+  // For hotels: price already = (room_price × rooms + meal costs) per night, so just multiply by nights
+  // For other categories: multiply by guests
+  const rawTotalPrice = activity.category === 'hotels'
+    ? basePrice * nights
+    : pricePerPerson * guests;
   
   // Calculate 12% tax dynamically for hotel bookings
   const taxes = activity.category === 'hotels' ? Math.round(rawTotalPrice * 0.12) : 0;
@@ -846,25 +857,66 @@ My payment ID is verified. Please confirm my slots.`;
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                    <Users size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'No. of Vehicles' : 'Total Guests'}
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={guests}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setGuests(val === '' ? '' : Math.max(1, parseInt(val) || 1));
-                    }}
-                    onBlur={() => {
-                      if (guests === '' || guests < 1) setGuests(1);
-                    }}
-                    className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
-                  />
-                </div>
+                {/* Guests field — hotel shows structured summary, others show editable number */}
+                {activity.category === 'hotels' ? (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                      <Users size={14} className="text-[#FF5F00]" /> Guests &amp; Rooms
+                    </label>
+                    <div className="w-full px-4 py-3 border border-black/10 rounded-xl bg-gray-50 text-sm font-semibold text-black">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="flex items-center gap-1.5 text-gray-700">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF5F00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
+                              </svg>
+                              <span className="font-black text-black">{activity.num_rooms || 1}</span>
+                              <span className="text-gray-500 text-xs">room{(activity.num_rooms || 1) > 1 ? 's' : ''}</span>
+                            </span>
+                            <span className="text-gray-300">·</span>
+                            <span className="flex items-center gap-1.5 text-gray-700">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+                              </svg>
+                              <span className="font-black text-black">{activity.num_adults || 2}</span>
+                              <span className="text-gray-500 text-xs">adult{(activity.num_adults || 2) > 1 ? 's' : ''}</span>
+                            </span>
+                            <span className="text-gray-300">·</span>
+                            <span className="flex items-center gap-1.5 text-gray-700">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="9" r="3"/><path d="M12 12v3"/><path d="M9.5 17.5 12 15l2.5 2.5"/>
+                              </svg>
+                              <span className="font-black text-black">{activity.num_kids || 1}</span>
+                              <span className="text-gray-500 text-xs">child{(activity.num_kids || 1) !== 1 ? 'ren' : ''}</span>
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-medium mt-0.5">Set in hotel details · Go back to change</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                      <Users size={14} className="text-[#FF5F00]" /> {isBikeRent ? 'No. of Vehicles' : 'Total Guests'}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={guests}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setGuests(val === '' ? '' : Math.max(1, parseInt(val) || 1));
+                      }}
+                      onBlur={() => {
+                        if (guests === '' || guests < 1) setGuests(1);
+                      }}
+                      className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Optional extras depending on category & free video selection */}
@@ -967,20 +1019,35 @@ My payment ID is verified. Please confirm my slots.`;
 
               {/* Pricing breakdown - Highlighted in Green */}
               <div className="p-4 bg-emerald-600/10 border border-emerald-500/20 text-emerald-950 rounded-2xl space-y-2.5 font-sans">
-                <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
-                  <span>{isBikeRent ? 'Price per day' : (activity.category === 'hotels' ? 'Price per room per night' : 'Price per person')}</span>
-                  <span>₹{pricePerPerson.toLocaleString('en-IN')}</span>
-                </div>
-                {activity.category === 'hotels' && (
-                  <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
-                    <span>Number of nights</span>
-                    <span>{nights} Night{nights > 1 ? 's' : ''}</span>
-                  </div>
+                {activity.category === 'hotels' ? (
+                  <>
+                    <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                      <span>Rate per night ({activity.num_rooms || 1} room{(activity.num_rooms || 1) > 1 ? 's' : ''})</span>
+                      <span>₹{(activity.room_price || activity.price || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    {(activity.meal_cost_per_night || 0) > 0 && (
+                      <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                        <span>Meal add-ons ({(activity.num_adults || 2) + (activity.num_kids || 1)} guests)</span>
+                        <span>₹{Number(activity.meal_cost_per_night).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                      <span>Nights</span>
+                      <span>{nights} Night{nights > 1 ? 's' : ''}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                      <span>{isBikeRent ? 'Price per day' : 'Price per person'}</span>
+                      <span>₹{pricePerPerson.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                      <span>Base price ({guests} {isBikeRent ? `vehicle${guests > 1 ? 's' : ''}` : `guest${guests > 1 ? 's' : ''}`})</span>
+                      <span>₹{rawTotalPrice.toLocaleString('en-IN')}</span>
+                    </div>
+                  </>
                 )}
-                <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
-                  <span>{activity.category === 'hotels' ? 'Room price' : 'Base price'} ({guests} {isBikeRent ? `vehicle${guests > 1 ? 's' : ''}` : `guest${guests > 1 ? 's' : ''}`})</span>
-                  <span>₹{rawTotalPrice.toLocaleString('en-IN')}</span>
-                </div>
                 {activity.category === 'hotels' && (
                   <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
                     <span>GST & Service Taxes (12%)</span>
