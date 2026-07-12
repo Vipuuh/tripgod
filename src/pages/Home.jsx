@@ -270,7 +270,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
   const quickAccess = [
     { label: 'Hotels', emoji: '🏨', route: 'hotels' },
-    { label: 'Char Dham', emoji: '🛕', route: 'tours' },
+    { label: 'Adventures', emoji: '⚡', route: 'adventures' },
     { label: 'Rafting', emoji: '🚣', route: 'rafting' },
     { label: 'Bike Rent', emoji: '🏍️', route: 'bikerent' }
   ];
@@ -283,6 +283,14 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       price: '1,290',
       img: '/rafting-hero.jpg',
       route: 'rafting'
+    },
+    {
+      id: 'bungee',
+      name: 'Bungee Jumping',
+      desc: 'Leap from 83m above the Ganges – the highest bungee in India.',
+      price: '3,500',
+      img: '/bungee-hero.jpg',
+      route: 'bungee'
     },
     {
       id: 'zipline',
@@ -654,18 +662,26 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-stretch md:items-center px-4">
             {/* Tab selection menu */}
             <div className="w-full md:w-auto flex items-center gap-1.5 md:gap-2 bg-black/75 backdrop-blur-xl px-4 md:px-6 py-2.5 md:py-3.5 rounded-t-2xl md:rounded-t-3xl border-t border-x border-white/15 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center scroll-smooth">
-              {[
+               [
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
                 { id: 'tours', label: 'Tours', icon: MapPinned },
                 { id: 'rafting', label: 'Rafting', icon: Waves },
-                { id: 'bikerent', label: 'Bike Rental', icon: Bike }
+                { id: 'bikerent', label: 'Bike Rental', icon: Bike },
+                { id: 'adventures', label: 'Adventures', icon: Zap }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeSearchTab === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveSearchTab(tab.id)}
+                    onClick={() => {
+                      setActiveSearchTab(tab.id);
+                      if (tab.id === 'adventures') {
+                        setTimeout(() => {
+                          document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
+                      }
+                    }}
                     className={`flex items-center gap-1.5 md:gap-2 px-3.5 md:px-5 py-2 md:py-2.5 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 border-none cursor-pointer flex-shrink-0 ${
                       isActive 
                         ? 'bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white shadow-[0_4px_15px_rgba(255,95,0,0.35)] scale-105' 
@@ -889,6 +905,31 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 </div>
               )}
 
+              {activeSearchTab === 'adventures' && (
+                <div className="flex flex-col gap-3 pb-4 md:pb-0">
+                  <p className="text-[11px] font-black uppercase text-slate-400 tracking-wider">Choose Your Activity</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { label: '🚣 River Rafting', route: 'rafting' },
+                      { label: '🪂 Paragliding', route: 'paragliding' },
+                      { label: '🎿 Ganga Zipline', route: 'zipline' },
+                      { label: '🎠 Giant Swing', route: 'swing' },
+                      { label: '⛺ Riverside Camping', route: 'camping' },
+                      { label: '🔥 Bungee Jumping', route: 'bungee' },
+                    ].map(act => (
+                      <button
+                        key={act.route}
+                        type="button"
+                        onClick={() => setRoute(act.route)}
+                        className="px-4 py-2 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/25 text-[#FF5F00] text-xs font-black hover:bg-[#FF5F00] hover:text-white transition-all duration-200 cursor-pointer"
+                      >
+                        {act.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Centered hanging search button */}
               <div className="absolute left-1/2 -bottom-6 -translate-x-1/2 z-20">
                 <button
@@ -914,6 +955,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                       setPrefDate(cabDate);
                       setPrefGuests(1);
                       setRoute('pickup');
+                    } else if (activeSearchTab === 'adventures') {
+                      document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
                     }
                   }}
                   className="px-10 py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs sm:text-sm uppercase tracking-widest rounded-full shadow-[0_8px_30px_rgba(255,95,0,0.4)] hover:shadow-[0_12px_40px_rgba(255,95,0,0.6)] hover:scale-105 transition-all duration-300 border-none cursor-pointer flex items-center gap-2 font-display"

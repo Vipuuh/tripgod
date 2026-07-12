@@ -13,6 +13,7 @@ import Rafting from './pages/Rafting';
 import Zipline from './pages/Zipline';
 import Paragliding from './pages/Paragliding';
 import Swing from './pages/Swing';
+import Bungee from './pages/Bungee';
 import Camping from './pages/Camping';
 import BikeRent from './pages/BikeRent';
 import Pickup from './pages/Pickup';
@@ -124,10 +125,10 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund', 'tour-partner-selection'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund', 'tour-partner-selection'];
 
       const isTourPartners = path.startsWith('tours/') && path.endsWith('/partners');
-      const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('swing/') || path.startsWith('camping/') || (path.startsWith('tours/') && !path.endsWith('/partners'));
+      const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || (path.startsWith('tours/') && !path.endsWith('/partners'));
 
       if (validRoutes.includes(path) || isSubRoute || isTourPartners) {
         let resolvedRoute = path;
@@ -135,6 +136,7 @@ export default function App() {
         else if (path.startsWith('rafting/')) resolvedRoute = 'rafting';
         else if (path.startsWith('zipline/')) resolvedRoute = 'zipline';
         else if (path.startsWith('paragliding/')) resolvedRoute = 'paragliding';
+        else if (path.startsWith('bungee/')) resolvedRoute = 'bungee';
         else if (path.startsWith('swing/')) resolvedRoute = 'swing';
         else if (path.startsWith('camping/')) resolvedRoute = 'camping';
         else if (path.startsWith('tours/') && !path.endsWith('/partners')) resolvedRoute = 'tours';
@@ -229,6 +231,7 @@ export default function App() {
     { name: 'River Rafting (12 KM Shivpuri)', route: 'rafting' },
     { name: 'River Rafting (16 KM Nim Beach)', route: 'rafting' },
     { name: 'River Rafting (26 KM Marine Drive)', route: 'rafting' },
+    { name: 'Bungee Jumping (83M Mohan Chatti)', route: 'bungee' },
     { name: 'Giant Swing (113M Valleys)', route: 'swing' },
     { name: 'Ganga Zipline Crossings', route: 'zipline' },
     { name: 'Tandem Paragliding', route: 'paragliding' },
@@ -355,6 +358,7 @@ export default function App() {
             {route === 'rafting' && <Rafting currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'zipline' && <Zipline currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'paragliding' && <Paragliding currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'bungee' && <Bungee currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'swing' && <Swing currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'camping' && <Camping currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
@@ -471,6 +475,7 @@ export default function App() {
             <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Adventures</h4>
             <ul className="space-y-2 text-xs font-medium text-gray-400">
               <li><button onClick={() => navigateTo('rafting')} className="hover:text-accent transition-colors">River Rafting</button></li>
+              <li><button onClick={() => navigateTo('bungee')} className="hover:text-accent transition-colors">Bungee Jumping</button></li>
               <li><button onClick={() => navigateTo('zipline')} className="hover:text-accent transition-colors">Ganga Zipline</button></li>
               <li><button onClick={() => navigateTo('paragliding')} className="hover:text-accent transition-colors">Paragliding</button></li>
               <li><button onClick={() => navigateTo('swing')} className="hover:text-accent transition-colors">Giant Swing</button></li>
