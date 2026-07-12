@@ -662,7 +662,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-stretch md:items-center px-4">
             {/* Tab selection menu */}
             <div className="w-full md:w-auto flex items-center gap-1.5 md:gap-2 bg-black/75 backdrop-blur-xl px-4 md:px-6 py-2.5 md:py-3.5 rounded-t-2xl md:rounded-t-3xl border-t border-x border-white/15 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center scroll-smooth">
-               [
+              {[
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
                 { id: 'tours', label: 'Tours', icon: MapPinned },
                 { id: 'rafting', label: 'Rafting', icon: Waves },
