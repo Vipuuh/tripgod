@@ -132,14 +132,6 @@ export default function Paragliding({ currentCity, openBookingModal }) {
     fetchParagliding();
   }, [currentCity]);
 
-  if (loading) {
-    return (
-      <div className="w-full min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
-      </div>
-    );
-  }
-
   const handleSelectPara = (para) => {
     setSelectedPara(para);
     if (para) {
@@ -176,6 +168,14 @@ export default function Paragliding({ currentCity, openBookingModal }) {
       setSelectedPara(paraData[0]);
     }
   }, [paraData]);
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">

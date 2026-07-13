@@ -132,14 +132,6 @@ export default function Swing({ currentCity, openBookingModal }) {
     fetchSwing();
   }, [currentCity]);
 
-  if (loading) {
-    return (
-      <div className="w-full min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
-      </div>
-    );
-  }
-
   const handleSelectSwing = (swing) => {
     setSelectedSwing(swing);
     if (swing) {
@@ -176,6 +168,14 @@ export default function Swing({ currentCity, openBookingModal }) {
       setSelectedSwing(swingData[0]);
     }
   }, [swingData]);
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">

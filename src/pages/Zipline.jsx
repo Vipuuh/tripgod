@@ -131,14 +131,6 @@ export default function Zipline({ currentCity, openBookingModal }) {
     fetchZipline();
   }, [currentCity]);
 
-  if (loading) {
-    return (
-      <div className="w-full min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
-      </div>
-    );
-  }
-
   const handleSelectZip = (zip) => {
     setSelectedZip(zip);
     if (zip) {
@@ -175,6 +167,14 @@ export default function Zipline({ currentCity, openBookingModal }) {
       setSelectedZip(zipData[0]);
     }
   }, [zipData]);
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">

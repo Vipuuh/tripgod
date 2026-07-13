@@ -133,14 +133,6 @@ export default function Camping({ currentCity, openBookingModal }) {
     fetchCamping();
   }, [currentCity]);
 
-  if (loading) {
-    return (
-      <div className="w-full min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
-      </div>
-    );
-  }
-
   const handleSelectCamp = (camp) => {
     setSelectedCamp(camp);
     if (camp) {
@@ -177,6 +169,14 @@ export default function Camping({ currentCity, openBookingModal }) {
       setSelectedCamp(campsData[0]);
     }
   }, [campsData]);
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">

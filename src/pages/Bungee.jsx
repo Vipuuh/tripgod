@@ -150,6 +150,13 @@ export default function Bungee({ currentCity, openBookingModal }) {
     return () => window.removeEventListener('popstate', handleRouteSync);
   }, [bungeeData]);
 
+  // Auto-select if only one option (moved to useEffect to avoid setState-in-render crash)
+  useEffect(() => {
+    if (bungeeData.length === 1 && !selectedBungee) {
+      setSelectedBungee(bungeeData[0]);
+    }
+  }, [bungeeData]);
+
   if (loading) {
     return (
       <div className="w-full min-h-[60vh] flex items-center justify-center">
@@ -157,13 +164,6 @@ export default function Bungee({ currentCity, openBookingModal }) {
       </div>
     );
   }
-
-  // Auto-select if only one option (moved to useEffect to avoid setState-in-render crash)
-  useEffect(() => {
-    if (bungeeData.length === 1 && !selectedBungee) {
-      setSelectedBungee(bungeeData[0]);
-    }
-  }, [bungeeData]);
 
   return (
     <div className="w-full min-h-screen bg-white">
