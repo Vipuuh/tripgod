@@ -156,9 +156,12 @@ export default function Bungee({ currentCity, openBookingModal }) {
     );
   }
 
-  if (bungeeData.length === 1 && !selectedBungee && window.location.pathname === '/bungee') {
-    setSelectedBungee(bungeeData[0]);
-  }
+  // Auto-select if only one option (moved to useEffect to avoid setState-in-render crash)
+  useEffect(() => {
+    if (bungeeData.length === 1 && !selectedBungee) {
+      setSelectedBungee(bungeeData[0]);
+    }
+  }, [bungeeData]);
 
   return (
     <div className="w-full min-h-screen bg-white">

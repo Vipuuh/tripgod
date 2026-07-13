@@ -168,10 +168,12 @@ export default function Paragliding({ currentCity, openBookingModal }) {
     return () => window.removeEventListener('popstate', handleRouteSync);
   }, [paraData]);
 
-  // If only one option exists, show details directly
-  if (paraData.length === 1 && !selectedPara && window.location.pathname === '/paragliding') {
-    setSelectedPara(paraData[0]);
-  }
+  // Auto-select if only one option (moved to useEffect to avoid setState-in-render crash)
+  useEffect(() => {
+    if (paraData.length === 1 && !selectedPara) {
+      setSelectedPara(paraData[0]);
+    }
+  }, [paraData]);
 
   return (
     <div className="w-full min-h-screen bg-white">

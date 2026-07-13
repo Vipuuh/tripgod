@@ -168,10 +168,12 @@ export default function Swing({ currentCity, openBookingModal }) {
     return () => window.removeEventListener('popstate', handleRouteSync);
   }, [swingData]);
 
-  // If only one option exists, show details directly
-  if (swingData.length === 1 && !selectedSwing && window.location.pathname === '/swing') {
-    setSelectedSwing(swingData[0]);
-  }
+  // Auto-select if only one option (moved to useEffect to avoid setState-in-render crash)
+  useEffect(() => {
+    if (swingData.length === 1 && !selectedSwing) {
+      setSelectedSwing(swingData[0]);
+    }
+  }, [swingData]);
 
   return (
     <div className="w-full min-h-screen bg-white">

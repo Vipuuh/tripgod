@@ -167,10 +167,12 @@ export default function Zipline({ currentCity, openBookingModal }) {
     return () => window.removeEventListener('popstate', handleRouteSync);
   }, [zipData]);
 
-  // If only one option exists, show details directly
-  if (zipData.length === 1 && !selectedZip && window.location.pathname === '/zipline') {
-    setSelectedZip(zipData[0]);
-  }
+  // Auto-select if only one option (moved to useEffect to avoid setState-in-render crash)
+  useEffect(() => {
+    if (zipData.length === 1 && !selectedZip) {
+      setSelectedZip(zipData[0]);
+    }
+  }, [zipData]);
 
   return (
     <div className="w-full min-h-screen bg-white">

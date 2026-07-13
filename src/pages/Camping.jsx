@@ -169,10 +169,12 @@ export default function Camping({ currentCity, openBookingModal }) {
     return () => window.removeEventListener('popstate', handleRouteSync);
   }, [campsData]);
 
-  // If there is only one camp package, show its detail view directly to save a click
-  if (campsData.length === 1 && !selectedCamp && window.location.pathname === '/camping') {
-    setSelectedCamp(campsData[0]);
-  }
+  // Auto-select if only one option (moved to useEffect to avoid setState-in-render crash)
+  useEffect(() => {
+    if (campsData.length === 1 && !selectedCamp) {
+      setSelectedCamp(campsData[0]);
+    }
+  }, [campsData]);
 
   return (
     <div className="w-full min-h-screen bg-white">
