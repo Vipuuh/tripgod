@@ -31,6 +31,47 @@ import AdminDashboard from './components/AdminDashboard';
 import LoginModal from './components/LoginModal';
 import AccountModal from './components/AccountModal';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 max-w-xl mx-auto my-12 bg-red-50 border border-red-200 text-red-900 rounded-3xl shadow-md text-left font-sans">
+          <h2 className="text-lg font-black uppercase text-red-700">Something went wrong</h2>
+          <p className="text-xs font-bold mt-3 text-slate-500">Error details:</p>
+          <pre className="p-4 mt-1 bg-red-100/50 rounded-2xl text-[10px] font-mono overflow-auto max-h-48 text-red-800 border border-red-200/50">
+            {this.state.error?.toString()}
+          </pre>
+          {this.state.error?.stack && (
+            <>
+              <p className="text-xs font-bold mt-4 text-slate-500">Stack Trace:</p>
+              <pre className="p-4 mt-1 bg-red-100/50 rounded-2xl text-[10px] font-mono overflow-auto max-h-48 text-red-800 border border-red-200/50">
+                {this.state.error.stack}
+              </pre>
+            </>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase rounded-xl border-none cursor-pointer transition-all shadow-sm"
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   // Navigation State
   const [route, setRoute] = useState('home');
@@ -355,12 +396,12 @@ export default function App() {
                 setPrefGuests={setPrefGuests}
               />
             )}
-            {route === 'rafting' && <Rafting currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'zipline' && <Zipline currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'paragliding' && <Paragliding currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'bungee' && <Bungee currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'swing' && <Swing currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'camping' && <Camping currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'rafting' && <ErrorBoundary><Rafting currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+            {route === 'zipline' && <ErrorBoundary><Zipline currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+            {route === 'paragliding' && <ErrorBoundary><Paragliding currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+            {route === 'bungee' && <ErrorBoundary><Bungee currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+            {route === 'swing' && <ErrorBoundary><Swing currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+            {route === 'camping' && <ErrorBoundary><Camping currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
             {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
             {route === 'hotels' && <Hotels currentCity={currentCity} openBookingModal={openBookingModal} />}
