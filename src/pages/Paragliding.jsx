@@ -31,6 +31,7 @@ const defaultParaglidingOptions = [
     ],
     rating: 4.8,
     reviewsCount: 520,
+    coming_soon: true,
     operators: []
   }
 ];
@@ -101,6 +102,7 @@ export default function Paragliding({ currentCity, openBookingModal }) {
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
                 free_video_type: item.free_video_type || 'none',
+                coming_soon: item.coming_soon !== undefined && item.coming_soon !== null ? !!item.coming_soon : true,
                 operators: []
               };
             }
@@ -256,8 +258,16 @@ export default function Paragliding({ currentCity, openBookingModal }) {
 
                       <div className="pt-4 border-t border-black/5 flex items-center justify-between">
                         <div>
-                          <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
-                          <span className="text-lg font-black text-black">₹{opt.price.toLocaleString('en-IN')}</span>
+                          {opt.coming_soon ? (
+                            <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded">
+                              Coming Soon
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
+                              <span className="text-lg font-black text-black">₹{(Number(opt.price) || 0).toLocaleString('en-IN')}</span>
+                            </>
+                          )}
                         </div>
                         <button
                           onClick={() => handleSelectPara(opt)}
@@ -329,6 +339,7 @@ export default function Paragliding({ currentCity, openBookingModal }) {
               closed_from={selectedPara.closed_from}
               closed_until={selectedPara.closed_until}
               free_video_type={selectedPara.free_video_type}
+              coming_soon={selectedPara.coming_soon}
             />
           </motion.div>
         )}

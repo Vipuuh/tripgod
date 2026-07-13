@@ -32,6 +32,7 @@ const defaultCamps = [
     ],
     rating: 4.6,
     reviewsCount: 618,
+    coming_soon: false,
     operators: []
   }
 ];
@@ -102,6 +103,7 @@ export default function Camping({ currentCity, openBookingModal }) {
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
                 free_video_type: item.free_video_type || 'none',
+                coming_soon: !!item.coming_soon,
                 operators: []
               };
             }
@@ -257,8 +259,16 @@ export default function Camping({ currentCity, openBookingModal }) {
 
                       <div className="pt-4 border-t border-black/5 flex items-center justify-between">
                         <div>
-                          <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
-                          <span className="text-lg font-black text-black">₹{camp.price.toLocaleString('en-IN')}</span>
+                          {camp.coming_soon ? (
+                            <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded">
+                              Coming Soon
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
+                              <span className="text-lg font-black text-black">₹{(Number(camp.price) || 0).toLocaleString('en-IN')}</span>
+                            </>
+                          )}
                         </div>
                         <button
                           onClick={() => handleSelectCamp(camp)}
@@ -328,6 +338,7 @@ export default function Camping({ currentCity, openBookingModal }) {
               closed_from={selectedCamp.closed_from}
               closed_until={selectedCamp.closed_until}
               free_video_type={selectedCamp.free_video_type}
+              coming_soon={selectedCamp.coming_soon}
             />
           </motion.div>
         )}

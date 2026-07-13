@@ -30,7 +30,8 @@ export default function ActivityDetail({
   closed_reason = '',
   closed_from = '',
   closed_until = '',
-  free_video_type = 'none'
+  free_video_type = 'none',
+  coming_soon = false
 }) {
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
 
@@ -110,6 +111,17 @@ export default function ActivityDetail({
   return (
     <div className="w-full min-h-screen bg-white pb-24 pt-6">
       <div className="max-w-4xl mx-auto px-6 space-y-6">
+        {coming_soon && (
+          <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex flex-col gap-1.5 text-left shadow-sm">
+            <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-amber-700">
+              🚀 COMING SOON
+            </span>
+            <p className="text-xs font-semibold leading-relaxed">
+              We are launch-readying this experience! Online slot bookings will open very soon.
+            </p>
+          </div>
+        )}
+
         {checkIfClosed().closed && (
           <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl flex flex-col gap-1.5 text-left shadow-sm">
             <span className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5 text-red-700">
@@ -152,7 +164,7 @@ export default function ActivityDetail({
 
           <div className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col">
             <span className="text-[10px] font-bold text-gray-600 uppercase">Package Price</span>
-            <span className="text-2xl font-black text-black">₹{price.toLocaleString('en-IN')}</span>
+            <span className="text-2xl font-black text-black">₹{(Number(price) || 0).toLocaleString('en-IN')}</span>
             <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
               Book with Token Advance
             </span>
@@ -307,7 +319,14 @@ export default function ActivityDetail({
               <p className="text-xs text-gray-600 font-medium">Pay a partial token advance online today to reserve your slot. 100% refund guarantee up to 24h prior.</p>
             </div>
           </div>
-          {checkIfClosed().closed ? (
+          {coming_soon ? (
+            <button
+              disabled
+              className="w-full sm:w-auto py-3 px-6 bg-slate-200 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display"
+            >
+              Coming Soon
+            </button>
+          ) : checkIfClosed().closed ? (
             <button
               disabled
               className="w-full sm:w-auto py-3 px-6 bg-gray-300 text-gray-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display"
@@ -355,10 +374,17 @@ export default function ActivityDetail({
         <div>
           <span className="block text-[10px] text-gray-500 uppercase font-bold">{title}</span>
           <span className="text-lg font-black text-black">
-            ₹{price.toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/person</span>
+            ₹{(Number(price) || 0).toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/person</span>
           </span>
         </div>
-        {checkIfClosed().closed ? (
+        {coming_soon ? (
+          <button
+            disabled
+            className="py-3.5 px-6 bg-slate-200 text-slate-500 text-xs font-black uppercase tracking-wider rounded-xl border-none cursor-not-allowed font-display"
+          >
+            Coming Soon
+          </button>
+        ) : checkIfClosed().closed ? (
           <button
             disabled
             className="py-3.5 px-6 bg-gray-300 text-gray-500 text-xs font-black uppercase tracking-wider rounded-xl border-none cursor-not-allowed font-display"

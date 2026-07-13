@@ -510,7 +510,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     <div className="p-4 sm:p-5 bg-gray-50 border-t border-black/5 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] block font-bold text-gray-500 uppercase">From</span>
-                        <span className="text-xl font-black text-black">₹{str.price.toLocaleString('en-IN')}</span>
+                        <span className="text-xl font-black text-black">₹{(Number(str.price) || 0).toLocaleString('en-IN')}</span>
                       </div>
                       <span className="text-xs font-black uppercase text-black flex items-center gap-1 group-hover:underline decoration-accent decoration-2">
                         View Details <ChevronLeft className="rotate-180" size={14} />
@@ -572,7 +572,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                   className="text-left sm:text-right bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-3 rounded-xl flex flex-col cursor-pointer hover:border-[#FF5F00]/40 transition-all active:scale-[0.98]"
                 >
                   <span className="text-[10px] font-bold text-gray-600 uppercase">Price per person</span>
-                  <span className="text-2xl font-black text-black">Starts from ₹{selectedStretch.price.toLocaleString('en-IN')}</span>
+                  <span className="text-2xl font-black text-black">Starts from ₹{(Number(selectedStretch.price) || 0).toLocaleString('en-IN')}</span>
                   <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">Compare Operators & Book</span>
                 </div>
               </div>
@@ -995,7 +995,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
               <div>
                 <span className="block text-[10px] text-gray-500 uppercase font-bold">{selectedStretch.name}</span>
                 <span className="text-lg font-black text-black">
-                  Starts from ₹{selectedStretch.price.toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/person</span>
+                  Starts from ₹{(Number(selectedStretch.price) || 0).toLocaleString('en-IN')}<span className="text-xs text-gray-500 font-semibold">/person</span>
                 </span>
               </div>
               <button

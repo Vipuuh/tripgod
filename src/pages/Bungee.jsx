@@ -33,6 +33,7 @@ const defaultBungeeOptions = [
     ],
     rating: 4.9,
     reviewsCount: 410,
+    coming_soon: false,
     operators: [],
   },
 ];
@@ -100,6 +101,7 @@ export default function Bungee({ currentCity, openBookingModal }) {
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
                 free_video_type: item.free_video_type || 'none',
+                coming_soon: !!item.coming_soon,
                 operators: [],
               };
             }
@@ -213,8 +215,16 @@ export default function Bungee({ currentCity, openBookingModal }) {
                       </div>
                       <div className="pt-4 border-t border-black/5 flex items-center justify-between">
                         <div>
-                          <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
-                          <span className="text-lg font-black text-black">Rs.{opt.price.toLocaleString('en-IN')}</span>
+                           {opt.coming_soon ? (
+                             <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded">
+                               Coming Soon
+                             </span>
+                           ) : (
+                             <>
+                               <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
+                               <span className="text-lg font-black text-black">Rs.{(Number(opt.price) || 0).toLocaleString('en-IN')}</span>
+                             </>
+                           )}
                         </div>
                         <button onClick={() => handleSelectBungee(opt)} className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1">
                           View Details <ChevronLeft className="rotate-180" size={14} />
@@ -263,6 +273,7 @@ export default function Bungee({ currentCity, openBookingModal }) {
               closed_from={selectedBungee.closed_from}
               closed_until={selectedBungee.closed_until}
               free_video_type={selectedBungee.free_video_type}
+              coming_soon={selectedBungee.coming_soon}
             />
           </motion.div>
         )}

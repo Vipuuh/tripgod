@@ -1819,6 +1819,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         closed_reason: data.closed_reason || '',
         closed_from: data.closed_from || '',
         closed_until: data.closed_until || '',
+        coming_soon: !!data.coming_soon,
         seats_left: data.seats_left !== undefined && data.seats_left !== null ? Number(data.seats_left) : 10,
         hotel_included: data.hotel_included !== undefined && data.hotel_included !== null ? !!data.hotel_included : true,
         meals_included: data.meals_included !== undefined && data.meals_included !== null ? !!data.meals_included : true,
@@ -1904,7 +1905,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         payment_mode: 'commission_advance',
         fixed_advance_amount: 0,
         upi_discount: null,
-        free_video_type: 'none'
+        free_video_type: 'none',
+        coming_soon: false
       };
 
       if (type === 'hotels') {
@@ -2048,7 +2050,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           is_closed: !!formData.is_closed,
           closed_reason: formData.closed_reason || '',
           closed_from: formData.closed_from || null,
-          closed_until: formData.closed_until || null
+          closed_until: formData.closed_until || null,
+          coming_soon: !!formData.coming_soon
         };
 
         if (data) {
@@ -5926,6 +5929,25 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               <span className="text-[10px] text-gray-500">Checking this will immediately stop bookings and show a notification on the frontend.</span>
             </div>
           </div>
+
+          {/* Coming Soon checkbox */}
+          {['rafting', 'adventures', 'swing', 'paragliding', 'zipline', 'camping'].includes(type) && (
+            <div className="flex items-center gap-3 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+              <input
+                type="checkbox"
+                id="coming_soon"
+                checked={formData.coming_soon || false}
+                onChange={(e) => setFormData(prev => ({ ...prev, coming_soon: e.target.checked }))}
+                className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-4 h-4 cursor-pointer"
+              />
+              <div>
+                <label htmlFor="coming_soon" className="text-xs font-black text-white cursor-pointer select-none block uppercase tracking-wide">
+                  Mark as Coming Soon
+                </label>
+                <span className="text-[10px] text-gray-500">Checking this will mark the activity as "Coming Soon", show a banner, and disable booking.</span>
+              </div>
+            </div>
+          )}
 
           {/* Closed Reason */}
           <div className="space-y-1">
