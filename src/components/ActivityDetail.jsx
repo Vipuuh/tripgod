@@ -80,7 +80,14 @@ export default function ActivityDetail({
   };
 
 
-  const images = Array.isArray(heroImage) ? heroImage : [heroImage];
+  const safeHighlights = Array.isArray(highlights) ? highlights : [];
+  const safeInclusions = Array.isArray(inclusions) ? inclusions : [];
+  const safeExclusions = Array.isArray(exclusions) ? exclusions : [];
+  const safeEligibility = Array.isArray(eligibility) ? eligibility : [];
+  const safeNotSuitableFor = Array.isArray(notSuitableFor) ? notSuitableFor : [];
+  const safeOperators = Array.isArray(operators) ? operators : [];
+
+  const images = Array.isArray(heroImage) ? heroImage.filter(Boolean) : (heroImage ? [heroImage] : ['/operator-default.png']);
 
   useEffect(() => {
     setCurrentImgIdx(0);
@@ -220,7 +227,7 @@ export default function ActivityDetail({
         {/* Specs card below image */}
         <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-[11px] sm:text-xs bg-black/85 p-3.5 sm:p-4 rounded-2xl border border-white/5 shadow-sm">
           <div className="flex gap-4 flex-wrap">
-            {highlights.map((hl, idx) => (
+            {safeHighlights.filter(Boolean).map((hl, idx) => (
               <div key={idx} className="min-w-[60px]">
                 <span className="block text-gray-400 text-[9px] sm:text-[10px] uppercase font-bold">{hl.label}</span>
                 <span className="font-bold text-white">{hl.value}</span>
@@ -247,7 +254,7 @@ export default function ActivityDetail({
               <Check size={16} className="text-green-600 stroke-[3]" /> Inclusions
             </h4>
             <ul className="space-y-2 text-xs font-medium text-gray-600">
-              {inclusions.map((item, idx) => (
+              {safeInclusions.filter(Boolean).map((item, idx) => (
                 <li key={idx} className="flex items-center gap-2">• {item}</li>
               ))}
             </ul>
@@ -258,7 +265,7 @@ export default function ActivityDetail({
               <X size={16} className="text-red-600 stroke-[3]" /> Exclusions
             </h4>
             <ul className="space-y-2 text-xs font-medium text-gray-600">
-              {exclusions.map((item, idx) => (
+              {safeExclusions.filter(Boolean).map((item, idx) => (
                 <li key={idx} className="flex items-center gap-2">• {item}</li>
               ))}
             </ul>
@@ -272,19 +279,19 @@ export default function ActivityDetail({
               <HeartCrack size={16} className="text-red-700" /> Eligibility & Health Restrictions
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-medium text-gray-700">
-              {eligibility.length > 0 && (
+              {safeEligibility.length > 0 && (
                 <div className="space-y-2">
                   <span className="block font-bold text-red-800">Who is Eligible:</span>
                   <ul className="list-disc pl-4 space-y-1">
-                    {eligibility.map((el, idx) => <li key={idx}>{el}</li>)}
+                    {safeEligibility.filter(Boolean).map((el, idx) => <li key={idx}>{el}</li>)}
                   </ul>
                 </div>
               )}
-              {notSuitableFor.length > 0 && (
+              {safeNotSuitableFor.length > 0 && (
                 <div className="space-y-2">
                   <span className="block font-bold text-red-800">NOT Suitable For:</span>
                   <ul className="list-disc pl-4 space-y-1">
-                    {notSuitableFor.map((ns, idx) => <li key={idx}>{ns}</li>)}
+                    {safeNotSuitableFor.filter(Boolean).map((ns, idx) => <li key={idx}>{ns}</li>)}
                   </ul>
                 </div>
               )}
@@ -425,7 +432,7 @@ export default function ActivityDetail({
                     Choose Your Booking Option
                   </h3>
                   <span className="text-[9px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    {operators.length} Options Available
+                    {safeOperators.length} Options Available
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 font-semibold leading-relaxed">
@@ -436,7 +443,7 @@ export default function ActivityDetail({
               {/* Operator List Container */}
               <div className="pt-2 text-left">
                 <OperatorSelector
-                  operators={operators.map(op => ({
+                  operators={safeOperators.filter(Boolean).map(op => ({
                     id: op.id,
                     vendorName: op.vendors?.name || op.name || 'Local Operator',
                     shopImage: op.vendors?.shop_image || null,
