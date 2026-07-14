@@ -524,6 +524,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             cachedFeaturedTours = mappedTours;
             setFeaturedTours(mappedTours);
           }
+        }
         // Fetch all tours for the dropdown
         const { data: allToursData } = await supabase.from('tours').select('id, name');
         if (allToursData && allToursData.length > 0) {
