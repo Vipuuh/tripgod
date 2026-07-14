@@ -924,10 +924,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                       <span className="text-base shrink-0">📞</span>
                       <span>Local Support</span>
                     </div>
-                  </div>
                 </div>
-
-              </div>
+               </div>
 
                 {/* Who is this tour perfect for? */}
                 {selectedTour.perfect_for && selectedTour.perfect_for.length > 0 && (
