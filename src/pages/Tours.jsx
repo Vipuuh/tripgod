@@ -164,6 +164,18 @@ const getMockItinerary = (tourName, duration) => {
   }
 };
 
+const slugify = (text) => {
+  return (text || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+};
+
 export default function Tours({ currentCity, openBookingModal, selectedTour, setSelectedTour, navigateTo }) {
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,7 +226,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
   const handleSelectTour = (tour) => {
     setSelectedTour(tour);
     setActiveMediaIdx(0);
-    window.history.pushState(null, '', `/tours/${tour.id}`);
+    const slug = slugify(tour.name);
+    window.history.pushState(null, '', `/tours/${tour.id}-${slug}`);
   };
 
   useEffect(() => {
@@ -354,8 +367,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
     const handleRouteSync = () => {
       const path = window.location.pathname;
       if (path.startsWith('/tours/')) {
-        const tourId = path.substring('/tours/'.length);
-        if (tourId && tourId !== 'partners') {
+        const slug = path.substring('/tours/'.length);
+        if (slug && slug !== 'partners') {
+          const parts = slug.split('-');
+          const tourId = parts.slice(0, 5).join('-');
           if (tours.length > 0) {
             const matched = tours.find(t => t.id === tourId);
             if (matched) {
@@ -537,6 +552,14 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
     // Images list
     const imagesList = selectedTour.images || cheapestOp.images || [];
     const displayImages = imagesList.length > 0 ? imagesList : [selectedTour.img];
+
+    const mediaList = [];
+    if (selectedTour.video_url || cheapestOp.video_url) {
+      mediaList.push({ type: 'video', url: selectedTour.video_url || cheapestOp.video_url });
+    }
+    displayImages.forEach(img => {
+      mediaList.push({ type: 'image', url: img });
+    });
 
     const parseJSONSafely = (data, defaultValue = {}) => {
       if (!data) return defaultValue;
@@ -1320,11 +1343,11 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
 }
 
   return (
-    <div className="w-full min-h-[80vh] bg-slate-50 flex flex-col py-12 font-sans text-left text-slate-800">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+    <div className="w-full min-h-[80vh] bg-slate-50 flex flex-col py-6 md:py-12 font-sans text-left text-slate-800">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-4 md:space-y-8">
         
         {/* Compact Hero Section */}
-        <div className="bg-slate-900 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden select-none shadow-lg">
+        <div className="bg-slate-900 rounded-3xl p-4 md:p-8 text-white relative overflow-hidden select-none shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30 z-10" />
           <div className="absolute inset-0 bg-[url('/tour-hero.jpg')] bg-cover bg-center opacity-40 animate-pulse-slow" />
           
@@ -1332,16 +1355,16 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
             <span className="text-[10px] uppercase font-black tracking-widest text-[#FF5F00] bg-[#FF5F00]/10 px-2.5 py-1 rounded-md border border-[#FF5F00]/20">
               Uttarakhand Yatras & Treks
             </span>
-            <h1 className="text-2xl md:text-4xl font-black font-display tracking-tight uppercase leading-tight">
+            <h1 className="text-xl md:text-4xl font-black font-display tracking-tight uppercase leading-tight">
               Explore Tours & Yatras
             </h1>
-            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
+            <p className="hidden sm:block text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
               Book complete guided pilgrimages, trekking expeditions, and weekend sightseeing getaways across Uttarakhand. Compare top-rated operators, see real reviews, and secure your booking with instant voucher confirmation.
             </p>
           </div>
 
           {/* Horizontal Scrolling Trust Strip */}
-          <div className="relative z-20 flex gap-4 overflow-x-auto pt-6 border-t border-white/10 mt-6 select-none shrink-0 scrollbar-none">
+          <div className="relative z-20 flex gap-2 md:gap-4 overflow-x-auto pt-3 md:pt-6 border-t border-white/10 mt-3 md:mt-6 select-none shrink-0 scrollbar-none">
             <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shrink-0">
               <ShieldCheck size={12} className="text-emerald-500" /> Verified Operators
             </div>
@@ -1361,7 +1384,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         </div>
 
         {/* Sticky Search & Filter Bar */}
-        <div className="sticky top-16 z-30 bg-white/80 backdrop-blur-md border border-slate-100 p-4 rounded-3xl shadow-sm flex flex-wrap gap-3 items-center justify-between">
+        <div className="sticky top-16 z-30 bg-white/80 backdrop-blur-md border border-slate-100 p-3 rounded-2xl md:rounded-3xl shadow-sm flex flex-wrap gap-2 md:gap-3 items-center justify-between">
           <div className="flex flex-wrap gap-2 items-center flex-grow">
             <div className="relative flex-grow max-w-xs">
               <input
@@ -1457,7 +1480,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
           </span>
         </div>
         {/* Grid List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {filteredGroupedList.map((tour, idx) => {
             const hasMultiple = tour.operators.length > 1;
             const hasDiscount = tour.operators.some(op => op.original_price && Number(op.original_price) > Number(op.price));
@@ -1559,7 +1582,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 </div>
 
                 {/* Card Info Content */}
-                <div className="p-5 flex-grow flex flex-col justify-between space-y-4">
+                <div className="p-4 md:p-5 flex-grow flex flex-col justify-between space-y-4">
                   <div className="space-y-2.5">
                     
                     {/* Rating Area and Bookings count */}
@@ -1579,7 +1602,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-extrabold text-base font-display text-slate-900 tracking-tight group-hover:text-[#FF5722] transition-colors leading-tight line-clamp-1 uppercase text-left">
+                    <h3 className="font-extrabold text-sm sm:text-base font-display text-slate-900 tracking-tight group-hover:text-[#FF5722] transition-colors leading-tight line-clamp-1 uppercase text-left">
                       {tour.name}
                     </h3>
 

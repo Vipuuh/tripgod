@@ -2034,8 +2034,19 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             id: op.id
           }));
 
+        const matchingVendors = getVendorsForType(formData.activity_type || 'rafting', vendors);
+        if (matchingVendors.length === 0) {
+          const catLabel = 
+            formData.activity_type === 'bungee' ? 'Bungee Jumping' :
+            formData.activity_type === 'swing' ? 'Giant Swing' :
+            formData.activity_type === 'paragliding' ? 'Paragliding' :
+            formData.activity_type === 'zipline' ? 'Ganga Zipline' :
+            formData.activity_type === 'camping' ? 'Camping' : 'Rafting';
+          throw new Error(`No vendors found with category '${catLabel}'. Please go to the 'Vendors DB' tab and add a vendor for '${catLabel}' first!`);
+        }
+
         if (enabledOps.length === 0) {
-          throw new Error('Please enable at least one operator for this adventure package.');
+          throw new Error('Please enable at least one operator for this adventure package by checking the checkbox next to the operator.');
         }
 
         if (enabledOps.some(op => !op.price || Number(op.price) <= 0)) {
@@ -2187,8 +2198,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           payment_mode: formData.payment_mode || 'commission_advance',
           commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
           fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null,
-          rating: formData.rating === undefined || formData.rating === null || formData.rating === '' ? 4.5 : Number(formData.rating),
-          reviews_count: formData.reviews_count === undefined || formData.reviews_count === null || formData.reviews_count === '' ? 100 : Number(formData.reviews_count),
           upi_discount: formData.upi_discount === undefined || formData.upi_discount === null || formData.upi_discount === '' ? null : Number(formData.upi_discount)
         };
 
@@ -2705,7 +2714,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           />
         </div>
 
-        {['rafting', 'adventures', 'bikes', 'tours'].includes(type) && (
+        {['rafting', 'adventures', 'tours'].includes(type) && (
           <>
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Star Rating (1-5)</label>
