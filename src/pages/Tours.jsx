@@ -978,8 +978,6 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                       </div>
                     );
                   })}
-                </div>
-              </div>  </div>
               </div>
 
               {/* Stay Preview Section */}
@@ -1257,7 +1255,9 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                     </p>
                   </div>
                 </div>
-                 {/* Right Column: Floating Sidebar Book Now widget (sticky on desktop) */}
+              </div>
+
+              {/* Right Column: Floating Sidebar Book Now widget (sticky on desktop) */}
             <div className="hidden lg:block lg:col-span-1">
               <div className="sticky top-20">
                 {renderPricingBlock(false)}
