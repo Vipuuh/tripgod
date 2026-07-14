@@ -2664,7 +2664,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               </div>
             )}
 
-            <div className="space-y-1">
+            {type === 'hotels' && (
+              <>
+                <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Override (%)</label>
               <input
                 type="number"
