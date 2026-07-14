@@ -104,6 +104,7 @@ export default function Camping({ currentCity, openBookingModal }) {
                 closed_until: item.closed_until,
                 free_video_type: item.free_video_type || 'none',
                 coming_soon: item.coming_soon !== undefined && item.coming_soon !== null ? !!item.coming_soon : false,
+                upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
                 operators: []
               };
             }
@@ -111,6 +112,7 @@ export default function Camping({ currentCity, openBookingModal }) {
             grouped[key].operators.push(item);
             if (Number(item.price) < grouped[key].price) {
               grouped[key].price = Number(item.price);
+              grouped[key].upi_discount = item.upi_discount ? Number(item.upi_discount) : null;
             }
             if (item.images && item.images.length > grouped[key].images.length) {
               grouped[key].images = item.images;
@@ -266,7 +268,14 @@ export default function Camping({ currentCity, openBookingModal }) {
                           ) : (
                             <>
                               <span className="text-[9px] block font-bold text-slate-400 uppercase">Starting From</span>
-                              <span className="text-lg font-black text-black">₹{(Number(camp.price) || 0).toLocaleString('en-IN')}</span>
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-lg font-black text-black">₹{(Number(camp.price) || 0).toLocaleString('en-IN')}</span>
+                                {camp.upi_discount > 0 && (
+                                  <span className="text-[9px] font-black text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 select-none">
+                                    💳 UPI: Save ₹{camp.upi_discount}
+                                  </span>
+                                )}
+                              </div>
                             </>
                           )}
                         </div>

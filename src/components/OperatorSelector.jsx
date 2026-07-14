@@ -138,6 +138,7 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
           const displayOriginalPrice = op.originalPrice || Math.round(displayPrice * 1.5);
           const isDiscounted = displayOriginalPrice && displayOriginalPrice > displayPrice;
           const savings = displayOriginalPrice - displayPrice;
+          const upiDiscount = op.upi_discount !== undefined && op.upi_discount !== null ? Number(op.upi_discount) : (op.full_payment_upi_discount ? Number(op.full_payment_upi_discount) : 0);
 
           // Determine Badge dynamically
           let badgeText = '';
@@ -236,6 +237,11 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                   {savings > 0 && (
                     <span className="text-[9px] font-black text-emerald-600 mt-0.5 uppercase tracking-wide">
                       Save ₹{savings.toLocaleString('en-IN')}
+                    </span>
+                  )}
+                  {upiDiscount > 0 && (
+                    <span className="text-[9px] font-black text-[#FF6B00] mt-0.5 uppercase tracking-wide flex items-center gap-1">
+                      💳 ₹{upiDiscount.toLocaleString('en-IN')} UPI Discount
                     </span>
                   )}
                 </div>

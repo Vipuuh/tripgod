@@ -291,6 +291,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 closed_until: item.closed_until,
                 free_video_type: item.free_video_type || 'none',
                 coming_soon: item.coming_soon !== undefined && item.coming_soon !== null ? !!item.coming_soon : false,
+                upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
                 operators: []
               };
             }
@@ -298,6 +299,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
             grouped[key].operators.push(item);
             if (Number(item.price) < grouped[key].price) {
               grouped[key].price = Number(item.price);
+              grouped[key].upi_discount = item.upi_discount ? Number(item.upi_discount) : null;
             }
             if (item.images && item.images.length > grouped[key].images.length) {
               grouped[key].images = item.images;
@@ -511,7 +513,14 @@ export default function Rafting({ currentCity, openBookingModal }) {
                     <div className="p-4 sm:p-5 bg-gray-50 border-t border-black/5 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] block font-bold text-gray-500 uppercase">From</span>
-                        <span className="text-xl font-black text-black">₹{(Number(str.price) || 0).toLocaleString('en-IN')}</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xl font-black text-black">₹{(Number(str.price) || 0).toLocaleString('en-IN')}</span>
+                          {str.upi_discount > 0 && (
+                            <span className="text-[9px] font-black text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 select-none">
+                              💳 UPI: Save ₹{str.upi_discount}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span className="text-xs font-black uppercase text-black flex items-center gap-1 group-hover:underline decoration-accent decoration-2">
                         View Details <ChevronLeft className="rotate-180" size={14} />

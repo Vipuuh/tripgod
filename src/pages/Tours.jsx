@@ -656,6 +656,20 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
               <MessageSquare size={16} />
             </a>
           </div>
+
+          {/* Payment Trust and Logos (Section 8) */}
+          <div className="pt-3 border-t border-slate-100 space-y-2 select-none text-[10px] font-bold text-slate-500">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1">🔒 Secure Payment</span>
+              <span>No Hidden Charges</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 pt-1 opacity-70">
+              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">UPI</span>
+              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">Visa</span>
+              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">Mastercard</span>
+              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">Razorpay</span>
+            </div>
+          </div>
         </div>
       );
     };
@@ -761,36 +775,63 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                       {/* Tour Title Section */}
               <div className="bg-white rounded-3xl p-6 md:p-8 space-y-5 border border-slate-100 shadow-sm text-left">
                 
-                {/* Horizontal Trust Strip (Section 2) */}
-                <div className="flex flex-wrap items-center gap-2 select-none">
-                  <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                {/* 1. Package Includes (Horizontal Ribbon right below image thumbnails) */}
+                <div className="flex flex-wrap gap-2 select-none">
+                  {selectedTour.hotel_included !== false && (
+                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      🛏 Hotel Included
+                    </span>
+                  )}
+                  {selectedTour.meals_included !== false && (
+                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      🍽 Meals Included
+                    </span>
+                  )}
+                  {selectedTour.transport_included !== false && (
+                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      🚗 Private Cab
+                    </span>
+                  )}
+                  {selectedTour.guide_included !== false && (
+                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      👨 Guide Included
+                    </span>
+                  )}
+                  <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    📍 Sightseeing Included
+                  </span>
+                </div>
+
+                {/* 2. Horizontal Trust Strip */}
+                <div className="flex flex-wrap items-center gap-2 select-none pt-1">
+                  <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0" />
                     <span>Verified</span>
                   </div>
                   
-                  <div className="flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                  <div className="flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs">
                     <span>⚡ Instant Confirmation</span>
                   </div>
 
-                  <div className="flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                  <div className="flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs">
                     <span>💰 Best Price</span>
                   </div>
                 </div>
 
-                {/* Title & Social Proof (Section 3) */}
-                <div className="space-y-2">
+                {/* 3. Title & Social Proof (Rating + Booked + Location inline) */}
+                <div className="space-y-2 pt-1">
                   <h1 className="text-xl md:text-3xl font-black text-slate-900 uppercase tracking-tight leading-tight">
                     {selectedTour.name}
                   </h1>
 
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500 font-bold select-none">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-slate-500 font-bold select-none">
                     <div className="flex items-center gap-1 text-slate-800">
                       <Star size={14} className="fill-amber-500 text-amber-500" />
-                      <span>{selectedTour.rating || 4.9}</span>
-                      <span className="text-slate-400">({selectedTour.reviewsCount || 128} Reviews)</span>
+                      <span>{selectedTour.rating || 4.8}</span>
+                      <span className="text-slate-400">({selectedTour.reviewsCount || 126} Reviews)</span>
                     </div>
                     <span className="text-slate-355">•</span>
-                    <span>1200+ Travelers</span>
+                    <span>{selectedTour.bookings_count || 143}+ Booked</span>
                     <span className="text-slate-355">•</span>
                     <div className="flex items-center gap-1">
                       <span>📍</span>
@@ -799,39 +840,49 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                   </div>
                 </div>
 
-                {/* Mobile pricing widget block */}
+                {/* Mobile pricing widget block (Inline) */}
                 <div className="lg:hidden">
                   {renderPricingBlock(true)}
                 </div>
 
-                {/* Section 6: Quick Highlights */}
-                <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100 select-none">
-                  {selectedTour.hotel_included !== false && (
-                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
-                      🛏 Hotel
-                    </span>
-                  )}
-                  {selectedTour.meals_included !== false && (
-                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
-                      🍽 Meals
-                    </span>
-                  )}
-                  {selectedTour.transport_included !== false && (
-                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
-                      🚗 Private Cab
-                    </span>
-                  )}
-                  {selectedTour.guide_included !== false && (
-                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
-                      👨 Guide
-                    </span>
-                  )}
-                  <span className="bg-[#FF6B00]/5 border border-[#FF6B00]/25 px-3 py-1.5 rounded-xl text-xs font-black text-[#FF6B00] flex items-center gap-1">
-                    ⏳ {selectedTour.duration}
-                  </span>
+                {/* 4. Trip Snapshot (Conversion Secret!) */}
+                <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4.5 space-y-2.5 select-none text-left">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider font-display">Trip Snapshot</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <span className="text-base shrink-0">📍</span>
+                      <span>{currentCity?.name || 'Rishikesh'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <span className="text-base shrink-0">⏳</span>
+                      <span>{selectedTour.duration}</span>
+                    </div>
+                    {selectedTour.hotel_included !== false && (
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                        <span className="text-base shrink-0">🏨</span>
+                        <span>Deluxe Stay</span>
+                      </div>
+                    )}
+                    {selectedTour.meals_included !== false && (
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                        <span className="text-base shrink-0">🍽</span>
+                        <span>Breakfast Included</span>
+                      </div>
+                    )}
+                    {selectedTour.transport_included !== false && (
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                        <span className="text-base shrink-0">🚗</span>
+                        <span>Private Cab</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <span className="text-base shrink-0">👨</span>
+                      <span>Local Guide</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Section 7: About Tour */}
+                {/* 5. About Tour */}
                 <div className="border-t border-slate-100 pt-4 text-left">
                   <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2 font-display">About this Tour</h4>
                   <p className={`text-sm text-slate-600 leading-relaxed font-medium ${!isDescExpanded ? 'line-clamp-2' : ''}`}>
@@ -844,6 +895,39 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                     {!isDescExpanded ? 'Read More' : 'Read Less'}
                   </button>
                 </div>
+
+                {/* 6. Why You'll Love This Trip (Selling block) */}
+                <div className="border-t border-slate-100 pt-4 text-left space-y-3">
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider font-display">Why You'll Love This Trip</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base shrink-0">🏔</span>
+                      <span>Premium Himalayan Views</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base shrink-0">🚗</span>
+                      <span>Private Cab Throughout</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base shrink-0">🏨</span>
+                      <span>Handpicked Hotels</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base shrink-0">🍽</span>
+                      <span>Daily Breakfast</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base shrink-0">🙏</span>
+                      <span>Hassle-Free Darshan</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base shrink-0">📞</span>
+                      <span>Local Support</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
 
                 {/* Who is this tour perfect for? */}
                 {selectedTour.perfect_for && selectedTour.perfect_for.length > 0 && (
@@ -1253,6 +1337,33 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 </div>
               </div>
 
+              {/* Need Help CTA (Section 11) */}
+              <div className="bg-slate-900 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden select-none shadow-md text-left space-y-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF5F00]/20 to-[#FF3E00]/10 z-10" />
+                <div className="relative z-20 space-y-2">
+                  <h4 className="text-lg font-black uppercase tracking-tight font-display font-black">Still Confused?</h4>
+                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                    Get in touch with our local travel experts. We will help you plan your itinerary and customize the package. Response in under 5 minutes!
+                  </p>
+                </div>
+                <div className="relative z-20 flex flex-wrap gap-3 pt-2">
+                  <a 
+                    href="tel:+918630027341" 
+                    className="flex items-center gap-1.5 px-5 py-3 bg-[#FF5F00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:bg-[#E54A18] transition-all text-center select-none font-display border-none decoration-none"
+                  >
+                    📞 Call Expert
+                  </a>
+                  <a 
+                    href={`https://wa.me/918630027341?text=Hi%2C%20I%20need%20help%20with%20booking%20the%20${encodeURIComponent(selectedTour.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-5 py-3 bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-700 transition-all text-center select-none font-display border-none decoration-none"
+                  >
+                    💬 WhatsApp
+                  </a>
+                </div>
+              </div>
+
               {/* Guidelines Box */}
               {selectedTour.tour_guidelines && selectedTour.tour_guidelines.length > 0 && (
                 <div className="bg-amber-50/30 border border-amber-100 rounded-3xl p-6 shadow-sm text-left">
@@ -1339,7 +1450,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 onClick={() => navigateTo(`tours/${selectedTour.id}/partners`)}
                 className="py-3 px-5 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm border-none shrink-0"
               >
-                Book Now
+                Book @ ₹{price.toLocaleString('en-IN')}
               </button>
             )}
           </div>
@@ -1351,8 +1462,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
 }
 
   return (
-    <div className="w-full min-h-[80vh] bg-slate-50 flex flex-col py-6 md:py-12 font-sans text-left text-slate-800">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-4 md:space-y-8">
+    <div className="w-full max-w-full overflow-x-hidden min-h-[80vh] bg-slate-50 flex flex-col py-6 md:py-12 font-sans text-left text-slate-800">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 space-y-4 md:space-y-8">
         
         {/* Compact Hero Section */}
         <div className="bg-gradient-to-br from-[#0F2C59] via-[#1B3C73] to-[#0A1E3F] rounded-3xl p-4 md:p-8 text-white relative overflow-hidden select-none shadow-lg">
@@ -1372,7 +1483,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
           </div>
 
           {/* Horizontal Scrolling Trust Strip */}
-          <div className="relative z-20 flex gap-2 md:gap-4 overflow-x-auto pt-3 md:pt-6 border-t border-white/10 mt-3 md:mt-6 select-none shrink-0 scrollbar-none">
+          <div className="relative z-20 flex gap-2 md:gap-4 overflow-x-auto w-full max-w-full no-scrollbar pt-3 md:pt-6 border-t border-white/10 mt-3 md:mt-6 select-none shrink-0 scrollbar-none">
             <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shrink-0">
               <ShieldCheck size={12} className="text-emerald-500" /> Verified Operators
             </div>
@@ -1392,86 +1503,84 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         </div>
 
         {/* Sticky Search & Filter Bar */}
-        <div className="sticky top-16 z-30 bg-white/85 backdrop-blur-md border border-slate-150/80 p-3 rounded-2xl md:rounded-3xl shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-          <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center flex-grow overflow-hidden">
-            {/* Search Input */}
-            <div className="relative shrink-0 md:max-w-xs w-full md:w-60">
-              <input
-                type="text"
-                placeholder="Search destination, yatra..."
-                value={filterDestination}
-                onChange={e => setFilterDestination(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5F00] font-semibold"
-              />
-            </div>
-            
-            {/* Horizontal Scrollable Filters on Mobile */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto shrink-0 md:shrink select-none">
-              <select
-                value={filterBudget}
-                onChange={e => setFilterBudget(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
-              >
-                <option value="All">All Budgets</option>
-                <option value="5000">Up to ₹5,000</option>
-                <option value="10000">Up to ₹10,000</option>
-                <option value="20000">Up to ₹20,000</option>
-                <option value="50000">Up to ₹50,000</option>
-              </select>
-
-              <select
-                value={filterDuration}
-                onChange={e => setFilterDuration(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
-              >
-                <option value="All">All Durations</option>
-                <option value="1-2">1-2 Days</option>
-                <option value="3-4">3-4 Days</option>
-                <option value="5+">5+ Days</option>
-              </select>
-
-              <select
-                value={filterTourType}
-                onChange={e => setFilterTourType(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
-              >
-                <option value="All">All Types</option>
-                <option value="Sightseeing">Sightseeing</option>
-                <option value="Pilgrimage">Pilgrimage</option>
-                <option value="Trekking">Trekking</option>
-                <option value="Adventure">Adventure</option>
-              </select>
-
-              <select
-                value={filterRating}
-                onChange={e => setFilterRating(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
-              >
-                <option value="All">All Ratings</option>
-                <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
-                <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
-              </select>
-            </div>
+        <div className="sticky top-16 z-30 bg-white/90 backdrop-blur-md border border-slate-150 p-2.5 rounded-2xl md:rounded-3xl shadow-sm space-y-2.5 select-none w-full max-w-full">
+          {/* Search Input */}
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Search destination, yatra..."
+              value={filterDestination}
+              onChange={e => setFilterDestination(e.target.value)}
+              className="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5F00] font-semibold"
+            />
           </div>
-
-          {/* Sort Select */}
-          <div className="flex gap-2 items-center justify-between md:justify-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-            <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Sort:</span>
+          
+          {/* Responsive grid filters (2x2 on mobile, flex row on desktop) */}
+          <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-2 w-full">
             <select
-              value={filterSort}
-              onChange={e => setFilterSort(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none cursor-pointer"
+              value={filterBudget}
+              onChange={e => setFilterBudget(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
             >
-              <option value="Recommended">Recommended</option>
-              <option value="PriceAsc">Price: Low to High</option>
-              <option value="PriceDesc">Price: High to Low</option>
-              <option value="Rating">Rating: High to Low</option>
+              <option value="All">All Budgets</option>
+              <option value="5000">Up to ₹5,000</option>
+              <option value="10000">Up to ₹10,000</option>
+              <option value="20000">Up to ₹20,000</option>
+              <option value="50000">Up to ₹50,000</option>
             </select>
+
+            <select
+              value={filterDuration}
+              onChange={e => setFilterDuration(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
+            >
+              <option value="All">All Durations</option>
+              <option value="1-2">1-2 Days</option>
+              <option value="3-4">3-4 Days</option>
+              <option value="5+">5+ Days</option>
+            </select>
+
+            <select
+              value={filterTourType}
+              onChange={e => setFilterTourType(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
+            >
+              <option value="All">All Types</option>
+              <option value="Sightseeing">Sightseeing</option>
+              <option value="Pilgrimage">Pilgrimage</option>
+              <option value="Trekking">Trekking</option>
+              <option value="Adventure">Adventure</option>
+            </select>
+
+            <select
+              value={filterRating}
+              onChange={e => setFilterRating(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
+            >
+              <option value="All">All Ratings</option>
+              <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
+              <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
+            </select>
+            
+            {/* Sort Select on Desktop is inline, on Mobile it takes its place in grid or floats */}
+            <div className="col-span-2 md:col-span-1 flex items-center justify-between md:justify-end gap-2 md:ml-auto pt-1 md:pt-0 border-t md:border-t-0 border-slate-100 w-full md:w-auto">
+              <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Sort:</span>
+              <select
+                value={filterSort}
+                onChange={e => setFilterSort(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer min-w-[120px]"
+              >
+                <option value="Recommended">Recommended</option>
+                <option value="PriceAsc">Price: Low to High</option>
+                <option value="PriceDesc">Price: High to Low</option>
+                <option value="Rating">Rating: High to Low</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Category Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none select-none">
+        <div className="flex gap-2 overflow-x-auto w-full max-w-full no-scrollbar pb-1 select-none">
           {['All', 'Pilgrimage', 'Adventure', 'Trekking', 'Sightseeing'].map((cat) => (
             <button
               key={cat}

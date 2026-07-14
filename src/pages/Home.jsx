@@ -162,7 +162,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
   // MakeMyTrip style Search Tab States
   const [activeSearchTab, setActiveSearchTab] = useState('hotels');
-  const [selectedHotelCity, setSelectedHotelCity] = useState('Rishikesh');
+  const [selectedHotelCity, setSelectedHotelCity] = useState('');
+  const [citiesList, setCitiesList] = useState([]);
   const [selectedRaftingStretch, setSelectedRaftingStretch] = useState('16 KM (Shivpuri)');
   const [selectedBikePickupLocation, setSelectedBikePickupLocation] = useState('Ram Jhula');
   const [allTours, setAllTours] = useState([]);
@@ -275,7 +276,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
   const quickAccess = [
     { label: 'Hotels', icon: Hotel, route: 'hotels', color: 'text-indigo-600 bg-indigo-50 border-indigo-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
-    { label: 'Bike Rent', icon: Bike, route: 'bikerent', color: 'text-emerald-600 bg-emerald-50 border-emerald-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
+    { label: 'Scooty Rent', icon: Bike, route: 'bikerent', color: 'text-emerald-600 bg-emerald-50 border-emerald-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
     { label: 'Rafting', icon: Ship, route: 'rafting', color: 'text-cyan-600 bg-cyan-50 border-cyan-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
     { label: 'Tours', icon: MapPinned, route: 'tours', color: 'text-rose-600 bg-rose-50 border-rose-100 group-hover:bg-[#FF6B00] group-hover:text-white' }
   ];
@@ -531,6 +532,15 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           setAllTours(allToursData);
           setSelectedTourOption(allToursData[0].id);
         }
+        // Fetch active cities from DB dynamically
+        const { data: dbCitiesData } = await supabase.from('cities').select('id, name');
+        if (dbCitiesData && dbCitiesData.length > 0) {
+          setCitiesList(dbCitiesData);
+          setSelectedHotelCity(dbCitiesData[0].name);
+        } else {
+          setCitiesList([{ id: 'default', name: 'Rishikesh' }]);
+          setSelectedHotelCity('Rishikesh');
+        }
 
         // Fetch adventure activity dynamic prices
         const { data: adventuresData } = await supabase
@@ -731,7 +741,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
                 { id: 'tours', label: 'Tours', icon: MapPinned },
                 { id: 'rafting', label: 'Rafting', icon: Waves },
-                { id: 'bikerent', label: 'Bike Rental', icon: Bike }
+                { id: 'bikerent', label: 'Scooty Rental', icon: Bike }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeSearchTab === tab.id;
@@ -773,8 +783,13 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                         onChange={(e) => setSelectedHotelCity(e.target.value)}
                         className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
                       >
-                        <option value="Rishikesh">Rishikesh, India</option>
-                        <option value="Haridwar">Haridwar, India</option>
+                        {citiesList.length > 0 ? (
+                          citiesList.map(city => (
+                            <option key={city.id} value={city.name}>{city.name}, India</option>
+                          ))
+                        ) : (
+                          <option value="Rishikesh">Rishikesh, India</option>
+                        )}
                       </select>
                     </div>
                   </div>

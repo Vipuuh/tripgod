@@ -448,6 +448,11 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                             {v.type}
                           </span>
                           <h3 className="text-base font-bold font-display text-black">{v.name}</h3>
+                          {v.upi_discount > 0 && (
+                             <span className="text-[9px] font-black text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-1.5 py-0.5 rounded uppercase tracking-wider inline-block select-none mt-1">
+                               💳 UPI: Save ₹{v.upi_discount}
+                             </span>
+                           )}
                           
                           <div className="flex items-center gap-1 text-[11px] text-black font-bold mt-0.5">
                             <Star size={11} className="text-[#FF5F00]" fill="#FF5F00" />

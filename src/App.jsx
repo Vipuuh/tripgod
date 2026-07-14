@@ -138,6 +138,9 @@ export default function App() {
   });
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [footerAdventuresOpen, setFooterAdventuresOpen] = useState(false);
+  const [footerServicesOpen, setFooterServicesOpen] = useState(false);
+  const [footerContactOpen, setFooterContactOpen] = useState(false);
 
   // Scroll Progress State
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -377,7 +380,7 @@ export default function App() {
       </header>
 
       {/* 3. Page Rendering Wrapper */}
-      <main className="w-full min-h-[75vh]">
+      <main className="w-full max-w-full overflow-x-hidden min-h-[75vh]">
         <AnimatePresence mode="wait">
           <motion.div
             key={route}
@@ -512,31 +515,55 @@ export default function App() {
           </div>
 
           {/* Column 1: Adventures */}
-          <div className="space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Adventures</h4>
-            <ul className="space-y-2 text-xs font-medium text-gray-400">
-              <li><button onClick={() => navigateTo('rafting')} className="hover:text-accent transition-colors">River Rafting</button></li>
-              <li><button onClick={() => navigateTo('bungee')} className="hover:text-accent transition-colors">Bungee Jumping</button></li>
-              <li><button onClick={() => navigateTo('zipline')} className="hover:text-accent transition-colors">Ganga Zipline</button></li>
-              <li><button onClick={() => navigateTo('paragliding')} className="hover:text-accent transition-colors">Paragliding</button></li>
-              <li><button onClick={() => navigateTo('swing')} className="hover:text-accent transition-colors">Giant Swing</button></li>
-              <li><button onClick={() => navigateTo('camping')} className="hover:text-accent transition-colors">Riverside Camping</button></li>
+          <div className="space-y-3 border-b border-white/5 md:border-b-0 pb-4 md:pb-0">
+            <h4 
+              onClick={() => setFooterAdventuresOpen(!footerAdventuresOpen)}
+              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-2 md:py-0 select-none"
+            >
+              <span>Adventures</span>
+              <span className="md:hidden text-gray-500 text-sm font-black pr-2">
+                {footerAdventuresOpen ? '−' : '+'}
+              </span>
+            </h4>
+            <ul className={`${footerAdventuresOpen ? 'block animate-fade-in' : 'hidden'} md:block space-y-2.5 text-xs font-medium text-gray-400 pl-1 md:pl-0`}>
+              <li><button onClick={() => navigateTo('rafting')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400">River Rafting</button></li>
+              <li><button onClick={() => navigateTo('bungee')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Bungee Jumping</button></li>
+              <li><button onClick={() => navigateTo('zipline')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Ganga Zipline</button></li>
+              <li><button onClick={() => navigateTo('paragliding')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Paragliding</button></li>
+              <li><button onClick={() => navigateTo('swing')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Giant Swing</button></li>
+              <li><button onClick={() => navigateTo('camping')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Riverside Camping</button></li>
             </ul>
           </div>
 
           {/* Column 2: Services */}
-          <div className="space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Services</h4>
-            <ul className="space-y-2 text-xs font-medium text-gray-400">
-              <li><button onClick={() => navigateTo('bikerent')} className="hover:text-accent transition-colors">Bike &amp; Scooty Rent</button></li>
-              <li><button onClick={() => navigateTo('hotels')} className="hover:text-accent transition-colors">Boutique Stays</button></li>
+          <div className="space-y-3 border-b border-white/5 md:border-b-0 pb-4 md:pb-0">
+            <h4 
+              onClick={() => setFooterServicesOpen(!footerServicesOpen)}
+              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-2 md:py-0 select-none"
+            >
+              <span>Services</span>
+              <span className="md:hidden text-gray-500 text-sm font-black pr-2">
+                {footerServicesOpen ? '−' : '+'}
+              </span>
+            </h4>
+            <ul className={`${footerServicesOpen ? 'block animate-fade-in' : 'hidden'} md:block space-y-2.5 text-xs font-medium text-gray-400 pl-1 md:pl-0`}>
+              <li><button onClick={() => navigateTo('bikerent')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Bike &amp; Scooty Rent</button></li>
+              <li><button onClick={() => navigateTo('hotels')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Boutique Stays</button></li>
             </ul>
           </div>
 
           {/* Column 3: Contact */}
-          <div className="space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-widest text-accent font-display">Contact</h4>
-            <ul className="space-y-2 text-xs font-medium text-gray-400">
+          <div className="space-y-3 pb-2 md:pb-0">
+            <h4 
+              onClick={() => setFooterContactOpen(!footerContactOpen)}
+              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-2 md:py-0 select-none"
+            >
+              <span>Contact</span>
+              <span className="md:hidden text-gray-500 text-sm font-black pr-2">
+                {footerContactOpen ? '−' : '+'}
+              </span>
+            </h4>
+            <ul className={`${footerContactOpen ? 'block animate-fade-in' : 'hidden'} md:block space-y-2.5 text-xs font-medium text-gray-400 pl-1 md:pl-0`}>
               <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: 8630027341</li>
               <li className="flex items-center gap-2"><Mail size={12} /> Email: hello@tripgod.in</li>
               <li className="flex items-center gap-2"><MapPin size={12} /> Rishikesh, Uttarakhand, India</li>
