@@ -979,6 +979,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                     );
                   })}
               </div>
+            </div>
 
               {/* Stay Preview Section */}
               {stayDetails?.hotel_name && (
@@ -1313,7 +1314,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
           </div>
         </div>
       </div>
-  }
+    </div>
+  </div>
+);
+}
 
   return (
     <div className="w-full min-h-[80vh] bg-slate-50 flex flex-col py-12 font-sans text-left text-slate-800">
