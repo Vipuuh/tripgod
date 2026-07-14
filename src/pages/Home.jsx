@@ -275,7 +275,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     { label: 'Bike Rent', emoji: '🏍️', route: 'bikerent' }
   ];
 
-  const activities = [
+  const [activitiesList, setActivitiesList] = useState([
     {
       id: 'rafting',
       name: 'River Rafting',
@@ -293,20 +293,29 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       route: 'bungee'
     },
     {
-      id: 'zipline',
-      name: 'Ganga Zipline',
-      desc: 'Glide over the gushing Ganges at speeds up to 140-160 km/h.',
-      price: '2,000',
-      img: '/zipline-hero.jpg',
-      route: 'zipline'
+      id: 'camping',
+      name: 'Riverside Camping',
+      desc: 'Swiss tents, bonfire, snacks and buffet meals near Shivpuri.',
+      price: '1,800',
+      img: '/camping-hero.jpg',
+      route: 'camping'
     },
     {
       id: 'paragliding',
       name: 'Paragliding',
       desc: 'Soar high above Rishikesh hills with experienced tandem pilots.',
-      price: '4,500',
+      price: '4,550',
       img: '/paragliding-hero.jpg',
       route: 'paragliding'
+    },
+    {
+      id: 'zipline',
+      name: 'Ganga Zipline',
+      desc: 'Glide over the gushing Ganges at speeds up to 140-160 km/h.',
+      price: '2,000',
+      img: '/zipline-hero.jpg',
+      route: 'zipline',
+      coming_soon: true
     },
     {
       id: 'swing',
@@ -314,17 +323,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       desc: 'Swing 113m above deep valleys, single or in couples.',
       price: '3,600',
       img: '/swing-hero.png',
-      route: 'swing'
-    },
-    {
-      id: 'camping',
-      name: 'Riverside Camping',
-      desc: 'Swiss tents, bonfire, snacks and buffet meals near Shivpuri.',
-      price: '1,800',
-      img: '/camping-hero.jpg',
-      route: 'camping'
+      route: 'swing',
+      coming_soon: true
     }
-  ];
+  ]);
 
   const raftingStretches = [
     {
@@ -519,22 +521,74 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           }
         }
 
+        // Fetch adventure activity dynamic prices
+        const { data: adventuresData } = await supabase
+          .from('rafting')
+          .select('price, activity_type, coming_soon, is_closed');
+        
+        if (adventuresData && adventuresData.length > 0) {
+          setActivitiesList(prev => prev.map(act => {
+            const matches = adventuresData.filter(item => (item.activity_type || 'rafting') === act.id);
+            const isComingSoon = matches.length > 0 ? matches.some(m => !!m.coming_soon) : !!act.coming_soon;
+            const activePrices = matches
+              .filter(m => !m.coming_soon && !m.is_closed && Number(m.price) > 0)
+              .map(m => Number(m.price));
+            
+            let minPrice = null;
+            if (activePrices.length > 0) {
+              minPrice = Math.min(...activePrices);
+            } else if (matches.length > 0) {
+              const dbPrices = matches.map(m => Number(m.price)).filter(p => p > 0);
+              if (dbPrices.length > 0) {
+                minPrice = Math.min(...dbPrices);
+              }
+            }
+            
+            return {
+              ...act,
+              price: minPrice ? minPrice.toLocaleString('en-IN') : act.price,
+              coming_soon: isComingSoon
+            };
+          }));
+        }
+
         // Bikes
         const bikeIds = sections.filter(s => s.section === 'bikes').map(s => s.item_id);
         if (bikeIds.length > 0) {
-          const { data: bikesData } = await supabase
+          const { data: allBikes } = await supabase
             .from('bikes')
-            .select('id, name, price, images, description')
-            .in('id', bikeIds);
-          if (bikesData && bikesData.length > 0) {
-            const ordered = bikeIds.map(id => bikesData.find(b => b.id === id)).filter(Boolean);
-            const mappedBikes = ordered.map(b => ({
-              id: b.id,
-              name: b.name,
-              price: Number(b.price),
-              img: b.images && b.images[0] ? b.images[0] : '/scooty-rent.jpg',
-              type: b.description || 'Motorcycle'
-            }));
+            .select('id, name, price, images, description');
+          
+          if (allBikes && allBikes.length > 0) {
+            const featuredNames = bikeIds.map(id => allBikes.find(b => b.id === id)?.name).filter(Boolean);
+            const uniqueFeaturedNames = Array.from(new Set(featuredNames));
+            
+            const mappedBikes = [];
+            uniqueFeaturedNames.forEach(name => {
+              const matches = allBikes.filter(b => b.name === name && Number(b.price) > 0);
+              if (matches.length > 0) {
+                const minPrice = Math.min(...matches.map(m => Number(m.price)));
+                const bestMatch = matches.find(m => Number(m.price) === minPrice) || matches[0];
+                mappedBikes.push({
+                  id: bestMatch.id,
+                  name: name,
+                  price: minPrice,
+                  img: bestMatch.images && bestMatch.images[0] ? bestMatch.images[0] : '/scooty-rent.jpg',
+                  type: bestMatch.description || 'Motorcycle'
+                });
+              } else {
+                const fallbackMatch = allBikes.find(b => b.name === name);
+                if (fallbackMatch) {
+                  mappedBikes.push({
+                    id: fallbackMatch.id,
+                    name: name,
+                    price: Number(fallbackMatch.price) || 800,
+                    img: fallbackMatch.images && fallbackMatch.images[0] ? fallbackMatch.images[0] : '/scooty-rent.jpg',
+                    type: fallbackMatch.description || 'Motorcycle'
+                  });
+                }
+              }
+            });
             cachedFeaturedBikes = mappedBikes;
             setFeaturedBikes(mappedBikes);
           }
@@ -1252,7 +1306,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           animate="show"
           className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8"
         >
-          {activities.map((act) => (
+          {activitiesList.map((act) => (
              <motion.div
               key={act.id}
               variants={fadeInUp}
@@ -1268,7 +1322,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   loading="lazy"
                 />
                 <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-accent-gradient text-white text-[9px] sm:text-xs font-black py-1 px-2.5 sm:px-3.5 rounded-full shadow-[0_4px_12px_rgba(255,95,0,0.25)]">
-                  {act.price.includes('Call') || act.price.includes('Enquire') ? act.price : `FROM ₹${act.price}`}
+                  {act.coming_soon ? 'COMING SOON' : `FROM ₹${act.price}`}
                 </div>
               </div>
 
@@ -1288,7 +1342,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     onClick={(e) => { e.stopPropagation(); setRoute(act.route); }}
                     className="py-1.5 sm:py-2 px-3.5 sm:px-4 bg-accent-gradient text-white text-[9px] sm:text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.4)] transition-all border-none cursor-pointer font-display"
                   >
-                    Book Now
+                    {act.coming_soon ? 'Coming Soon' : 'Book Now'}
                   </button>
                 </div>
               </div>

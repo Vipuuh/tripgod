@@ -49,6 +49,12 @@ const STANDARD_ADVENTURE_NAMES = {
   camping: [
     "RIVERSIDE CAMPING RISHIKESH",
     "SWISS LUXURY CAMPING SHIVPURI"
+  ],
+  bungee: [
+    "BUNGEE JUMPING 83M RISHIKESH",
+    "BUNGEE JUMPING 101M RISHIKESH",
+    "BUNGEE JUMPING 104M RISHIKESH",
+    "BUNGEE JUMPING 117M RISHIKESH"
   ]
 };
 
@@ -543,6 +549,7 @@ export default function AdminDashboard({ setRoute }) {
                   >
                     <option value="all">All Adventures</option>
                     <option value="rafting">Rafting</option>
+                    <option value="bungee">Bungee Jumping</option>
                     <option value="swing">Giant Swing</option>
                     <option value="paragliding">Paragliding</option>
                     <option value="zipline">Ganga Zipline</option>
@@ -1051,6 +1058,10 @@ export default function AdminDashboard({ setRoute }) {
                       >
                         <option value="Hotel">Hotel</option>
                         <option value="Rafting">Rafting</option>
+                        <option value="Bungee">Bungee Jumping</option>
+                        <option value="Giant Swing">Giant Swing</option>
+                        <option value="Paragliding">Paragliding</option>
+                        <option value="Zipline">Ganga Zipline</option>
                         <option value="Bike Rental">Bike Rental</option>
                         <option value="Tour">Tour Package</option>
                         <option value="Camping">Camping</option>
@@ -2027,6 +2038,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           throw new Error('Please enable at least one operator for this adventure package.');
         }
 
+        if (enabledOps.some(op => !op.price || Number(op.price) <= 0)) {
+          throw new Error('Price must be greater than 0 for all enabled operators.');
+        }
+
         const commonProps = {
           city_id: formData.city_id,
           name: formData.name || (formData.activity_type === 'rafting' ? `${formData.distance_km} KM Rafting Stretch` : 'Adventure Spot'),
@@ -2047,6 +2062,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount),
           free_video_type: formData.free_video_type || 'none',
+          rating: formData.rating === undefined || formData.rating === '' || formData.rating === null ? 4.8 : Number(formData.rating),
+          reviews_count: formData.reviews_count === undefined || formData.reviews_count === '' || formData.reviews_count === null ? 100 : Number(formData.reviews_count),
           is_closed: !!formData.is_closed,
           closed_reason: formData.closed_reason || '',
           closed_from: formData.closed_from || null,
@@ -2157,6 +2174,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           throw new Error('Please enable at least one vendor for this bike/scoty rent.');
         }
 
+        if (enabledOps.some(op => !op.price || Number(op.price) <= 0)) {
+          throw new Error('Price must be greater than 0 for all enabled operators.');
+        }
+
         const commonProps = {
           city_id: formData.city_id,
           name: formData.name,
@@ -2165,7 +2186,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           images: formData.images || [],
           payment_mode: formData.payment_mode || 'commission_advance',
           commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
-          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null
+          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null,
+          rating: formData.rating === undefined || formData.rating === null || formData.rating === '' ? 4.5 : Number(formData.rating),
+          reviews_count: formData.reviews_count === undefined || formData.reviews_count === null || formData.reviews_count === '' ? 100 : Number(formData.reviews_count),
+          upi_discount: formData.upi_discount === undefined || formData.upi_discount === null || formData.upi_discount === '' ? null : Number(formData.upi_discount)
         };
 
         if (data) {
@@ -2286,6 +2310,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           closed_from: formData.closed_from || null,
           closed_until: formData.closed_until || null,
           upi_discount: formData.upi_discount !== null && formData.upi_discount !== undefined && formData.upi_discount !== '' ? Number(formData.upi_discount) : null,
+          rating: formData.rating === undefined || formData.rating === '' || formData.rating === null ? 4.8 : Number(formData.rating),
+          reviews_count: formData.reviews_count === undefined || formData.reviews_count === '' || formData.reviews_count === null ? 100 : Number(formData.reviews_count),
           seats_left: formData.seats_left !== undefined && formData.seats_left !== null && formData.seats_left !== '' ? Number(formData.seats_left) : 10,
           bookings_count: formData.bookings_count !== undefined && formData.bookings_count !== null && formData.bookings_count !== '' ? Number(formData.bookings_count) : 150,
           hotel_included: formData.hotel_included !== undefined ? !!formData.hotel_included : true,
@@ -2585,6 +2611,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none font-bold"
             >
               <option value="rafting">Rafting</option>
+              <option value="bungee">Bungee Jumping</option>
               <option value="swing">Giant Swing</option>
               <option value="paragliding">Paragliding</option>
               <option value="zipline">Ganga Zipline</option>
@@ -2593,29 +2620,36 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </div>
         )}
 
-        {!['rafting', 'adventures', 'bikes', 'tours'].includes(type) && (
+        {(!['bikes', 'tours'].includes(type) || ['rafting', 'adventures'].includes(type)) && (
           <>
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Price (₹)</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                {['rafting', 'adventures'].includes(type) ? 'Fallback Showcase Price (₹)' : 'Price (₹)'}
+              </label>
               <input
                 type="number"
                 required
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                value={formData.price === undefined || formData.price === null ? '' : formData.price}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value === '' ? '' : Number(e.target.value) }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                placeholder={['rafting', 'adventures'].includes(type) ? 'e.g. 1290' : ''}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Original Price (₹ - Strikethrough)</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                {['rafting', 'adventures'].includes(type) ? 'Showcase Original Price (₹)' : 'Original Price (₹ - Strikethrough)'}
+              </label>
               <input
                 type="number"
                 value={formData.original_price !== null && formData.original_price !== undefined ? formData.original_price : ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value === '' ? null : Number(e.target.value) }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder="e.g. 2999 (Leave blank if no discount)"
+                placeholder={['rafting', 'adventures'].includes(type) ? 'e.g. 1800' : 'e.g. 2999 (Leave blank if no discount)'}
               />
             </div>
+          </>
+        )}
 
             {['hotels', 'bikes'].includes(type) && (
               <div className="space-y-1">
@@ -2656,9 +2690,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Custom UPI Discount (INR)</label>
+          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Custom UPI Discount (INR)</label>
           <input
             type="number"
             min="0"
@@ -2668,6 +2702,36 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
           />
         </div>
+
+        {['rafting', 'adventures', 'bikes', 'tours'].includes(type) && (
+          <>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Star Rating (1-5)</label>
+              <input
+                type="number"
+                step="0.1"
+                min="1"
+                max="5"
+                required
+                value={formData.rating === undefined || formData.rating === null ? 4.8 : formData.rating}
+                onChange={(e) => setFormData(prev => ({ ...prev, rating: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Reviews Count</label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={formData.reviews_count === undefined || formData.reviews_count === null ? 100 : formData.reviews_count}
+                onChange={(e) => setFormData(prev => ({ ...prev, reviews_count: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <div className="space-y-1">
@@ -2683,15 +2747,48 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
       {/* 3. Image URLs Manager */}
       <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Image URLs</label>
-          <button
-            type="button"
-            onClick={() => addArrayItem('images')}
-            className="py-1 px-3 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[10px] text-slate-300 font-bold cursor-pointer"
-          >
-            Add Image URL
-          </button>
+        <div className="flex justify-between items-center bg-slate-900/10 p-2 rounded-xl border border-slate-800/40 font-semibold">
+          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Gallery Images</label>
+          <div className="flex items-center gap-2">
+            <label className="py-1 px-3 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[10px] text-slate-350 font-bold cursor-pointer flex items-center justify-center">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length === 0) return;
+                  for (let file of files) {
+                    try {
+                      const ext = file.name.split('.').pop();
+                      const randName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
+                      const filePath = `listings/${randName}`;
+
+                      const { error } = await supabase.storage.from('media').upload(filePath, file);
+                      if (error) throw error;
+
+                      const { data } = supabase.storage.from('media').getPublicUrl(filePath);
+                      setFormData(prev => ({
+                        ...prev,
+                        images: [...(prev.images || []), data.publicUrl]
+                      }));
+                    } catch (err) {
+                      alert(`Upload failed for ${file.name}: ${err.message}`);
+                    }
+                  }
+                }}
+                className="hidden"
+              />
+              <span>Upload Photos</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => addArrayItem('images')}
+              className="py-1 px-3 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[10px] text-slate-300 font-bold cursor-pointer"
+            >
+              Add URL
+            </button>
+          </div>
         </div>
         <div className="space-y-2">
           {(formData.images || []).map((img, idx) => (
@@ -4128,7 +4225,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
             
             <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
-              {getVendorsForType(formData.activity_type || 'rafting', vendors).map(vendor => {
+              {getVendorsForType(formData.activity_type || 'rafting', vendors).length === 0 ? (
+                <div className="p-4 text-center text-slate-500 font-semibold italic text-[11px]">
+                  No vendors found with category matching "{formData.activity_type || 'rafting'}". Please add a vendor in the Vendors tab first!
+                </div>
+              ) : (
+                getVendorsForType(formData.activity_type || 'rafting', vendors).map(vendor => {
                 const opState = activitiesOperators[vendor.id] || { enabled: false, price: '', original_price: '', commission_percentage: '', whatsapp_number: '' };
                 return (
                   <div key={vendor.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950 hover:bg-slate-900/50 transition-colors">
@@ -4427,9 +4529,14 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
             
             <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
-              {vendors
-                .filter(v => v.category === 'Bike Rental')
-                .map(vendor => {
+              {vendors.filter(v => v.category === 'Bike Rental').length === 0 ? (
+                <div className="p-4 text-center text-slate-500 font-semibold italic text-[11px]">
+                  No vendors found with category 'Bike Rental'. Please add a vendor in the Vendors tab first!
+                </div>
+              ) : (
+                vendors
+                  .filter(v => v.category === 'Bike Rental')
+                  .map(vendor => {
                   const opState = bikesOperators[vendor.id] || { enabled: false, price: '', deposit: 0, pickup_location: '' };
                   return (
                     <div key={vendor.id} className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-950 hover:bg-slate-900/50 transition-colors">
@@ -6114,15 +6221,7 @@ const groupBikesByName = (list) => {
     const key = item.name;
     if (!grouped[key]) {
       grouped[key] = {
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        deposit: item.deposit,
-        documents: item.documents,
-        pickup_location: item.pickup_location,
-        city_id: item.city_id,
-        price: item.price,
-        images: item.images,
+        ...item,
         operators: []
       };
     }
@@ -6141,22 +6240,7 @@ const groupActivitiesByName = (list) => {
     const key = item.name;
     if (!grouped[key]) {
       grouped[key] = {
-        id: item.id,
-        name: item.name,
-        activity_type: item.activity_type || 'rafting',
-        route: item.route,
-        distance_km: item.distance_km,
-        description: item.description,
-        duration: item.duration,
-        pickup_included: item.pickup_included,
-        drop_included: item.drop_included,
-        age_limit: item.age_limit,
-        images: item.images,
-        inclusions: item.inclusions,
-        exclusions: item.exclusions,
-        cancellation_policy: item.cancellation_policy,
-        city_id: item.city_id,
-        price: item.price,
+        ...item,
         operators: []
       };
     }
@@ -6175,18 +6259,7 @@ const groupToursByName = (list) => {
     const key = item.name;
     if (!grouped[key]) {
       grouped[key] = {
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        duration: item.duration,
-        itinerary: item.itinerary,
-        inclusions: item.inclusions,
-        exclusions: item.exclusions,
-        cancellation_policy: item.cancellation_policy,
-        contact_number: item.contact_number,
-        city_id: item.city_id,
-        price: item.price,
-        images: item.images,
+        ...item,
         operators: []
       };
     }
@@ -6209,15 +6282,17 @@ const getVendorsForType = (activityType, vendorsList) => {
   if (typeLower === 'camping') {
     return vendorsList.filter(v => v.category === 'Camping');
   }
-  
-  const mappedCategory = 
-    typeLower === 'swing' ? 'Giant Swing' :
-    typeLower === 'paragliding' ? 'Paragliding' :
-    typeLower === 'zipline' ? 'Zipline' : '';
-    
-  if (mappedCategory) {
-    const filtered = vendorsList.filter(v => v.category === mappedCategory);
-    if (filtered.length > 0) return filtered;
+  if (typeLower === 'bungee') {
+    return vendorsList.filter(v => v.category === 'Bungee' || v.category === 'Bungee Jumping');
+  }
+  if (typeLower === 'zipline') {
+    return vendorsList.filter(v => v.category === 'Zipline' || v.category === 'Ganga Zipline');
+  }
+  if (typeLower === 'swing') {
+    return vendorsList.filter(v => v.category === 'Giant Swing' || v.category === 'Swing');
+  }
+  if (typeLower === 'paragliding') {
+    return vendorsList.filter(v => v.category === 'Paragliding');
   }
   
   const fallback = vendorsList.filter(v => ['Rafting', 'Camping'].includes(v.category));

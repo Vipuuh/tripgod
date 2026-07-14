@@ -138,8 +138,9 @@ export default function BikeRent({ currentCity, openBookingModal }) {
             type: item.name.toLowerCase().includes('scooty') || item.name.toLowerCase().includes('activa') ? 'Automatic Scooter' : 'Cruiser Motorcycle',
             spec: item.description,
             img: item.images && item.images.length > 0 ? item.images[0] : '/scooty-rent.jpg',
-            rating: item.vendors?.star_rating || item.rating || Number((4.5 + ((idx * 3) % 5) / 10).toFixed(1)),
+            rating: item.rating || item.vendors?.star_rating || Number((4.5 + ((idx * 3) % 5) / 10).toFixed(1)),
             reviewsCount: item.reviews_count || (120 + ((idx * 67) % 250)),
+            upi_discount: item.upi_discount !== null && item.upi_discount !== undefined ? Number(item.upi_discount) : null,
             details: [
               { label: 'Deposit', value: `₹${item.deposit}` },
               { label: 'Required', value: item.documents && item.documents.length > 0 ? item.documents[0] : 'License' },
@@ -178,6 +179,9 @@ export default function BikeRent({ currentCity, openBookingModal }) {
     const grouped = {};
     vehicles.forEach(v => {
       const key = v.name;
+      const priceVal = Number(v.price) || 0;
+      if (priceVal <= 0) return; // Safeguard: skip operators with invalid/zero prices!
+      
       if (!grouped[key]) {
         grouped[key] = {
           name: v.name,
@@ -185,9 +189,10 @@ export default function BikeRent({ currentCity, openBookingModal }) {
           spec: v.spec,
           img: v.img,
           details: v.details || [],
-          minPrice: Number(v.price),
+          minPrice: priceVal,
           rating: v.rating || 4.7,
           reviewsCount: v.reviewsCount || 150,
+          upi_discount: v.upi_discount || null,
           is_closed: v.is_closed,
           closed_reason: v.closed_reason,
           closed_from: v.closed_from,
@@ -195,8 +200,8 @@ export default function BikeRent({ currentCity, openBookingModal }) {
           operators: []
         };
       }
-      if (Number(v.price) < grouped[key].minPrice) {
-        grouped[key].minPrice = Number(v.price);
+      if (priceVal < grouped[key].minPrice) {
+        grouped[key].minPrice = priceVal;
       }
       grouped[key].operators.push(v);
     });
@@ -291,6 +296,22 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               </p>
             </div>
             
+            {selectedVehicle.upi_discount && Number(selectedVehicle.upi_discount) > 0 && (
+              <div className="mb-4 flex items-center gap-3 bg-[#008F5D]/5 border border-[#008F5D]/15 p-3.5 rounded-2xl text-left">
+                <span className="w-8 h-8 rounded-full bg-[#008F5D]/10 flex items-center justify-center text-[#008F5D] shrink-0 text-sm">
+                  💳
+                </span>
+                <div className="flex flex-col">
+                  <span className="text-[12.5px] font-black text-slate-950">
+                    Pay via UPI & Get Extra ₹{selectedVehicle.upi_discount} OFF
+                  </span>
+                  <span className="text-[9.5px] text-slate-500 font-bold mt-0.5">
+                    Pay using any UPI app instantly & save extra on your advance payment.
+                  </span>
+                </div>
+              </div>
+            )}
+
             {checkIfClosed(selectedVehicle).closed ? (
               <div className="p-6 bg-red-50/50 border border-red-100 rounded-2xl text-center font-sans space-y-2">
                 <p className="text-xs font-black text-red-700 uppercase tracking-wider">⚠️ Bookings Temporarily Disabled</p>
@@ -320,6 +341,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                     city_id: raw.city_id,
                     vendor_id: raw.vendor_id,
                     commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
+                    upi_discount: selectedVehicle.upi_discount,
                     vendors: raw.vendors,
                     slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
                     is_closed: selectedVehicle.is_closed || raw.is_closed,

@@ -3,8 +3,9 @@ import React from 'react';
 import { Star, MapPin, HelpCircle } from 'lucide-react';
 
 const formatLandmarkDistance = (landmark) => {
-  if (!landmark) return null;
-  const lower = landmark.toLowerCase();
+  if (!landmark || typeof landmark !== 'string' || !landmark.trim()) return null;
+  const trimmed = landmark.trim();
+  const lower = trimmed.toLowerCase();
   
   if (lower.includes('laxman') || lower.includes('lakshman')) {
     return { title: 'Laxman Jhula', mode: '🚶 4 min walk' };
@@ -26,14 +27,14 @@ const formatLandmarkDistance = (landmark) => {
   }
   
   return { 
-    title: landmark.length > 20 ? landmark.split(',')[0] : landmark, 
+    title: trimmed.length > 20 ? trimmed.split(',')[0] : trimmed, 
     mode: '🚶 5 min walk' 
   };
 };
 
 const getContextualHelperText = (landmark) => {
-  if (!landmark) return null;
-  const lower = landmark.toLowerCase();
+  if (!landmark || typeof landmark !== 'string' || !landmark.trim()) return null;
+  const lower = landmark.trim().toLowerCase();
   if (lower.includes('laxman') || lower.includes('lakshman')) {
     return "Best for hotels near Laxman Jhula.";
   }
@@ -43,17 +44,18 @@ const getContextualHelperText = (landmark) => {
   if (lower.includes('tapovan')) {
     return "Ideal for hotels in Tapovan.";
   }
-  if (lower.includes('shivpuri')) {
+  if (lower.includes('open_browser_url') || lower.includes('shivpuri')) {
     return "Great choice near Shivpuri.";
   }
   return null;
 };
 
 const getConsistentReviewCount = (name) => {
-  if (!name) return 128;
+  if (!name || typeof name !== 'string' || !name.trim()) return 128;
+  const trimmed = name.trim();
   let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash << 5) - hash + name.charCodeAt(i);
+  for (let i = 0; i < trimmed.length; i++) {
+    hash = (hash << 5) - hash + trimmed.charCodeAt(i);
   }
   return (Math.abs(hash) % 180) + 35; // consistent number between 35 and 215
 };
@@ -147,9 +149,13 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
             badgeText = '⭐ Top Rated';
           }
 
-          const loc = formatLandmarkDistance(op.landmark);
-          const contextHelper = getContextualHelperText(op.landmark);
-          const reviewsCount = getConsistentReviewCount(op.vendorName);
+          // Safe Fallbacks
+          const vendorName = typeof op.vendorName === 'string' && op.vendorName.trim() ? op.vendorName.trim() : (typeof op.name === 'string' && op.name.trim() ? op.name.trim() : 'Local Operator');
+          const landmark = typeof op.landmark === 'string' && op.landmark.trim() ? op.landmark.trim() : 'Rishikesh';
+          
+          const loc = formatLandmarkDistance(landmark);
+          const contextHelper = getContextualHelperText(landmark);
+          const reviewsCount = getConsistentReviewCount(vendorName);
 
           return (
             <div
@@ -206,9 +212,9 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                   </span>
                 )}
 
-                {op.vendorName && (
+                {vendorName && (
                   <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                    Operator: {op.vendorName}
+                    Operator: {vendorName}
                   </span>
                 )}
               </div>

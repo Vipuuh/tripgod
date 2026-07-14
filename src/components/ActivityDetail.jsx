@@ -160,8 +160,8 @@ export default function ActivityDetail({
             <div className="flex items-center gap-2 flex-wrap mt-0.5">
               <div className="flex items-center gap-1 text-xs text-black font-black">
                 <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                <span>{rating}</span>
-                <span className="text-gray-500 font-bold">({reviewsCount} reviews)</span>
+                <span>{coming_soon ? '0.0' : rating}</span>
+                <span className="text-gray-500 font-bold">({coming_soon ? 0 : reviewsCount} reviews)</span>
               </div>
             </div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 mt-1">

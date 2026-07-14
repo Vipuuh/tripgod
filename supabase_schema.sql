@@ -349,5 +349,17 @@ ALTER TABLE bikes ADD COLUMN IF NOT EXISTS closed_reason TEXT DEFAULT 'Weather c
 ALTER TABLE bikes ADD COLUMN IF NOT EXISTS closed_from DATE;
 ALTER TABLE bikes ADD COLUMN IF NOT EXISTS closed_until DATE;
 
+-- Reviews & Ratings updates for Bikes and Tours (July 2026)
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS rating NUMERIC DEFAULT 4.5;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS reviews_count INTEGER DEFAULT 100;
+
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS rating NUMERIC DEFAULT 4.7;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS reviews_count INTEGER DEFAULT 80;
+
+-- Additional Dynamic Columns (July 2026)
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS coming_soon BOOLEAN DEFAULT false;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
+
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
+

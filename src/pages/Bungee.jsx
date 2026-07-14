@@ -93,15 +93,15 @@ export default function Bungee({ currentCity, openBookingModal }) {
                 images: item.images && item.images.length > 0 ? item.images : defaultBungeeOptions[0].images,
                 inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : defaultBungeeOptions[0].inclusions,
                 exclusions: item.exclusions && item.exclusions.length > 0 ? item.exclusions : defaultBungeeOptions[0].exclusions,
-                rating: item.rating || 4.9,
-                reviewsCount: item.reviews_count || 410,
+                rating: item.coming_soon ? 0 : (item.rating || 4.9),
+                reviewsCount: item.coming_soon ? 0 : (item.reviews_count || 410),
                 cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior to the jump.',
                 is_closed: item.is_closed,
                 closed_reason: item.closed_reason,
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
                 free_video_type: item.free_video_type || 'none',
-                coming_soon: !!item.coming_soon,
+                coming_soon: item.coming_soon !== undefined && item.coming_soon !== null ? !!item.coming_soon : false,
                 operators: [],
               };
             }

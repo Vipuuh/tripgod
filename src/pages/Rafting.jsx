@@ -271,8 +271,8 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 ageLimit: item.age_limit ? `Age ${item.age_limit}+ yrs` : (dist === 12 ? 'Age 14-60 yrs' : dist === 16 ? 'Age 14-55 yrs' : dist === 24 ? 'Age 18-50 yrs' : 'Age 18-45 yrs'),
                 weightLimit: dist >= 24 ? 'Weight 45-95 kg' : 'Weight 40-100 kg',
                 desc: item.description || (dist === 12 ? 'Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch.' : dist === 16 ? 'A thrilling rafting run with multiple Grade III rapids, suitable for adventure seekers.' : dist === 24 ? 'An advanced white-water rafting trip with massive rapids and high speed flows.' : 'Rishikesh\'s most extreme rafting stretch. Features the notorious Grade IV+ rapid "The Wall".'),
-                rating: item.rating || (dist === 12 ? 4.8 : dist === 16 ? 4.8 : 4.9),
-                reviewsCount: item.reviews_count || (dist === 12 ? 570 : dist === 16 ? 494 : dist === 24 ? 380 : dist === 36 ? 240 : 150),
+                rating: item.coming_soon ? 0 : (item.rating || (dist === 12 ? 4.8 : dist === 16 ? 4.8 : 4.9)),
+                reviewsCount: item.coming_soon ? 0 : (item.reviews_count || (dist === 12 ? 570 : dist === 16 ? 494 : dist === 24 ? 380 : dist === 36 ? 240 : 150)),
                 inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : [
                   'Transportation from office to rafting start point & back after finish',
                   'All rafting gear: imported life jackets, helmets, paddles',
@@ -290,6 +290,7 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 closed_from: item.closed_from,
                 closed_until: item.closed_until,
                 free_video_type: item.free_video_type || 'none',
+                coming_soon: item.coming_soon !== undefined && item.coming_soon !== null ? !!item.coming_soon : false,
                 operators: []
               };
             }
