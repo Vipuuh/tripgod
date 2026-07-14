@@ -4460,8 +4460,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                       </div>
                     )}
                   </div>
-                );
-              })}
+              }))}
             </div>
           </div>
         </div>
@@ -4637,7 +4636,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                       )}
                     </div>
                   );
-                })}
+                }))}
             </div>
           </div>
         </div>
