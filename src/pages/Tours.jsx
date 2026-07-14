@@ -521,6 +521,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
   const filteredGroupedList = getFilteredGroupedList();
 
   if (selectedTour) {
+    const ratingVal = selectedTour.why_book_with_us?.rating !== undefined && selectedTour.why_book_with_us?.rating !== null ? Number(selectedTour.why_book_with_us.rating) : (selectedTour.rating || 4.5);
+    const reviewsCountVal = selectedTour.why_book_with_us?.reviews_count !== undefined && selectedTour.why_book_with_us?.reviews_count !== null ? Number(selectedTour.why_book_with_us.reviews_count) : (selectedTour.reviewsCount || 80);
     const infoTags = selectedTour.quick_info_tags || ['Stay Included', 'Private AC Cab', 'Meals Included', 'Local Driver'];
     const rawItinerary = selectedTour.day_wise_itinerary || selectedTour.itinerary || [];
     const itineraryData = rawItinerary.length > 0 ? rawItinerary : getMockItinerary(selectedTour.name, selectedTour.duration);
@@ -704,24 +706,14 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
               {/* Premium Image Gallery */}
               <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm p-3 space-y-3">
                 <div className="h-72 md:h-[400px] w-full overflow-hidden rounded-2xl bg-slate-100 relative">
-                  {/* Top-Left / Top-Right Overlay Badges (Max 4) */}
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-20 items-start select-none max-w-[85%]">
-                    {selectedTour.is_bestseller && (
-                      <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1 uppercase">
-                        🔥 Best Seller
-                      </span>
-                    )}
-                    <span className="bg-slate-900/90 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
-                      ⭐ {selectedTour.rating || 4.9}
+                  {/* Top-Left / Top-Right Overlay Badges (Only 2) */}
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-20 items-start select-none">
+                    <span className="bg-slate-900/95 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
+                      ⭐ {ratingVal}
                     </span>
-                    <span className="bg-slate-900/90 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
-                      👥 {selectedTour.bookings_count || 428} Booked
+                    <span className="bg-slate-900/95 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
+                      👥 {selectedTour.bookings_count || 143}+ Booked
                     </span>
-                    {(selectedTour.upi_discount || cheapestOp.upi_discount) > 0 && (
-                      <span className="bg-emerald-600 text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1 uppercase">
-                        💳 UPI ₹{selectedTour.upi_discount || cheapestOp.upi_discount} OFF
-                      </span>
-                    )}
                   </div>
 
                   {mediaList[activeMediaIdx]?.type === 'video' ? (
@@ -776,46 +768,47 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
               <div className="bg-white rounded-3xl p-6 md:p-8 space-y-5 border border-slate-100 shadow-sm text-left">
                 
                 {/* 1. Package Includes (Horizontal Ribbon right below image thumbnails) */}
-                <div className="flex flex-wrap gap-2 select-none">
-                  {selectedTour.hotel_included !== false && (
-                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      🛏 Hotel Included
-                    </span>
-                  )}
-                  {selectedTour.meals_included !== false && (
-                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      🍽 Meals Included
-                    </span>
-                  )}
-                  {selectedTour.transport_included !== false && (
-                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      🚗 Private Cab
-                    </span>
-                  )}
-                  {selectedTour.guide_included !== false && (
-                    <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      👨 Guide Included
-                    </span>
-                  )}
-                  <span className="bg-slate-50 border border-slate-150 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    📍 Sightseeing Included
-                  </span>
-                </div>
+                { (selectedTour.hotel_included || selectedTour.meals_included || selectedTour.transport_included || selectedTour.guide_included) && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] sm:text-xs font-black text-slate-650 bg-slate-50/70 px-4 py-2.5 rounded-2xl border border-slate-100/80 select-none">
+                    <span className="text-[9px] uppercase font-black text-[#FF5F00] tracking-wider mr-1">Package Includes:</span>
+                    {selectedTour.hotel_included && (
+                      <span className="flex items-center gap-1">
+                        🏨 Stay
+                      </span>
+                    )}
+                    {selectedTour.meals_included && (
+                      <span className="flex items-center gap-1">
+                        🍽 Meals
+                      </span>
+                    )}
+                    {selectedTour.transport_included && (
+                      <span className="flex items-center gap-1">
+                        🚗 Cab
+                      </span>
+                    )}
+                    {selectedTour.guide_included && (
+                      <span className="flex items-center gap-1">
+                        👨 Guide
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* 2. Horizontal Trust Strip */}
-                <div className="flex flex-wrap items-center gap-2 select-none pt-1">
-                  <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0" />
-                    <span>Verified</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs">
-                    <span>⚡ Instant Confirmation</span>
-                  </div>
-
-                  <div className="flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs">
-                    <span>💰 Best Price</span>
-                  </div>
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[10px] font-black uppercase tracking-wider select-none pt-1">
+                  {selectedTour.is_verified && (
+                    <span className="flex items-center gap-1 text-emerald-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0 animate-pulse" /> Verified Operator
+                    </span>
+                  )}
+                  {selectedTour.is_instant_confirmation && (
+                    <span className="flex items-center gap-1 text-amber-600">
+                      ⚡ Instant Voucher
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1 text-blue-600">
+                    🛡 Best Price
+                  </span>
                 </div>
 
                 {/* 3. Title & Social Proof (Rating + Booked + Location inline) */}
@@ -827,8 +820,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-slate-500 font-bold select-none">
                     <div className="flex items-center gap-1 text-slate-800">
                       <Star size={14} className="fill-amber-500 text-amber-500" />
-                      <span>{selectedTour.rating || 4.8}</span>
-                      <span className="text-slate-400">({selectedTour.reviewsCount || 126} Reviews)</span>
+                      <span>{ratingVal}</span>
+                      <span className="text-slate-400">({reviewsCountVal} Reviews)</span>
                     </div>
                     <span className="text-slate-355">•</span>
                     <span>{selectedTour.bookings_count || 143}+ Booked</span>
@@ -899,7 +892,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 {/* 6. Why You'll Love This Trip (Selling block) */}
                 <div className="border-t border-slate-100 pt-4 text-left space-y-3">
                   <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider font-display">Why You'll Love This Trip</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold text-slate-700">
+                  <div className="grid grid-cols-2 gap-3 text-[11px] sm:text-xs font-bold text-slate-700">
                     <div className="flex items-center gap-2">
                       <span className="text-base shrink-0">🏔</span>
                       <span>Premium Himalayan Views</span>
@@ -961,30 +954,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 )}
               </div>
               
-              {/* Trust Checklist: Why Choose Us */}
-              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100 text-left space-y-4 select-none">
-                <div className="flex items-center gap-2">
-                  <Star size={16} className="text-[#FF5F00] fill-[#FF5F00]" />
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Why Travelers Trust TripGod</h4>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-xs font-bold text-slate-800">
-                  {(tourHighlights.length > 0 ? tourHighlights : [
-                    "100% Verified Local Operators",
-                    "Premium Handpicked Accommodation",
-                    "No Hidden Charges / Tolls Included",
-                    "24/7 Coordinate Desk Support",
-                    "Instant Booking Voucher Confirmation",
-                    "Best Price Guarantee"
-                  ]).map((hl, idx) => (
-                    <div key={idx} className="flex items-center gap-2.5 text-slate-700">
-                      <ShieldCheck size={16} className="text-[#008F5D] shrink-0" />
-                      <span>{hl.startsWith('✓') ? hl.substring(1).trim() : hl}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Route Map Timeline */}
+               {/* Route Map Timeline */}
               {routeMap.length > 0 && (
                 <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
@@ -1234,6 +1204,54 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 )}
               </div>
 
+              {/* Trust Checklist: Why Choose Us */}
+              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100 text-left space-y-4 select-none">
+                <div className="flex items-center gap-2">
+                  <Star size={16} className="text-[#FF5F00] fill-[#FF5F00]" />
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Why Travelers Trust TripGod</h4>
+                </div>
+                
+                {selectedTour.why_book_with_us?.items?.some(item => item.title) ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                    {selectedTour.why_book_with_us.items.map((item, idx) => {
+                      if (!item.title) return null;
+                      return (
+                        <div key={idx} className="bg-slate-50/70 border border-slate-100/80 rounded-2xl p-4 space-y-2 hover:border-[#FF5F00]/25 transition-all duration-300">
+                          <div className="w-9 h-9 rounded-xl bg-[#FF5F00]/10 text-[#FF5F00] flex items-center justify-center text-lg select-none">
+                            {item.icon === 'Shield' && '🛡️'}
+                            {item.icon === 'Headset' && '📞'}
+                            {item.icon === 'Hotel' && '🏨'}
+                            {item.icon === 'Car' && '🚗'}
+                            {item.icon === 'Utensils' && '🍽️'}
+                            {item.icon === 'Compass' && '🧭'}
+                            {item.icon === 'Ticket' && '🎫'}
+                            {!['Shield','Headset','Hotel','Car','Utensils','Compass','Ticket'].includes(item.icon) && '✨'}
+                          </div>
+                          <h5 className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{item.title}</h5>
+                          <p className="text-[10px] text-slate-500 font-bold leading-relaxed">{item.desc}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-xs font-bold text-slate-800">
+                    {(tourHighlights.length > 0 ? tourHighlights : [
+                      "100% Verified Local Operators",
+                      "Premium Handpicked Accommodation",
+                      "No Hidden Charges / Tolls Included",
+                      "24/7 Coordinate Desk Support",
+                      "Instant Booking Voucher Confirmation",
+                      "Best Price Guarantee"
+                    ]).map((hl, idx) => (
+                      <div key={idx} className="flex items-center gap-2.5 text-slate-700">
+                        <ShieldCheck size={16} className="text-[#008F5D] shrink-0" />
+                        <span>{hl.startsWith('✓') ? hl.substring(1).trim() : hl}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Nearby Landmarks Grid */}
               {landmarks.length > 0 && (
                 <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
@@ -1409,46 +1427,46 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         </div>
 
         {/* Sticky bottom bar (Mobile/Tablet only) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-150 p-4 z-40 shadow-[0_-5px_15px_rgba(0,0,0,0.06)] flex items-center justify-between gap-4">
-          <div className="flex flex-col text-left">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-150 py-2.5 px-3 z-45 shadow-[0_-5px_15px_rgba(0,0,0,0.06)] flex items-center justify-between gap-2.5">
+          <div className="flex flex-col text-left shrink-0">
             <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Starts from</span>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-xl font-extrabold text-[#008F5D]">₹{price.toLocaleString('en-IN')}</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-extrabold text-[#008F5D]">₹{price.toLocaleString('en-IN')}</span>
               {originalPrice > price && (
-                <span className="text-xs text-slate-450 line-through font-bold">
+                <span className="text-[10px] text-slate-400 line-through font-bold">
                   ₹{originalPrice.toLocaleString('en-IN')}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 font-display">
+          <div className="flex items-center gap-1.5 flex-grow justify-end max-w-[70%] font-display">
             <a
               href="tel:+918630027341"
-              className="p-3 bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#FF5F00] rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
+              className="p-2.5 bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#FF5F00] rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
             >
-              <Phone size={16} />
+              <Phone size={14} />
             </a>
             
             <a
               href={`https://wa.me/918630027341?text=Hi%2C%20I'm%252520interested%252520in%252520booking%252520the%252520${encodeURIComponent(selectedTour.name)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-3 bg-slate-50 border border-slate-200 text-slate-750 hover:text-emerald-500 rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
+              className="p-2.5 bg-slate-50 border border-slate-200 text-slate-750 hover:text-emerald-500 rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
             >
-              <MessageSquare size={16} />
+              <MessageSquare size={14} />
             </a>
 
             {checkIfClosed(selectedTour).closed ? (
-              <button disabled className="py-3 px-5 bg-gray-300 text-gray-500 font-black text-xs uppercase tracking-wider rounded-xl cursor-not-allowed shrink-0">
+              <button disabled className="py-2.5 px-4 bg-gray-300 text-gray-500 font-black text-xs uppercase tracking-wider rounded-xl cursor-not-allowed shrink-0">
                 Closed
               </button>
             ) : (
               <button
                 onClick={() => navigateTo(`tours/${selectedTour.id}/partners`)}
-                className="py-3 px-5 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm border-none shrink-0"
+                className="py-2.5 px-4 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm border-none flex-grow text-center justify-center shrink-0 min-w-[90px]"
               >
-                Book @ ₹{price.toLocaleString('en-IN')}
+                Book Now
               </button>
             )}
           </div>
@@ -1502,18 +1520,31 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
 
         {/* Sticky Search & Filter Bar */}
         <div className="sticky top-16 z-30 bg-white/90 backdrop-blur-md border border-slate-150 p-2.5 rounded-2xl md:rounded-3xl shadow-sm space-y-2.5 select-none w-full max-w-full">
-          {/* Search Input */}
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Search destination, yatra..."
-              value={filterDestination}
-              onChange={e => setFilterDestination(e.target.value)}
-              className="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5F00] font-semibold"
-            />
+          
+          {/* Line 1: Search (Left) & Sort (Right) */}
+          <div className="flex gap-2 items-center justify-between w-full">
+            <div className="relative flex-grow">
+              <input
+                type="text"
+                placeholder="Search destination, yatra..."
+                value={filterDestination}
+                onChange={e => setFilterDestination(e.target.value)}
+                className="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5F00] font-semibold"
+              />
+            </div>
+            <select
+              value={filterSort}
+              onChange={e => setFilterSort(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none cursor-pointer min-w-[110px] md:min-w-[140px] shrink-0 text-slate-700"
+            >
+              <option value="Recommended">Recommended</option>
+              <option value="PriceAsc">Price: Low to High</option>
+              <option value="PriceDesc">Price: High to Low</option>
+              <option value="Rating">Rating: High to Low</option>
+            </select>
           </div>
           
-          {/* Responsive grid filters (2x2 on mobile, flex row on desktop) */}
+          {/* Line 2: Responsive grid filters (2x2 on mobile, flex row on desktop) */}
           <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-2 w-full">
             <select
               value={filterBudget}
@@ -1559,21 +1590,6 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
               <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
               <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
             </select>
-            
-            {/* Sort Select on Desktop is inline, on Mobile it takes its place in grid or floats */}
-            <div className="col-span-2 md:col-span-1 flex items-center justify-between md:justify-end gap-2 md:ml-auto pt-1 md:pt-0 border-t md:border-t-0 border-slate-100 w-full md:w-auto">
-              <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Sort:</span>
-              <select
-                value={filterSort}
-                onChange={e => setFilterSort(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer min-w-[120px]"
-              >
-                <option value="Recommended">Recommended</option>
-                <option value="PriceAsc">Price: Low to High</option>
-                <option value="PriceDesc">Price: High to Low</option>
-                <option value="Rating">Rating: High to Low</option>
-              </select>
-            </div>
           </div>
         </div>
 
@@ -1710,13 +1726,15 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                       <div className="flex flex-col text-left">
                         <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
                           <Star size={14} className="fill-amber-500 text-amber-500" />
-                          <span>{tour.rating}</span>
+                          <span>{tour.why_book_with_us?.rating !== undefined && tour.why_book_with_us?.rating !== null ? Number(tour.why_book_with_us.rating) : (tour.rating || 4.5)}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{tour.reviewsCount} Reviews</span>
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">
+                          {tour.why_book_with_us?.reviews_count !== undefined && tour.why_book_with_us?.reviews_count !== null ? Number(tour.why_book_with_us.reviews_count) : (tour.reviewsCount || 80)} Reviews
+                        </span>
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase tracking-wider">
-                          🔥 {tour.bookings_count}+ booked
+                          🔥 {tour.bookings_count || 143}+ booked
                         </span>
                       </div>
                     </div>

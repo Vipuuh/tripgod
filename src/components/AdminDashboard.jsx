@@ -4860,6 +4860,55 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               </div>
             </div>
 
+            {/* Tour Rating & Reviews Count override fields */}
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1 text-left">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  Tour Rating (Backend Override)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  max="5"
+                  value={formData.why_book_with_us?.rating || ''}
+                  placeholder="e.g. 4.8"
+                  onChange={(e) => {
+                    const val = e.target.value ? parseFloat(e.target.value) : '';
+                    setFormData(prev => ({
+                      ...prev,
+                      why_book_with_us: {
+                        ...(prev.why_book_with_us || { items: [] }),
+                        rating: val
+                      }
+                    }));
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#FF5F00]"
+                />
+              </div>
+              <div className="space-y-1 text-left">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  Reviews Count (Backend Override)
+                </label>
+                <input
+                  type="number"
+                  value={formData.why_book_with_us?.reviews_count || ''}
+                  placeholder="e.g. 126"
+                  onChange={(e) => {
+                    const val = e.target.value ? parseInt(e.target.value, 10) : '';
+                    setFormData(prev => ({
+                      ...prev,
+                      why_book_with_us: {
+                        ...(prev.why_book_with_us || { items: [] }),
+                        reviews_count: val
+                      }
+                    }));
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#FF5F00]"
+                />
+              </div>
+            </div>
+
             {/* Why Book With Us Items */}
             <div className="space-y-3 pt-2">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
