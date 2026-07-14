@@ -2073,8 +2073,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount),
           free_video_type: formData.free_video_type || 'none',
-          rating: formData.rating === undefined || formData.rating === '' || formData.rating === null ? 4.8 : Number(formData.rating),
-          reviews_count: formData.reviews_count === undefined || formData.reviews_count === '' || formData.reviews_count === null ? 100 : Number(formData.reviews_count),
           is_closed: !!formData.is_closed,
           closed_reason: formData.closed_reason || '',
           closed_from: formData.closed_from || null,
@@ -2319,8 +2317,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           closed_from: formData.closed_from || null,
           closed_until: formData.closed_until || null,
           upi_discount: formData.upi_discount !== null && formData.upi_discount !== undefined && formData.upi_discount !== '' ? Number(formData.upi_discount) : null,
-          rating: formData.rating === undefined || formData.rating === '' || formData.rating === null ? 4.8 : Number(formData.rating),
-          reviews_count: formData.reviews_count === undefined || formData.reviews_count === '' || formData.reviews_count === null ? 100 : Number(formData.reviews_count),
           seats_left: formData.seats_left !== undefined && formData.seats_left !== null && formData.seats_left !== '' ? Number(formData.seats_left) : 10,
           bookings_count: formData.bookings_count !== undefined && formData.bookings_count !== null && formData.bookings_count !== '' ? Number(formData.bookings_count) : 150,
           hotel_included: formData.hotel_included !== undefined ? !!formData.hotel_included : true,
@@ -2714,7 +2710,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           />
         </div>
 
-        {['rafting', 'adventures', 'tours'].includes(type) && (
+        {false && (
           <>
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Star Rating (1-5)</label>

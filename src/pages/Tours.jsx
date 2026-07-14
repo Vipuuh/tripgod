@@ -206,6 +206,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
   const [expandedDays, setExpandedDays] = useState({ 0: true });
   const [costTab, setCostTab] = useState('included');
   const [expandedFAQs, setExpandedFAQs] = useState({});
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [filterDestination, setFilterDestination] = useState('');
   const [filterBudget, setFilterBudget] = useState('All');
   const [filterDuration, setFilterDuration] = useState('All');
@@ -616,22 +617,19 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                   ₹{originalPrice.toLocaleString('en-IN')}
                 </span>
               )}
-              {discountPercent > 0 && (
-                <span className="inline-flex items-center text-[10px] font-black uppercase text-[#008F5D] bg-[#008F5D]/10 px-2.5 py-0.5 rounded">
-                  💚 Save {discountPercent}% OFF
-                </span>
-              )}
             </div>
             <span className="text-[10px] text-slate-450 font-bold">Per Person</span>
           </div>
 
+          {originalPrice > price && (
+            <div className="text-xs font-black text-emerald-600 flex items-center gap-1 select-none">
+              <span>🟢 Save ₹{(originalPrice - price).toLocaleString('en-IN')} Today</span>
+            </div>
+          )}
+
           {upiDiscount > 0 && (
-            <div className="flex items-center gap-2.5 bg-[#008F5D]/10 border border-[#008F5D]/20 p-3 rounded-2xl text-left select-none">
-              <span className="text-sm">💳</span>
-              <div className="flex flex-col">
-                <span className="text-[11.5px] font-black text-slate-950 leading-tight">Pay via UPI & Get Extra ₹{upiDiscount} OFF</span>
-                <span className="text-[9px] text-slate-500 font-bold mt-0.5 leading-normal">Use GPay, PhonePe or Paytm for additional checkout savings.</span>
-              </div>
+            <div className="text-xs font-black text-[#FF6B00] flex items-center gap-1 select-none">
+              <span>💳 Extra ₹{upiDiscount.toLocaleString('en-IN')} OFF with UPI</span>
             </div>
           )}
 
@@ -692,6 +690,26 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
               {/* Premium Image Gallery */}
               <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm p-3 space-y-3">
                 <div className="h-72 md:h-[400px] w-full overflow-hidden rounded-2xl bg-slate-100 relative">
+                  {/* Top-Left / Top-Right Overlay Badges (Max 4) */}
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-20 items-start select-none max-w-[85%]">
+                    {selectedTour.is_bestseller && (
+                      <span className="bg-[#FF5F00] text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1 uppercase">
+                        🔥 Best Seller
+                      </span>
+                    )}
+                    <span className="bg-slate-900/90 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
+                      ⭐ {selectedTour.rating || 4.9}
+                    </span>
+                    <span className="bg-slate-900/90 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
+                      👥 {selectedTour.bookings_count || 428} Booked
+                    </span>
+                    {(selectedTour.upi_discount || cheapestOp.upi_discount) > 0 && (
+                      <span className="bg-emerald-600 text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1 uppercase">
+                        💳 UPI ₹{selectedTour.upi_discount || cheapestOp.upi_discount} OFF
+                      </span>
+                    )}
+                  </div>
+
                   {mediaList[activeMediaIdx]?.type === 'video' ? (
                     mediaList[activeMediaIdx].url.includes('youtube.com') || mediaList[activeMediaIdx].url.includes('youtu.be') ? (
                       <iframe 
@@ -743,58 +761,40 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                       {/* Tour Title Section */}
               <div className="bg-white rounded-3xl p-6 md:p-8 space-y-5 border border-slate-100 shadow-sm text-left">
                 
-                {/* Badges strip */}
-                <div className="flex flex-wrap gap-2 select-none">
+                {/* Horizontal Trust Strip (Section 2) */}
+                <div className="flex flex-wrap items-center gap-2 select-none">
                   <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
-                    <ShieldCheck size={12} className="text-emerald-600" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0" />
                     <span>Verified</span>
                   </div>
                   
                   <div className="flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
-                    <Zap size={12} className="text-amber-500 fill-amber-500" />
-                    <span>Instant Confirmation</span>
+                    <span>⚡ Instant Confirmation</span>
                   </div>
 
                   <div className="flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
-                    <Tag size={12} className="text-blue-600" />
-                    <span>Best Price</span>
+                    <span>💰 Best Price</span>
                   </div>
-
-                  {selectedTour.is_bestseller && (
-                    <div className="flex items-center gap-1 bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
-                      <Star size={12} className="text-indigo-650 fill-indigo-650" />
-                      <span>Best Seller</span>
-                    </div>
-                  )}
                 </div>
 
+                {/* Title & Social Proof (Section 3) */}
                 <div className="space-y-2">
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+                  <h1 className="text-xl md:text-3xl font-black text-slate-900 uppercase tracking-tight leading-tight">
                     {selectedTour.name}
                   </h1>
 
-                  {/* Rating + Bookings inline */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500 font-bold">
-                    <div className="flex items-center gap-1 text-slate-800 font-extrabold">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500 font-bold select-none">
+                    <div className="flex items-center gap-1 text-slate-800">
                       <Star size={14} className="fill-amber-500 text-amber-500" />
-                      <span>{selectedTour.rating}</span>
-                      <span>({selectedTour.reviewsCount} Reviews)</span>
+                      <span>{selectedTour.rating || 4.9}</span>
+                      <span className="text-slate-400">({selectedTour.reviewsCount || 128} Reviews)</span>
                     </div>
-                    <span>•</span>
-                    <span className="text-slate-600 bg-slate-100/60 px-2 py-0.5 rounded uppercase tracking-wider">
-                      🔥 {selectedTour.bookings_count || 1842} Bookings
-                    </span>
-                  </div>
-
-                  {/* Metadata: ex location & duration */}
-                  <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-black uppercase tracking-wider text-slate-550 select-none">
-                    <div className="flex items-center gap-1 bg-slate-100/60 px-2.5 py-1 rounded-xl border border-slate-200/50">
-                      <MapPin size={14} className="text-[#FF5F00]" />
-                      <span>Starts: Ex {currentCity?.name || 'Rishikesh'}</span>
-                    </div>
-                    <div className="flex items-center gap-1 bg-slate-100/60 px-2.5 py-1 rounded-xl border border-slate-200/50">
-                      <Clock size={14} className="text-[#FF5F00]" />
-                      <span>Duration: {selectedTour.duration}</span>
+                    <span className="text-slate-355">•</span>
+                    <span>1200+ Travelers</span>
+                    <span className="text-slate-355">•</span>
+                    <div className="flex items-center gap-1">
+                      <span>📍</span>
+                      <span className="uppercase tracking-wider">{currentCity?.name || 'Rishikesh'}</span>
                     </div>
                   </div>
                 </div>
@@ -804,34 +804,45 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                   {renderPricingBlock(true)}
                 </div>
 
-                <div className="border-t border-slate-100 pt-4">
-                  <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                    {selectedTour.description}
-                  </p>
+                {/* Section 6: Quick Highlights */}
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100 select-none">
+                  {selectedTour.hotel_included !== false && (
+                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
+                      🛏 Hotel
+                    </span>
+                  )}
+                  {selectedTour.meals_included !== false && (
+                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
+                      🍽 Meals
+                    </span>
+                  )}
+                  {selectedTour.transport_included !== false && (
+                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
+                      🚗 Private Cab
+                    </span>
+                  )}
+                  {selectedTour.guide_included !== false && (
+                    <span className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-1">
+                      👨 Guide
+                    </span>
+                  )}
+                  <span className="bg-[#FF6B00]/5 border border-[#FF6B00]/25 px-3 py-1.5 rounded-xl text-xs font-black text-[#FF6B00] flex items-center gap-1">
+                    ⏳ {selectedTour.duration}
+                  </span>
                 </div>
 
-                {/* Inclusions Ribbon */}
-                <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100 select-none">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-700">
-                    <span className="text-emerald-600 text-sm">✔</span>
-                    <Hotel size={14} className="text-[#FF5F00]" />
-                    <span>Hotel Included</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-700">
-                    <span className="text-emerald-600 text-sm">✔</span>
-                    <Utensils size={14} className="text-[#FF5F00]" />
-                    <span>Meals Included</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-700">
-                    <span className="text-emerald-600 text-sm">✔</span>
-                    <Car size={14} className="text-[#FF5F00]" />
-                    <span>Transfers Included</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-700">
-                    <span className="text-emerald-600 text-sm">✔</span>
-                    <Users size={14} className="text-[#FF5F00]" />
-                    <span>Guide Available</span>
-                  </div>
+                {/* Section 7: About Tour */}
+                <div className="border-t border-slate-100 pt-4 text-left">
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2 font-display">About this Tour</h4>
+                  <p className={`text-sm text-slate-600 leading-relaxed font-medium ${!isDescExpanded ? 'line-clamp-2' : ''}`}>
+                    {selectedTour.description}
+                  </p>
+                  <button 
+                    onClick={() => setIsDescExpanded(!isDescExpanded)} 
+                    className="text-[#FF6B00] font-black text-xs uppercase mt-2 tracking-wider bg-transparent border-none cursor-pointer p-0 hover:underline"
+                  >
+                    {!isDescExpanded ? 'Read More' : 'Read Less'}
+                  </button>
                 </div>
 
                 {/* Who is this tour perfect for? */}
@@ -871,10 +882,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
               {/* Trust Checklist: Why Choose Us */}
               <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100 text-left space-y-4 select-none">
                 <div className="flex items-center gap-2">
-                  <Star size={14} className="text-[#FF5F00] fill-[#FF5F00]" />
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Why Book with TripGod?</h4>
+                  <Star size={16} className="text-[#FF5F00] fill-[#FF5F00]" />
+                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Why Travelers Trust TripGod</h4>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs font-bold text-slate-800">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-xs font-bold text-slate-800">
                   {(tourHighlights.length > 0 ? tourHighlights : [
                     "100% Verified Local Operators",
                     "Premium Handpicked Accommodation",
@@ -883,8 +894,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                     "Instant Booking Voucher Confirmation",
                     "Best Price Guarantee"
                   ]).map((hl, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-slate-700">
-                      <Check size={14} className="text-[#008F5D] shrink-0 stroke-[2.5]" />
+                    <div key={idx} className="flex items-center gap-2.5 text-slate-700">
+                      <ShieldCheck size={16} className="text-[#008F5D] shrink-0" />
                       <span>{hl.startsWith('✓') ? hl.substring(1).trim() : hl}</span>
                     </div>
                   ))}
@@ -968,22 +979,19 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
 
                         {/* Day Metadata Cards */}
                         <div className="flex flex-wrap gap-2 pt-1.5">
-                          {(day.stay || stayDetails?.hotel_name) && idx === 0 && (
-                            <div className="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-800 px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-xs">
-                              <Hotel size={12} className="text-sky-600 shrink-0" />
-                              <span>Stay: {day.stay || stayDetails.hotel_name}</span>
-                            </div>
-                          )}
-                          {day.stay && idx > 0 && (
-                            <div className="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-800 px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-xs">
-                              <Hotel size={12} className="text-sky-600 shrink-0" />
-                              <span>Stay: {day.stay}</span>
-                            </div>
-                          )}
                           {meals.length > 0 && (
-                            <div className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 text-emerald-800 px-2.5 py-1.5 rounded-xl text-[10px] font-bold shadow-xs">
-                              <Utensils size={12} className="text-emerald-600 shrink-0" />
-                              <span>Meals: {meals.join(', ')}</span>
+                            <div className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-emerald-800 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
+                              🍽 Meals: {meals.join(', ')}
+                            </div>
+                          )}
+                          {(day.stay || stayDetails?.hotel_name) && (
+                            <div className="inline-flex items-center gap-1 bg-sky-50 border border-sky-100 text-sky-800 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
+                              🛏 Stay: {day.stay || (idx === 0 ? stayDetails.hotel_name : '') || 'Included'}
+                            </div>
+                          )}
+                          {selectedTour.transport_included !== false && (
+                            <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
+                              🚗 Cab Included
                             </div>
                           )}
                         </div>
@@ -1347,7 +1355,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
       <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-4 md:space-y-8">
         
         {/* Compact Hero Section */}
-        <div className="bg-slate-900 rounded-3xl p-4 md:p-8 text-white relative overflow-hidden select-none shadow-lg">
+        <div className="bg-gradient-to-br from-[#0F2C59] via-[#1B3C73] to-[#0A1E3F] rounded-3xl p-4 md:p-8 text-white relative overflow-hidden select-none shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30 z-10" />
           <div className="absolute inset-0 bg-[url('/tour-hero.jpg')] bg-cover bg-center opacity-40 animate-pulse-slow" />
           
@@ -1384,9 +1392,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         </div>
 
         {/* Sticky Search & Filter Bar */}
-        <div className="sticky top-16 z-30 bg-white/80 backdrop-blur-md border border-slate-100 p-3 rounded-2xl md:rounded-3xl shadow-sm flex flex-wrap gap-2 md:gap-3 items-center justify-between">
-          <div className="flex flex-wrap gap-2 items-center flex-grow">
-            <div className="relative flex-grow max-w-xs">
+        <div className="sticky top-16 z-30 bg-white/85 backdrop-blur-md border border-slate-150/80 p-3 rounded-2xl md:rounded-3xl shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+          <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center flex-grow overflow-hidden">
+            {/* Search Input */}
+            <div className="relative shrink-0 md:max-w-xs w-full md:w-60">
               <input
                 type="text"
                 placeholder="Search destination, yatra..."
@@ -1396,58 +1405,62 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
               />
             </div>
             
-            <select
-              value={filterBudget}
-              onChange={e => setFilterBudget(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Budgets</option>
-              <option value="5000">Up to ₹5,000</option>
-              <option value="10000">Up to ₹10,000</option>
-              <option value="20000">Up to ₹20,000</option>
-              <option value="50000">Up to ₹50,000</option>
-            </select>
+            {/* Horizontal Scrollable Filters on Mobile */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto shrink-0 md:shrink select-none">
+              <select
+                value={filterBudget}
+                onChange={e => setFilterBudget(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
+              >
+                <option value="All">All Budgets</option>
+                <option value="5000">Up to ₹5,000</option>
+                <option value="10000">Up to ₹10,000</option>
+                <option value="20000">Up to ₹20,000</option>
+                <option value="50000">Up to ₹50,000</option>
+              </select>
 
-            <select
-              value={filterDuration}
-              onChange={e => setFilterDuration(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Durations</option>
-              <option value="1-2">1-2 Days</option>
-              <option value="3-4">3-4 Days</option>
-              <option value="5+">5+ Days</option>
-            </select>
+              <select
+                value={filterDuration}
+                onChange={e => setFilterDuration(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
+              >
+                <option value="All">All Durations</option>
+                <option value="1-2">1-2 Days</option>
+                <option value="3-4">3-4 Days</option>
+                <option value="5+">5+ Days</option>
+              </select>
 
-            <select
-              value={filterTourType}
-              onChange={e => setFilterTourType(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Types</option>
-              <option value="Sightseeing">Sightseeing</option>
-              <option value="Pilgrimage">Pilgrimage</option>
-              <option value="Trekking">Trekking</option>
-              <option value="Adventure">Adventure</option>
-            </select>
+              <select
+                value={filterTourType}
+                onChange={e => setFilterTourType(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
+              >
+                <option value="All">All Types</option>
+                <option value="Sightseeing">Sightseeing</option>
+                <option value="Pilgrimage">Pilgrimage</option>
+                <option value="Trekking">Trekking</option>
+                <option value="Adventure">Adventure</option>
+              </select>
 
-            <select
-              value={filterRating}
-              onChange={e => setFilterRating(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none cursor-pointer"
-            >
-              <option value="All">All Ratings</option>
-              <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
-              <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
-            </select>
+              <select
+                value={filterRating}
+                onChange={e => setFilterRating(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer shrink-0"
+              >
+                <option value="All">All Ratings</option>
+                <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
+                <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
+              </select>
+            </div>
           </div>
 
-          <div className="flex gap-2 items-center shrink-0">
-            <span className="text-[10px] uppercase font-black text-slate-450 tracking-wider">Sort:</span>
+          {/* Sort Select */}
+          <div className="flex gap-2 items-center justify-between md:justify-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+            <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Sort:</span>
             <select
               value={filterSort}
               onChange={e => setFilterSort(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none cursor-pointer"
+              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none cursor-pointer"
             >
               <option value="Recommended">Recommended</option>
               <option value="PriceAsc">Price: Low to High</option>

@@ -162,6 +162,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
   // MakeMyTrip style Search Tab States
   const [activeSearchTab, setActiveSearchTab] = useState('hotels');
+  const [selectedHotelCity, setSelectedHotelCity] = useState('Rishikesh');
+  const [selectedRaftingStretch, setSelectedRaftingStretch] = useState('16 KM (Shivpuri)');
+  const [selectedBikePickupLocation, setSelectedBikePickupLocation] = useState('Ram Jhula');
+  const [allTours, setAllTours] = useState([]);
+  const [selectedTourOption, setSelectedTourOption] = useState('');
   
   // Stays / Hotels search states
   const [hotelCheckIn, setHotelCheckIn] = useState(() => {
@@ -269,10 +274,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   };
 
   const quickAccess = [
-    { label: 'Hotels', emoji: '🏨', route: 'hotels' },
-    { label: 'Adventures', emoji: '⚡', route: 'adventures' },
-    { label: 'Rafting', emoji: '🚣', route: 'rafting' },
-    { label: 'Bike Rent', emoji: '🏍️', route: 'bikerent' }
+    { label: 'Hotels', icon: Hotel, route: 'hotels', color: 'text-indigo-600 bg-indigo-50 border-indigo-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
+    { label: 'Bike Rent', icon: Bike, route: 'bikerent', color: 'text-emerald-600 bg-emerald-50 border-emerald-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
+    { label: 'Rafting', icon: Ship, route: 'rafting', color: 'text-cyan-600 bg-cyan-50 border-cyan-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
+    { label: 'Tours', icon: MapPinned, route: 'tours', color: 'text-rose-600 bg-rose-50 border-rose-100 group-hover:bg-[#FF6B00] group-hover:text-white' }
   ];
 
   const [activitiesList, setActivitiesList] = useState([
@@ -519,6 +524,11 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             cachedFeaturedTours = mappedTours;
             setFeaturedTours(mappedTours);
           }
+        // Fetch all tours for the dropdown
+        const { data: allToursData } = await supabase.from('tours').select('id, name');
+        if (allToursData && allToursData.length > 0) {
+          setAllTours(allToursData);
+          setSelectedTourOption(allToursData[0].id);
         }
 
         // Fetch adventure activity dynamic prices
@@ -720,8 +730,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
                 { id: 'tours', label: 'Tours', icon: MapPinned },
                 { id: 'rafting', label: 'Rafting', icon: Waves },
-                { id: 'bikerent', label: 'Bike Rental', icon: Bike },
-                { id: 'adventures', label: 'Adventures', icon: Zap }
+                { id: 'bikerent', label: 'Bike Rental', icon: Bike }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeSearchTab === tab.id;
@@ -758,7 +767,14 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     <MapPin className="text-[#FF5F00] shrink-0" size={18} />
                     <div className="flex flex-col text-left">
                       <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">City / Destination</span>
-                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Rishikesh, India</span>
+                      <select 
+                        value={selectedHotelCity}
+                        onChange={(e) => setSelectedHotelCity(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      >
+                        <option value="Rishikesh">Rishikesh, India</option>
+                        <option value="Haridwar">Haridwar, India</option>
+                      </select>
                     </div>
                   </div>
                   <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('hotel-checkin')?.showPicker()}>
@@ -816,7 +832,16 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     <MapPin className="text-[#FF5F00] shrink-0" size={18} />
                     <div className="flex flex-col text-left">
                       <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Activity Route</span>
-                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Rishikesh Stretches</span>
+                      <select 
+                        value={selectedRaftingStretch}
+                        onChange={(e) => setSelectedRaftingStretch(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      >
+                        <option value="9 KM (Brahmpuri)">9 KM (Brahmpuri)</option>
+                        <option value="16 KM (Shivpuri)">16 KM (Shivpuri)</option>
+                        <option value="24 KM (Marine Drive)">24 KM (Marine Drive)</option>
+                        <option value="32 KM (Kaudiyala)">32 KM (Kaudiyala)</option>
+                      </select>
                     </div>
                   </div>
                   <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('rafting-date')?.showPicker()}>
@@ -855,7 +880,17 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     <MapPin className="text-[#FF5F00] shrink-0" size={18} />
                     <div className="flex flex-col text-left">
                       <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Pickup Location</span>
-                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Rishikesh Office</span>
+                      <select 
+                        value={selectedBikePickupLocation}
+                        onChange={(e) => setSelectedBikePickupLocation(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      >
+                        <option value="Ram Jhula">Ram Jhula</option>
+                        <option value="Laxman Jhula">Laxman Jhula</option>
+                        <option value="Bus Stand">Bus Stand</option>
+                        <option value="Janki Setu (Sita Pul)">Janki Setu (Sita Pul)</option>
+                        <option value="Sita Jhula">Sita Jhula</option>
+                      </select>
                     </div>
                   </div>
                   <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('bike-date')?.showPicker()}>
@@ -893,8 +928,25 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
                     <MapPin className="text-[#FF5F00] shrink-0" size={18} />
                     <div className="flex flex-col text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Destination</span>
-                      <span className="text-sm font-extrabold text-slate-900 mt-0.5">Char Dham / Rishikesh</span>
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Destination / Package</span>
+                      <select 
+                        value={selectedTourOption}
+                        onChange={(e) => setSelectedTourOption(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      >
+                        {allTours.length > 0 ? (
+                          allTours.map(t => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))
+                        ) : (
+                          <>
+                            <option value="do-dham-yatra">Do Dham Yatra Packages</option>
+                            <option value="kedarnath-yatra">Kedarnath Pilgrimage</option>
+                            <option value="badrinath-yatra">Badrinath Pilgrimage</option>
+                            <option value="char-dham-yatra">Char Dham Yatra 10 Days</option>
+                          </>
+                        )}
+                      </select>
                     </div>
                   </div>
                   <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('tour-date')?.showPicker()}>
@@ -1004,6 +1056,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     } else if (activeSearchTab === 'tours') {
                       setPrefDate(tourDate);
                       setPrefGuests(tourGuests);
+                      if (selectedTourOption) {
+                        window.history.pushState(null, '', `/tours/${selectedTourOption}`);
+                      }
                       setRoute('tours');
                     } else if (activeSearchTab === 'pickup') {
                       setPrefDate(cabDate);
@@ -1071,20 +1126,23 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       >
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-4 gap-4 sm:gap-6 px-2 md:px-0">
-            {quickAccess.map((item, index) => (
-              <button 
-                key={index} 
-                onClick={() => setRoute(item.route)}
-                className="hover-scale-premium hover-glow flex flex-col items-center justify-center gap-2.5 p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all duration-300 group cursor-pointer"
-              >
-                <div className="flex items-center justify-center h-14 w-14 sm:h-20 sm:w-20 rounded-2xl bg-slate-50 border border-slate-100 group-hover:bg-accent-gradient group-hover:shadow-[0_8px_20px_rgba(255,107,0,0.25)] transition-all duration-500">
-                  <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-500">{item.emoji}</span>
-                </div>
-                <span className="font-black text-[10px] sm:text-xs text-slate-800 tracking-wider uppercase text-center font-display leading-tight mt-1 group-hover:text-[#FF6B00] transition-colors">
-                  {item.label}
-                </span>
-              </button>
-            ))}
+            {quickAccess.map((item, index) => {
+              const IconComp = item.icon;
+              return (
+                <button 
+                  key={index} 
+                  onClick={() => setRoute(item.route)}
+                  className="hover-scale-premium hover-glow flex flex-col items-center justify-center gap-2 p-2 sm:p-5 rounded-3xl bg-white border border-slate-200/50 shadow-[0_4px_25px_rgba(0,0,0,0.03)] transition-all duration-300 group cursor-pointer"
+                >
+                  <div className={`flex items-center justify-center h-12 w-12 sm:h-20 sm:w-20 rounded-2xl transition-all duration-500 ${item.color} border`}>
+                    <IconComp size={22} className="sm:h-8 sm:w-8 group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <span className="font-black text-[9px] sm:text-xs text-slate-800 tracking-wider uppercase text-center font-display leading-tight mt-1 group-hover:text-[#FF6B00] transition-colors">
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </motion.div>
