@@ -614,7 +614,8 @@ export default function BikeRent({ currentCity, openBookingModal }) {
       )}
 
         {/* Logistics (Documents & Pickup Points) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-8 border-t border-black/5">
+        <div className="max-w-6xl mx-auto px-6 pt-12 border-t border-black/5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {/* Left Column: Documents */}
           <div className="space-y-6">
             <h3 className="text-xl font-bold font-display text-black flex items-center gap-2">
