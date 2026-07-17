@@ -1504,7 +1504,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
   return (
