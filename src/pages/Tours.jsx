@@ -1,242 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MapPin, Clock, Calendar, ShieldCheck, Waves, ChevronLeft, Star, 
-  ChevronDown, ChevronUp, Check, X, Hotel, Car, Utensils, Compass, 
-  Flame, Footprints, Moon, Sun, ShoppingBag, Eye, Tag, Info, Ticket, 
-  Headphones, CheckCircle2, Phone, MessageSquare, Zap, Users, Shield, 
-  Award, Sparkles, HelpCircle, ArrowRight, CreditCard, Headset
+  ChevronLeft, Star, Clock, MapPin, ShieldCheck, 
+  Sparkles, Smartphone, Calendar, Phone, 
+  MessageSquare, ExternalLink, Info, ArrowRight, Check,
+  Hotel, Utensils, Car, Compass, Tag, CheckCircle2, ChevronDown
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import MarketplaceFilters from '../components/MarketplaceFilters';
+import ReviewsSection from '../components/ReviewsSection';
+import TrustSignals from '../components/TrustSignals';
 
-const stripEmojis = (str) => {
-  if (!str || typeof str !== 'string') return str || '';
-  return str
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
-    .replace(/[\u{1F600}-\u{1F64F}]/gu, '')
-    .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')
-    .replace(/[\u{2600}-\u{27BF}]/gu, '')
-    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
-    .replace(/[\u{1F000}-\u{1F0DF}]/gu, '')
-    .replace(/[\u{1F0E0}-\u{1F0FF}]/gu, '')
-    .replace(/[\u{1F100}-\u{1F1FF}]/gu, '')
-    .replace(/[\u{1F200}-\u{1F2FF}]/gu, '')
-    .replace(/[\u{1F700}-\u{1F77F}]/gu, '')
-    .replace(/[\u{1F780}-\u{1F7FF}]/gu, '')
-    .replace(/[\u{1F800}-\u{1F8FF}]/gu, '')
-    .replace(/[\u{1F900}-\u{1F9FF}]/gu, '')
-    .replace(/[\u{1FA00}-\u{1FA6F}]/gu, '')
-    .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '')
-    .trim();
+// Consistent hash generator for mock data
+const getHash = (str) => {
+  if (!str) return 0;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+  }
+  return Math.abs(hash);
 };
 
-const getTagIcon = (tag, iconClass = "w-5 h-5 text-slate-500 shrink-0") => {
-  const cleaned = stripEmojis(tag).toLowerCase();
-  if (cleaned.includes('stay') || cleaned.includes('camp') || cleaned.includes('hotel') || cleaned.includes('tent')) {
-    return <Hotel className={iconClass} />;
-  }
-  if (cleaned.includes('cab') || cleaned.includes('car') || cleaned.includes('drive') || cleaned.includes('pickup') || cleaned.includes('transfer') || cleaned.includes('return')) {
-    return <Car className={iconClass} />;
-  }
-  if (cleaned.includes('meals') || cleaned.includes('breakfast') || cleaned.includes('dinner') || cleaned.includes('food') || cleaned.includes('cuisine') || cleaned.includes('lunch')) {
-    return <Utensils className={iconClass} />;
-  }
-  if (cleaned.includes('driver') || cleaned.includes('guide') || cleaned.includes('orientation') || cleaned.includes('local')) {
-    return <Compass className={iconClass} />;
-  }
-  if (cleaned.includes('bonfire')) {
-    return <Flame className={iconClass} />;
-  }
-  if (cleaned.includes('trek') || cleaned.includes('hiking') || cleaned.includes('walk')) {
-    return <Footprints className={iconClass} />;
-  }
-  if (cleaned.includes('night') || cleaned.includes('stargazing') || cleaned.includes('sky')) {
-    return <Moon className={iconClass} />;
-  }
-  if (cleaned.includes('shopping')) {
-    return <ShoppingBag className={iconClass} />;
-  }
-  if (cleaned.includes('sightseeing') || cleaned.includes('view') || cleaned.includes('photo') || cleaned.includes('spots') || cleaned.includes('darshan') || cleaned.includes('aarti')) {
-    return <Eye className={iconClass} />;
-  }
-  return <Tag className={iconClass} />;
-};
-
-const getLucideIcon = (iconName) => {
-  switch (iconName) {
-    case 'Ticket':
-      return <Ticket className="w-5 h-5 text-[#FF5722]" />;
-    case 'Shield':
-      return <ShieldCheck className="w-5 h-5 text-[#FF5722]" />;
-    case 'Headset':
-      return <Headphones className="w-5 h-5 text-[#FF5722]" />;
-    case 'Hotel':
-      return <Hotel className="w-5 h-5 text-[#FF5722]" />;
-    case 'Car':
-      return <Car className="w-5 h-5 text-[#FF5722]" />;
-    case 'Utensils':
-      return <Utensils className="w-5 h-5 text-[#FF5722]" />;
-    case 'Compass':
-      return <Compass className="w-5 h-5 text-[#FF5722]" />;
-    default:
-      return <CheckCircle2 className="w-5 h-5 text-[#FF5722]" />;
-  }
-};
-
+// Generate mock itineraries if database has empty array
 const getMockItinerary = (tourName, duration) => {
-  if (tourName.toLowerCase().includes('kedarnath')) {
+  const nameLower = (tourName || '').toLowerCase();
+  if (nameLower.includes('kedarnath') || nameLower.includes('char dham')) {
     return [
-      {
-        day: 1,
-        title: 'Rishikesh to Guptkashi',
-        tags: ['Pickup', 'Luxury Camp', 'Bonfire'],
-        description: 'Drive from Rishikesh to Guptkashi along the Ganges and Mandakini rivers. Arrive, check into luxury camps, and enjoy a warm bonfire in the evening.'
-      },
-      {
-        day: 2,
-        title: 'Guptkashi to Kedarnath',
-        tags: ['Kedarnath Trek', 'Temple Stay', 'Evening Aarti'],
-        description: 'Early morning drive to Sonprayag/Gaurikund, then start the 16km trek to Kedarnath. Check into guest house near the temple and attend the divine evening Aarti.'
-      },
-      {
-        day: 3,
-        title: 'Kedarnath to Guptkashi',
-        tags: ['Morning Darshan', 'Trek Down', 'Hotel Stay'],
-        description: 'Wake up early for the morning Abhishek and Darshan of Lord Kedarnath. Trek down to Gaurikund and drive back to Guptkashi for hotel check-in and rest.'
-      },
-      {
-        day: 4,
-        title: 'Guptkashi to Rishikesh',
-        tags: ['Return Drive', 'Devprayag', 'Drop-off'],
-        description: 'Drive back to Rishikesh, visiting Devprayag confluence on the way. Tour ends with drop-off at Rishikesh railway station or your preferred hotel.'
-      }
+      { day: 1, title: 'Departure & Scenic Drive to Guptkashi', description: 'Drive along the Ganges and Mandakini rivers. Arrive, check into Swiss camps, and attend brief safety orientation.' },
+      { day: 2, title: 'Trek to Kedarnath Temple & Evening Aarti', description: 'Early morning drive to Gaurikund, then start the scenic 16km trek. Attend the divine evening Aarti at the temple.' },
+      { day: 3, title: 'Descend to Gaurikund & Return to Rishikesh', description: 'Pray at the temple at sunrise, trek back down to Gaurikund, and drive back to Rishikesh in private cab.' }
     ];
-  } else if (tourName.toLowerCase().includes('chopta') || tourName.toLowerCase().includes('tungnath')) {
-    return [
-      {
-        day: 1,
-        title: 'Rishikesh to Chopta',
-        tags: ['Scenic Drive', 'Alpine Camp', 'Stargazing'],
-        description: 'Drive from Rishikesh to Chopta, the mini Switzerland of Uttarakhand. Stay in alpine tents under the starry skies.'
-      },
-      {
-        day: 2,
-        title: 'Chopta to Tungnath & Chandrashila',
-        tags: ['Summit Trek', 'Himalayan View', 'Bonfire Night'],
-        description: 'Trek 4km to Tungnath Temple and a further 1.5km to Chandrashila Peak for stunning 360-degree views of the Garhwal Himalayas. Return to camp for a cozy bonfire.'
-      },
-      {
-        day: 3,
-        title: 'Chopta to Rishikesh',
-        tags: ['Drive Back', 'Devprayag', 'Farewell'],
-        description: 'Drive back to Rishikesh via Devprayag confluence. Tour concludes with drop-off at your location.'
-      }
-    ];
-  } else {
-    const daysMatch = duration.match(/(\d+)\s*Day/i);
-    const numDays = daysMatch ? parseInt(daysMatch[1], 10) : 3;
-    const items = [];
-    for (let i = 1; i <= numDays; i++) {
-      if (i === 1) {
-        items.push({
-          day: 1,
-          title: 'Arrival & Setup',
-          tags: ['Pickup', 'Hotel Check-in', 'Orientation'],
-          description: 'Arrival at the starting point, transfer to your premium accommodation, briefing session, and rest.'
-        });
-      } else if (i === numDays) {
-        items.push({
-          day: i,
-          title: 'Return Journey',
-          tags: ['Drive Back', 'Souvenir Shopping', 'Drop-off'],
-          description: 'Enjoy a scenic breakfast, pack bags, visit local landmarks on the way back, and get dropped off at your destination.'
-        });
-      } else {
-        items.push({
-          day: i,
-          title: `Sightseeing & Adventure - Day ${i}`,
-          tags: ['Guided Trek', 'Photo Spots', 'Local Cuisine'],
-          description: `Full day of guided sightseeing, visiting major spots, clicking photos, and enjoying delicious local meals.`
-        });
-      }
-    }
-    return items;
   }
+  return [
+    { day: 1, title: 'Local Sightseeing & Acclimatization', description: 'Visit famous suspension bridges Ram Jhula and Laxman Jhula. Attend the grand Ganga Aarti in the evening.' },
+    { day: 2, title: 'Hidden Waterfalls & Adventure Treks', description: 'Guided morning trek to Patna Waterfall. Enjoy local organic lunch at Neer Garh café and explore local markets.' }
+  ];
 };
 
-const slugify = (text) => {
-  return (text || '')
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
-};
-
-export default function Tours({ currentCity, openBookingModal, selectedTour, setSelectedTour, navigateTo }) {
-  const [tours, setTours] = useState([]);
+export default function Tours({ currentCity, openBookingModal, selectedTour: parentSelectedTour, setSelectedTour: parentSetSelectedTour, navigateTo }) {
+  const [toursList, setToursList] = useState([]);
   const [partnersData, setPartnersData] = useState([]);
   const [selectedPartner, setSelectedPartner] = useState(null);
+  const [selectedTour, setSelectedTour] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState(null);
+  const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  const [activeItineraryDay, setActiveItineraryDay] = useState(1);
 
-  const checkIfClosed = (item) => {
-    if (!item) return { closed: false };
-    if (item.is_closed) {
-      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
-    }
-    if (item.closed_from && item.closed_until) {
-      try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const from = new Date(item.closed_from);
-        from.setHours(0, 0, 0, 0);
-        const to = new Date(item.closed_until);
-        to.setHours(0, 0, 0, 0);
-        if (today >= from && today <= to) {
-          return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    return { closed: false };
-  };
-
-  const [expandedDays, setExpandedDays] = useState({ 0: true });
-  const [costTab, setCostTab] = useState('included');
-  const [expandedFAQs, setExpandedFAQs] = useState({});
-  const [isDescExpanded, setIsDescExpanded] = useState(false);
-  const [filterDestination, setFilterDestination] = useState('');
-  const [filterBudget, setFilterBudget] = useState('All');
-  const [filterDuration, setFilterDuration] = useState('All');
-  const [filterTourType, setFilterTourType] = useState('All');
-  const [filterRating, setFilterRating] = useState('All');
-  const [filterSort, setFilterSort] = useState('Default');
-  const [filterCategory, setFilterCategory] = useState('All');
-  const [activeMediaIdx, setActiveMediaIdx] = useState(0);
-
-  const toggleDay = (idx) => {
-    setExpandedDays(prev => ({ ...prev, [idx]: !prev[idx] }));
-  };
-
-  const toggleFAQ = (idx) => {
-    setExpandedFAQs(prev => ({ ...prev, [idx]: !prev[idx] }));
-  };
-
-  const handleSelectTour = (tour) => {
-    setSelectedTour(tour);
-    setActiveMediaIdx(0);
-    const slug = slugify(tour.name);
-    window.history.pushState(null, '', `/tours/${tour.id}-${slug}`);
-  };
-
+  // 1. Fetch Tours
   useEffect(() => {
-    if (window.location.pathname === '/tours' || window.location.pathname === '/tours/') {
-      setSelectedTour(null);
-    }
     const fetchTours = async () => {
       setLoading(true);
       try {
@@ -246,1755 +58,832 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         }
         const { data, error } = await query;
         if (error) throw error;
-        if (data) {
+
+        if (data && data.length > 0) {
           const mapped = data.map((item, idx) => ({
             ...item,
-            rating: item.vendors?.star_rating || item.rating || Number((4.5 + ((idx * 4) % 5) / 10).toFixed(1)),
-            reviewsCount: item.reviews_count || (80 + ((idx * 41) % 150))
+            price: Number(item.price),
+            original_price: item.original_price ? Number(item.original_price) : Math.round(Number(item.price) * 1.4),
+            rating: item.rating || item.vendors?.star_rating || 4.8,
+            reviewsCount: item.reviews_count || (60 + (idx * 23) % 180),
+            upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
+            images: item.images && item.images.length > 0 ? item.images : ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600']
           }));
-          setTours(mapped);
+          setToursList(mapped);
 
           // Group by partners
           const partnersMap = {};
           mapped.forEach(item => {
             const vendor = item.vendors;
             if (!vendor) return;
+
             if (!partnersMap[vendor.id]) {
+              const hVal = getHash(vendor.name);
+              const mockSince = vendor.since || ((hVal % 7) + 2017);
+              const mockBookings = vendor.bookings_count || ((hVal % 200) + 140);
+              const mockMapsLink = vendor.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.name + ' Rishikesh')}`;
+              const mockInstructions = vendor.meeting_instructions || `Please arrive at ${vendor.name} office for tour verification. Secure parking is available.`;
+              const mockReportingTime = vendor.reporting_time || '07:30 AM Departure';
+              const mockParking = vendor.parking_details || 'Free public parking available near the pickup office';
+              const mockHighlight = vendor.short_highlight || 'Award-winning local pilgrimages operator';
+              
+              let mockBadges = vendor.badges || [];
+              if (mockBadges.length === 0) {
+                if (vendor.star_rating >= 4.8) mockBadges = ['🔥 Best Seller', '⭐ Top Rated'];
+                else mockBadges = ['Verified Tour Expert', 'Budget Choice'];
+              }
+
               partnersMap[vendor.id] = {
                 id: vendor.id,
                 name: vendor.name,
-                star_rating: vendor.star_rating || 4.8,
+                star_rating: vendor.star_rating || 4.7,
                 address: vendor.address || 'Rishikesh, Uttarakhand',
                 landmark: vendor.landmark || 'Tapovan',
                 shop_image: vendor.shop_image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
-                tours: []
+                phone: vendor.phone || '+918630027341',
+                whatsapp: vendor.whatsapp || '+918630027341',
+                since: mockSince,
+                bookings_count: mockBookings,
+                google_maps_link: mockMapsLink,
+                meeting_instructions: mockInstructions,
+                reporting_time: mockReportingTime,
+                parking_details: mockParking,
+                badges: mockBadges,
+                short_highlight: mockHighlight,
+                packages: []
               };
             }
-            partnersMap[vendor.id].tours.push({
-              ...item,
-              operators: [item]
-            });
+
+            partnersMap[vendor.id].packages.push(item);
           });
           setPartnersData(Object.values(partnersMap));
+        } else {
+          setToursList([]);
+          setPartnersData([]);
         }
       } catch (err) {
         console.error('Error fetching tours:', err);
-        const demo = [
-          {
-            id: 'demo-tour-1',
-            name: 'Rishikesh to Kedarnath Pilgrimage',
-            description: 'A sacred 4 Days / 3 Nights guided yatra to the ancient Kedarnath Temple starting from Rishikesh. Includes luxury transfers, stay, and VIP darshan slips.',
-            price: 9500,
-            duration: '4 Days / 3 Nights',
-            images: ['https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'],
-            cancellation_policy: '100% refund up to 72h prior.',
-            rating: 4.8,
-            reviewsCount: 198,
-            quick_info_tags: ['Stay Included', 'Private AC Cab', 'Meals Included', 'Local Driver'],
-            reporting_address: 'Reporting Address: TripGod Office, Near Ram Jhula Parking, Rishikesh',
-            inclusions: [
-              'Accommodation in deluxe hotels/camps on twin sharing basis',
-              'All transfers and sightseeing by private air-conditioned cab',
-              'Daily breakfast and dinner (MAP plan) at all locations',
-              'Services of a professional local driver/guide for the entire tour',
-              'All toll taxes, parking fees, state taxes, and driver allowances'
-            ],
-            exclusions: [
-              'Any meals/beverages other than those mentioned in inclusions',
-              'Tips to driver, guide, hotel staff, or helpers',
-              'Any entrance tickets to monuments, temples, or parks',
-              'Personal expenses like laundry, phone calls, shopping, medical bills',
-              'Any cost arising due to natural disasters, landslides, or road blocks'
-            ],
-            day_wise_itinerary: [
-              {
-                day: 1,
-                title: 'Rishikesh to Guptkashi',
-                tags: ['Pickup', 'Luxury Camp', 'Bonfire'],
-                description: 'Drive from Rishikesh to Guptkashi along the Ganges and Mandakini rivers. Arrive, check into luxury camps, and enjoy a warm bonfire in the evening.'
-              },
-              {
-                day: 2,
-                title: 'Guptkashi to Kedarnath',
-                tags: ['Kedarnath Trek', 'Temple Stay', 'Evening Aarti'],
-                description: 'Early morning drive to Sonprayag/Gaurikund, then start the 16km trek to Kedarnath. Check into guest house near the temple and attend the divine evening Aarti.'
-              },
-              {
-                day: 3,
-                title: 'Kedarnath to Guptkashi',
-                tags: ['Morning Darshan', 'Trek Down', 'Hotel Stay'],
-                description: 'Wake up early for the morning Abhishek and Darshan of Lord Kedarnath. Trek down to Gaurikund and drive back to Guptkashi for hotel check-in and rest.'
-              },
-              {
-                day: 4,
-                title: 'Guptkashi to Rishikesh',
-                tags: ['Return Drive', 'Devprayag', 'Drop-off'],
-                description: 'Drive back to Rishikesh, visiting Devprayag confluence on the way. Tour ends with drop-off at Rishikesh railway station or your preferred hotel.'
-              }
-            ]
-          },
-          {
-            id: 'demo-tour-2',
-            name: 'Chopta Tungnath Valley Trek',
-            description: 'Explore the mini Switzerland of Uttarakhand. Trek to the highest Shiva temple in the world (Tungnath) and see majestic Chandrashila peaks.',
-            price: 5500,
-            duration: '3 Days / 2 Nights',
-            images: ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'],
-            cancellation_policy: '100% refund up to 48h prior.',
-            rating: 4.7,
-            reviewsCount: 110,
-            quick_info_tags: ['Alpine Stay', 'Private AC Cab', 'Meals Included', 'Local Guide'],
-            reporting_address: 'Reporting Address: TripGod Activity Desk, Tapovan Bypass Road, Rishikesh',
-            inclusions: [
-              'Accommodation in premium alpine tents in Chopta',
-              'All transfers and sightseeing by private air-conditioned cab',
-              'All meals (Breakfast, Lunch, Dinner) during camping',
-              'Professional certified trekking guide/leader',
-              'All forest entry permits, camping charges, and driver allowance'
-            ],
-            exclusions: [
-              'Any personal gear (trekking poles, warm jackets, boots)',
-              'Tips to guide, driver, or camp staff',
-              'Mineral water, alcoholic drinks, or laundry expenses',
-              'Emergency medical evacuation or rescue charges'
-            ],
-            day_wise_itinerary: [
-              {
-                day: 1,
-                title: 'Rishikesh to Chopta',
-                tags: ['Scenic Drive', 'Alpine Camp', 'Stargazing'],
-                description: 'Drive from Rishikesh to Chopta, the mini Switzerland of Uttarakhand. Stay in alpine tents under the starry skies.'
-              },
-              {
-                day: 2,
-                title: 'Chopta to Tungnath & Chandrashila',
-                tags: ['Summit Trek', 'Himalayan View', 'Bonfire Night'],
-                description: 'Trek 4km to Tungnath Temple and a further 1.5km to Chandrashila Peak for stunning 360-degree views of the Garhwal Himalayas. Return to camp for a cozy bonfire.'
-              }
-            ]
-          }
-        ];
-        setTours(demo);
-        setPartnersData([
-          {
-            id: 'demo-tour-partner',
-            name: 'Garhwal Tour & Travels',
-            star_rating: 4.8,
-            address: 'Ram Jhula, Rishikesh',
-            landmark: 'Near Ram Jhula Parking',
-            shop_image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
-            tours: demo.map(d => ({ ...d, operators: [d] }))
-          }
-        ]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTours();
   }, [currentCity]);
 
+  // 2. Route popstate sync
   useEffect(() => {
     const handleRouteSync = () => {
       const path = window.location.pathname;
+      const queryParams = new URLSearchParams(window.location.search);
+      const partnerIdParam = queryParams.get('partner');
+
       if (path.startsWith('/tours/')) {
-        const slug = path.substring('/tours/'.length);
-        if (slug && slug !== 'partners') {
-          const parts = slug.split('-');
-          const tourId = parts.slice(0, 5).join('-');
-          if (tours.length > 0) {
-            const matched = tours.find(t => t.id === tourId);
-            if (matched) {
-              setSelectedTour(matched);
-            }
+        const tourId = path.substring('/tours/'.length);
+        if (toursList.length > 0) {
+          const matched = toursList.find(t => t.id === tourId);
+          if (matched) {
+            setSelectedTour(matched);
+            const vData = partnersData.find(p => p.id === matched.vendor_id);
+            if (vData) setSelectedPartner(vData);
+            return;
           }
         }
-      } else {
-        setSelectedTour(null);
       }
+
+      if (partnerIdParam) {
+        const matchedPartner = partnersData.find(p => p.id === partnerIdParam);
+        if (matchedPartner) {
+          setSelectedPartner(matchedPartner);
+          setSelectedTour(null);
+          return;
+        }
+      }
+
+      setSelectedTour(null);
+      setSelectedPartner(null);
     };
 
-    handleRouteSync();
+    if (partnersData.length > 0) {
+      handleRouteSync();
+    }
     window.addEventListener('popstate', handleRouteSync);
     return () => window.removeEventListener('popstate', handleRouteSync);
-  }, [tours]);
+  }, [partnersData, toursList]);
+
+  // Navigation handlers
+  const navigateToPartner = (partner) => {
+    setSelectedPartner(partner);
+    setSelectedTour(null);
+    if (partner) {
+      window.history.pushState(null, '', `/tours?partner=${partner.id}`);
+    } else {
+      window.history.pushState(null, '', '/tours');
+    }
+    window.scrollTo(0, 0);
+  };
+
+  const navigateToTour = (tour) => {
+    setSelectedTour(tour);
+    if (tour) {
+      window.history.pushState(null, '', `/tours/${tour.id}`);
+    } else {
+      window.history.pushState(null, '', selectedPartner ? `/tours?partner=${selectedPartner.id}` : '/tours');
+    }
+    window.scrollTo(0, 0);
+  };
+
+  const checkIfClosed = (item) => {
+    if (!item) return { closed: false };
+    if (item.is_closed) {
+      return { closed: true, reason: item.closed_reason || 'Monsoon closures / route safety advisory', reopenDate: item.closed_until };
+    }
+    return { closed: false };
+  };
+
+  const getFilteredPartners = () => {
+    let list = [...partnersData];
+    if (!activeFilter) return list;
+
+    switch (activeFilter) {
+      case 'most_booked':
+        return list.sort((a, b) => b.bookings_count - a.bookings_count);
+      case 'best_rated':
+        return list.sort((a, b) => b.star_rating - a.star_rating);
+      case 'lowest_price':
+        return list.sort((a, b) => {
+          const aMin = a.packages.length > 0 ? Math.min(...a.packages.map(p => p.price)) : 999999;
+          const bMin = b.packages.length > 0 ? Math.min(...b.packages.map(p => p.price)) : 999999;
+          return aMin - bMin;
+        });
+      case 'nearest':
+        return list.filter(p => p.landmark.toLowerCase().includes('tapovan') || p.landmark.toLowerCase().includes('sation'));
+      case 'choice':
+        return list.filter(p => p.badges.some(b => b.toLowerCase().includes('seller') || b.toLowerCase().includes('choice')));
+      case 'family':
+        return list; // All pilgrimages are family-friendly
+      default:
+        return list;
+    }
+  };
+
+  const filteredPartners = getFilteredPartners();
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-black space-y-4">
-        <div className="w-10 h-10 rounded-full border-2 border-t-[#FF5F00] border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-        <span className="text-[10px] uppercase font-black tracking-widest text-[#FF5F00]">Loading Tours...</span>
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent" />
       </div>
     );
   }
 
-  const getGroupedTours = () => {
-    const listToGroup = selectedPartner ? selectedPartner.tours : tours;
-    const grouped = {};
-    listToGroup.forEach(t => {
-      const key = t.name;
-      if (!grouped[key]) {
-        grouped[key] = {
-          id: t.id,
-          name: t.name,
-          description: t.description,
-          duration: t.duration,
-          img: t.images && t.images.length > 0 ? t.images[0] : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
-          minPrice: Number(t.price),
-          rating: t.rating || 4.7,
-          reviewsCount: t.reviewsCount || 120,
-          inclusions: t.inclusions || [],
-          exclusions: t.exclusions || [],
-          quick_info_tags: t.quick_info_tags || null,
-          day_wise_itinerary: t.day_wise_itinerary || t.itinerary || null,
-          reporting_address: t.reporting_address || '',
-          why_book_with_us: t.why_book_with_us || null,
-          is_free_cancellation: t.is_free_cancellation || false,
-          is_limited_seats: t.is_limited_seats || false,
-          tour_highlights: t.tour_highlights || [],
-          route_map: t.route_map || [],
-          stay_details: t.stay_details || null,
-          pickup_drop: t.pickup_drop || null,
-          landmarks_data: t.landmarks_data || [],
-          faq_data: t.faq_data || [],
-          is_verified: t.is_verified !== undefined && t.is_verified !== null ? t.is_verified : true,
-          is_bestseller: t.is_bestseller || false,
-          is_instant_confirmation: t.is_instant_confirmation !== undefined && t.is_instant_confirmation !== null ? t.is_instant_confirmation : true,
-          is_closed: t.is_closed || false,
-          closed_reason: t.closed_reason || '',
-          closed_from: t.closed_from || '',
-          closed_until: t.closed_until || '',
-          seats_left: t.seats_left !== undefined && t.seats_left !== null ? t.seats_left : 10,
-          bookings_count: t.bookings_count !== undefined && t.bookings_count !== null ? t.bookings_count : 150,
-          hotel_included: t.hotel_included !== undefined && t.hotel_included !== null ? t.hotel_included : true,
-          meals_included: t.meals_included !== undefined && t.meals_included !== null ? t.meals_included : true,
-          transport_included: t.transport_included !== undefined && t.transport_included !== null ? t.transport_included : true,
-          guide_included: t.guide_included !== undefined && t.guide_included !== null ? t.guide_included : true,
-          tour_type: t.tour_type || 'Sightseeing',
-          next_batch: t.next_batch || '15 July',
-          difficulty: t.difficulty || 'Moderate',
-          group_type: t.group_type || 'Group Tour',
-          perfect_for: t.perfect_for || [],
-          city_id: t.city_id,
-          operators: []
-        };
-      }
-      if (Number(t.price) < grouped[key].minPrice) {
-        grouped[key].minPrice = Number(t.price);
-      }
-      grouped[key].operators.push(t);
-    });
-    return Object.values(grouped);
-  };
+  return (
+    <div className="w-full min-h-screen bg-slate-50 text-slate-800 font-sans">
+      <AnimatePresence mode="wait">
 
-  const groupedList = getGroupedTours();
-
-  const getFilteredGroupedList = () => {
-    const filtered = groupedList.filter(tour => {
-      // 1. Destination Filter
-      if (filterDestination && filterDestination.trim() !== '') {
-        const destLower = filterDestination.toLowerCase().trim();
-        const matchesName = tour.name.toLowerCase().includes(destLower);
-        const matchesDesc = tour.description.toLowerCase().includes(destLower);
-        if (!matchesName && !matchesDesc) return false;
-      }
-
-      // 2. Budget Filter
-      if (filterBudget !== 'All') {
-        const budgetLimit = Number(filterBudget);
-        if (tour.minPrice > budgetLimit) return false;
-      }
-
-      // 3. Duration Filter
-      if (filterDuration !== 'All') {
-        const daysMatch = tour.duration.match(/(\d+)\s*Day/i);
-        const numDays = daysMatch ? parseInt(daysMatch[1], 10) : 3;
-        if (filterDuration === '1-2' && numDays > 2) return false;
-        if (filterDuration === '3-4' && (numDays < 3 || numDays > 4)) return false;
-        if (filterDuration === '5+' && numDays < 5) return false;
-      }
-
-      // 4. Tour Type Filter
-      if (filterTourType !== 'All') {
-        const typeLower = filterTourType.toLowerCase();
-        const tourTypeLower = (tour.tour_type || 'Sightseeing').toLowerCase();
-        if (tourTypeLower !== typeLower) return false;
-      }
-
-      // 5. Category Chip Filter
-      if (filterCategory !== 'All') {
-        const catLower = filterCategory.toLowerCase();
-        const tourTypeLower = (tour.tour_type || 'Sightseeing').toLowerCase();
-        if (tourTypeLower !== catLower) return false;
-      }
-
-      // 6. Rating Filter
-      if (filterRating !== 'All') {
-        const ratingLimit = Number(filterRating);
-        if (Number(tour.rating || 4.5) < ratingLimit) return false;
-      }
-
-      return true;
-    });
-
-    // Apply Sorting
-    if (filterSort === 'PriceAsc') {
-      filtered.sort((a, b) => a.minPrice - b.minPrice);
-    } else if (filterSort === 'PriceDesc') {
-      filtered.sort((a, b) => b.minPrice - a.minPrice);
-    } else if (filterSort === 'Rating') {
-      filtered.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
-    }
-
-    return filtered;
-  };
-
-  const filteredGroupedList = getFilteredGroupedList();
-
-  if (selectedTour) {
-    const ratingVal = selectedTour.why_book_with_us?.rating !== undefined && selectedTour.why_book_with_us?.rating !== null ? Number(selectedTour.why_book_with_us.rating) : (selectedTour.rating || 4.5);
-    const reviewsCountVal = selectedTour.why_book_with_us?.reviews_count !== undefined && selectedTour.why_book_with_us?.reviews_count !== null ? Number(selectedTour.why_book_with_us.reviews_count) : (selectedTour.reviewsCount || 80);
-    const infoTags = selectedTour.quick_info_tags || ['Stay Included', 'Private AC Cab', 'Meals Included', 'Local Driver'];
-    const rawItinerary = selectedTour.day_wise_itinerary || selectedTour.itinerary || [];
-    const itineraryData = rawItinerary.length > 0 ? rawItinerary : getMockItinerary(selectedTour.name, selectedTour.duration);
-    
-    const inclusions = selectedTour.inclusions || [];
-    const exclusions = selectedTour.exclusions || [];
-
-    const displayInclusions = inclusions.length > 0 ? inclusions : [
-      'Accommodation in deluxe hotels/camps on twin sharing basis',
-      'All transfers and sightseeing by private air-conditioned cab',
-      'Daily breakfast and dinner (MAP plan) at all locations',
-      'Services of a professional local driver/guide for the entire tour',
-      'All toll taxes, parking fees, state taxes, and driver allowances'
-    ];
-    const displayExclusions = exclusions.length > 0 ? exclusions : [
-      'Any meals/beverages other than those mentioned in inclusions',
-      'Tips to driver, guide, hotel staff, or helpers',
-      'Any entrance tickets to monuments, temples, or parks',
-      'Personal expenses like laundry, phone calls, shopping, medical bills',
-      'Any cost arising due to natural disasters, landslides, or road blocks'
-    ];
-
-    const tourId = selectedTour.id || (selectedTour.operators?.[0]?.id) || 'demo-tour-1';
-
-    const cheapestOp = selectedTour.operators?.find(op => Number(op.price) === selectedTour.minPrice) || selectedTour.operators?.[0] || selectedTour;
-    const price = Number(cheapestOp.price || selectedTour.minPrice || 0);
-    const originalPrice = cheapestOp.original_price ? Number(cheapestOp.original_price) : Math.round(price * 1.3);
-    const discountPercent = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
-    
-    // Images list
-    const imagesList = selectedTour.images || cheapestOp.images || [];
-    const displayImages = imagesList.length > 0 ? imagesList : [selectedTour.img];
-
-    const mediaList = [];
-    if (selectedTour.video_url || cheapestOp.video_url) {
-      mediaList.push({ type: 'video', url: selectedTour.video_url || cheapestOp.video_url });
-    }
-    displayImages.forEach(img => {
-      mediaList.push({ type: 'image', url: img });
-    });
-
-    const parseJSONSafely = (data, defaultValue = {}) => {
-      if (!data) return defaultValue;
-      if (typeof data === 'object') return data;
-      try {
-        return JSON.parse(data);
-      } catch (e) {
-        return defaultValue;
-      }
-    };
-
-    const stayDetails = parseJSONSafely(selectedTour.stay_details, { hotel_name: "", photos: [], amenities: [], room_type: "" });
-    const pickupDrop = parseJSONSafely(selectedTour.pickup_drop, { pickup_point: "", drop_point: "", reporting_time: "", coordinator_number: "" });
-    const landmarks = Array.isArray(selectedTour.landmarks_data) ? selectedTour.landmarks_data : parseJSONSafely(selectedTour.landmarks_data, []);
-    const faqData = Array.isArray(selectedTour.faq_data) ? selectedTour.faq_data : parseJSONSafely(selectedTour.faq_data, []);
-    const tourHighlights = Array.isArray(selectedTour.tour_highlights) ? selectedTour.tour_highlights : (selectedTour.tour_highlights ? [selectedTour.tour_highlights] : []);
-    const routeMap = Array.isArray(selectedTour.route_map) ? selectedTour.route_map : [];
-
-    const getAsArray = (val) => {
-      if (!val) return [];
-      if (Array.isArray(val)) return val;
-      if (typeof val === 'string') {
-        return val.split(',').map(s => s.trim()).filter(Boolean);
-      }
-      return [];
-    };
-
-    const getYouTubeEmbedUrl = (url) => {
-      if (!url) return '';
-      let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      let match = url.match(regExp);
-      if (match && match[2].length === 11) {
-        return `https://www.youtube.com/embed/${match[2]}`;
-      }
-      return url;
-    };
-
-    const renderPricingBlock = (isMobile) => {
-      const isClosed = checkIfClosed(selectedTour).closed;
-      const upiDiscount = selectedTour.upi_discount || 0;
-      
-      return (
-        <div className={`space-y-4 p-5 rounded-3xl border text-left ${
-          isMobile 
-            ? 'bg-[#008F5D]/5 border-[#008F5D]/15' 
-            : 'bg-white shadow-md border-slate-100'
-        }`}>
-          <div className="flex flex-col text-left space-y-1">
-            <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Starting From</span>
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-3xl font-black text-[#008F5D]">₹{price.toLocaleString('en-IN')}</span>
-              {originalPrice > price && (
-                <span className="text-sm line-through text-slate-400 font-bold">
-                  ₹{originalPrice.toLocaleString('en-IN')}
-                </span>
-              )}
-            </div>
-            <span className="text-[10px] text-slate-450 font-bold">Per Person</span>
-          </div>
-
-          {originalPrice > price && (
-            <div className="text-xs font-black text-emerald-600 flex items-center gap-1 select-none">
-              <span>🟢 Save ₹{(originalPrice - price).toLocaleString('en-IN')} Today</span>
-            </div>
-          )}
-
-          {upiDiscount > 0 && (
-            <div className="text-xs font-black text-[#FF6B00] flex items-center gap-1 select-none">
-              <span>💳 Extra ₹{upiDiscount.toLocaleString('en-IN')} OFF with UPI</span>
-            </div>
-          )}
-
-          <div className="flex gap-2 font-display">
-            {isClosed ? (
-              <button disabled className="flex-1 py-3.5 bg-gray-300 text-gray-500 font-black text-xs uppercase tracking-widest rounded-xl cursor-not-allowed text-center">
-                Closed
-              </button>
-            ) : (
-              <button
-                onClick={() => navigateTo(`tours/${selectedTour.id}/partners`)}
-                className="flex-1 py-3.5 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer shadow-md hover:shadow-lg border-none text-center"
-              >
-                Book Now
-              </button>
-            )}
-
-            <a
-              href={`https://wa.me/918630027341?text=Hi%2C%20I'm%20interested%252520in%252520booking%252520the%252520${encodeURIComponent(selectedTour.name)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 bg-emerald-50 border border-emerald-250 text-emerald-650 hover:text-emerald-700 rounded-xl transition-all flex items-center justify-center shrink-0"
-            >
-              <MessageSquare size={16} />
-            </a>
-          </div>
-
-          {/* Payment Trust and Logos (Section 8) */}
-          <div className="pt-3 border-t border-slate-100 space-y-2 select-none text-[10px] font-bold text-slate-500">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1">🔒 Secure Payment</span>
-              <span>No Hidden Charges</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 pt-1 opacity-70">
-              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">UPI</span>
-              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">Visa</span>
-              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">Mastercard</span>
-              <span className="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">Razorpay</span>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    return (
-      <div className="w-full min-h-screen bg-slate-50 pb-32 font-sans text-left text-slate-800">
-        {/* Navigation header */}
-        <div className="bg-white border-b border-slate-100 py-4 px-6 sticky top-0 z-30 shadow-sm">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <button
-              onClick={() => {
-                setSelectedTour(null);
-                window.history.pushState(null, '', '/tours');
-              }}
-              className="flex items-center gap-2 text-xs font-black text-slate-700 uppercase tracking-wider hover:text-[#FF5722] cursor-pointer border-none bg-transparent"
-            >
-              <ChevronLeft size={16} /> Back to Packages
-            </button>
-            <span className="text-[10px] font-black text-slate-400 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full uppercase tracking-wider">
-              Package Details
-            </span>
-          </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* VIEW 1: PARTNER LIST */}
+        {!selectedPartner && !selectedTour && (
+          <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pb-24">
             
-            {/* Left Column: Image gallery and details */}
-            <div className="lg:col-span-2 space-y-8">
-              
-              {/* Premium Image Gallery */}
-              <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm p-3 space-y-3">
-                <div className="h-72 md:h-[400px] w-full overflow-hidden rounded-2xl bg-slate-100 relative">
-                  {/* Top-Left / Top-Right Overlay Badges (Only 2) */}
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-20 items-start select-none">
-                    <span className="bg-slate-900/95 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
-                      ⭐ {ratingVal}
-                    </span>
-                    <span className="bg-slate-900/95 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
-                      👥 {selectedTour.bookings_count || 143}+ Booked
-                    </span>
-                  </div>
-
-                  {mediaList[activeMediaIdx]?.type === 'video' ? (
-                    mediaList[activeMediaIdx].url.includes('youtube.com') || mediaList[activeMediaIdx].url.includes('youtu.be') ? (
-                      <iframe 
-                        src={getYouTubeEmbedUrl(mediaList[activeMediaIdx].url)} 
-                        className="w-full h-full border-none"
-                        allowFullScreen 
-                      />
-                    ) : (
-                      <video 
-                        src={mediaList[activeMediaIdx].url} 
-                        controls 
-                        className="w-full h-full object-cover" 
-                      />
-                    )
-                  ) : (
-                    <img 
-                      src={mediaList[activeMediaIdx]?.url} 
-                      alt={selectedTour.name} 
-                      className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" 
-                    />
-                  )}
-                </div>
-
-                {/* Horizontal scroll thumbnails */}
-                {mediaList.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto py-1 scrollbar-none select-none">
-                    {mediaList.map((item, idx) => (
-                      <div 
-                        key={idx} 
-                        onClick={() => setActiveMediaIdx(idx)} 
-                        className={`w-20 h-14 rounded-lg overflow-hidden shrink-0 cursor-pointer relative border-2 transition-all ${
-                          activeMediaIdx === idx ? 'border-[#FF5F00]' : 'border-transparent opacity-70 hover:opacity-100'
-                        }`}
-                      >
-                        {item.type === 'video' ? (
-                          <div className="w-full h-full bg-slate-900 flex items-center justify-center relative">
-                            <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0">
-                              ▶
-                            </span>
-                            <span className="text-[8px] font-black text-white absolute bottom-1 uppercase tracking-widest bg-black/60 px-1 rounded">VIDEO</span>
-                          </div>
-                        ) : (
-                          <img src={item.url} className="w-full h-full object-cover" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                      {/* Tour Title Section */}
-              <div className="bg-white rounded-3xl p-6 md:p-8 space-y-5 border border-slate-100 shadow-sm text-left">
-                
-                {/* 1. Package Includes (Horizontal Ribbon right below image thumbnails) */}
-                { (selectedTour.hotel_included || selectedTour.meals_included || selectedTour.transport_included || selectedTour.guide_included) && (
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] sm:text-xs font-black text-slate-650 bg-slate-50/70 px-4 py-2.5 rounded-2xl border border-slate-100/80 select-none">
-                    <span className="text-[9px] uppercase font-black text-[#FF5F00] tracking-wider mr-1">Package Includes:</span>
-                    {selectedTour.hotel_included && (
-                      <span className="flex items-center gap-1">
-                        🏨 Stay
-                      </span>
-                    )}
-                    {selectedTour.meals_included && (
-                      <span className="flex items-center gap-1">
-                        🍽 Meals
-                      </span>
-                    )}
-                    {selectedTour.transport_included && (
-                      <span className="flex items-center gap-1">
-                        🚗 Cab
-                      </span>
-                    )}
-                    {selectedTour.guide_included && (
-                      <span className="flex items-center gap-1">
-                        👨 Guide
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* 2. Horizontal Trust Strip */}
-                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[10px] font-black uppercase tracking-wider select-none pt-1">
-                  {selectedTour.is_verified && (
-                    <span className="flex items-center gap-1 text-emerald-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0 animate-pulse" /> Verified Operator
-                    </span>
-                  )}
-                  {selectedTour.is_instant_confirmation && (
-                    <span className="flex items-center gap-1 text-amber-600">
-                      ⚡ Instant Voucher
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1 text-blue-600">
-                    🛡 Best Price
-                  </span>
-                </div>
-
-                {/* 3. Title & Social Proof (Rating + Booked + Location inline) */}
-                <div className="space-y-2 pt-1">
-                  <h1 className="text-xl md:text-3xl font-black text-slate-900 uppercase tracking-tight leading-tight">
-                    {selectedTour.name}
-                  </h1>
-
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-slate-500 font-bold select-none">
-                    <div className="flex items-center gap-1 text-slate-800">
-                      <Star size={14} className="fill-amber-500 text-amber-500" />
-                      <span>{ratingVal}</span>
-                      <span className="text-slate-400">({reviewsCountVal} Reviews)</span>
-                    </div>
-                    <span className="text-slate-355">•</span>
-                    <span>{selectedTour.bookings_count || 143}+ Booked</span>
-                    <span className="text-slate-355">•</span>
-                    <div className="flex items-center gap-1">
-                      <span>📍</span>
-                      <span className="uppercase tracking-wider">{currentCity?.name || 'Rishikesh'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mobile pricing widget block (Inline) */}
-                <div className="lg:hidden">
-                  {renderPricingBlock(true)}
-                </div>
-
-                {/* 4. Trip Snapshot (Conversion Secret!) */}
-                <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-4.5 space-y-2.5 select-none text-left">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider font-display">Trip Snapshot</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                      <span className="text-base shrink-0">📍</span>
-                      <span>{currentCity?.name || 'Rishikesh'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                      <span className="text-base shrink-0">⏳</span>
-                      <span>{selectedTour.duration}</span>
-                    </div>
-                    {selectedTour.hotel_included !== false && (
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                        <span className="text-base shrink-0">🏨</span>
-                        <span>Deluxe Stay</span>
-                      </div>
-                    )}
-                    {selectedTour.meals_included !== false && (
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                        <span className="text-base shrink-0">🍽</span>
-                        <span>Breakfast Included</span>
-                      </div>
-                    )}
-                    {selectedTour.transport_included !== false && (
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                        <span className="text-base shrink-0">🚗</span>
-                        <span>Private Cab</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                      <span className="text-base shrink-0">👨</span>
-                      <span>Local Guide</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 5. About Tour */}
-                <div className="border-t border-slate-100 pt-4 text-left">
-                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2 font-display">About this Tour</h4>
-                  <p className={`text-sm text-slate-600 leading-relaxed font-medium ${!isDescExpanded ? 'line-clamp-2' : ''}`}>
-                    {selectedTour.description}
-                  </p>
-                  <button 
-                    onClick={() => setIsDescExpanded(!isDescExpanded)} 
-                    className="text-[#FF6B00] font-black text-xs uppercase mt-2 tracking-wider bg-transparent border-none cursor-pointer p-0 hover:underline"
-                  >
-                    {!isDescExpanded ? 'Read More' : 'Read Less'}
-                  </button>
-                </div>
-
-                {/* 6. Why You'll Love This Trip (Selling block) */}
-                <div className="border-t border-slate-100 pt-4 text-left space-y-3">
-                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider font-display">Why You'll Love This Trip</h4>
-                  <div className="grid grid-cols-2 gap-3 text-[11px] sm:text-xs font-bold text-slate-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base shrink-0">🏔</span>
-                      <span>Premium Himalayan Views</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base shrink-0">🚗</span>
-                      <span>Private Cab Throughout</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base shrink-0">🏨</span>
-                      <span>Handpicked Hotels</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base shrink-0">🍽</span>
-                      <span>Daily Breakfast</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base shrink-0">🙏</span>
-                      <span>Hassle-Free Darshan</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base shrink-0">📞</span>
-                      <span>Local Support</span>
-                    </div>
-                </div>
-               </div>
-
-                {/* Who is this tour perfect for? */}
-                {selectedTour.perfect_for && selectedTour.perfect_for.length > 0 && (
-                  <div className="pt-4 border-t border-slate-100 text-left">
-                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1.5 font-display">
-                      <Users className="text-[#FF5F00]" size={14} />
-                      Who is this tour perfect for?
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTour.perfect_for.map((item, idx) => (
-                        <span 
-                          key={idx} 
-                          className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider shadow-xs flex items-center gap-1"
-                        >
-                          <Sparkles size={10} className="text-indigo-500 animate-pulse" />
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Info Tags Ribbon */}
-                {infoTags.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
-                    {infoTags.map((tag, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 text-xs text-slate-700 font-bold shadow-xs">
-                        {getTagIcon(tag, "w-4 h-4 text-slate-500 shrink-0")}
-                        <span>{stripEmojis(tag)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-               {/* Route Map Timeline */}
-              {routeMap.length > 0 && (
-                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
-                    <Compass className="text-[#FF5F00]" size={18} />
-                    Route Map & Destination Sequence
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    {routeMap.map((point, pIdx) => (
-                      <React.Fragment key={pIdx}>
-                        <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-800 flex items-center gap-1.5 shadow-sm">
-                          <span className="w-5 h-5 rounded-full bg-[#FF5F00]/10 text-[#FF5F00] flex items-center justify-center text-[10px] font-black">{pIdx + 1}</span>
-                          <span>{point}</span>
-                        </div>
-                        {pIdx < routeMap.length - 1 && (
-                          <ArrowRight size={14} className="text-slate-400 shrink-0" />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Visual Timeline Itinerary */}
-              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
-                  <Calendar className="text-[#FF5F00]" size={18} />
-                  Detailed Day-Wise Itinerary
-                </h3>
-                
-                <div className="relative pl-6 md:pl-8 border-l-2 border-dashed border-[#FF5F00]/30 space-y-8 ml-2 text-left">
-                  {itineraryData.map((day, idx) => {
-                    const meals = getAsArray(day.meals);
-                    const activities = getAsArray(day.activities);
-                    const dayImages = getAsArray(day.images);
-
-                    return (
-                      <div key={idx} className="relative space-y-3">
-                        {/* Timeline Circle Node */}
-                        <div className="absolute -left-[35px] md:-left-[43px] top-0.5 w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#FF5F00] text-white flex items-center justify-center text-[10px] md:text-xs font-black shadow-md border-2 border-white ring-4 ring-[#FF5F00]/10">
-                          {idx + 1}
-                        </div>
-
-                        {/* Title Row */}
-                        <div 
-                          onClick={() => toggleDay(idx)} 
-                          className="space-y-1 cursor-pointer flex items-center justify-between group/day text-left"
-                        >
-                          <div className="space-y-1">
-                            <span className="text-[10px] text-[#FF5F00] font-black uppercase tracking-widest block">
-                              DAY {day.day || idx + 1}
-                            </span>
-                            <h4 className="text-sm md:text-base font-extrabold text-slate-900 uppercase tracking-tight group-hover/day:text-[#FF5F00] transition-colors">
-                              {day.title || 'Sightseeing'}
-                            </h4>
-                          </div>
-                          <span className="text-slate-450 group-hover/day:text-[#FF5F00] transition-colors shrink-0">
-                            {expandedDays[idx] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </span>
-                        </div>
-
-                        {/* Description (Collapsible) */}
-                        <div className="text-xs text-slate-655 font-medium leading-relaxed text-left space-y-2">
-                          <p className={expandedDays[idx] ? "" : "line-clamp-2"}>
-                            {day.description}
-                          </p>
-                          <button 
-                            type="button" 
-                            onClick={() => toggleDay(idx)}
-                            className="text-[10px] font-black uppercase tracking-wider text-[#FF5F00] border-none bg-transparent cursor-pointer flex items-center gap-1 mt-1 p-0"
-                          >
-                            {expandedDays[idx] ? 'Read Less ↑' : 'Read More ↓'}
-                          </button>
-                        </div>
-
-                        {/* Day Metadata Cards */}
-                        <div className="flex flex-wrap gap-2 pt-1.5">
-                          {meals.length > 0 && (
-                            <div className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-emerald-800 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
-                              🍽 Meals: {meals.join(', ')}
-                            </div>
-                          )}
-                          {(day.stay || stayDetails?.hotel_name) && (
-                            <div className="inline-flex items-center gap-1 bg-sky-50 border border-sky-100 text-sky-800 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
-                              🛏 Stay: {day.stay || (idx === 0 ? stayDetails.hotel_name : '') || 'Included'}
-                            </div>
-                          )}
-                          {selectedTour.transport_included !== false && (
-                            <div className="inline-flex items-center gap-1 bg-amber-50 border border-amber-100 text-amber-800 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shadow-xs">
-                              🚗 Cab Included
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Day Photos Grid */}
-                        {dayImages.length > 0 && (
-                          <div className="flex gap-2 overflow-x-auto py-2 pr-4 scrollbar-thin">
-                            {dayImages.map((imgUrl, imgIdx) => (
-                              <div key={imgIdx} className="w-24 h-16 md:w-32 md:h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0 shadow-sm">
-                                <img src={imgUrl} alt={`Day ${idx + 1} view`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+            {/* Category Hero Banner */}
+            <div className="relative h-[40vh] bg-black flex items-center justify-center text-center">
+              <div 
+                className="absolute inset-0 bg-cover bg-center opacity-70"
+                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200')` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <div className="relative z-10 space-y-3 px-6">
+                <span className="text-[10px] font-black text-accent tracking-widest uppercase bg-black/40 px-3 py-1 rounded-full border border-accent/20">
+                  Pilgrimages & Yatras
+                </span>
+                <h1 className="text-3xl sm:text-5xl font-black text-white font-display tracking-tight uppercase">
+                  Tours & Yatras
+                </h1>
+                <p className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm font-medium leading-relaxed">
+                  Book complete tour packages for Kedarnath, Badrinath, Char Dham, Do Dham and local sightseeings with verified guides.
+                </p>
               </div>
             </div>
 
-              {/* Stay Preview Section */}
-              {stayDetails?.hotel_name && (
-                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
-                    <Hotel className="text-[#FF5722]" size={18} />
-                    Hotel & Accommodation Details
-                  </h3>
-                  <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-3">
-                      <div className="text-left">
-                        <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-                          {stayDetails.hotel_name}
-                        </h4>
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mt-0.5">
-                          {stayDetails.room_type || 'Premium Deluxe Room'}
-                        </span>
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-250 px-2.5 py-1 rounded-md w-fit">
-                        <Check size={10} strokeWidth={3} /> Double Sharing Included
-                      </span>
-                    </div>
+            {/* Listing grid */}
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+              
+              <div className="space-y-3">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left block">
+                  Quick Filters
+                </span>
+                <MarketplaceFilters activeFilter={activeFilter} onChangeFilter={setActiveFilter} />
+              </div>
 
-                    {/* Stay Amenities */}
-                    {stayDetails.amenities && getAsArray(stayDetails.amenities).length > 0 && (
-                      <div className="space-y-2 text-left">
-                        <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block">Stay Amenities</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {getAsArray(stayDetails.amenities).map((am, amIdx) => (
-                            <span key={amIdx} className="bg-white border border-slate-200 text-slate-700 px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-xs">
-                              {am}
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h2 className="text-base font-black font-display text-slate-900 uppercase">
+                  Available Tour Operators ({filteredPartners.length})
+                </h2>
+              </div>
+
+              {/* Tour Partners horizontal cards */}
+              <div className="flex flex-col gap-5">
+                {filteredPartners.map((partner, idx) => {
+                  const minPrice = partner.packages.length > 0 ? Math.min(...partner.packages.map(p => p.price)) : 0;
+                  const displayBadges = partner.badges.slice(0, 2);
+
+                  return (
+                    <motion.div
+                      key={partner.id || idx}
+                      initial={{ opacity: 0, y: 15 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.3, delay: Math.min(idx * 0.05, 0.3) }}
+                      onClick={() => navigateToPartner(partner)}
+                      className="flex flex-col sm:flex-row bg-white border border-slate-200/80 rounded-3xl overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all group w-full cursor-pointer text-left"
+                    >
+                      {/* Left Side: Cover Image */}
+                      <div className="w-full sm:w-[220px] h-44 sm:h-auto shrink-0 relative overflow-hidden bg-slate-100">
+                        <img
+                          src={partner.shop_image}
+                          alt={partner.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                          <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
+                            Verified Tour Operator
+                          </span>
+                          {partner.star_rating >= 4.8 && (
+                            <span className="bg-indigo-650/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
+                              Top Rated
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Side: Information */}
+                      <div className="p-5 flex-grow flex flex-col justify-between gap-4">
+                        
+                        <div className="space-y-1.5">
+                          <div className="flex items-start justify-between gap-4">
+                            <h3 className="font-extrabold text-base sm:text-lg font-display text-slate-900 uppercase group-hover:text-[#FF5F00] transition-colors leading-tight">
+                              {partner.name}
+                            </h3>
+                            <div className="text-right shrink-0">
+                              <span className="font-black text-sm text-slate-800 flex items-center gap-1 justify-end leading-none">
+                                ⭐ {partner.star_rating}
+                              </span>
+                              <span className="text-[9px] text-slate-400 font-bold block mt-0.5 leading-none">
+                                {partner.bookings_count + 18} Reviews
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 font-bold">
+                            <span className="flex items-center gap-1">
+                              📍 {partner.landmark || partner.address}
+                            </span>
+                            <span>•</span>
+                            <span>Since {partner.since}</span>
+                            <span>•</span>
+                            <span className="text-emerald-600">🔥 {partner.bookings_count}+ Yatris Guided</span>
+                          </div>
+                        </div>
+
+                        {/* Badges */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {displayBadges.map((badge, bIdx) => (
+                            <span key={bIdx} className="text-[9px] font-black uppercase text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/10 px-2 py-0.5 rounded">
+                              {badge}
                             </span>
                           ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Stay Photos */}
-                    {stayDetails.photos && getAsArray(stayDetails.photos).length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
-                        {getAsArray(stayDetails.photos).map((photo, phIdx) => (
-                          <div key={phIdx} className="h-20 sm:h-24 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs">
-                            <img src={photo} alt="Hotel preview" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Pickup & Drop transfers widget */}
-              {(pickupDrop?.pickup_point || pickupDrop?.drop_point || pickupDrop?.reporting_time) && (
-                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
-                    <Car className="text-[#FF5722]" size={18} />
-                    Reporting & Transfer Details
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {pickupDrop.pickup_point && (
-                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
-                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">PICKUP POINT</span>
-                        <p className="text-xs font-extrabold text-slate-900 leading-snug">{pickupDrop.pickup_point}</p>
-                      </div>
-                    )}
-                    {pickupDrop.drop_point && (
-                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
-                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">DROP POINT</span>
-                        <p className="text-xs font-extrabold text-slate-900 leading-snug">{pickupDrop.drop_point}</p>
-                      </div>
-                    )}
-                    {pickupDrop.reporting_time && (
-                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
-                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">REPORTING TIME</span>
-                        <p className="text-xs font-extrabold text-slate-900 leading-snug">{pickupDrop.reporting_time}</p>
-                      </div>
-                    )}
-                    {pickupDrop.coordinator_number && (
-                      <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-1 text-left">
-                        <span className="text-[9px] text-[#FF5722] font-black uppercase tracking-widest block">ON-TRIP COORDINATOR</span>
-                        <a href={`tel:${pickupDrop.coordinator_number}`} className="inline-flex items-center gap-1 text-xs font-black text-slate-900 hover:text-[#FF5722] underline pt-0.5">
-                          <Phone size={12} className="text-[#FF5722]" /> Call Coordinator
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Dynamic Inclusions & Exclusions Tabs */}
-              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
-                <div className="flex border-b border-slate-100 mb-6">
-                  <button
-                    type="button"
-                    onClick={() => setCostTab('included')}
-                    className={`flex-1 pb-3 text-center text-xs font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
-                      costTab === 'included'
-                        ? 'border-[#FF5722] text-[#FF5722]'
-                        : 'border-transparent text-slate-400 hover:text-slate-700'
-                    }`}
-                  >
-                    What's Included
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCostTab('excluded')}
-                    className={`flex-1 pb-3 text-center text-xs font-black uppercase tracking-wider border-b-2 cursor-pointer transition-all ${
-                      costTab === 'excluded'
-                        ? 'border-[#FF5722] text-[#FF5722]'
-                        : 'border-transparent text-slate-400 hover:text-slate-700'
-                    }`}
-                  >
-                    What's Excluded
-                  </button>
-                </div>
-
-                {costTab === 'included' ? (
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 font-bold list-none p-0 m-0 text-left">
-                    {displayInclusions.map((item, idx) => (
-                      <li key={idx} className="flex gap-2.5 items-start bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <span className="bg-green-50 text-green-600 rounded-full p-0.5 w-5 h-5 flex items-center justify-center shrink-0 border border-green-200">
-                          <Check size={12} strokeWidth={3} />
-                        </span>
-                        <span className="leading-snug">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 font-bold list-none p-0 m-0 text-left">
-                    {displayExclusions.map((item, idx) => (
-                      <li key={idx} className="flex gap-2.5 items-start bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <span className="bg-red-50 text-red-650 rounded-full p-0.5 w-5 h-5 flex items-center justify-center shrink-0 border border-red-200">
-                          <X size={12} strokeWidth={3} />
-                        </span>
-                        <span className="leading-snug">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {/* Trust Checklist: Why Choose Us */}
-              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100 text-left space-y-4 select-none">
-                <div className="flex items-center gap-2">
-                  <Star size={16} className="text-[#FF5F00] fill-[#FF5F00]" />
-                  <h4 className="text-xs font-black uppercase text-black tracking-wider font-display">Why Travelers Trust TripGod</h4>
-                </div>
-                
-                {selectedTour.why_book_with_us?.items?.some(item => item.title) ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-                    {selectedTour.why_book_with_us.items.map((item, idx) => {
-                      if (!item.title) return null;
-                      return (
-                        <div key={idx} className="bg-slate-50/70 border border-slate-100/80 rounded-2xl p-4 space-y-2 hover:border-[#FF5F00]/25 transition-all duration-300">
-                          <div className="w-9 h-9 rounded-xl bg-[#FF5F00]/10 text-[#FF5F00] flex items-center justify-center text-lg select-none">
-                            {item.icon === 'Shield' && '🛡️'}
-                            {item.icon === 'Headset' && '📞'}
-                            {item.icon === 'Hotel' && '🏨'}
-                            {item.icon === 'Car' && '🚗'}
-                            {item.icon === 'Utensils' && '🍽️'}
-                            {item.icon === 'Compass' && '🧭'}
-                            {item.icon === 'Ticket' && '🎫'}
-                            {!['Shield','Headset','Hotel','Car','Utensils','Compass','Ticket'].includes(item.icon) && '✨'}
-                          </div>
-                          <h5 className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{item.title}</h5>
-                          <p className="text-[10px] text-slate-500 font-bold leading-relaxed">{item.desc}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-xs font-bold text-slate-800">
-                    {(tourHighlights.length > 0 ? tourHighlights : [
-                      "100% Verified Local Operators",
-                      "Premium Handpicked Accommodation",
-                      "No Hidden Charges / Tolls Included",
-                      "24/7 Coordinate Desk Support",
-                      "Instant Booking Voucher Confirmation",
-                      "Best Price Guarantee"
-                    ]).map((hl, idx) => (
-                      <div key={idx} className="flex items-center gap-2.5 text-slate-700">
-                        <ShieldCheck size={16} className="text-[#008F5D] shrink-0" />
-                        <span>{hl.startsWith('✓') ? hl.substring(1).trim() : hl}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Nearby Landmarks Grid */}
-              {landmarks.length > 0 && (
-                <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
-                    <MapPin className="text-[#FF5722]" size={18} />
-                    Nearby Attractions & Landmarks
-                  </h3>
-                  <div className="overflow-hidden border border-slate-150 rounded-2xl bg-white shadow-xs">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-750 border-b border-slate-200 font-black uppercase text-[10px] tracking-wider">
-                          <th className="p-3.5 pl-4">Location Name</th>
-                          <th className="p-3.5">Distance</th>
-                          <th className="p-3.5">Travel Time</th>
-                          <th className="p-3.5 pr-4 text-right">Directions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-150 text-slate-650 font-medium">
-                        {landmarks.map((mark, mIdx) => (
-                          <tr key={mIdx} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="p-3.5 pl-4 font-bold text-slate-900">{mark.name}</td>
-                            <td className="p-3.5">{mark.distance || 'N/A'}</td>
-                            <td className="p-3.5">{mark.time || 'N/A'}</td>
-                            <td className="p-3.5 pr-4 text-right">
-                              {mark.maps_url ? (
-                                <a
-                                  href={mark.maps_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-[#FF5722]/10 text-[#FF5722] hover:bg-[#FF5722]/20 px-2.5 py-1.5 rounded-lg transition-all"
-                                >
-                                  Map View
-                                </a>
-                              ) : (
-                                <span className="text-slate-400 text-[10px]">No link</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* FAQs accordion section */}
-              <div className="bg-white shadow-sm rounded-3xl p-6 md:p-8 border border-slate-100">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-6 font-display flex items-center gap-2">
-                  <HelpCircle className="text-[#FF5722]" size={18} />
-                  Frequently Asked Questions
-                </h3>
-                <div className="space-y-3">
-                  {(faqData.length > 0 ? faqData : [
-                    {
-                      question: "How is the cancellation handled?",
-                      answer: selectedTour.cancellation_policy || "Refunds are processed based on the operator guidelines. Contact support for instant yatra cancellations."
-                    },
-                    {
-                      question: "Are guides provided?",
-                      answer: "Yes, certified local coordinators and local mountain guides will manage safety briefings during treks."
-                    },
-                    {
-                      question: "Are tolls and state taxes included in the pricing?",
-                      answer: "Absolutely. Under our TripGod promise, all green taxes, toll permits, and local charges are 100% covered."
-                    }
-                  ]).map((faq, fIdx) => {
-                    const isOpen = !!expandedFAQs[fIdx];
-                    return (
-                      <div key={fIdx} className="border border-slate-150 rounded-2xl overflow-hidden bg-white shadow-xs">
-                        <button
-                          onClick={() => toggleFAQ(fIdx)}
-                          className="w-full flex items-center justify-between p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors text-left border-none cursor-pointer"
-                        >
-                          <span className="text-xs font-black text-slate-800 pr-4">
-                            {faq.question}
+                          <span className="text-[10px] text-slate-500 font-semibold italic">
+                            "{partner.short_highlight}"
                           </span>
-                          <span className="text-slate-400 shrink-0">
-                            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </span>
-                        </button>
-                        
-                        <AnimatePresence initial={false}>
-                          {isOpen && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
+                        </div>
+
+                        {/* Ribbon and CTA */}
+                        <div className="pt-3 border-t border-slate-100 flex flex-col xs:flex-row xs:items-center justify-between gap-3">
+                          
+                          <div className="flex gap-3 text-slate-400">
+                            <div className="group/inc relative">
+                              <Hotel size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Hotel Stays Included</span>
+                            </div>
+                            <div className="group/inc relative">
+                              <Utensils size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Buffet Meals</span>
+                            </div>
+                            <div className="group/inc relative">
+                              <Car size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Comfort Transfers</span>
+                            </div>
+                            <div className="group/inc relative">
+                              <Compass size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Coordinators & Guides</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4.5 justify-between xs:justify-end">
+                            <div>
+                              <span className="text-[9px] block font-bold text-slate-455 uppercase leading-none">Starting From</span>
+                              <span className="text-xl font-black text-slate-900 leading-none">
+                                ₹{minPrice.toLocaleString('en-IN')}
+                                <span className="text-[10px] text-slate-450 font-bold lowercase">/person</span>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              className="py-2.5 px-4.5 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display"
                             >
-                              <div className="p-4 bg-white border-t border-slate-100 text-xs text-slate-655 font-medium leading-relaxed">
-                                {faq.answer}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                              View Tours
+                            </button>
+                          </div>
 
-              {/* Need Help CTA (Section 11) */}
-              <div className="bg-slate-900 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden select-none shadow-md text-left space-y-4">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF5F00]/20 to-[#FF3E00]/10 z-10" />
-                <div className="relative z-20 space-y-2">
-                  <h4 className="text-lg font-black uppercase tracking-tight font-display font-black">Still Confused?</h4>
-                  <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                    Get in touch with our local travel experts. We will help you plan your itinerary and customize the package. Response in under 5 minutes!
-                  </p>
-                </div>
-                <div className="relative z-20 flex flex-wrap gap-3 pt-2">
-                  <a 
-                    href="tel:+918630027341" 
-                    className="flex items-center gap-1.5 px-5 py-3 bg-[#FF5F00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:bg-[#E54A18] transition-all text-center select-none font-display border-none decoration-none"
-                  >
-                    📞 Call Expert
-                  </a>
-                  <a 
-                    href={`https://wa.me/918630027341?text=Hi%2C%20I%20need%20help%20with%20booking%20the%20${encodeURIComponent(selectedTour.name)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-5 py-3 bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-700 transition-all text-center select-none font-display border-none decoration-none"
-                  >
-                    💬 WhatsApp
-                  </a>
-                </div>
-              </div>
-
-              {/* Guidelines Box */}
-              {selectedTour.tour_guidelines && selectedTour.tour_guidelines.length > 0 && (
-                <div className="bg-amber-50/30 border border-amber-100 rounded-3xl p-6 shadow-sm text-left">
-                  <h3 className="text-xs sm:text-sm font-black text-amber-900 uppercase tracking-wider mb-4 font-display flex items-center gap-2">
-                    <Info size={16} className="text-amber-600" />
-                    Important Tour Guidelines
-                  </h3>
-                  <ul className="space-y-2.5 list-none p-0 m-0">
-                    {selectedTour.tour_guidelines.map((guideline, gIdx) => (
-                      <li key={gIdx} className="flex gap-2.5 items-start text-xs text-amber-800 font-bold leading-normal">
-                        <span className="text-amber-500 shrink-0 mt-0.5">•</span>
-                        <span>{guideline}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* TripGod Promise checklist */}
-              <div className="bg-white shadow-sm rounded-3xl p-6 border border-slate-100">
-                <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider mb-3 font-display">
-                  TripGod Promise: ₹1 Extra Nahi Dena
-                </h3>
-                <div className="flex gap-2.5 items-start bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 text-xs text-slate-700 font-bold text-left">
-                  <span className="bg-emerald-100 text-[#10B981] rounded-full p-1.5 shrink-0 border border-emerald-250">
-                    <Check size={12} strokeWidth={3} />
-                  </span>
-                  <div>
-                    <p className="text-emerald-800 font-black uppercase text-[10px] tracking-wider">All Tolls, Taxes, and Driver Allowances Included</p>
-                    <p className="text-[11px] text-emerald-650 font-medium mt-1 leading-relaxed">
-                      No hidden charges, parking fees, or driver stay charges. The price you book at is final.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Floating Sidebar Book Now widget (sticky on desktop) */}
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="sticky top-20">
-                {renderPricingBlock(false)}
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Sticky bottom bar (Mobile/Tablet only) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-150 py-2.5 px-3 z-45 shadow-[0_-5px_15px_rgba(0,0,0,0.06)] flex items-center justify-between gap-2.5">
-          <div className="flex flex-col text-left shrink-0">
-            <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Starts from</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-extrabold text-[#008F5D]">₹{price.toLocaleString('en-IN')}</span>
-              {originalPrice > price && (
-                <span className="text-[10px] text-slate-400 line-through font-bold">
-                  ₹{originalPrice.toLocaleString('en-IN')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-grow justify-end max-w-[70%] font-display">
-            <a
-              href="tel:+918630027341"
-              className="p-2.5 bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#FF5F00] rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
-            >
-              <Phone size={14} />
-            </a>
-            
-            <a
-              href={`https://wa.me/918630027341?text=Hi%2C%20I'm%252520interested%252520in%252520booking%252520the%252520${encodeURIComponent(selectedTour.name)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2.5 bg-slate-50 border border-slate-200 text-slate-750 hover:text-emerald-500 rounded-xl transition-all shadow-xs shrink-0 flex items-center justify-center"
-            >
-              <MessageSquare size={14} />
-            </a>
-
-            {checkIfClosed(selectedTour).closed ? (
-              <button disabled className="py-2.5 px-4 bg-gray-300 text-gray-500 font-black text-xs uppercase tracking-wider rounded-xl cursor-not-allowed shrink-0">
-                Closed
-              </button>
-            ) : (
-              <button
-                onClick={() => navigateTo(`tours/${selectedTour.id}/partners`)}
-                className="py-2.5 px-4 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm border-none flex-grow text-center justify-center shrink-0 min-w-[90px]"
-              >
-                Book Now
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-}
-
-  return (
-    <div className="w-full max-w-full overflow-x-hidden min-h-[80vh] bg-slate-50 flex flex-col py-6 md:py-12 font-sans text-left text-slate-800">
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 space-y-4 md:space-y-8">
-        
-        {/* Compact Hero Section */}
-        <div className="bg-gradient-to-br from-[#0F2C59] via-[#1B3C73] to-[#0A1E3F] rounded-3xl p-4 md:p-8 text-white relative overflow-hidden select-none shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30 z-10" />
-          <div className="absolute inset-0 bg-[url('/tour-hero.jpg')] bg-cover bg-center opacity-40 animate-pulse-slow" />
-          
-          <div className="relative z-20 space-y-3 max-w-2xl text-left">
-            <span className="text-[10px] uppercase font-black tracking-widest text-[#FF5F00] bg-[#FF5F00]/10 px-2.5 py-1 rounded-md border border-[#FF5F00]/20">
-              Uttarakhand Yatras & Treks
-            </span>
-            <h1 className="text-xl md:text-4xl font-black font-display tracking-tight uppercase leading-tight">
-              Explore Tours & Yatras
-            </h1>
-            <p className="hidden sm:block text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
-              Book complete guided pilgrimages, trekking expeditions, and weekend sightseeing getaways across Uttarakhand. Compare top-rated operators, see real reviews, and secure your booking with instant voucher confirmation.
-            </p>
-          </div>
-
-          {/* Horizontal Scrolling Trust Strip */}
-          <div className="relative z-20 flex gap-2 md:gap-4 overflow-x-auto w-full max-w-full no-scrollbar pt-3 md:pt-6 border-t border-white/10 mt-3 md:mt-6 select-none shrink-0 scrollbar-none">
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shrink-0">
-              <ShieldCheck size={12} className="text-emerald-500" /> Verified Operators
-            </div>
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shrink-0">
-              <Zap size={12} className="text-amber-500 fill-amber-500" /> Instant Confirmations
-            </div>
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shrink-0">
-              <Tag size={12} className="text-sky-500" /> Best Price Guarantee
-            </div>
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shrink-0">
-              <CreditCard size={12} className="text-emerald-500" /> Secure Advance Payments
-            </div>
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shrink-0">
-              <Headset size={12} className="text-[#FF5F00]" /> 24/7 Coordinator Support
-            </div>
-          </div>
-        </div>
-
-        {/* PARTNERS LIST */}
-        {!selectedPartner ? (
-          <div className="space-y-12">
-            <div className="text-center space-y-2">
-              <span className="text-xs font-bold uppercase text-slate-500 tracking-widest">Verified Tour Operators</span>
-              <h2 className="text-xl md:text-3xl font-black font-display text-black uppercase">SELECT TOUR PARTNERS</h2>
-              <div className="w-16 h-1 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] mx-auto" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {partnersData.map((partner, idx) => (
-                <motion.div
-                  key={partner.id || idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.1 }}
-                  className="flex flex-col bg-white border border-black/5 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group text-left"
-                >
-                  <div className="relative h-48 overflow-hidden bg-slate-100">
-                    <img
-                      src={partner.shop_image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'}
-                      alt={partner.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
-                    />
-                    <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
-                      ⭐ {partner.star_rating}
-                    </div>
-                  </div>
-                  
-                  <div className="p-5 flex-grow flex flex-col justify-between space-y-4">
-                    <div className="space-y-2">
-                      <h3 className="font-bold text-lg font-display text-black leading-snug uppercase text-left">{partner.name}</h3>
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 text-left">
-                        <MapPin size={13} className="text-accent shrink-0" />
-                        <span className="truncate max-w-[200px]">{partner.address}</span>
-                      </div>
-                      {partner.landmark && (
-                        <div className="text-[10px] text-slate-400 font-bold uppercase text-left">
-                          🏢 {partner.landmark}
                         </div>
-                      )}
-                      <p className="text-xs text-slate-500 text-left pt-1.5 leading-relaxed">
-                        Offers {partner.tours.length} complete tour package(s) with local guide support.
-                      </p>
-                    </div>
 
-                    <div className="pt-4 border-t border-black/5 flex items-center justify-between">
-                      <div>
-                        <span className="text-[9px] block font-bold text-slate-400 uppercase text-left">Starting From</span>
-                        <span className="text-lg font-black text-black">
-                          ₹{partner.tours.length > 0 ? Math.min(...partner.tours.map(t => t.price)).toLocaleString('en-IN') : '0'}
-                        </span>
                       </div>
-                      <button
-                        onClick={() => setSelectedPartner(partner)}
-                        className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
-                      >
-                        View Tours <ChevronLeft className="rotate-180" size={14} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                    </motion.div>
+                  );
+                })}
+              </div>
+
             </div>
-          </div>
-        ) : (
-          /* PARTNER DETAILS & CUSTOM PACKAGES LIST */
-          <div className="space-y-8">
-            {/* Back button */}
+          </motion.div>
+        )}
+
+        {/* VIEW 2: PARTNER PROFILE (Tour Packages) */}
+        {selectedPartner && !selectedTour && (
+          <motion.div key="profile" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pb-24 max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8 text-left">
+            
             <button
-              onClick={() => setSelectedPartner(null)}
-              className="flex items-center gap-1 text-slate-500 hover:text-black font-black text-xs uppercase bg-transparent border-none cursor-pointer p-0 select-none text-left"
+              onClick={() => navigateToPartner(null)}
+              className="flex items-center gap-1 text-slate-500 hover:text-black font-black text-xs uppercase bg-transparent border-none cursor-pointer p-0"
             >
-              <ChevronLeft size={16} /> Back to Tour Partners
+              <ChevronLeft size={16} /> Back to Operators
             </button>
 
-            {/* Partner Banner Block */}
-            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-5 md:p-8 flex flex-col md:flex-row items-center gap-6 text-left shadow-xs">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
+            {/* Profile banner */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-2xs flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
                 <img src={selectedPartner.shop_image} className="w-full h-full object-cover" />
               </div>
               <div className="space-y-2 flex-grow">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl md:text-2xl font-black text-black uppercase">{selectedPartner.name}</h2>
-                  <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider select-none animate-pulse">Verified Tour Partner</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase font-display leading-tight">{selectedPartner.name}</h2>
+                  <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
+                    TripGod Verified
+                  </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-slate-500">
                   <div className="flex items-center gap-1">
                     <Star size={13} className="fill-amber-500 text-amber-500" />
-                    <span>{selectedPartner.star_rating} Rating</span>
+                    <span>{selectedPartner.star_rating} Rating ({selectedPartner.bookings_count} bookings)</span>
                   </div>
                   <span>•</span>
-                  <span>📍 {selectedPartner.address}</span>
-                  {selectedPartner.landmark && (
-                    <>
-                      <span>•</span>
-                      <span>🏢 {selectedPartner.landmark}</span>
-                    </>
-                  )}
+                  <span>📍 {selectedPartner.landmark || selectedPartner.address}</span>
+                  <span>•</span>
+                  <span>Since {selectedPartner.since}</span>
                 </div>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed pt-1 max-w-2xl">
+                  {selectedPartner.short_highlight}. Experienced pilgrimage planners coordinating comfortable stays, certified guides, and transport.
+                </p>
               </div>
             </div>
 
-            {/* Sticky Search & Filter Bar */}
-            <div className="sticky top-16 z-30 bg-white/90 backdrop-blur-md border border-slate-150 p-2.5 rounded-2xl md:rounded-3xl shadow-sm space-y-2.5 select-none w-full max-w-full">
-              {/* Line 1: Search & Sort */}
-              <div className="flex gap-2 items-center justify-between w-full">
-                <div className="relative flex-grow">
-                  <input
-                    type="text"
-                    placeholder="Search package, destination..."
-                    value={filterDestination}
-                    onChange={e => setFilterDestination(e.target.value)}
-                    className="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5F00] font-semibold text-left"
-                  />
-                </div>
-                <select
-                  value={filterSort}
-                  onChange={e => setFilterSort(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none cursor-pointer min-w-[110px] md:min-w-[140px] shrink-0 text-slate-700 text-left"
-                >
-                  <option value="Default">Default Recommended</option>
-                  <option value="PriceAsc">Price: Low to High</option>
-                  <option value="PriceDesc">Price: High to Low</option>
-                  <option value="Rating">Top Rated First</option>
-                </select>
-              </div>
+            {/* Available Yatras */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest font-display">Available Yatras & Tours</h3>
 
-              {/* Line 2: Advanced filters */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <select
-                  value={filterBudget}
-                  onChange={e => setFilterBudget(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-                >
-                  <option value="All">All Budgets</option>
-                  <option value="3000">Under ₹3,000</option>
-                  <option value="6000">Under ₹6,000</option>
-                  <option value="12000">Under ₹12,000</option>
-                  <option value="20000">Under ₹20,000</option>
-                </select>
+              <div className="flex flex-col gap-4">
+                {selectedPartner.packages.map((pkg, idx) => {
+                  const savings = pkg.original_price - pkg.price;
+                  const closed = checkIfClosed(pkg).closed;
 
-                <select
-                  value={filterDuration}
-                  onChange={e => setFilterDuration(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-                >
-                  <option value="All">All Durations</option>
-                  <option value="1-2">1 - 2 Days</option>
-                  <option value="3-4">3 - 4 Days</option>
-                  <option value="5+">5+ Days</option>
-                </select>
-
-                <select
-                  value={filterTourType}
-                  onChange={e => setFilterTourType(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-                >
-                  <option value="All">All Types</option>
-                  <option value="Sightseeing">Sightseeing</option>
-                  <option value="Pilgrimage">Pilgrimage</option>
-                  <option value="Trekking">Trekking</option>
-                  <option value="Adventure">Adventure</option>
-                </select>
-
-                <select
-                  value={filterRating}
-                  onChange={e => setFilterRating(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-                >
-                  <option value="All">All Ratings</option>
-                  <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
-                  <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Category Filter Chips */}
-            <div className="flex gap-2 overflow-x-auto w-full max-w-full no-scrollbar pb-1 select-none">
-              {['All', 'Pilgrimage', 'Adventure', 'Trekking', 'Sightseeing'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilterCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all border shrink-0 cursor-pointer ${
-                    filterCategory === cat
-                      ? 'bg-[#FF5F00] border-[#FF5F00] text-white shadow-md'
-                      : 'bg-white border-slate-200 text-slate-650 hover:border-slate-350'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between border-b border-slate-150 pb-2 text-left">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-500">
-                {filteredGroupedList.length} Yatras & Tours Found
-              </span>
-            </div>
-
-            {/* Grid List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-              {filteredGroupedList.map((tour, idx) => {
-                const hasMultiple = tour.operators.length > 1;
-                const hasDiscount = tour.operators.some(op => op.original_price && Number(op.original_price) > Number(op.price));
-                const originalPriceToShow = hasDiscount ? Math.max(...tour.operators.map(op => Number(op.original_price || 0))) : Math.round(tour.minPrice * 1.3);
-                const discountPercentage = Math.round(((originalPriceToShow - tour.minPrice) / originalPriceToShow) * 100);
-
-                // Badges
-                const overlayBadges = [];
-                if (tour.is_verified) {
-                  overlayBadges.push({
-                    label: 'Verified Operator',
-                    bg: 'bg-emerald-600',
-                    icon: <ShieldCheck size={9} />
-                  });
-                }
-                if (tour.seats_left <= 5 || tour.is_limited_seats) {
-                  overlayBadges.push({
-                    label: 'Fast Filling',
-                    bg: 'bg-red-600',
-                    icon: <Zap size={9} fill="currentColor" />
-                  });
-                }
-                if (tour.rating >= 4.7) {
-                  overlayBadges.push({
-                    label: 'Top Rated',
-                    bg: 'bg-indigo-650',
-                    icon: <Star size={9} fill="currentColor" />
-                  });
-                }
-                if (discountPercentage >= 20) {
-                  overlayBadges.push({
-                    label: 'Best Price',
-                    bg: 'bg-blue-600',
-                    icon: <Tag size={9} />
-                  });
-                }
-                const displayBadges = overlayBadges.slice(0, 2);
-
-                return (
-                  <React.Fragment key={tour.name || idx}>
-                    {idx === 3 && (
-                      <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-md border-none select-none my-4 text-left font-sans">
-                        <div className="space-y-1">
-                          <h4 className="text-lg font-black uppercase tracking-tight font-display">₹1 Extra Nahi Dena - TripGod Promise!</h4>
-                          <p className="text-xs text-emerald-100 font-medium leading-relaxed max-w-xl">
-                            Under our local tourism guarantee, all tolls, parking fees, state green cess, permits, and driver allowance are 100% included in the checkout price. Zero hidden charges, guaranteed.
-                          </p>
-                        </div>
-                        <div className="flex gap-4 shrink-0">
-                          <a href="tel:+918630027341" className="px-5 py-3 bg-white text-emerald-700 font-black text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-50 transition-all text-center select-none font-display">
-                            Call Helpline
-                          </a>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <motion.div
-                      whileHover={{ y: -5 }}
-                      className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md border border-slate-100 transition-all duration-300 group cursor-pointer relative text-left"
-                      onClick={() => handleSelectTour(tour)}
+                  return (
+                    <div 
+                      key={pkg.id || idx}
+                      className="flex flex-col md:flex-row bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-slate-350 transition-all w-full relative"
                     >
-                      <div className="h-52 overflow-hidden relative bg-slate-100">
-                        <img 
-                          src={tour.img} 
-                          alt={tour.name} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                        />
-                        {checkIfClosed(tour).closed && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-20">
-                            <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
-                              Closed
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 items-start">
-                          {displayBadges.map((badge, bIdx) => (
-                            <span key={bIdx} className={`${badge.bg} text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-sm tracking-wider flex items-center gap-1`}>
-                              {badge.icon} {badge.label.toUpperCase()}
-                            </span>
-                          ))}
+                      {closed && (
+                        <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex items-center justify-center z-10">
+                          <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded shadow-md">
+                            Closed temporarily
+                          </span>
                         </div>
+                      )}
 
-                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
-                          {tour.is_bestseller && (
-                            <span className="bg-[#FF5722] text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-md tracking-wider">
-                              🔥 BESTSELLER
-                            </span>
-                          )}
-                          {tour.seats_left <= 8 && (
-                            <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-sm tracking-wider">
-                              ONLY {tour.seats_left} SEATS LEFT
-                            </span>
-                          )}
-                        </div>
+                      <div className="w-full md:w-[200px] h-40 md:h-auto shrink-0 relative overflow-hidden bg-slate-100">
+                        <img src={pkg.images[0]} alt={pkg.name} className="w-full h-full object-cover" />
                       </div>
 
-                      <div className="p-4 md:p-5 flex-grow flex flex-col justify-between space-y-4 text-left">
-                        <div className="space-y-2.5">
-                          <div className="flex items-center justify-between border-b border-slate-50 pb-2 text-left">
-                            <div className="flex flex-col text-left">
-                              <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
-                                <Star size={14} className="fill-amber-500 text-amber-500" />
-                                <span>{tour.why_book_with_us?.rating !== undefined && tour.why_book_with_us?.rating !== null ? Number(tour.why_book_with_us.rating) : (tour.rating || 4.5)}</span>
-                              </div>
-                              <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">
-                                {tour.why_book_with_us?.reviews_count !== undefined && tour.why_book_with_us?.reviews_count !== null ? Number(tour.why_book_with_us.reviews_count) : (tour.reviewsCount || 80)} Reviews
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[9px] font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase tracking-wider">
-                                🔥 {tour.bookings_count || 143}+ booked
-                              </span>
+                      <div className="p-5 flex-grow flex flex-col justify-between gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-4">
+                            <h4 className="font-extrabold text-base font-display text-slate-900 uppercase">
+                              {pkg.name}
+                            </h4>
+                            <div className="flex items-center gap-1 text-xs text-[#FF6B00] font-black shrink-0">
+                              <Clock size={12} />
+                              <span>{pkg.duration}</span>
                             </div>
                           </div>
 
-                          <h3 className="font-extrabold text-sm sm:text-base font-display text-slate-900 tracking-tight group-hover:text-[#FF5722] transition-colors leading-tight line-clamp-1 uppercase text-left">
-                            {tour.name}
-                          </h3>
+                          <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-500">
+                            {pkg.hotel_included && <span className="bg-slate-100 px-2 py-0.5 rounded">🏨 Hotels Stay</span>}
+                            {pkg.meals_included && <span className="bg-slate-100 px-2 py-0.5 rounded">🍲 Meals</span>}
+                            {pkg.transport_included && <span className="bg-slate-100 px-2 py-0.5 rounded">🚗 Cab transfers</span>}
+                          </div>
 
-                          {tour.route_map && tour.route_map.length > 0 && (
-                            <div className="flex items-center gap-1 text-[11px] font-bold text-[#FF5722] text-left pt-0.5">
-                              <span className="truncate">{tour.route_map.join(' → ')}</span>
-                            </div>
-                          )}
-                          
-                          <p className="text-xs text-slate-550 leading-relaxed font-medium line-clamp-2 text-left pt-0.5">
-                            {tour.description}
+                          <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">
+                            {pkg.description || `Secure your yatra bookings with ${selectedPartner.name}. Full packages cover lodging, meals, coordinates and local guides.`}
                           </p>
+                        </div>
 
-                          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-b border-slate-50 pb-2.5 text-left">
-                            <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
-                              <span>🗓</span>
-                              <span>{tour.duration}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
-                              <span>📍</span>
-                              <span>Ex {currentCity?.name || 'Rishikesh'}</span>
-                            </div>
-                            {tour.difficulty && (
-                              <div className="flex items-center gap-1">
-                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                                  tour.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                  tour.difficulty === 'Moderate' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                                  'bg-red-50 text-red-600 border border-red-100'
-                                }`}>
-                                  {tour.difficulty}
-                                </span>
-                              </div>
-                            )}
+                        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex flex-wrap gap-2 text-[9px] font-black uppercase">
+                            <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded">
+                              ✓ Instant Confirmation
+                            </span>
+                            <span className="bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded">
+                              ✓ Free Coordinator support
+                            </span>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-1 text-[11px] font-bold text-slate-600 text-left">
-                            {tour.hotel_included && (
-                              <div className="flex items-center gap-1.5 text-left">
-                                <span className="text-emerald-500 font-bold">✔</span>
-                                <span>Hotel Included</span>
+                          <div className="flex items-center gap-4 justify-between sm:justify-end">
+                            <div>
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-lg font-black text-slate-950">₹{pkg.price.toLocaleString('en-IN')}</span>
+                                {pkg.original_price > pkg.price && (
+                                  <span className="text-xs text-slate-400 line-through font-semibold">₹{pkg.original_price.toLocaleString('en-IN')}</span>
+                                )}
                               </div>
-                            )}
-                            {tour.meals_included && (
-                              <div className="flex items-center gap-1.5 text-left">
-                                <span className="text-emerald-500 font-bold">✔</span>
-                                <span>Meals Included</span>
-                              </div>
-                            )}
-                            {tour.transport_included && (
-                              <div className="flex items-center gap-1.5 text-left">
-                                <span className="text-emerald-500 font-bold">✔</span>
-                                <span>Transfers Included</span>
-                              </div>
-                            )}
-                            {tour.guide_included && (
-                              <div className="flex items-center gap-1.5 text-left">
-                                <span className="text-emerald-500 font-bold">✔</span>
-                                <span>Guide Available</span>
-                              </div>
-                            )}
+                              {savings > 0 && (
+                                <span className="text-[9px] font-black text-emerald-600 uppercase block">Save ₹{savings}</span>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => navigateToTour(pkg)}
+                              className="py-2.5 px-4 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.02] transition-all border-none cursor-pointer"
+                            >
+                              View Details
+                            </button>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="p-5 pt-0 flex items-center justify-between border-t border-slate-100 mt-auto pt-4 gap-3 text-left">
-                        <div className="flex flex-col text-left">
-                          <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">From</span>
-                          <div className="flex items-baseline gap-1.5 mt-0.5">
-                            <span className="text-lg font-extrabold text-[#008F5D]">₹{tour.minPrice.toLocaleString('en-IN')}</span>
-                            {originalPriceToShow && (
-                              <span className="text-xs text-slate-400 line-through font-bold">
-                                ₹{originalPriceToShow.toLocaleString('en-IN')}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1 select-none">
-                            {discountPercentage > 0 && (
-                              <span className="bg-[#008F5D]/10 text-[#008F5D] text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
-                                Save {discountPercentage}%
-                              </span>
-                            )}
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Per Person</span>
-                          </div>
-                        </div>
-                        
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectTour(tour);
-                          }}
-                          className="px-5 py-3 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all border-none cursor-pointer text-center font-display whitespace-nowrap shadow-md hover:shadow-lg"
-                        >
-                          Explore Tour
-                        </button>
                       </div>
-                    </motion.div>
-                  </React.Fragment>
-                );
-              })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Empty State */}
-            {filteredGroupedList.length === 0 && (
-              <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center text-slate-505 font-medium space-y-3">
-                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto text-[#FF5722]">
-                  <Compass size={24} />
-                </div>
-                <p className="text-sm font-black text-slate-800 uppercase tracking-wider">No matching packages found</p>
-                <p className="text-xs text-slate-400 max-w-xs mx-auto">We couldn't find any tour packages matching your search filters. Try clearing filters or searching for another keyword.</p>
-                <button
-                  onClick={() => {
-                    setFilterDestination('');
-                    setFilterBudget('All');
-                    setFilterDuration('All');
-                    setFilterTourType('All');
-                  }}
-                  className="mt-4 px-5 py-2.5 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all border-none cursor-pointer"
-                >
-                  Reset Filters
-                </button>
-              </div>
-            )}
-          </div>
+            {/* Operator Reviews */}
+            <div className="pt-6 border-t border-slate-200">
+              <ReviewsSection rating={selectedPartner.star_rating} reviewsCount={selectedPartner.bookings_count} name={selectedPartner.name} />
+            </div>
+
+          </motion.div>
         )}
 
-      </div>
+        {/* VIEW 3: TOUR DETAILS VIEW */}
+        {selectedTour && (
+          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="pb-24 pt-6 max-w-4xl mx-auto px-4 sm:px-6 space-y-6 text-left">
+            
+            <button
+              onClick={() => navigateToTour(null)}
+              className="flex items-center gap-1.5 py-2 px-3 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:text-black hover:border-slate-400 transition-colors cursor-pointer bg-white"
+            >
+              <ChevronLeft size={16} /> Back to Tours
+            </button>
+
+            {/* Title & stats */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-black text-accent font-black tracking-widest px-2 py-0.5 rounded uppercase">
+                    Yatra & Tour
+                  </span>
+                </div>
+                <h1 className="text-xl md:text-2xl font-bold font-display text-slate-900 uppercase">
+                  {selectedTour.name}
+                </h1>
+                
+                <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-500">
+                  <div className="flex items-center gap-1 text-slate-800">
+                    <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                    <span>{selectedPartner?.star_rating || 4.8}</span>
+                    <span className="text-slate-400">({selectedPartner?.bookings_count || 120} reviews)</span>
+                  </div>
+                  <span>•</span>
+                  <span className="text-emerald-700">Operator: {selectedPartner?.name}</span>
+                </div>
+              </div>
+
+              <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-4 rounded-2xl flex flex-col min-w-[160px] xs:text-right shrink-0">
+                <span className="text-[9px] font-bold text-slate-455 uppercase block">Package Price</span>
+                <div className="flex items-baseline gap-1 xs:justify-end">
+                  <span className="text-2xl font-black text-slate-900">₹{selectedTour.price.toLocaleString('en-IN')}</span>
+                  {selectedTour.original_price > selectedTour.price && (
+                    <span className="text-xs text-slate-450 line-through font-semibold">₹{selectedTour.original_price.toLocaleString('en-IN')}</span>
+                  )}
+                </div>
+                <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
+                  Book with Token Advance
+                </span>
+              </div>
+            </div>
+
+            {/* Tour Images */}
+            <div className="h-52 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-slate-200 group">
+              <img 
+                src={selectedTour.images[currentImgIdx]} 
+                alt={selectedTour.name}
+                className="w-full h-full object-cover"
+              />
+              
+              {selectedTour.images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-xs">
+                  {selectedTour.images.map((_, dotIdx) => (
+                    <button
+                      key={dotIdx}
+                      onClick={() => setCurrentImgIdx(dotIdx)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer border-none ${dotIdx === currentImgIdx ? 'bg-white w-3' : 'bg-white/40'}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Specs card below image */}
+            <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-xs bg-slate-900 p-4 rounded-2xl shadow-sm">
+              <div className="flex gap-6 flex-wrap">
+                <div>
+                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Duration</span>
+                  <span className="font-bold text-white">{selectedTour.duration}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Stay lodging</span>
+                  <span className="font-bold text-white">{selectedTour.hotel_included ? 'Hotel Stay included' : 'Not included'}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Meals</span>
+                  <span className="font-bold text-white">{selectedTour.meals_included ? 'Buffet meals' : 'Self expense'}</span>
+                </div>
+              </div>
+              <div className="px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs shrink-0 self-start xs:self-auto">
+                <ShieldCheck size={12} /> Tour Safety Verified
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-3">
+              <h3 className="text-base font-bold font-display text-slate-900 uppercase">Tour Overview</h3>
+              <p className="text-xs sm:text-sm text-slate-650 leading-relaxed font-medium">
+                {selectedTour.description || `Embark on the glorious ${selectedTour.name} yatra from Rishikesh. Coordinated by ${selectedPartner?.name}, this pilgrimage package includes private transport, stay, guide, and quick coordination hotlines.`}
+              </p>
+            </div>
+
+            {/* Day Wise Itinerary */}
+            <div className="space-y-4 pt-4 border-t border-slate-200">
+              <h3 className="text-base font-bold font-display text-slate-900 uppercase">Day Wise Itinerary</h3>
+              <div className="space-y-4 pl-1">
+                {(selectedTour.day_wise_itinerary && selectedTour.day_wise_itinerary.length > 0
+                  ? selectedTour.day_wise_itinerary
+                  : getMockItinerary(selectedTour.name, selectedTour.duration)
+                ).map((day, idx) => (
+                  <div key={idx} className="flex gap-4 items-start relative">
+                    {/* Circle timeline */}
+                    <div className="flex flex-col items-center shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-[#FF6B00] text-white text-[10px] font-black flex items-center justify-center border-4 border-orange-100">
+                        {day.day || (idx + 1)}
+                      </div>
+                      {idx < 2 && <div className="w-0.5 h-16 bg-slate-200 mt-1" />}
+                    </div>
+
+                    <div className="space-y-1.5 flex-1 bg-white border border-slate-200/60 p-4 rounded-2xl">
+                      <span className="block text-[10px] font-black uppercase text-[#FF6B00]">Day {day.day || (idx + 1)}</span>
+                      <h4 className="font-extrabold text-sm text-slate-900 uppercase font-display leading-tight">{day.title}</h4>
+                      <p className="text-xs text-slate-600 leading-normal font-medium">{day.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Who is this perfect for? */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold font-display text-slate-900 uppercase">Who is this perfect for?</h4>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
+                  <Users size={11} /> Families & Senior Citizens
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
+                  <Sparkles size={11} /> Spiritual Seekers
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
+                  ✓ Comfort Travel Seekers
+                </span>
+              </div>
+            </div>
+
+            {/* Inclusions / Exclusions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Inclusions</h4>
+                <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                  {selectedTour.inclusions && selectedTour.inclusions.length > 0 ? (
+                    selectedTour.inclusions.map((inc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                        <span>{inc}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                        <span>Hotels & camps stays</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                        <span>Cab transport & driver support</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Exclusions</h4>
+                <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                  {selectedTour.exclusions && selectedTour.exclusions.length > 0 ? (
+                    selectedTour.exclusions.map((exc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-rose-600 font-bold shrink-0">✗</span>
+                        <span>{exc}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-rose-600 font-bold shrink-0">✗</span>
+                        <span>Helicopter tickets (unless explicitly added)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-rose-600 font-bold shrink-0">✗</span>
+                        <span>Personal VIP Darshan entry tickets</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            {/* Dynamic Partner Location & Contact Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 bg-slate-50 border border-slate-200/60 rounded-3xl p-5 md:p-6 shadow-2xs">
+              <div className="space-y-3">
+                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Reporting & Office Address</span>
+                <div className="space-y-1.5">
+                  <p className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <MapPin size={15} className="text-[#FF6B00]" />
+                    {selectedPartner?.name} Office
+                  </p>
+                  <p className="text-xs text-slate-600 font-medium pl-5 leading-normal">
+                    {selectedPartner?.address} ({selectedPartner?.landmark})
+                  </p>
+                </div>
+                {selectedPartner?.google_maps_link && (
+                  <a
+                    href={selectedPartner.google_maps_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase text-[#FF6B00] hover:text-[#FF3D00] pl-5"
+                  >
+                    Open in Google Maps <ExternalLink size={12} />
+                  </a>
+                )}
+                <div className="pl-5 pt-1 text-[10px] text-slate-500 leading-normal">
+                  <span className="font-bold uppercase text-slate-600 block">🚗 Parking</span>
+                  {selectedPartner?.parking_details}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <span className="block text-[10px] font-black text-slate-455 uppercase tracking-wide">Yatra Coordinator Guidelines</span>
+                <div className="space-y-2 text-xs font-medium text-slate-600 pl-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#FF6B00] font-black">🕒 Departure:</span>
+                    <span>{selectedPartner?.reporting_time}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#FF6B00] font-black">📞 Coordinator Hotline:</span>
+                    <a href={`tel:${selectedPartner?.phone}`} className="text-slate-800 hover:text-accent font-bold">
+                      {selectedPartner?.phone}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#FF6B00] font-black">💬 WhatsApp Chat:</span>
+                    <a href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}`} className="text-slate-800 hover:text-accent font-bold">
+                      {selectedPartner?.whatsapp}
+                    </a>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-normal pt-1.5">
+                    <span className="font-bold uppercase text-slate-600 block">📝 Meeting Guidelines</span>
+                    {selectedPartner?.meeting_instructions}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Trust and Reviews Section */}
+            <div className="pt-6 border-t border-slate-200">
+              <TrustSignals />
+            </div>
+
+            {/* Checkout Widget Card */}
+            <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
+              <div className="flex items-start gap-3.5">
+                <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Tour with Token Advance</h4>
+                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                    Pay a token advance online to secure your slots with <strong>{selectedPartner?.name}</strong>. Cancel up to 24 hours prior for a 100% refund.
+                  </p>
+                </div>
+              </div>
+
+              {checkIfClosed(selectedTour).closed ? (
+                <button
+                  disabled
+                  className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
+                >
+                  Closed Temporarily
+                </button>
+              ) : (
+                <button
+                  onClick={() => openBookingModal({
+                    id: selectedTour.id,
+                    name: `${selectedTour.name} - ${selectedPartner?.name}`,
+                    stretch: selectedTour.duration,
+                    price: selectedTour.price,
+                    category: 'tours',
+                    city_id: selectedTour.city_id,
+                    vendor_id: selectedTour.vendor_id,
+                    commission_percentage: selectedTour.commission_percentage || selectedTour.vendors?.commission_percentage || 10,
+                    upi_discount: selectedTour.upi_discount,
+                    vendors: selectedPartner, // Send partner info directly to checkout
+                    slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
+                  })}
+                  className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
+                >
+                  Book Operator
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Sticky Booking Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-3.5 px-4 flex items-center justify-between gap-4 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+              <div>
+                <span className="text-[9px] font-bold text-slate-455 uppercase block">Total Cost</span>
+                <span className="text-lg font-black text-slate-900">₹{selectedTour.price.toLocaleString('en-IN')}</span>
+              </div>
+
+              <div className="flex gap-2">
+                <a
+                  href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}?text=Hi%2C%20I%20want%20to%20book%20the%20${encodeURIComponent(selectedTour.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-xl flex items-center justify-center text-white shrink-0 hover:scale-105 active:scale-95 transition-all shadow-xs"
+                >
+                  <MessageSquare size={16} />
+                </a>
+                <button
+                  onClick={() => openBookingModal({
+                    id: selectedTour.id,
+                    name: `${selectedTour.name} - ${selectedPartner?.name}`,
+                    stretch: selectedTour.duration,
+                    price: selectedTour.price,
+                    category: 'tours',
+                    city_id: selectedTour.city_id,
+                    vendor_id: selectedTour.vendor_id,
+                    commission_percentage: selectedTour.commission_percentage || selectedTour.vendors?.commission_percentage || 10,
+                    upi_discount: selectedTour.upi_discount,
+                    vendors: selectedPartner,
+                    slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
+                  })}
+                  className="py-2.5 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
+                >
+                  Book Now
+                </button>
+              </div>
+            </div>
+
+            {/* Reviews list */}
+            <div className="pt-8 border-t border-slate-200">
+              <ReviewsSection rating={selectedPartner?.star_rating || 4.8} reviewsCount={selectedPartner?.bookings_count || 120} name={selectedPartner?.name} />
+            </div>
+
+          </motion.div>
+        )}
+
+      </AnimatePresence>
     </div>
   );
 }

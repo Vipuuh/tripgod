@@ -1,10 +1,10 @@
 import React from 'react';
 import AdventureMarketplace from '../components/AdventureMarketplace';
 
-export default function Paragliding({ currentCity, openBookingModal }) {
+export default function Kayaking({ currentCity, openBookingModal }) {
   return (
     <AdventureMarketplace
-      activityType="paragliding"
+      activityType="kayaking"
       currentCity={currentCity}
       openBookingModal={openBookingModal}
     />

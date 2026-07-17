@@ -20,6 +20,7 @@ import Pickup from './pages/Pickup';
 import Hotels from './pages/Hotels';
 import Tours from './pages/Tours';
 import TourPartnerSelection from './pages/TourPartnerSelection';
+import Kayaking from './pages/Kayaking';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import RefundPolicy from './pages/RefundPolicy';
@@ -169,12 +170,11 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund', 'tour-partner-selection'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund'];
 
-      const isTourPartners = path.startsWith('tours/') && path.endsWith('/partners');
-      const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || (path.startsWith('tours/') && !path.endsWith('/partners'));
+      const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || path.startsWith('kayaking/') || path.startsWith('tours/');
 
-      if (validRoutes.includes(path) || isSubRoute || isTourPartners) {
+      if (validRoutes.includes(path) || isSubRoute) {
         let resolvedRoute = path;
         if (path.startsWith('hotels/')) resolvedRoute = 'hotels';
         else if (path.startsWith('rafting/')) resolvedRoute = 'rafting';
@@ -183,8 +183,8 @@ export default function App() {
         else if (path.startsWith('bungee/')) resolvedRoute = 'bungee';
         else if (path.startsWith('swing/')) resolvedRoute = 'swing';
         else if (path.startsWith('camping/')) resolvedRoute = 'camping';
-        else if (path.startsWith('tours/') && !path.endsWith('/partners')) resolvedRoute = 'tours';
-        else if (isTourPartners) resolvedRoute = 'tour-partner-selection';
+        else if (path.startsWith('kayaking/')) resolvedRoute = 'kayaking';
+        else if (path.startsWith('tours/')) resolvedRoute = 'tours';
 
         setRoute(resolvedRoute);
         if (resolvedRoute === 'home') {
@@ -405,20 +405,12 @@ export default function App() {
             {route === 'bungee' && <ErrorBoundary><Bungee currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
             {route === 'swing' && <ErrorBoundary><Swing currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
             {route === 'camping' && <ErrorBoundary><Camping currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+            {route === 'kayaking' && <ErrorBoundary><Kayaking currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
             {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
             {route === 'hotels' && <Hotels currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'tours' && (
               <Tours
-                currentCity={currentCity}
-                openBookingModal={openBookingModal}
-                selectedTour={selectedTour}
-                setSelectedTour={setSelectedTour}
-                navigateTo={navigateTo}
-              />
-            )}
-            {route === 'tour-partner-selection' && (
-              <TourPartnerSelection
                 currentCity={currentCity}
                 openBookingModal={openBookingModal}
                 selectedTour={selectedTour}

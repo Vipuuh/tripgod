@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronLeft, Star, MapPin, ShieldCheck, 
-  Sparkles, Smartphone, Calendar, Phone, 
+  ChevronLeft, Star, Clock, MapPin, ShieldCheck, 
+  HelpCircle, Sparkles, Smartphone, Calendar, Phone, 
   MessageSquare, ExternalLink, Info, ArrowRight, Check,
-  Car, Clock, Shield, Tag
+  Hotel, Utensils, Car, Compass, Users
 } from 'lucide-react';
 import { supabase } from '../supabase';
-import MarketplaceFilters from '../components/MarketplaceFilters';
-import ReviewsSection from '../components/ReviewsSection';
-import TrustSignals from '../components/TrustSignals';
+import MarketplaceFilters from './MarketplaceFilters';
+import ReviewsSection from './ReviewsSection';
+import TrustSignals from './TrustSignals';
 
 // Consistent hash generator for mock data
 const getHash = (str) => {
@@ -21,59 +21,62 @@ const getHash = (str) => {
   return Math.abs(hash);
 };
 
-export default function BikeRent({ currentCity, openBookingModal }) {
-  const [vehicles, setVehicles] = useState([]);
+export default function AdventureMarketplace({ activityType, currentCity, openBookingModal }) {
   const [partnersData, setPartnersData] = useState([]);
+  const [rawPackages, setRawPackages] = useState([]);
   const [selectedPartner, setSelectedPartner] = useState(null);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState(null);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  const [activeFaq, setActiveFaq] = useState(null);
 
-  // 1. Fetch Bikes & Scooters
+  // 1. Fetch category data from Supabase
   useEffect(() => {
-    const fetchBikes = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('bikes').select('*, vendors(*)');
+        let query = supabase.from('rafting')
+          .select('*, vendors(*)');
+
+        if (activityType === 'rafting') {
+          query = query.or('activity_type.eq.rafting,activity_type.is.null');
+        } else {
+          query = query.eq('activity_type', activityType);
+        }
+
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
+
         const { data, error } = await query;
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const mapped = data.map((item, idx) => ({
-            ...item,
-            price: Number(item.price),
-            deposit: Number(item.deposit || 0),
-            rating: item.rating || item.vendors?.star_rating || 4.7,
-            reviewsCount: item.reviews_count || (80 + (idx * 17) % 150),
-            upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
-            images: item.images && item.images.length > 0 ? item.images : ['/scooty-rent.jpg'],
-            type: item.name.toLowerCase().includes('scooty') || item.name.toLowerCase().includes('activa') ? 'Automatic Scooter' : 'Cruiser Motorcycle'
-          }));
-          setVehicles(mapped);
+          setRawPackages(data);
 
-          // Group by partners
+          // Group by vendor
           const partnersMap = {};
-          mapped.forEach(item => {
+          data.forEach(item => {
             const vendor = item.vendors;
             if (!vendor) return;
 
             if (!partnersMap[vendor.id]) {
+              // Generate mock data consistent with vendor id/name if missing
               const hVal = getHash(vendor.name);
-              const mockSince = vendor.since || ((hVal % 6) + 2018);
-              const mockBookings = vendor.bookings_count || ((hVal % 150) + 110);
+              const mockSince = vendor.since || ((hVal % 8) + 2016);
+              const mockBookings = vendor.bookings_count || ((hVal % 180) + 120);
               const mockMapsLink = vendor.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.name + ' Rishikesh')}`;
-              const mockInstructions = vendor.meeting_instructions || `Please report at ${vendor.name} office for documents verification and vehicle pickup. Carry original DL.`;
-              const mockReportingTime = vendor.reporting_time || '09:00 AM - 08:00 PM';
-              const mockParking = vendor.parking_details || 'Customer vehicle parking available during rental duration';
-              const mockHighlight = vendor.short_highlight || 'Well maintained fleet with fresh helmets';
+              const mockInstructions = vendor.meeting_instructions || `Please report at ${vendor.name} office. Bring extra clothes and valid ID.`;
+              const mockReportingTime = vendor.reporting_time || '15 mins before slot';
+              const mockParking = vendor.parking_details || 'Free customer parking available';
+              const mockHighlight = vendor.short_highlight || 'Highly experienced local safety crew';
               
+              // Generate badges
               let mockBadges = vendor.badges || [];
               if (mockBadges.length === 0) {
-                if (vendor.star_rating >= 4.8) mockBadges = ['🔥 Best Seller', '⭐ Top Rated'];
+                if (vendor.star_rating >= 4.8) mockBadges = ['🔥 Most Booked', '⭐ Best Rated'];
+                else if (hVal % 2 === 0) mockBadges = ['TripGod Choice', 'Family Friendly'];
                 else mockBadges = ['Verified Operator', 'Budget Pick'];
               }
 
@@ -83,7 +86,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 star_rating: vendor.star_rating || 4.7,
                 address: vendor.address || 'Rishikesh, Uttarakhand',
                 landmark: vendor.landmark || 'Tapovan',
-                shop_image: vendor.shop_image || 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=600',
+                shop_image: vendor.shop_image || 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
                 phone: vendor.phone || '+918630027341',
                 whatsapp: vendor.whatsapp || '+918630027341',
                 since: mockSince,
@@ -100,53 +103,65 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
             partnersMap[vendor.id].packages.push({
               ...item,
-              operators: [item]
+              price: Number(item.price),
+              original_price: item.original_price ? Number(item.original_price) : Math.round(Number(item.price) * 1.3),
+              duration: item.duration || '2-3 Hours',
+              images: item.images && item.images.length > 0 ? item.images : ['/rafting-4.jpg'],
+              coming_soon: !!item.coming_soon,
+              upi_discount: item.upi_discount ? Number(item.upi_discount) : null
             });
           });
+
           setPartnersData(Object.values(partnersMap));
         } else {
-          setVehicles([]);
+          // Empty state fallbacks
           setPartnersData([]);
+          setRawPackages([]);
         }
       } catch (err) {
-        console.error('Error fetching bikes:', err);
+        console.error(`Failed to fetch ${activityType} marketplace data:`, err);
       } finally {
         setLoading(false);
       }
     };
-    fetchBikes();
-  }, [currentCity]);
 
-  // 2. Routing popstate sync
+    fetchData();
+  }, [activityType, currentCity]);
+
+  // 2. Routing Sync (Popstate back button support)
   useEffect(() => {
     const handleRouteSync = () => {
       const path = window.location.pathname;
       const queryParams = new URLSearchParams(window.location.search);
       const partnerIdParam = queryParams.get('partner');
 
-      if (path.startsWith('/bikerent/')) {
-        const bikeId = path.substring('/bikerent/'.length);
-        if (vehicles.length > 0) {
-          const matched = vehicles.find(v => v.id === bikeId);
-          if (matched) {
-            setSelectedVehicle(matched);
-            const vData = partnersData.find(p => p.id === matched.vendor_id);
+      // Match /category/:packageId
+      if (path.startsWith(`/${activityType}/`)) {
+        const pkgId = path.substring(`/${activityType}/`.length);
+        if (rawPackages.length > 0) {
+          const matchedPkg = rawPackages.find(p => p.id === pkgId);
+          if (matchedPkg) {
+            setSelectedPackage(matchedPkg);
+            // Auto resolve vendor
+            const vData = partnersData.find(v => v.id === matchedPkg.vendor_id);
             if (vData) setSelectedPartner(vData);
             return;
           }
         }
       }
 
+      // Match partner param
       if (partnerIdParam) {
-        const matchedPartner = partnersData.find(p => p.id === partnerIdParam);
+        const matchedPartner = partnersData.find(v => v.id === partnerIdParam);
         if (matchedPartner) {
           setSelectedPartner(matchedPartner);
-          setSelectedVehicle(null);
+          setSelectedPackage(null);
           return;
         }
       }
 
-      setSelectedVehicle(null);
+      // Default root
+      setSelectedPackage(null);
       setSelectedPartner(null);
     };
 
@@ -155,26 +170,26 @@ export default function BikeRent({ currentCity, openBookingModal }) {
     }
     window.addEventListener('popstate', handleRouteSync);
     return () => window.removeEventListener('popstate', handleRouteSync);
-  }, [partnersData, vehicles]);
+  }, [activityType, partnersData, rawPackages]);
 
-  // Navigation helpers
+  // Navigation handlers
   const navigateToPartner = (partner) => {
     setSelectedPartner(partner);
-    setSelectedVehicle(null);
+    setSelectedPackage(null);
     if (partner) {
-      window.history.pushState(null, '', `/bikerent?partner=${partner.id}`);
+      window.history.pushState(null, '', `/${activityType}?partner=${partner.id}`);
     } else {
-      window.history.pushState(null, '', '/bikerent');
+      window.history.pushState(null, '', `/${activityType}`);
     }
     window.scrollTo(0, 0);
   };
 
-  const navigateToVehicle = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    if (vehicle) {
-      window.history.pushState(null, '', `/bikerent/${vehicle.id}`);
+  const navigateToPackage = (pkg) => {
+    setSelectedPackage(pkg);
+    if (pkg) {
+      window.history.pushState(null, '', `/${activityType}/${pkg.id}`);
     } else {
-      window.history.pushState(null, '', selectedPartner ? `/bikerent?partner=${selectedPartner.id}` : '/bikerent');
+      window.history.pushState(null, '', selectedPartner ? `/${activityType}?partner=${selectedPartner.id}` : `/${activityType}`);
     }
     window.scrollTo(0, 0);
   };
@@ -182,11 +197,27 @@ export default function BikeRent({ currentCity, openBookingModal }) {
   const checkIfClosed = (item) => {
     if (!item) return { closed: false };
     if (item.is_closed) {
-      return { closed: true, reason: item.closed_reason || 'Monsoon constraints / maintenance', reopenDate: item.closed_until };
+      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+    }
+    if (item.closed_from && item.closed_until) {
+      try {
+        const today = new Date();
+        const from = new Date(item.closed_from);
+        const to = new Date(item.closed_until);
+        today.setHours(0, 0, 0, 0);
+        from.setHours(0, 0, 0, 0);
+        to.setHours(0, 0, 0, 0);
+        if (today >= from && today <= to) {
+          return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
     return { closed: false };
   };
 
+  // Filter application
   const getFilteredPartners = () => {
     let list = [...partnersData];
     if (!activeFilter) return list;
@@ -203,11 +234,11 @@ export default function BikeRent({ currentCity, openBookingModal }) {
           return aMin - bMin;
         });
       case 'nearest':
-        return list.filter(p => p.landmark.toLowerCase().includes('tapovan') || p.landmark.toLowerCase().includes('ramjhula'));
+        return list.filter(p => p.landmark.toLowerCase().includes('tapovan') || p.landmark.toLowerCase().includes('laxman'));
       case 'choice':
-        return list.filter(p => p.badges.some(b => b.toLowerCase().includes('seller') || b.toLowerCase().includes('choice')));
+        return list.filter(p => p.badges.some(b => b.toLowerCase().includes('choice') || b.toLowerCase().includes('booked')));
       case 'family':
-        return list; // All rentals are family friendly
+        return list.filter(p => p.badges.some(b => b.toLowerCase().includes('family') || b.toLowerCase().includes('rated')));
       default:
         return list;
     }
@@ -215,6 +246,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
   const filteredPartners = getFilteredPartners();
 
+  // Loading state
   if (loading) {
     return (
       <div className="w-full min-h-[60vh] flex items-center justify-center">
@@ -223,37 +255,78 @@ export default function BikeRent({ currentCity, openBookingModal }) {
     );
   }
 
+  // Get display details for rendering
+  const getCategoryTitle = () => {
+    switch (activityType) {
+      case 'rafting': return 'White Water Rafting';
+      case 'camping': return 'Riverside Camping';
+      case 'bungee': return 'Bungee Jumping';
+      case 'paragliding': return 'Tandem Paragliding';
+      case 'swing': return 'Giant Valley Swing';
+      case 'zipline': return 'Ganga Zipline';
+      case 'kayaking': return 'White Water Kayaking';
+      default: return 'Adventure Sports';
+    }
+  };
+
+  const getCategorySubtitle = () => {
+    switch (activityType) {
+      case 'rafting': return 'Fight the rapids of the holy Ganges with verified river crews.';
+      case 'camping': return 'Spend a night in nature with bonfire, meals, and luxury Swiss tents.';
+      case 'bungee': return 'Leap from India\'s highest bungee platform at 83 metres.';
+      case 'paragliding': return 'Soar high above Rishikesh green hills with veteran tandem pilots.';
+      case 'swing': return 'Swing 113m above deep valleys, single or in couples.';
+      case 'zipline': return 'Glide securely suspended above the rapids of Ganga.';
+      case 'kayaking': return 'Learn kayaking courses and navigate Grade I to III rapids.';
+      default: return 'Book handpicked and verified adventure tours in Rishikesh.';
+    }
+  };
+
+  const getCategoryBannerImg = () => {
+    switch (activityType) {
+      case 'rafting': return 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=1200';
+      case 'camping': return '/camping-hero.jpg';
+      case 'bungee': return '/bungee-hero.jpg';
+      case 'paragliding': return '/paragliding-hero.jpg';
+      case 'swing': return '/swing-hero.png';
+      case 'zipline': return '/zipline-hero.jpg';
+      case 'kayaking': return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200';
+      default: return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1200';
+    }
+  };
+
   return (
     <div className="w-full min-h-screen bg-slate-50 text-slate-800 font-sans">
       <AnimatePresence mode="wait">
-
+        
         {/* VIEW 1: PARTNER LIST */}
-        {!selectedPartner && !selectedVehicle && (
+        {!selectedPartner && !selectedPackage && (
           <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pb-24">
             
             {/* Category Hero Banner */}
             <div className="relative h-[40vh] bg-black flex items-center justify-center text-center">
               <div 
                 className="absolute inset-0 bg-cover bg-center opacity-70"
-                style={{ backgroundImage: `url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1200')` }}
+                style={{ backgroundImage: `url('${getCategoryBannerImg()}')` }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="relative z-10 space-y-3 px-6">
                 <span className="text-[10px] font-black text-accent tracking-widest uppercase bg-black/40 px-3 py-1 rounded-full border border-accent/20">
-                  Rentals
+                  Rishikesh Adventure
                 </span>
                 <h1 className="text-3xl sm:text-5xl font-black text-white font-display tracking-tight uppercase">
-                  Bike & Scooty Rent
+                  {getCategoryTitle()}
                 </h1>
                 <p className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm font-medium leading-relaxed">
-                  Explore Rishikesh on your own terms. Activas, Royal Enfields, and adventure tourers available at standard rates.
+                  {getCategorySubtitle()}
                 </p>
               </div>
             </div>
 
-            {/* Main Listing Grid */}
+            {/* Main Marketplace Area */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
               
+              {/* Filters chips */}
               <div className="space-y-3">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left block">
                   Quick Filters
@@ -261,17 +334,20 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 <MarketplaceFilters activeFilter={activeFilter} onChangeFilter={setActiveFilter} />
               </div>
 
+              {/* Partners Listing Title */}
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h2 className="text-base font-black font-display text-slate-900 uppercase">
-                  Available Rental Partners ({filteredPartners.length})
+                  Available Operators ({filteredPartners.length})
                 </h2>
               </div>
 
-              {/* Partners Cards */}
+              {/* Partners list cards (Horizontal layout) */}
               <div className="flex flex-col gap-5">
                 {filteredPartners.map((partner, idx) => {
                   const minPrice = partner.packages.length > 0 ? Math.min(...partner.packages.map(p => p.price)) : 0;
                   const displayBadges = partner.badges.slice(0, 2);
+                  const hVal = getHash(partner.name);
+                  const verifiedBadge = hVal % 5 !== 0;
 
                   return (
                     <motion.div
@@ -283,17 +359,20 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                       onClick={() => navigateToPartner(partner)}
                       className="flex flex-col sm:flex-row bg-white border border-slate-200/80 rounded-3xl overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all group w-full cursor-pointer text-left"
                     >
-                      {/* Left: Cover image */}
+                      {/* Left Side: Cover Image */}
                       <div className="w-full sm:w-[220px] h-44 sm:h-auto shrink-0 relative overflow-hidden bg-slate-100">
                         <img
                           src={partner.shop_image}
                           alt={partner.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
+                        {/* Overlay badges (max 2) */}
                         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-                          <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
-                            Verified Rental Desk
-                          </span>
+                          {verifiedBadge && (
+                            <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
+                              Verified Operator
+                            </span>
+                          )}
                           {partner.star_rating >= 4.8 && (
                             <span className="bg-indigo-650/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
                               Top Rated
@@ -302,20 +381,22 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                         </div>
                       </div>
 
-                      {/* Right: Info */}
+                      {/* Right Side: Information rows */}
                       <div className="p-5 flex-grow flex flex-col justify-between gap-4">
                         
+                        {/* Title, rating, and since */}
                         <div className="space-y-1.5">
                           <div className="flex items-start justify-between gap-4">
                             <h3 className="font-extrabold text-base sm:text-lg font-display text-slate-900 uppercase group-hover:text-[#FF5F00] transition-colors leading-tight">
                               {partner.name}
                             </h3>
+                            {/* Two-line vertical rating stack */}
                             <div className="text-right shrink-0">
                               <span className="font-black text-sm text-slate-800 flex items-center gap-1 justify-end leading-none">
                                 ⭐ {partner.star_rating}
                               </span>
                               <span className="text-[9px] text-slate-400 font-bold block mt-0.5 leading-none">
-                                {partner.bookings_count + 23} Reviews
+                                {partner.bookings_count + 15} Reviews
                               </span>
                             </div>
                           </div>
@@ -327,11 +408,11 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                             <span>•</span>
                             <span>Since {partner.since}</span>
                             <span>•</span>
-                            <span className="text-emerald-600">🔥 {partner.bookings_count}+ Rides Booked</span>
+                            <span className="text-emerald-600">🔥 {partner.bookings_count}+ Bookings</span>
                           </div>
                         </div>
 
-                        {/* Badges */}
+                        {/* Badges and Highlights */}
                         <div className="flex flex-wrap items-center gap-1.5">
                           {displayBadges.map((badge, bIdx) => (
                             <span key={bIdx} className="text-[9px] font-black uppercase text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/10 px-2 py-0.5 rounded">
@@ -343,47 +424,72 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                           </span>
                         </div>
 
-                        {/* Price & CTA row */}
+                        {/* Ribbon inclusions, price and CTA */}
                         <div className="pt-3 border-t border-slate-100 flex flex-col xs:flex-row xs:items-center justify-between gap-3">
-                          
-                          <div className="flex gap-2 text-slate-450 text-[10px] font-black uppercase tracking-wider">
-                            <span>Helmet Included</span>
-                            <span>•</span>
-                            <span>Zero Security Deposit Option</span>
+                          {/* Inclusions ribbon */}
+                          <div className="flex gap-3 text-slate-400">
+                            <div className="group/inc relative">
+                              <Hotel size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Stay option</span>
+                            </div>
+                            <div className="group/inc relative">
+                              <Utensils size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Meals support</span>
+                            </div>
+                            <div className="group/inc relative">
+                              <Car size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Transport</span>
+                            </div>
+                            <div className="group/inc relative">
+                              <Compass size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Expert Guide</span>
+                            </div>
                           </div>
 
+                          {/* Price & CTA */}
                           <div className="flex items-center gap-4.5 justify-between xs:justify-end">
                             <div>
                               <span className="text-[9px] block font-bold text-slate-450 uppercase leading-none">Starting From</span>
                               <span className="text-xl font-black text-slate-900 leading-none">
                                 ₹{minPrice.toLocaleString('en-IN')}
-                                <span className="text-[10px] text-slate-400 font-bold lowercase">/day</span>
+                                <span className="text-[10px] text-slate-400 font-bold lowercase">/person</span>
                               </span>
                             </div>
                             <button
                               type="button"
                               className="py-2.5 px-4.5 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display"
                             >
-                              View Fleet
+                              View Packages
                             </button>
                           </div>
-
                         </div>
 
                       </div>
                     </motion.div>
                   );
                 })}
+
+                {filteredPartners.length === 0 && (
+                  <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 font-medium">
+                    No active operators found matching the criteria in {currentCity?.name || 'Rishikesh'}.
+                  </div>
+                )}
+              </div>
+
+              {/* Trust Section */}
+              <div className="pt-8 border-t border-slate-200">
+                <TrustSignals />
               </div>
 
             </div>
           </motion.div>
         )}
 
-        {/* VIEW 2: PARTNER PROFILE (Vehicles list) */}
-        {selectedPartner && !selectedVehicle && (
+        {/* VIEW 2: PARTNER PROFILE (Packages List) */}
+        {selectedPartner && !selectedPackage && (
           <motion.div key="profile" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pb-24 max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8 text-left">
             
+            {/* Back Button */}
             <button
               onClick={() => navigateToPartner(null)}
               className="flex items-center gap-1 text-slate-500 hover:text-black font-black text-xs uppercase bg-transparent border-none cursor-pointer p-0"
@@ -391,7 +497,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               <ChevronLeft size={16} /> Back to Operators
             </button>
 
-            {/* Profile banner */}
+            {/* Premium Profile Header Section */}
             <div className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-2xs flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
                 <img src={selectedPartner.shop_image} className="w-full h-full object-cover" />
@@ -414,20 +520,20 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                   <span>Since {selectedPartner.since}</span>
                 </div>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed pt-1 max-w-2xl">
-                  {selectedPartner.short_highlight}. Standard rentals with verified registration documents. Explore Rishikesh, Tapovan, and surrounding sights.
+                  {selectedPartner.short_highlight}. Highly trained operators offering pre-verified slot confirmations, top-grade safety standards and certified equipment.
                 </p>
               </div>
             </div>
 
-            {/* Available Vehicles */}
+            {/* Available Packages */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest font-display">Available Rental Fleet</h3>
-
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest font-display">Available Stretches & Packages</h3>
+              
               <div className="flex flex-col gap-4">
                 {selectedPartner.packages.map((pkg, idx) => {
                   const savings = pkg.original_price - pkg.price;
                   const closed = checkIfClosed(pkg).closed;
-
+                  
                   return (
                     <div 
                       key={pkg.id || idx}
@@ -441,49 +547,60 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                         </div>
                       )}
 
+                      {/* Package Image */}
                       <div className="w-full md:w-[200px] h-40 md:h-auto shrink-0 relative overflow-hidden bg-slate-100">
                         <img src={pkg.images[0]} alt={pkg.name} className="w-full h-full object-cover" />
                       </div>
 
+                      {/* Package details */}
                       <div className="p-5 flex-grow flex flex-col justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-4">
                             <h4 className="font-extrabold text-base font-display text-slate-900 uppercase">
                               {pkg.name}
                             </h4>
-                            <span className="text-[10px] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded uppercase font-black tracking-wide text-slate-600 shrink-0">
-                              {pkg.type}
-                            </span>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold shrink-0">
+                              <Clock size={13} className="text-[#FF6B00]" />
+                              <span>{pkg.duration}</span>
+                            </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-slate-500">
-                            <span>Refundable Deposit: ₹{pkg.deposit}</span>
-                            <span>•</span>
-                            <span>Docs: {pkg.documents?.join(', ') || 'DL & Aadhar'}</span>
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                            {pkg.route && (
+                              <>
+                                <MapPin size={11} className="text-[#FF6B00]" />
+                                <span className="truncate max-w-[150px]">{pkg.route}</span>
+                                <span>•</span>
+                              </>
+                            )}
+                            {pkg.distance_km > 0 && (
+                              <span>Distance: {pkg.distance_km} KM</span>
+                            )}
                           </div>
 
                           <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">
-                            {pkg.description || `Rent the reliable ${pkg.name} scooter in Rishikesh. High mileage, regular maintenance, and dual mirrors included.`}
+                            {pkg.description || `Beautiful ${pkg.name} in Rishikesh operated by ${selectedPartner.name}. Includes all equipment, instructions, and guide.`}
                           </p>
                         </div>
 
+                        {/* Inclusions, price and CTA */}
                         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          {/* Trust highlights */}
                           <div className="flex flex-wrap gap-2 text-[9px] font-black uppercase">
                             <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded">
                               ✓ Instant Confirmation
                             </span>
                             <span className="bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded">
-                              ✓ Free Helmet Included
+                              ✓ Free Cancellation
                             </span>
                           </div>
 
+                          {/* Price & button */}
                           <div className="flex items-center gap-4 justify-between sm:justify-end">
                             <div>
                               <div className="flex items-baseline gap-1.5">
                                 <span className="text-lg font-black text-slate-950">₹{pkg.price.toLocaleString('en-IN')}</span>
-                                {pkg.original_price > pkg.price && (
-                                  <span className="text-xs text-slate-400 line-through font-semibold">₹{pkg.original_price.toLocaleString('en-IN')}</span>
-                                )}
+                                <span className="text-xs text-slate-400 line-through font-semibold">₹{pkg.original_price.toLocaleString('en-IN')}</span>
                               </div>
                               {savings > 0 && (
                                 <span className="text-[9px] font-black text-emerald-600 uppercase block">Save ₹{savings}</span>
@@ -492,7 +609,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
                             <button
                               type="button"
-                              onClick={() => navigateToVehicle(pkg)}
+                              onClick={() => navigateToPackage(pkg)}
                               className="py-2.5 px-4 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.02] transition-all border-none cursor-pointer"
                             >
                               View Details
@@ -507,7 +624,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               </div>
             </div>
 
-            {/* Operator Reviews */}
+            {/* Partner Reviews */}
             <div className="pt-6 border-t border-slate-200">
               <ReviewsSection rating={selectedPartner.star_rating} reviewsCount={selectedPartner.bookings_count} name={selectedPartner.name} />
             </div>
@@ -515,27 +632,31 @@ export default function BikeRent({ currentCity, openBookingModal }) {
           </motion.div>
         )}
 
-        {/* VIEW 3: VEHICLE DETAILS VIEW */}
-        {selectedVehicle && (
+        {/* VIEW 3: PACKAGE DETAILS VIEW */}
+        {selectedPackage && (
           <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="pb-24 pt-6 max-w-4xl mx-auto px-4 sm:px-6 space-y-6 text-left">
             
+            {/* Back Button */}
             <button
-              onClick={() => navigateToVehicle(null)}
+              onClick={() => navigateToPackage(null)}
               className="flex items-center gap-1.5 py-2 px-3 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:text-black hover:border-slate-400 transition-colors cursor-pointer bg-white"
             >
-              <ChevronLeft size={16} /> Back to Fleet
+              <ChevronLeft size={16} /> Back to Packages
             </button>
 
-            {/* Title & Price Block */}
+            {/* Title & Stats block */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] bg-black text-accent font-black tracking-widest px-2 py-0.5 rounded uppercase">
-                    {selectedVehicle.type}
+                    {activityType}
+                  </span>
+                  <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-black tracking-widest px-2 py-0.5 rounded uppercase flex items-center gap-1">
+                    <Sparkles size={10} /> BEST IN CLASS
                   </span>
                 </div>
                 <h1 className="text-xl md:text-2xl font-bold font-display text-slate-900 uppercase">
-                  {selectedVehicle.name}
+                  {selectedPackage.name}
                 </h1>
                 
                 <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-500">
@@ -549,13 +670,12 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
+              {/* Price card styled as checkout widget */}
               <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-4 rounded-2xl flex flex-col min-w-[160px] xs:text-right shrink-0">
-                <span className="text-[9px] font-bold text-slate-450 uppercase block">Daily Rent Price</span>
+                <span className="text-[9px] font-bold text-slate-450 uppercase block">Starting From</span>
                 <div className="flex items-baseline gap-1 xs:justify-end">
-                  <span className="text-2xl font-black text-slate-900">₹{selectedVehicle.price.toLocaleString('en-IN')}</span>
-                  {selectedVehicle.original_price > selectedVehicle.price && (
-                    <span className="text-xs text-slate-400 line-through font-semibold">₹{selectedVehicle.original_price.toLocaleString('en-IN')}</span>
-                  )}
+                  <span className="text-2xl font-black text-slate-900">₹{selectedPackage.price.toLocaleString('en-IN')}</span>
+                  <span className="text-xs text-slate-400 line-through font-semibold">₹{selectedPackage.original_price.toLocaleString('en-IN')}</span>
                 </div>
                 <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
                   Book with Token Advance
@@ -563,17 +683,19 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               </div>
             </div>
 
-            {/* Image Slider */}
+            {/* Slider / Image Gallery */}
             <div className="h-52 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-slate-200 group">
               <img 
-                src={selectedVehicle.images[currentImgIdx] || '/scooty-rent.jpg'} 
-                alt={selectedVehicle.name}
+                src={selectedPackage.images[currentImgIdx] || selectedPackage.img || '/rafting-4.jpg'} 
+                alt={selectedPackage.name}
                 className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35" />
               
-              {selectedVehicle.images.length > 1 && (
+              {/* Slider dots */}
+              {selectedPackage.images.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-xs">
-                  {selectedVehicle.images.map((_, dotIdx) => (
+                  {selectedPackage.images.map((_, dotIdx) => (
                     <button
                       key={dotIdx}
                       onClick={() => setCurrentImgIdx(dotIdx)}
@@ -588,32 +710,103 @@ export default function BikeRent({ currentCity, openBookingModal }) {
             <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-xs bg-slate-900 p-4 rounded-2xl shadow-sm">
               <div className="flex gap-6 flex-wrap">
                 <div>
-                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Security Deposit</span>
-                  <span className="font-bold text-white">₹{selectedVehicle.deposit}</span>
+                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Duration</span>
+                  <span className="font-bold text-white">{selectedPackage.duration}</span>
                 </div>
+                {selectedPackage.distance_km > 0 && (
+                  <div>
+                    <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Distance</span>
+                    <span className="font-bold text-white">{selectedPackage.distance_km} KM</span>
+                  </div>
+                )}
                 <div>
-                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Documents Required</span>
-                  <span className="font-bold text-white">{selectedVehicle.documents?.join(', ') || 'Original DL'}</span>
-                </div>
-                <div>
-                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Included</span>
-                  <span className="font-bold text-white">1x Standard Helmet</span>
+                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Operator</span>
+                  <span className="font-bold text-white">{selectedPartner?.name}</span>
                 </div>
               </div>
               <div className="px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs shrink-0 self-start xs:self-auto">
-                <ShieldCheck size={12} /> Fleet Safety Verified
+                <ShieldCheck size={12} /> Safe & Verified
               </div>
             </div>
 
             {/* Description */}
             <div className="space-y-3">
-              <h3 className="text-base font-bold font-display text-slate-900 uppercase">Fleet Specifications</h3>
+              <h3 className="text-base font-bold font-display text-slate-900 uppercase">About this Experience</h3>
               <p className="text-xs sm:text-sm text-slate-650 leading-relaxed font-medium">
-                {selectedVehicle.description || `Clean, regularly serviced ${selectedVehicle.name} available for self-drive rental in Rishikesh. Perfect for sightseeing tours around Ganga beaches, temples, and cafes.`}
+                {selectedPackage.description || `Experience thrilling ${selectedPackage.name} with ${selectedPartner?.name}. Enjoy state-of-the-art equipment, detailed safety briefings from certified local guides, and standard support. Instant booking confirmation guarantees slots.`}
               </p>
             </div>
 
-            {/* Dynamic Partner Location & Contact Info */}
+            {/* Who is this perfect for? */}
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-bold font-display text-slate-900 uppercase">Who is this perfect for?</h4>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
+                  <Users size={11} /> Families & Couples
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
+                  <Sparkles size={11} /> Adventure Seekers
+                </span>
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
+                  ✓ Beginners & First-Timers
+                </span>
+              </div>
+            </div>
+
+            {/* Inclusions / Exclusions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Inclusions</h4>
+                <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                  {selectedPackage.inclusions && selectedPackage.inclusions.length > 0 ? (
+                    selectedPackage.inclusions.map((inc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                        <span>{inc}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                        <span>Certified guides & equipment</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                        <span>Safety gear: helmets, life-jackets/harness</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Exclusions</h4>
+                <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                  {selectedPackage.exclusions && selectedPackage.exclusions.length > 0 ? (
+                    selectedPackage.exclusions.map((exc, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-rose-600 font-bold shrink-0">✗</span>
+                        <span>{exc}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-rose-600 font-bold shrink-0">✗</span>
+                        <span>Photos & videos (GoPro) extra cost</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-rose-600 font-bold shrink-0">✗</span>
+                        <span>Personal expenses</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            {/* Dynamic Partner Contact & Location Info (Additional Fix) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 bg-slate-50 border border-slate-200/60 rounded-3xl p-5 md:p-6 shadow-2xs">
               <div className="space-y-3">
                 <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Reporting & Office Address</span>
@@ -637,20 +830,20 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                   </a>
                 )}
                 <div className="pl-5 pt-1 text-[10px] text-slate-500 leading-normal">
-                  <span className="font-bold uppercase text-slate-600 block">🚗 Customer Parking</span>
+                  <span className="font-bold uppercase text-slate-600 block">🚗 Parking</span>
                   {selectedPartner?.parking_details}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Pickup Desk & Document Rules</span>
+                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Logistics & Meeting Guidelines</span>
                 <div className="space-y-2 text-xs font-medium text-slate-600 pl-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">🕒 Timings:</span>
+                    <span className="text-[#FF6B00] font-black">🕒 Reporting:</span>
                     <span>{selectedPartner?.reporting_time}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">📞 Desk Hotline:</span>
+                    <span className="text-[#FF6B00] font-black">📞 Hotline:</span>
                     <a href={`tel:${selectedPartner?.phone}`} className="text-slate-800 hover:text-accent font-bold">
                       {selectedPartner?.phone}
                     </a>
@@ -662,7 +855,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                     </a>
                   </div>
                   <p className="text-[10px] text-slate-500 leading-normal pt-1.5">
-                    <span className="font-bold uppercase text-slate-600 block">📝 Document Verification</span>
+                    <span className="font-bold uppercase text-slate-600 block">📝 Instructions</span>
                     {selectedPartner?.meeting_instructions}
                   </p>
                 </div>
@@ -681,12 +874,12 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 <div className="space-y-1">
                   <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
                   <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Pay a partial token advance online to secure your vehicle booking with <strong>{selectedPartner?.name}</strong>. Free cancellation applies up to 24 hours prior.
+                    Pay a 10% advance to lock down your booking with <strong>{selectedPartner?.name}</strong>. Free cancellation applies up to 24 hours in advance.
                   </p>
                 </div>
               </div>
 
-              {checkIfClosed(selectedVehicle).closed ? (
+              {checkIfClosed(selectedPackage).closed ? (
                 <button
                   disabled
                   className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
@@ -696,24 +889,23 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               ) : (
                 <button
                   onClick={() => openBookingModal({
-                    id: selectedVehicle.id,
-                    name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
-                    price: selectedVehicle.price,
-                    category: 'bikerent',
-                    city_id: selectedVehicle.city_id,
-                    vendor_id: selectedVehicle.vendor_id,
-                    commission_percentage: selectedVehicle.commission_percentage || selectedVehicle.vendors?.commission_percentage || 10,
-                    upi_discount: selectedVehicle.upi_discount,
-                    vendors: selectedPartner, // Send partner info directly to checkout
-                    slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
-                    is_closed: selectedVehicle.is_closed,
-                    closed_reason: selectedVehicle.closed_reason,
-                    closed_from: selectedVehicle.closed_from,
-                    closed_until: selectedVehicle.closed_until
+                    id: selectedPackage.id,
+                    name: `${selectedPackage.name} - ${selectedPartner?.name}`,
+                    stretch: selectedPackage.route || selectedPackage.stretch,
+                    price: selectedPackage.price,
+                    category: activityType,
+                    city_id: selectedPackage.city_id,
+                    vendor_id: selectedPackage.vendor_id,
+                    free_video_type: selectedPackage.free_video_type || 'none',
+                    is_closed: selectedPackage.is_closed,
+                    closed_reason: selectedPackage.closed_reason,
+                    closed_from: selectedPackage.closed_from,
+                    closed_until: selectedPackage.closed_until,
+                    vendors: selectedPartner // Send partner info directly to checkout
                   })}
                   className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
                 >
-                  Book Rental
+                  Book Operator
                 </button>
               )}
             </div>
@@ -721,13 +913,13 @@ export default function BikeRent({ currentCity, openBookingModal }) {
             {/* Mobile Sticky Booking Bar */}
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-3.5 px-4 flex items-center justify-between gap-4 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
               <div>
-                <span className="text-[9px] font-bold text-slate-450 uppercase block">Daily Rent</span>
-                <span className="text-lg font-black text-slate-900">₹{selectedVehicle.price.toLocaleString('en-IN')}</span>
+                <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Price</span>
+                <span className="text-lg font-black text-slate-900">₹{selectedPackage.price.toLocaleString('en-IN')}</span>
               </div>
 
               <div className="flex gap-2">
                 <a
-                  href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}?text=Hi%2C%20I%20want%20to%20rent%20the%20${encodeURIComponent(selectedVehicle.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
+                  href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}?text=Hi%2C%20I%20want%20to%20book%20the%20${encodeURIComponent(selectedPackage.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-xl flex items-center justify-center text-white shrink-0 hover:scale-105 active:scale-95 transition-all shadow-xs"
@@ -736,20 +928,19 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 </a>
                 <button
                   onClick={() => openBookingModal({
-                    id: selectedVehicle.id,
-                    name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
-                    price: selectedVehicle.price,
-                    category: 'bikerent',
-                    city_id: selectedVehicle.city_id,
-                    vendor_id: selectedVehicle.vendor_id,
-                    commission_percentage: selectedVehicle.commission_percentage || selectedVehicle.vendors?.commission_percentage || 10,
-                    upi_discount: selectedVehicle.upi_discount,
-                    vendors: selectedPartner,
-                    slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
-                    is_closed: selectedVehicle.is_closed,
-                    closed_reason: selectedVehicle.closed_reason,
-                    closed_from: selectedVehicle.closed_from,
-                    closed_until: selectedVehicle.closed_until
+                    id: selectedPackage.id,
+                    name: `${selectedPackage.name} - ${selectedPartner?.name}`,
+                    stretch: selectedPackage.route || selectedPackage.stretch,
+                    price: selectedPackage.price,
+                    category: activityType,
+                    city_id: selectedPackage.city_id,
+                    vendor_id: selectedPackage.vendor_id,
+                    free_video_type: selectedPackage.free_video_type || 'none',
+                    is_closed: selectedPackage.is_closed,
+                    closed_reason: selectedPackage.closed_reason,
+                    closed_from: selectedPackage.closed_from,
+                    closed_until: selectedPackage.closed_until,
+                    vendors: selectedPartner
                   })}
                   className="py-2.5 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
                 >

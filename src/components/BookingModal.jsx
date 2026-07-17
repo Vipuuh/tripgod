@@ -395,7 +395,7 @@ My payment ID is verified. Please confirm my slots.`;
             customer_name: name,
             customer_phone: phone,
             customer_email: email,
-            service_type: activity.category === 'hotels' ? 'Hotel' : activity.category === 'rafting' ? 'Rafting' : activity.category === 'bikerent' ? 'Bike Rental' : activity.category === 'tour' ? 'Tour' : activity.category === 'camping' ? 'Camping' : 'Rafting',
+            service_type: activity.category === 'hotels' ? 'Hotel' : activity.category === 'bikerent' ? 'Bike Rental' : (activity.category === 'tours' || activity.category === 'tour') ? 'Tour' : ['rafting', 'camping', 'bungee', 'paragliding', 'swing', 'zipline', 'kayaking'].includes(activity.category) ? activity.category.charAt(0).toUpperCase() + activity.category.slice(1) : 'Rafting',
             service_id: activity.id && isValidUUID(activity.id) ? activity.id : '00000000-0000-0000-0000-000000000000',
             travel_date: activity.category === 'hotels' ? checkInDate : date,
             status: 'pending',

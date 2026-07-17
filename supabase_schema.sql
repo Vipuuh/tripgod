@@ -363,3 +363,35 @@ ALTER TABLE bikes ADD COLUMN IF NOT EXISTS upi_discount NUMERIC;
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
 
+
+-- =========================================================================
+-- Schema Extensions (Premium Marketplace & Dynamic Partner Info — July 2026)
+-- =========================================================================
+
+-- Vendors (Partners) updates
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS since INTEGER;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS bookings_count INTEGER;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS google_maps_link TEXT;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS meeting_instructions TEXT;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS reporting_time TEXT;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS parking_details TEXT;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS badges TEXT[];
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS short_highlight TEXT;
+
+-- Rafting (Adventures) updates
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS instant_confirmation BOOLEAN DEFAULT true;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS free_cancellation BOOLEAN DEFAULT true;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS highlights_data JSONB DEFAULT '[]'::JSONB;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS badges TEXT[];
+
+-- Bikes (Rentals) updates
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS instant_confirmation BOOLEAN DEFAULT true;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS free_cancellation BOOLEAN DEFAULT true;
+
+-- Tours updates
+-- (tours table already has many similar columns, we ensure compatibility)
+
+-- Refresh PostgREST schema cache
+NOTIFY pgrst, 'reload schema';
+
+
