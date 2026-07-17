@@ -97,7 +97,9 @@ export default function AdminDashboard({ setRoute }) {
   const [newCitySlug, setNewCitySlug] = useState('');
   const [newVendor, setNewVendor] = useState({
     name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
-    shop_image: '', star_rating: 4.5, landmark: ''
+    shop_image: '', star_rating: 4.5, landmark: '',
+    since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
+    reporting_time: '', parking_details: '', badges: '', short_highlight: ''
   });
 
   // Filter States for Bookings
@@ -325,14 +327,28 @@ export default function AdminDashboard({ setRoute }) {
   const handleSaveVendor = async (e) => {
     e.preventDefault();
     try {
+      const vendorData = {
+        ...newVendor,
+        since: newVendor.since ? Number(newVendor.since) : 2020,
+        bookings_count: newVendor.bookings_count ? Number(newVendor.bookings_count) : 50,
+        badges: typeof newVendor.badges === 'string'
+          ? newVendor.badges.split(',').map(s => s.trim()).filter(Boolean)
+          : (Array.isArray(newVendor.badges) ? newVendor.badges : [])
+      };
+
       if (editingItem && editingItem.type === 'vendor') {
-        const { error } = await supabase.from('vendors').update(newVendor).eq('id', editingItem.data.id);
+        const { error } = await supabase.from('vendors').update(vendorData).eq('id', editingItem.data.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('vendors').insert(newVendor);
+        const { error } = await supabase.from('vendors').insert(vendorData);
         if (error) throw error;
       }
-      setNewVendor({ name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active', shop_image: '', star_rating: 4.5, landmark: '' });
+      setNewVendor({
+        name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+        shop_image: '', star_rating: 4.5, landmark: '',
+        since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
+        reporting_time: '', parking_details: '', badges: '', short_highlight: ''
+      });
       setEditingItem(null);
       fetchAllData();
     } catch (err) {
@@ -1170,6 +1186,100 @@ export default function AdminDashboard({ setRoute }) {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Since (Year)</label>
+                      <input
+                        type="number"
+                        value={newVendor.since}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, since: parseInt(e.target.value) || 2020 }))}
+                        placeholder="e.g. 2018"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Bookings Count</label>
+                      <input
+                        type="number"
+                        value={newVendor.bookings_count}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, bookings_count: parseInt(e.target.value) || 50 }))}
+                        placeholder="e.g. 150"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Google Maps Link</label>
+                    <input
+                      type="text"
+                      value={newVendor.google_maps_link}
+                      onChange={(e) => setNewVendor(prev => ({ ...prev, google_maps_link: e.target.value }))}
+                      placeholder="https://google.com/maps/..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Badges (Comma separated)</label>
+                      <input
+                        type="text"
+                        value={newVendor.badges}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, badges: e.target.value }))}
+                        placeholder="e.g. Verified Operator, Best Price"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Short Highlight</label>
+                      <input
+                        type="text"
+                        value={newVendor.short_highlight}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, short_highlight: e.target.value }))}
+                        placeholder="e.g. Certified guides, DSLR free"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Reporting Time</label>
+                      <input
+                        type="text"
+                        value={newVendor.reporting_time}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, reporting_time: e.target.value }))}
+                        placeholder="e.g. 09:00 AM - 08:00 PM"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Parking Details</label>
+                      <input
+                        type="text"
+                        value={newVendor.parking_details}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, parking_details: e.target.value }))}
+                        placeholder="e.g. Customer parking available"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Meeting Instructions</label>
+                    <textarea
+                      rows="2"
+                      value={newVendor.meeting_instructions}
+                      onChange={(e) => setNewVendor(prev => ({ ...prev, meeting_instructions: e.target.value }))}
+                      placeholder="Please report at the office with DL..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent resize-none"
+                    />
+                  </div>
+
                   <div className="space-y-1">
                     <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Status</label>
                     <select
@@ -1194,7 +1304,12 @@ export default function AdminDashboard({ setRoute }) {
                       <button
                         type="button"
                         onClick={() => {
-                          setNewVendor({ name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active', shop_image: '', star_rating: 4.5, landmark: '' });
+                          setNewVendor({
+                            name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+                            shop_image: '', star_rating: 4.5, landmark: '',
+                            since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
+                            reporting_time: '', parking_details: '', badges: '', short_highlight: ''
+                          });
                           setEditingItem(null);
                         }}
                         className="py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-black text-xs uppercase rounded-xl transition-all cursor-pointer"
@@ -1263,7 +1378,15 @@ export default function AdminDashboard({ setRoute }) {
                                     ...v,
                                     shop_image: v.shop_image || '',
                                     star_rating: v.star_rating !== null && v.star_rating !== undefined ? v.star_rating : 4.5,
-                                    landmark: v.landmark || ''
+                                    landmark: v.landmark || '',
+                                    since: v.since || 2020,
+                                    bookings_count: v.bookings_count || 50,
+                                    google_maps_link: v.google_maps_link || '',
+                                    meeting_instructions: v.meeting_instructions || '',
+                                    reporting_time: v.reporting_time || '',
+                                    parking_details: v.parking_details || '',
+                                    badges: Array.isArray(v.badges) ? v.badges.join(', ') : (v.badges || ''),
+                                    short_highlight: v.short_highlight || ''
                                   });
                                 }}
                                 className="p-1 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded"
