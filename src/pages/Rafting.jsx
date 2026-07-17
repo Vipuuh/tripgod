@@ -168,6 +168,8 @@ const faqs = [
 
 export default function Rafting({ currentCity, openBookingModal }) {
   const [stretchesData, setStretchesData] = useState([]);
+  const [partnersData, setPartnersData] = useState([]);
+  const [selectedPartner, setSelectedPartner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedStretch, setSelectedStretch] = useState(null);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
@@ -244,8 +246,8 @@ export default function Rafting({ currentCity, openBookingModal }) {
             36: ['/rafting-7.jpg', '/rafting-1.jpg', '/rafting-2.jpg']
           };
 
-          const grouped = {};
-          data.forEach(item => {
+          // 1. Raw mapping
+          const mappedRaw = data.map((item, idx) => {
             const rawDist = item.distance_km;
             let dist = 12;
             if (rawDist) {
@@ -254,60 +256,77 @@ export default function Rafting({ currentCity, openBookingModal }) {
                 dist = Number(matched[0]);
               }
             }
-            const key = `${dist} KM`;
+            return {
+              ...item,
+              price: Number(item.price),
+              img: item.images && item.images.length > 0 ? item.images[0] : (fallbackImages[dist] ? fallbackImages[dist][0] : '/rafting-4.jpg'),
+              images: item.images && item.images.length > 0 ? item.images : (fallbackImages[dist] || ['/rafting-4.jpg']),
+              rating: item.coming_soon ? 0 : (item.rating || 4.8),
+              reviewsCount: item.coming_soon ? 0 : (item.reviews_count || 120)
+            };
+          });
+          setStretchesData(mappedRaw);
+
+          // 2. Group into Partners List
+          const partnersMap = {};
+          data.forEach(item => {
+            const vendor = item.vendors;
+            if (!vendor) return;
             
-            if (!grouped[key]) {
-              grouped[key] = {
-                id: item.id,
-                name: `${dist} KM Rafting Stretch`,
-                stretch: item.route || (dist === 12 ? 'Brahmpuri to Laxman Jhula' : dist === 16 ? 'Shivpuri to Nim Beach' : dist === 24 ? 'Marine Drive to Nim Beach' : 'Kaudiyala to Nim Beach'),
-                difficulty: dist >= 36 ? 'Extreme' : dist >= 24 ? 'Advanced' : dist === 16 ? 'Thrilling' : 'Moderate',
-                difficultyColor: dist >= 36 ? 'bg-red-200 text-red-900 border border-red-300' : dist >= 24 ? 'bg-red-100 text-red-800' : dist === 16 ? 'bg-orange-100 text-orange-850' : 'bg-green-100 text-green-850',
-                price: Number(item.price),
-                img: item.images && item.images.length > 0 ? item.images[0] : (fallbackImages[dist] ? fallbackImages[dist][0] : '/rafting-4.jpg'),
-                images: item.images && item.images.length > 0 ? item.images : (fallbackImages[dist] || ['/rafting-4.jpg']),
-                duration: item.duration || (dist === 12 ? '1.5-2 Hours' : dist === 16 ? '2.5-3 Hours' : dist === 24 ? '3.5-4 Hours' : '5-6 Hours'),
-                rapids: item.rapids || (dist === 12 ? 'Grade I & II rapids (Black Money, Sweet Sixteen)' : dist === 16 ? 'Grade II & III (Roller Coaster, Golf Course, Maelstrom)' : dist === 24 ? 'Grade III & IV (Three Blind Mice, Crossfire, Body Surfing)' : 'Grade IV & IV+ (The Wall, Daniel\'s Dip, Three Blind Mice)'),
-                ageLimit: item.age_limit ? `Age ${item.age_limit}+ yrs` : (dist === 12 ? 'Age 14-60 yrs' : dist === 16 ? 'Age 14-55 yrs' : dist === 24 ? 'Age 18-50 yrs' : 'Age 18-45 yrs'),
-                weightLimit: dist >= 24 ? 'Weight 45-95 kg' : 'Weight 40-100 kg',
-                desc: item.description || (dist === 12 ? 'Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch.' : dist === 16 ? 'A thrilling rafting run with multiple Grade III rapids, suitable for adventure seekers.' : dist === 24 ? 'An advanced white-water rafting trip with massive rapids and high speed flows.' : 'Rishikesh\'s most extreme rafting stretch. Features the notorious Grade IV+ rapid "The Wall".'),
-                rating: item.coming_soon ? 0 : (item.rating || (dist === 12 ? 4.8 : dist === 16 ? 4.8 : 4.9)),
-                reviewsCount: item.coming_soon ? 0 : (item.reviews_count || (dist === 12 ? 570 : dist === 16 ? 494 : dist === 24 ? 380 : dist === 36 ? 240 : 150)),
-                inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : [
-                  'Transportation from office to rafting start point & back after finish',
-                  'All rafting gear: imported life jackets, helmets, paddles',
-                  'Wetsuits during winter (December–February)',
-                  'Certified river guides',
-                  'Safety kayaker on every trip'
-                ],
-                exclusions: item.exclusions && item.exclusions.length > 0 ? item.exclusions : [
-                  'Rafting photos/videos go pro cost - Rs. 1800 - Rs. 2000 (divided by 8 people)',
-                  'Personal expenses'
-                ],
-                cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior.',
-                is_closed: item.is_closed,
-                closed_reason: item.closed_reason,
-                closed_from: item.closed_from,
-                closed_until: item.closed_until,
-                free_video_type: item.free_video_type || 'none',
-                coming_soon: item.coming_soon !== undefined && item.coming_soon !== null ? !!item.coming_soon : false,
-                upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
-                operators: []
+            const rawDist = item.distance_km;
+            let dist = 12;
+            if (rawDist) {
+              const matched = String(rawDist).match(/\d+/);
+              if (matched) {
+                dist = Number(matched[0]);
+              }
+            }
+            
+            if (!partnersMap[vendor.id]) {
+              partnersMap[vendor.id] = {
+                id: vendor.id,
+                name: vendor.name,
+                star_rating: vendor.star_rating || 4.8,
+                address: vendor.address || 'Rishikesh, Uttarakhand',
+                landmark: vendor.landmark || 'Tapovan',
+                shop_image: vendor.shop_image || 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
+                stretches: []
               };
             }
             
-            grouped[key].operators.push(item);
-            if (Number(item.price) < grouped[key].price) {
-              grouped[key].price = Number(item.price);
-              grouped[key].upi_discount = item.upi_discount ? Number(item.upi_discount) : null;
-            }
-            if (item.images && item.images.length > grouped[key].images.length) {
-              grouped[key].images = item.images;
-              grouped[key].img = item.images[0];
-            }
+            partnersMap[vendor.id].stretches.push({
+              ...item,
+              id: item.id,
+              name: `${dist} KM Rafting Stretch`,
+              stretch: item.route || (dist === 12 ? 'Brahmpuri to Laxman Jhula' : dist === 16 ? 'Shivpuri to Nim Beach' : dist === 24 ? 'Marine Drive to Nim Beach' : 'Kaudiyala to Nim Beach'),
+              difficulty: dist >= 36 ? 'Extreme' : dist >= 24 ? 'Advanced' : dist === 16 ? 'Thrilling' : 'Moderate',
+              price: Number(item.price),
+              images: item.images && item.images.length > 0 ? item.images : (fallbackImages[dist] || ['/rafting-4.jpg']),
+              img: item.images && item.images.length > 0 ? item.images[0] : (fallbackImages[dist] ? fallbackImages[dist][0] : '/rafting-4.jpg'),
+              duration: item.duration || (dist === 12 ? '1.5-2 Hours' : dist === 16 ? '2.5-3 Hours' : dist === 24 ? '3.5-4 Hours' : '5-6 Hours'),
+              rapids: item.rapids || (dist === 12 ? 'Grade I & II rapids (Black Money, Sweet Sixteen)' : dist === 16 ? 'Grade II & III (Roller Coaster, Golf Course, Maelstrom)' : dist === 24 ? 'Grade III & IV (Three Blind Mice, Crossfire, Body Surfing)' : 'Grade IV & IV+ (The Wall, Daniel\'s Dip, Three Blind Mice)'),
+              ageLimit: item.age_limit ? `Age ${item.age_limit}+ yrs` : (dist === 12 ? 'Age 14-60 yrs' : dist === 16 ? 'Age 14-55 yrs' : dist === 24 ? 'Age 18-50 yrs' : 'Age 18-45 yrs'),
+              weightLimit: dist >= 24 ? 'Weight 45-95 kg' : 'Weight 40-100 kg',
+              desc: item.description || (dist === 12 ? 'Perfect for beginners and families. Covers 7 thrilling rapids over a scenic 12km stretch.' : dist === 16 ? 'A thrilling rafting run with multiple Grade III rapids, suitable for adventure seekers.' : dist === 24 ? 'An advanced white-water rafting trip with massive rapids and high speed flows.' : 'Rishikesh\'s most extreme rafting stretch. Features the notorious Grade IV+ rapid "The Wall".'),
+              rating: item.coming_soon ? 0 : (item.rating || (dist === 12 ? 4.8 : 4.9)),
+              reviewsCount: item.coming_soon ? 0 : (item.reviews_count || 120),
+              inclusions: item.inclusions && item.inclusions.length > 0 ? item.inclusions : [
+                'Transportation from office to rafting start point & back after finish',
+                'All rafting gear: imported life jackets, helmets, paddles',
+                'Certified river guides'
+              ],
+              exclusions: item.exclusions && item.exclusions.length > 0 ? item.exclusions : [
+                'Rafting photos/videos go pro cost',
+                'Personal expenses'
+              ],
+              cancellation_policy: item.cancellation_policy || '100% refund up to 24 hours prior.',
+              free_video_type: item.free_video_type || 'none',
+              coming_soon: item.coming_soon !== undefined && item.coming_soon !== null ? !!item.coming_soon : false,
+              upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
+              operators: [item]
+            });
           });
-          const mapped = Object.values(grouped);
-          setStretchesData(mapped);
+          setPartnersData(Object.values(partnersMap));
         } else {
           setStretchesData(defaultStretches);
         }
@@ -429,107 +448,190 @@ export default function Rafting({ currentCity, openBookingModal }) {
               </div>
             </div>
 
-            {/* Stretch Cards List */}
-            <div className="max-w-6xl mx-auto px-6 py-16 space-y-12">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-center space-y-2"
-              >
-                <h2 className="text-2xl md:text-4xl font-black font-display text-black">SELECT YOUR STRETCH</h2>
-                <div className="w-16 h-1 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] mx-auto" />
-              </motion.div>
+            {/* PARTNERS LIST */}
+            {!selectedPartner ? (
+              <div className="max-w-6xl mx-auto px-6 py-16 space-y-12">
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                  className="text-center space-y-2"
+                >
+                  <h2 className="text-2xl md:text-4xl font-black font-display text-black uppercase">SELECT RAFTING PARTNERS</h2>
+                  <div className="w-16 h-1 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] mx-auto" />
+                </motion.div>
 
-              <motion.div 
-                variants={staggerContainer}
-                initial="hidden"
-                animate="show"
-                className="grid grid-cols-1 md:grid-cols-3 gap-8"
-              >
-                {stretchesData.map((str) => (
-                  <motion.div
-                    key={str.id}
-                    variants={fadeInUp}
-                    whileHover={{ y: -5 }}
-                    onClick={() => {
-                      handleSelectStretch(str);
-                      setCurrentImgIdx(0);
-                      window.scrollTo(0, 0);
-                    }}
-                    className="border border-white/60 bg-white/60 backdrop-blur-md rounded-2xl overflow-hidden cursor-pointer hover:border-accent/40 hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all flex flex-col justify-between h-full group shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
-                  >
-                    <div>
-                      {/* Image Box */}
-                      <div className="h-36 sm:h-40 bg-gray-100 overflow-hidden relative border-b border-black/5">
-                        <img 
-                          src={str.img} 
-                          alt={str.name} 
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                          loading="lazy" 
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {partnersData.map((partner, idx) => (
+                    <motion.div
+                      key={partner.id || idx}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: idx * 0.1 }}
+                      className="flex flex-col bg-white border border-black/5 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group"
+                    >
+                      <div className="relative h-48 overflow-hidden bg-slate-100">
+                        <img
+                          src={partner.shop_image || '/rafting-4.jpg'}
+                          alt={partner.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
                         />
-                        {checkIfClosed(str).closed && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center">
-                            <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
-                              Closed
-                            </span>
-                          </div>
-                        )}
+                        <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
+                          ⭐ {partner.star_rating}
+                        </div>
                       </div>
                       
-                      <div className="p-4 sm:p-5 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <span className="text-xl font-black font-display text-black">{str.km || str.name}</span>
-                          <div className="flex flex-col items-end gap-1">
-                            <span className={`text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded ${str.difficultyColor}`}>
-                              {str.difficulty}
-                            </span>
-                            {str.vendors?.name && (
-                              <span className="text-[9px] bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] font-black px-2 py-0.5 rounded truncate max-w-[120px]">
-                                {str.vendors.name}
-                              </span>
-                            )}
+                      <div className="p-5 flex-grow flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <h3 className="font-bold text-lg font-display text-black leading-snug uppercase text-left">{partner.name}</h3>
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 text-left">
+                            <MapPin size={13} className="text-accent shrink-0" />
+                            <span className="truncate max-w-[200px]">{partner.address}</span>
                           </div>
+                          {partner.landmark && (
+                            <div className="text-[10px] text-slate-400 font-bold uppercase text-left">
+                              🏢 {partner.landmark}
+                            </div>
+                          )}
+                          <p className="text-xs text-slate-500 text-left pt-1.5 leading-relaxed">
+                            Offers {partner.stretches.length} rafting stretch package(s) with pre-verified slots.
+                          </p>
                         </div>
 
-                        <div className="flex items-center gap-1 text-xs text-black font-bold">
-                          <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                          <span>{str.rating}</span>
-                          <span className="text-gray-500 font-semibold">({str.reviewsCount} reviews)</span>
-                        </div>
-                        
-                        <div className="space-y-0.5">
-                          <h3 className="font-bold text-base font-display text-black leading-tight">{str.stretch}</h3>
-                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{str.duration}</p>
-                        </div>
-                        
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed line-clamp-3">
-                          {str.desc}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-4 sm:p-5 bg-gray-50 border-t border-black/5 flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] block font-bold text-gray-500 uppercase">From</span>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-xl font-black text-black">₹{(Number(str.price) || 0).toLocaleString('en-IN')}</span>
-                          {str.upi_discount > 0 && (
-                            <span className="text-[9px] font-black text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 select-none">
-                              💳 UPI: Save ₹{str.upi_discount}
+                        <div className="pt-4 border-t border-black/5 flex items-center justify-between">
+                          <div>
+                            <span className="text-[9px] block font-bold text-slate-400 uppercase text-left">Starting From</span>
+                            <span className="text-lg font-black text-black">
+                              ₹{partner.stretches.length > 0 ? Math.min(...partner.stretches.map(s => s.price)).toLocaleString('en-IN') : '0'}
                             </span>
+                          </div>
+                          <button
+                            onClick={() => setSelectedPartner(partner)}
+                            className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
+                          >
+                            View Stretches <ChevronLeft className="rotate-180" size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* PARTNER DETAILS & PACKAGES LIST */
+              <div className="max-w-6xl mx-auto px-6 py-12 space-y-8">
+                {/* Back button */}
+                <button
+                  onClick={() => setSelectedPartner(null)}
+                  className="flex items-center gap-1 text-slate-500 hover:text-black font-black text-xs uppercase bg-transparent border-none cursor-pointer p-0 select-none text-left"
+                >
+                  <ChevronLeft size={16} /> Back to Partners
+                </button>
+
+                {/* Partner Banner Block */}
+                <div className="bg-slate-50 border border-slate-100 rounded-3xl p-5 md:p-8 flex flex-col md:flex-row items-center gap-6 text-left shadow-xs">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
+                    <img src={selectedPartner.shop_image} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="space-y-2 flex-grow">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl md:text-2xl font-black text-black uppercase">{selectedPartner.name}</h2>
+                      <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider select-none animate-pulse">Verified Partner</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-slate-500">
+                      <div className="flex items-center gap-1">
+                        <Star size={13} className="fill-amber-500 text-amber-500" />
+                        <span>{selectedPartner.star_rating} Rating</span>
+                      </div>
+                      <span>•</span>
+                      <span>📍 {selectedPartner.address}</span>
+                      {selectedPartner.landmark && (
+                        <>
+                          <span>•</span>
+                          <span>🏢 {selectedPartner.landmark}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest text-left font-display">Available Rafting Stretches</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {selectedPartner.stretches.map((str, idx) => (
+                      <motion.div
+                        key={str.id || idx}
+                        className="flex flex-col bg-white border border-black/5 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group"
+                      >
+                        <div className="relative h-48 overflow-hidden bg-slate-100">
+                          <img
+                            src={str.img}
+                            alt={str.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
+                          />
+                          {checkIfClosed(str).closed && (
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10">
+                              <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
+                                Closed
+                              </span>
+                            </div>
                           )}
                         </div>
-                      </div>
-                      <span className="text-xs font-black uppercase text-black flex items-center gap-1 group-hover:underline decoration-accent decoration-2">
-                        View Details <ChevronLeft className="rotate-180" size={14} />
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
+                        
+                        <div className="p-5 flex-grow flex flex-col justify-between space-y-4">
+                          <div className="space-y-2">
+                            <h3 className="font-bold text-base font-display text-black leading-snug text-left uppercase">{str.name}</h3>
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 text-left">
+                              <Clock size={13} className="text-accent" />
+                              <span>{str.duration}</span>
+                              <span className="text-slate-300">•</span>
+                              <MapPin size={13} className="text-accent" />
+                              <span className="truncate max-w-[120px]">{str.stretch}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 text-left line-clamp-3 leading-relaxed">
+                              {str.desc}
+                            </p>
+                          </div>
+
+                          <div className="pt-4 border-t border-black/5 flex items-center justify-between">
+                            <div>
+                              {str.coming_soon ? (
+                                <span className="bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded">
+                                  Coming Soon
+                                </span>
+                              ) : (
+                                <>
+                                  <span className="text-[9px] block font-bold text-slate-400 uppercase text-left">Starting From</span>
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className="text-lg font-black text-black">₹{(Number(str.price) || 0).toLocaleString('en-IN')}</span>
+                                    {str.upi_discount > 0 && (
+                                      <span className="text-[9px] font-black text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/15 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 select-none">
+                                        💳 UPI: Save ₹{str.upi_discount}
+                                      </span>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                handleSelectStretch(str);
+                                setCurrentImgIdx(0);
+                              }}
+                              className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
+                            >
+                              View Details <ChevronLeft className="rotate-180" size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         ) : (
           /* SECTION B: DETAILED VIEW */

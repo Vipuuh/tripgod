@@ -178,6 +178,8 @@ const slugify = (text) => {
 
 export default function Tours({ currentCity, openBookingModal, selectedTour, setSelectedTour, navigateTo }) {
   const [tours, setTours] = useState([]);
+  const [partnersData, setPartnersData] = useState([]);
+  const [selectedPartner, setSelectedPartner] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const checkIfClosed = (item) => {
@@ -212,7 +214,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
   const [filterDuration, setFilterDuration] = useState('All');
   const [filterTourType, setFilterTourType] = useState('All');
   const [filterRating, setFilterRating] = useState('All');
-  const [filterSort, setFilterSort] = useState('Recommended');
+  const [filterSort, setFilterSort] = useState('Default');
   const [filterCategory, setFilterCategory] = useState('All');
   const [activeMediaIdx, setActiveMediaIdx] = useState(0);
 
@@ -251,11 +253,33 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
             reviewsCount: item.reviews_count || (80 + ((idx * 41) % 150))
           }));
           setTours(mapped);
+
+          // Group by partners
+          const partnersMap = {};
+          mapped.forEach(item => {
+            const vendor = item.vendors;
+            if (!vendor) return;
+            if (!partnersMap[vendor.id]) {
+              partnersMap[vendor.id] = {
+                id: vendor.id,
+                name: vendor.name,
+                star_rating: vendor.star_rating || 4.8,
+                address: vendor.address || 'Rishikesh, Uttarakhand',
+                landmark: vendor.landmark || 'Tapovan',
+                shop_image: vendor.shop_image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
+                tours: []
+              };
+            }
+            partnersMap[vendor.id].tours.push({
+              ...item,
+              operators: [item]
+            });
+          });
+          setPartnersData(Object.values(partnersMap));
         }
       } catch (err) {
         console.error('Error fetching tours:', err);
-        // Fallback demo tours if DB not ready
-        setTours([
+        const demo = [
           {
             id: 'demo-tour-1',
             name: 'Rishikesh to Kedarnath Pilgrimage',
@@ -346,14 +370,20 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
                 title: 'Chopta to Tungnath & Chandrashila',
                 tags: ['Summit Trek', 'Himalayan View', 'Bonfire Night'],
                 description: 'Trek 4km to Tungnath Temple and a further 1.5km to Chandrashila Peak for stunning 360-degree views of the Garhwal Himalayas. Return to camp for a cozy bonfire.'
-              },
-              {
-                day: 3,
-                title: 'Chopta to Rishikesh',
-                tags: ['Drive Back', 'Devprayag', 'Farewell'],
-                description: 'Drive back to Rishikesh via Devprayag confluence. Tour concludes with drop-off at your location.'
               }
             ]
+          }
+        ];
+        setTours(demo);
+        setPartnersData([
+          {
+            id: 'demo-tour-partner',
+            name: 'Garhwal Tour & Travels',
+            star_rating: 4.8,
+            address: 'Ram Jhula, Rishikesh',
+            landmark: 'Near Ram Jhula Parking',
+            shop_image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600',
+            tours: demo.map(d => ({ ...d, operators: [d] }))
           }
         ]);
       } finally {
@@ -399,8 +429,9 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
   }
 
   const getGroupedTours = () => {
+    const listToGroup = selectedPartner ? selectedPartner.tours : tours;
     const grouped = {};
-    tours.forEach(t => {
+    listToGroup.forEach(t => {
       const key = t.name;
       if (!grouped[key]) {
         grouped[key] = {
@@ -1473,8 +1504,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
   return (
@@ -1518,355 +1548,448 @@ export default function Tours({ currentCity, openBookingModal, selectedTour, set
           </div>
         </div>
 
-        {/* Sticky Search & Filter Bar */}
-        <div className="sticky top-16 z-30 bg-white/90 backdrop-blur-md border border-slate-150 p-2.5 rounded-2xl md:rounded-3xl shadow-sm space-y-2.5 select-none w-full max-w-full">
-          
-          {/* Line 1: Search (Left) & Sort (Right) */}
-          <div className="flex gap-2 items-center justify-between w-full">
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                placeholder="Search destination, yatra..."
-                value={filterDestination}
-                onChange={e => setFilterDestination(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5F00] font-semibold"
-              />
+        {/* PARTNERS LIST */}
+        {!selectedPartner ? (
+          <div className="space-y-12">
+            <div className="text-center space-y-2">
+              <span className="text-xs font-bold uppercase text-slate-500 tracking-widest">Verified Tour Operators</span>
+              <h2 className="text-xl md:text-3xl font-black font-display text-black uppercase">SELECT TOUR PARTNERS</h2>
+              <div className="w-16 h-1 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] mx-auto" />
             </div>
-            <select
-              value={filterSort}
-              onChange={e => setFilterSort(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none cursor-pointer min-w-[110px] md:min-w-[140px] shrink-0 text-slate-700"
-            >
-              <option value="Recommended">Recommended</option>
-              <option value="PriceAsc">Price: Low to High</option>
-              <option value="PriceDesc">Price: High to Low</option>
-              <option value="Rating">Rating: High to Low</option>
-            </select>
-          </div>
-          
-          {/* Line 2: Responsive grid filters (2x2 on mobile, flex row on desktop) */}
-          <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-2 w-full">
-            <select
-              value={filterBudget}
-              onChange={e => setFilterBudget(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-            >
-              <option value="All">All Budgets</option>
-              <option value="5000">Up to ₹5,000</option>
-              <option value="10000">Up to ₹10,000</option>
-              <option value="20000">Up to ₹20,000</option>
-              <option value="50000">Up to ₹50,000</option>
-            </select>
 
-            <select
-              value={filterDuration}
-              onChange={e => setFilterDuration(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-            >
-              <option value="All">All Durations</option>
-              <option value="1-2">1-2 Days</option>
-              <option value="3-4">3-4 Days</option>
-              <option value="5+">5+ Days</option>
-            </select>
-
-            <select
-              value={filterTourType}
-              onChange={e => setFilterTourType(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-            >
-              <option value="All">All Types</option>
-              <option value="Sightseeing">Sightseeing</option>
-              <option value="Pilgrimage">Pilgrimage</option>
-              <option value="Trekking">Trekking</option>
-              <option value="Adventure">Adventure</option>
-            </select>
-
-            <select
-              value={filterRating}
-              onChange={e => setFilterRating(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
-            >
-              <option value="All">All Ratings</option>
-              <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
-              <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Category Filter Chips */}
-        <div className="flex gap-2 overflow-x-auto w-full max-w-full no-scrollbar pb-1 select-none">
-          {['All', 'Pilgrimage', 'Adventure', 'Trekking', 'Sightseeing'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilterCategory(cat)}
-              className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all border shrink-0 cursor-pointer ${
-                filterCategory === cat
-                  ? 'bg-[#FF5F00] border-[#FF5F00] text-white shadow-md'
-                  : 'bg-white border-slate-200 text-slate-650 hover:border-slate-350'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between border-b border-slate-150 pb-2">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-500">
-            {filteredGroupedList.length} Yatras & Tours Found
-          </span>
-        </div>
-        {/* Grid List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-          {filteredGroupedList.map((tour, idx) => {
-            const hasMultiple = tour.operators.length > 1;
-            const hasDiscount = tour.operators.some(op => op.original_price && Number(op.original_price) > Number(op.price));
-            const originalPriceToShow = hasDiscount ? Math.max(...tour.operators.map(op => Number(op.original_price || 0))) : Math.round(tour.minPrice * 1.3);
-            const discountPercentage = Math.round(((originalPriceToShow - tour.minPrice) / originalPriceToShow) * 100);
-
-            // Determine overlay badges (max 2)
-            const overlayBadges = [];
-            if (tour.is_verified) {
-              overlayBadges.push({
-                label: 'Verified Operator',
-                bg: 'bg-emerald-600',
-                icon: <ShieldCheck size={9} />
-              });
-            }
-            if (tour.seats_left <= 5 || tour.is_limited_seats) {
-              overlayBadges.push({
-                label: 'Fast Filling',
-                bg: 'bg-red-600',
-                icon: <Zap size={9} fill="currentColor" />
-              });
-            }
-            if (tour.rating >= 4.7) {
-              overlayBadges.push({
-                label: 'Top Rated',
-                bg: 'bg-indigo-650',
-                icon: <Star size={9} fill="currentColor" />
-              });
-            }
-            if (discountPercentage >= 20) {
-              overlayBadges.push({
-                label: 'Best Price',
-                bg: 'bg-blue-600',
-                icon: <Tag size={9} />
-              });
-            }
-            const displayBadges = overlayBadges.slice(0, 2);
-
-            return (
-              <React.Fragment key={tour.name || idx}>
-                {idx === 3 && (
-                  <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-md border-none select-none my-4 text-left font-sans">
-                    <div className="space-y-1">
-                      <h4 className="text-lg font-black uppercase tracking-tight font-display">₹1 Extra Nahi Dena - TripGod Promise!</h4>
-                      <p className="text-xs text-emerald-100 font-medium leading-relaxed max-w-xl">
-                        Under our local tourism guarantee, all tolls, parking fees, state green cess, permits, and driver allowance are 100% included in the checkout price. Zero hidden charges, guaranteed.
-                      </p>
-                    </div>
-                    <div className="flex gap-4 shrink-0">
-                      <a href="tel:+918630027341" className="px-5 py-3 bg-white text-emerald-700 font-black text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-50 transition-all text-center select-none font-display">
-                        Call Helpline
-                      </a>
-                    </div>
-                  </div>
-                )}
-                
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {partnersData.map((partner, idx) => (
                 <motion.div
-                  whileHover={{ y: -5 }}
-                  className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md border border-slate-100 transition-all duration-300 group cursor-pointer relative"
-                  onClick={() => handleSelectTour(tour)}
+                  key={partner.id || idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: idx * 0.1 }}
+                  className="flex flex-col bg-white border border-black/5 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all group text-left"
                 >
-                {/* Image & Badges overlay */}
-                <div className="h-52 overflow-hidden relative bg-slate-100">
-                  <img 
-                    src={tour.img} 
-                    alt={tour.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                  />
-                  {checkIfClosed(tour).closed && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-20">
-                      <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
-                        Closed
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Top-left Badges (Max 2) */}
-                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 items-start">
-                    {displayBadges.map((badge, bIdx) => (
-                      <span key={bIdx} className={`${badge.bg} text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-sm tracking-wider flex items-center gap-1`}>
-                        {badge.icon} {badge.label.toUpperCase()}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Bottom Overlays */}
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
-                    {tour.is_bestseller && (
-                      <span className="bg-[#FF5722] text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-md tracking-wider">
-                        🔥 BESTSELLER
-                      </span>
-                    )}
-                    {tour.seats_left <= 8 && (
-                      <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-sm tracking-wider">
-                        ONLY {tour.seats_left} SEATS LEFT
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card Info Content */}
-                <div className="p-4 md:p-5 flex-grow flex flex-col justify-between space-y-4">
-                  <div className="space-y-2.5">
-                    
-                    {/* Rating Area and Bookings count */}
-                    <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-                      <div className="flex flex-col text-left">
-                        <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
-                          <Star size={14} className="fill-amber-500 text-amber-500" />
-                          <span>{tour.why_book_with_us?.rating !== undefined && tour.why_book_with_us?.rating !== null ? Number(tour.why_book_with_us.rating) : (tour.rating || 4.5)}</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">
-                          {tour.why_book_with_us?.reviews_count !== undefined && tour.why_book_with_us?.reviews_count !== null ? Number(tour.why_book_with_us.reviews_count) : (tour.reviewsCount || 80)} Reviews
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase tracking-wider">
-                          🔥 {tour.bookings_count || 143}+ booked
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="font-extrabold text-sm sm:text-base font-display text-slate-900 tracking-tight group-hover:text-[#FF5722] transition-colors leading-tight line-clamp-1 uppercase text-left">
-                      {tour.name}
-                    </h3>
-
-                    {/* Route Flow sequence */}
-                    {tour.route_map && tour.route_map.length > 0 && (
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-[#FF5722] text-left pt-0.5">
-                        <span className="truncate">{tour.route_map.join(' → ')}</span>
-                      </div>
-                    )}
-                    
-                    {/* Description */}
-                    <p className="text-xs text-slate-550 leading-relaxed font-medium line-clamp-2 text-left pt-0.5">
-                      {tour.description}
-                    </p>
-
-                    {/* Specifications Ribbon */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-b border-slate-50 pb-2.5">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
-                        <span>🗓</span>
-                        <span>{tour.duration}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
-                        <span>📍</span>
-                        <span>Ex {currentCity?.name || 'Rishikesh'}</span>
-                      </div>
-                      {tour.difficulty && (
-                        <div className="flex items-center gap-1">
-                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                            tour.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                            tour.difficulty === 'Moderate' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                            'bg-red-50 text-red-600 border border-red-100'
-                          }`}>
-                            {tour.difficulty}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Inclusions checklists trust row */}
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-1 text-[11px] font-bold text-slate-600">
-                      {tour.hotel_included && (
-                        <div className="flex items-center gap-1.5 text-left">
-                          <span className="text-emerald-500 font-bold">✔</span>
-                          <span>Hotel Included</span>
-                        </div>
-                      )}
-                      {tour.meals_included && (
-                        <div className="flex items-center gap-1.5 text-left">
-                          <span className="text-emerald-500 font-bold">✔</span>
-                          <span>Meals Included</span>
-                        </div>
-                      )}
-                      {tour.transport_included && (
-                        <div className="flex items-center gap-1.5 text-left">
-                          <span className="text-emerald-500 font-bold">✔</span>
-                          <span>Transfers Included</span>
-                        </div>
-                      )}
-                      {tour.guide_included && (
-                        <div className="flex items-center gap-1.5 text-left">
-                          <span className="text-emerald-500 font-bold">✔</span>
-                          <span>Guide Available</span>
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* Price and CTA Row */}
-                <div className="p-5 pt-0 flex items-center justify-between border-t border-slate-100 mt-auto pt-4 gap-3">
-                  <div className="flex flex-col text-left">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">From</span>
-                    <div className="flex items-baseline gap-1.5 mt-0.5">
-                      <span className="text-lg font-extrabold text-[#008F5D]">₹{tour.minPrice.toLocaleString('en-IN')}</span>
-                      {originalPriceToShow && (
-                        <span className="text-xs text-slate-400 line-through font-bold">
-                          ₹{originalPriceToShow.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1 select-none">
-                      {discountPercentage > 0 && (
-                        <span className="bg-[#008F5D]/10 text-[#008F5D] text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
-                          Save {discountPercentage}%
-                        </span>
-                      )}
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Per Person</span>
+                  <div className="relative h-48 overflow-hidden bg-slate-100">
+                    <img
+                      src={partner.shop_image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'}
+                      alt={partner.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
+                    />
+                    <div className="absolute top-4 left-4 bg-slate-900/90 backdrop-blur-xs text-white text-[9px] font-black py-1.5 px-3 rounded-lg shadow-md tracking-wider flex items-center gap-1">
+                      ⭐ {partner.star_rating}
                     </div>
                   </div>
                   
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectTour(tour);
-                    }}
-                    className="px-5 py-3 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all border-none cursor-pointer text-center font-display whitespace-nowrap shadow-md hover:shadow-lg"
-                  >
-                    Explore Tour
-                  </button>
-                </div>
-              </motion.div>
-            </React.Fragment>
-            );
-          })}
-        </div>
+                  <div className="p-5 flex-grow flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-lg font-display text-black leading-snug uppercase text-left">{partner.name}</h3>
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 text-left">
+                        <MapPin size={13} className="text-accent shrink-0" />
+                        <span className="truncate max-w-[200px]">{partner.address}</span>
+                      </div>
+                      {partner.landmark && (
+                        <div className="text-[10px] text-slate-400 font-bold uppercase text-left">
+                          🏢 {partner.landmark}
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-500 text-left pt-1.5 leading-relaxed">
+                        Offers {partner.tours.length} complete tour package(s) with local guide support.
+                      </p>
+                    </div>
 
-        {/* Empty State */}
-        {filteredGroupedList.length === 0 && (
-          <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center text-slate-505 font-medium space-y-3">
-            <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto text-[#FF5722]">
-              <Compass size={24} />
+                    <div className="pt-4 border-t border-black/5 flex items-center justify-between">
+                      <div>
+                        <span className="text-[9px] block font-bold text-slate-400 uppercase text-left">Starting From</span>
+                        <span className="text-lg font-black text-black">
+                          ₹{partner.tours.length > 0 ? Math.min(...partner.tours.map(t => t.price)).toLocaleString('en-IN') : '0'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedPartner(partner)}
+                        className="py-2.5 px-4 bg-accent hover:bg-[#FF3E00] text-white text-xs font-black uppercase rounded-xl transition-all cursor-pointer border-none flex items-center gap-1"
+                      >
+                        View Tours <ChevronLeft className="rotate-180" size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-            <p className="text-sm font-black text-slate-800 uppercase tracking-wider">No matching packages found</p>
-            <p className="text-xs text-slate-400 max-w-xs mx-auto">We couldn't find any tour packages matching your search filters. Try clearing filters or searching for another keyword.</p>
+          </div>
+        ) : (
+          /* PARTNER DETAILS & CUSTOM PACKAGES LIST */
+          <div className="space-y-8">
+            {/* Back button */}
             <button
-              onClick={() => {
-                setFilterDestination('');
-                setFilterBudget('All');
-                setFilterDuration('All');
-                setFilterTourType('All');
-              }}
-              className="mt-4 px-5 py-2.5 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all border-none cursor-pointer"
+              onClick={() => setSelectedPartner(null)}
+              className="flex items-center gap-1 text-slate-500 hover:text-black font-black text-xs uppercase bg-transparent border-none cursor-pointer p-0 select-none text-left"
             >
-              Reset Filters
+              <ChevronLeft size={16} /> Back to Tour Partners
             </button>
+
+            {/* Partner Banner Block */}
+            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-5 md:p-8 flex flex-col md:flex-row items-center gap-6 text-left shadow-xs">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
+                <img src={selectedPartner.shop_image} className="w-full h-full object-cover" />
+              </div>
+              <div className="space-y-2 flex-grow">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl md:text-2xl font-black text-black uppercase">{selectedPartner.name}</h2>
+                  <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider select-none animate-pulse">Verified Tour Partner</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <Star size={13} className="fill-amber-500 text-amber-500" />
+                    <span>{selectedPartner.star_rating} Rating</span>
+                  </div>
+                  <span>•</span>
+                  <span>📍 {selectedPartner.address}</span>
+                  {selectedPartner.landmark && (
+                    <>
+                      <span>•</span>
+                      <span>🏢 {selectedPartner.landmark}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Sticky Search & Filter Bar */}
+            <div className="sticky top-16 z-30 bg-white/90 backdrop-blur-md border border-slate-150 p-2.5 rounded-2xl md:rounded-3xl shadow-sm space-y-2.5 select-none w-full max-w-full">
+              {/* Line 1: Search & Sort */}
+              <div className="flex gap-2 items-center justify-between w-full">
+                <div className="relative flex-grow">
+                  <input
+                    type="text"
+                    placeholder="Search package, destination..."
+                    value={filterDestination}
+                    onChange={e => setFilterDestination(e.target.value)}
+                    className="w-full pl-3 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#FF5F00] font-semibold text-left"
+                  />
+                </div>
+                <select
+                  value={filterSort}
+                  onChange={e => setFilterSort(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none cursor-pointer min-w-[110px] md:min-w-[140px] shrink-0 text-slate-700 text-left"
+                >
+                  <option value="Default">Default Recommended</option>
+                  <option value="PriceAsc">Price: Low to High</option>
+                  <option value="PriceDesc">Price: High to Low</option>
+                  <option value="Rating">Top Rated First</option>
+                </select>
+              </div>
+
+              {/* Line 2: Advanced filters */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <select
+                  value={filterBudget}
+                  onChange={e => setFilterBudget(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
+                >
+                  <option value="All">All Budgets</option>
+                  <option value="3000">Under ₹3,000</option>
+                  <option value="6000">Under ₹6,000</option>
+                  <option value="12000">Under ₹12,000</option>
+                  <option value="20000">Under ₹20,000</option>
+                </select>
+
+                <select
+                  value={filterDuration}
+                  onChange={e => setFilterDuration(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
+                >
+                  <option value="All">All Durations</option>
+                  <option value="1-2">1 - 2 Days</option>
+                  <option value="3-4">3 - 4 Days</option>
+                  <option value="5+">5+ Days</option>
+                </select>
+
+                <select
+                  value={filterTourType}
+                  onChange={e => setFilterTourType(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
+                >
+                  <option value="All">All Types</option>
+                  <option value="Sightseeing">Sightseeing</option>
+                  <option value="Pilgrimage">Pilgrimage</option>
+                  <option value="Trekking">Trekking</option>
+                  <option value="Adventure">Adventure</option>
+                </select>
+
+                <select
+                  value={filterRating}
+                  onChange={e => setFilterRating(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none cursor-pointer w-full md:w-auto text-left"
+                >
+                  <option value="All">All Ratings</option>
+                  <option value="4.8">⭐⭐⭐⭐⭐ 4.8+</option>
+                  <option value="4.5">⭐⭐⭐⭐ 4.5+</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Category Filter Chips */}
+            <div className="flex gap-2 overflow-x-auto w-full max-w-full no-scrollbar pb-1 select-none">
+              {['All', 'Pilgrimage', 'Adventure', 'Trekking', 'Sightseeing'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilterCategory(cat)}
+                  className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all border shrink-0 cursor-pointer ${
+                    filterCategory === cat
+                      ? 'bg-[#FF5F00] border-[#FF5F00] text-white shadow-md'
+                      : 'bg-white border-slate-200 text-slate-650 hover:border-slate-350'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between border-b border-slate-150 pb-2 text-left">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+                {filteredGroupedList.length} Yatras & Tours Found
+              </span>
+            </div>
+
+            {/* Grid List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+              {filteredGroupedList.map((tour, idx) => {
+                const hasMultiple = tour.operators.length > 1;
+                const hasDiscount = tour.operators.some(op => op.original_price && Number(op.original_price) > Number(op.price));
+                const originalPriceToShow = hasDiscount ? Math.max(...tour.operators.map(op => Number(op.original_price || 0))) : Math.round(tour.minPrice * 1.3);
+                const discountPercentage = Math.round(((originalPriceToShow - tour.minPrice) / originalPriceToShow) * 100);
+
+                // Badges
+                const overlayBadges = [];
+                if (tour.is_verified) {
+                  overlayBadges.push({
+                    label: 'Verified Operator',
+                    bg: 'bg-emerald-600',
+                    icon: <ShieldCheck size={9} />
+                  });
+                }
+                if (tour.seats_left <= 5 || tour.is_limited_seats) {
+                  overlayBadges.push({
+                    label: 'Fast Filling',
+                    bg: 'bg-red-600',
+                    icon: <Zap size={9} fill="currentColor" />
+                  });
+                }
+                if (tour.rating >= 4.7) {
+                  overlayBadges.push({
+                    label: 'Top Rated',
+                    bg: 'bg-indigo-650',
+                    icon: <Star size={9} fill="currentColor" />
+                  });
+                }
+                if (discountPercentage >= 20) {
+                  overlayBadges.push({
+                    label: 'Best Price',
+                    bg: 'bg-blue-600',
+                    icon: <Tag size={9} />
+                  });
+                }
+                const displayBadges = overlayBadges.slice(0, 2);
+
+                return (
+                  <React.Fragment key={tour.name || idx}>
+                    {idx === 3 && (
+                      <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-md border-none select-none my-4 text-left font-sans">
+                        <div className="space-y-1">
+                          <h4 className="text-lg font-black uppercase tracking-tight font-display">₹1 Extra Nahi Dena - TripGod Promise!</h4>
+                          <p className="text-xs text-emerald-100 font-medium leading-relaxed max-w-xl">
+                            Under our local tourism guarantee, all tolls, parking fees, state green cess, permits, and driver allowance are 100% included in the checkout price. Zero hidden charges, guaranteed.
+                          </p>
+                        </div>
+                        <div className="flex gap-4 shrink-0">
+                          <a href="tel:+918630027341" className="px-5 py-3 bg-white text-emerald-700 font-black text-xs uppercase tracking-wider rounded-xl hover:bg-emerald-50 transition-all text-center select-none font-display">
+                            Call Helpline
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <motion.div
+                      whileHover={{ y: -5 }}
+                      className="bg-white rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md border border-slate-100 transition-all duration-300 group cursor-pointer relative text-left"
+                      onClick={() => handleSelectTour(tour)}
+                    >
+                      <div className="h-52 overflow-hidden relative bg-slate-100">
+                        <img 
+                          src={tour.img} 
+                          alt={tour.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
+                        {checkIfClosed(tour).closed && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-20">
+                            <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded shadow-md">
+                              Closed
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 items-start">
+                          {displayBadges.map((badge, bIdx) => (
+                            <span key={bIdx} className={`${badge.bg} text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-sm tracking-wider flex items-center gap-1`}>
+                              {badge.icon} {badge.label.toUpperCase()}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
+                          {tour.is_bestseller && (
+                            <span className="bg-[#FF5722] text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-md tracking-wider">
+                              🔥 BESTSELLER
+                            </span>
+                          )}
+                          {tour.seats_left <= 8 && (
+                            <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[8px] font-black py-1 px-2.5 rounded-md shadow-sm tracking-wider">
+                              ONLY {tour.seats_left} SEATS LEFT
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-4 md:p-5 flex-grow flex flex-col justify-between space-y-4 text-left">
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between border-b border-slate-50 pb-2 text-left">
+                            <div className="flex flex-col text-left">
+                              <div className="flex items-center gap-1 text-sm font-extrabold text-slate-800">
+                                <Star size={14} className="fill-amber-500 text-amber-500" />
+                                <span>{tour.why_book_with_us?.rating !== undefined && tour.why_book_with_us?.rating !== null ? Number(tour.why_book_with_us.rating) : (tour.rating || 4.5)}</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-black uppercase tracking-wider">
+                                {tour.why_book_with_us?.reviews_count !== undefined && tour.why_book_with_us?.reviews_count !== null ? Number(tour.why_book_with_us.reviews_count) : (tour.reviewsCount || 80)} Reviews
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[9px] font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase tracking-wider">
+                                🔥 {tour.bookings_count || 143}+ booked
+                              </span>
+                            </div>
+                          </div>
+
+                          <h3 className="font-extrabold text-sm sm:text-base font-display text-slate-900 tracking-tight group-hover:text-[#FF5722] transition-colors leading-tight line-clamp-1 uppercase text-left">
+                            {tour.name}
+                          </h3>
+
+                          {tour.route_map && tour.route_map.length > 0 && (
+                            <div className="flex items-center gap-1 text-[11px] font-bold text-[#FF5722] text-left pt-0.5">
+                              <span className="truncate">{tour.route_map.join(' → ')}</span>
+                            </div>
+                          )}
+                          
+                          <p className="text-xs text-slate-550 leading-relaxed font-medium line-clamp-2 text-left pt-0.5">
+                            {tour.description}
+                          </p>
+
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-b border-slate-50 pb-2.5 text-left">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                              <span>🗓</span>
+                              <span>{tour.duration}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                              <span>📍</span>
+                              <span>Ex {currentCity?.name || 'Rishikesh'}</span>
+                            </div>
+                            {tour.difficulty && (
+                              <div className="flex items-center gap-1">
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                                  tour.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                  tour.difficulty === 'Moderate' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
+                                  'bg-red-50 text-red-600 border border-red-100'
+                                }`}>
+                                  {tour.difficulty}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-1 text-[11px] font-bold text-slate-600 text-left">
+                            {tour.hotel_included && (
+                              <div className="flex items-center gap-1.5 text-left">
+                                <span className="text-emerald-500 font-bold">✔</span>
+                                <span>Hotel Included</span>
+                              </div>
+                            )}
+                            {tour.meals_included && (
+                              <div className="flex items-center gap-1.5 text-left">
+                                <span className="text-emerald-500 font-bold">✔</span>
+                                <span>Meals Included</span>
+                              </div>
+                            )}
+                            {tour.transport_included && (
+                              <div className="flex items-center gap-1.5 text-left">
+                                <span className="text-emerald-500 font-bold">✔</span>
+                                <span>Transfers Included</span>
+                              </div>
+                            )}
+                            {tour.guide_included && (
+                              <div className="flex items-center gap-1.5 text-left">
+                                <span className="text-emerald-500 font-bold">✔</span>
+                                <span>Guide Available</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-5 pt-0 flex items-center justify-between border-t border-slate-100 mt-auto pt-4 gap-3 text-left">
+                        <div className="flex flex-col text-left">
+                          <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">From</span>
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-lg font-extrabold text-[#008F5D]">₹{tour.minPrice.toLocaleString('en-IN')}</span>
+                            {originalPriceToShow && (
+                              <span className="text-xs text-slate-400 line-through font-bold">
+                                ₹{originalPriceToShow.toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 select-none">
+                            {discountPercentage > 0 && (
+                              <span className="bg-[#008F5D]/10 text-[#008F5D] text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                Save {discountPercentage}%
+                              </span>
+                            )}
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Per Person</span>
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectTour(tour);
+                          }}
+                          className="px-5 py-3 bg-[#FF5F00] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all border-none cursor-pointer text-center font-display whitespace-nowrap shadow-md hover:shadow-lg"
+                        >
+                          Explore Tour
+                        </button>
+                      </div>
+                    </motion.div>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+
+            {/* Empty State */}
+            {filteredGroupedList.length === 0 && (
+              <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center text-slate-505 font-medium space-y-3">
+                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto text-[#FF5722]">
+                  <Compass size={24} />
+                </div>
+                <p className="text-sm font-black text-slate-800 uppercase tracking-wider">No matching packages found</p>
+                <p className="text-xs text-slate-400 max-w-xs mx-auto">We couldn't find any tour packages matching your search filters. Try clearing filters or searching for another keyword.</p>
+                <button
+                  onClick={() => {
+                    setFilterDestination('');
+                    setFilterBudget('All');
+                    setFilterDuration('All');
+                    setFilterTourType('All');
+                  }}
+                  className="mt-4 px-5 py-2.5 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all border-none cursor-pointer"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
           </div>
         )}
 
