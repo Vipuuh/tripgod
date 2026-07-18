@@ -26,6 +26,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [hasVideoOption, setHasVideoOption] = useState(false);
   const [error, setError] = useState('');
   const [paymentOption, setPaymentOption] = useState('advance');
+  const [liabilityAgreed, setLiabilityAgreed] = useState(false);
 
   // Contact States for direct Razorpay prefilling
   const [name, setName] = useState('');
@@ -154,6 +155,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       setName(userName);
       setEmail(userEmail);
       setPhone(userPhone);
+      setLiabilityAgreed(false);
     }
   }, [activity, initialDate, initialGuests]);
 
@@ -236,6 +238,10 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
   const handleRazorpayPayment = () => {
+    if (!liabilityAgreed) {
+      setError('You must read and agree to the Liability Disclaimer to proceed.');
+      return;
+    }
     if (!date) {
       setError('Please select a date.');
       return;
@@ -1098,10 +1104,24 @@ My payment ID is verified. Please confirm my slots.`;
                   <span>{effectivePaymentOption === 'full' ? '₹0 (Paid in Full)' : `₹${remainingPayment.toLocaleString('en-IN')}`}</span>
                 </div>
               </div>
-            </div>
+          </div>
+
+          {/* Liability Policy Agreement */}
+          <div className="px-5 py-3.5 bg-red-50/50 border-t border-b border-red-200/50 flex gap-3 text-left">
+            <input
+              type="checkbox"
+              id="liability_policy_agree"
+              checked={liabilityAgreed}
+              onChange={(e) => setLiabilityAgreed(e.target.checked)}
+              className="mt-0.5 rounded border-red-300 text-rose-600 focus:ring-0 w-4 h-4 cursor-pointer shrink-0"
+            />
+            <label htmlFor="liability_policy_agree" className="text-[10px] sm:text-[11px] font-semibold text-rose-950 leading-normal cursor-pointer select-none">
+              <strong>Liability Disclaimer:</strong> I acknowledge that TripGod is solely a booking platform and is not responsible for any accidents, injuries, losses, or mishaps during tours, activities, hotel stays, or campings. The selected local operator is solely responsible for safety and service delivery. I agree to comply with all safety instructions.
+            </label>
+          </div>
 
             {/* Footer buttons */}
-            <div className="p-5 bg-transparent border-t border-black/5 flex">
+            <div className="p-5 bg-transparent flex">
               {isClosed ? (
                 <button
                   disabled

@@ -4,7 +4,8 @@ import {
   ChevronLeft, Star, Clock, MapPin, ShieldCheck, 
   Sparkles, Smartphone, Calendar, Phone, 
   MessageSquare, ExternalLink, Info, ArrowRight, Check,
-  Hotel, Utensils, Car, Compass, Tag, CheckCircle2, ChevronDown
+  Hotel, Utensils, Car, Compass, Tag, CheckCircle2, ChevronDown,
+  Users
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import MarketplaceFilters from '../components/MarketplaceFilters';
@@ -799,45 +800,72 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
             </div>
 
             {/* Checkout Widget Card */}
-            <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
-              <div className="flex items-start gap-3.5">
-                <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Tour with Token Advance</h4>
-                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Pay a token advance online to secure your slots with <strong>{selectedPartner?.name}</strong>. Cancel up to 24 hours prior for a 100% refund.
-                  </p>
-                </div>
-              </div>
+            {(() => {
+              const pMode = selectedTour.payment_mode || 'commission_advance';
+              const commPct = selectedTour.commission_percentage !== undefined && selectedTour.commission_percentage !== null ? Number(selectedTour.commission_percentage) : 10;
+              const fixedAmt = selectedTour.fixed_advance_amount !== undefined && selectedTour.fixed_advance_amount !== null ? Number(selectedTour.fixed_advance_amount) : 0;
 
-              {checkIfClosed(selectedTour).closed ? (
-                <button
-                  disabled
-                  className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
-                >
-                  Closed Temporarily
-                </button>
-              ) : (
-                <button
-                  onClick={() => openBookingModal({
-                    id: selectedTour.id,
-                    name: `${selectedTour.name} - ${selectedPartner?.name}`,
-                    stretch: selectedTour.duration,
-                    price: selectedTour.price,
-                    category: 'tours',
-                    city_id: selectedTour.city_id,
-                    vendor_id: selectedTour.vendor_id,
-                    commission_percentage: selectedTour.commission_percentage || selectedTour.vendors?.commission_percentage || 10,
-                    upi_discount: selectedTour.upi_discount,
-                    vendors: selectedPartner, // Send partner info directly to checkout
-                    slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
-                  })}
-                  className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
-                >
-                  Book Operator
-                </button>
-              )}
-            </div>
+              let advanceAmount = 0;
+              if (pMode === 'full_payment') {
+                advanceAmount = selectedTour.price;
+              } else if (pMode === 'fixed_advance') {
+                advanceAmount = fixedAmt;
+              } else {
+                advanceAmount = Math.round((selectedTour.price * commPct) / 100);
+              }
+              const remainingAmount = Math.max(0, selectedTour.price - advanceAmount);
+
+              let paymentTermsLabel = '';
+              if (pMode === 'full_payment') {
+                paymentTermsLabel = 'Pay 100% online now to secure your booking.';
+              } else {
+                paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} partial online token now to secure your booking • Pay remaining ₹${remainingAmount.toLocaleString('en-IN')} to operator at venue.`;
+              }
+
+              return (
+                <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
+                  <div className="flex items-start gap-3.5">
+                    <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
+                    <div className="space-y-1 text-left">
+                      <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Tour with Token Advance</h4>
+                      <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                        {paymentTermsLabel} Cancel up to 24 hours prior for a 100% refund.
+                      </p>
+                    </div>
+                  </div>
+
+                  {checkIfClosed(selectedTour).closed ? (
+                    <button
+                      disabled
+                      className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
+                    >
+                      Closed Temporarily
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openBookingModal({
+                        id: selectedTour.id,
+                        name: `${selectedTour.name} - ${selectedPartner?.name}`,
+                        stretch: selectedTour.duration,
+                        price: selectedTour.price,
+                        category: 'tours',
+                        city_id: selectedTour.city_id,
+                        vendor_id: selectedTour.vendor_id,
+                        payment_mode: pMode,
+                        commission_percentage: commPct,
+                        fixed_advance_amount: fixedAmt,
+                        upi_discount: selectedTour.upi_discount,
+                        vendors: selectedPartner, // Send partner info directly to checkout
+                        slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
+                      })}
+                      className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
+                    >
+                      Book Operator
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Mobile Sticky Booking Bar */}
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-3.5 px-4 flex items-center justify-between gap-4 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
@@ -856,19 +884,27 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                   <MessageSquare size={16} />
                 </a>
                 <button
-                  onClick={() => openBookingModal({
-                    id: selectedTour.id,
-                    name: `${selectedTour.name} - ${selectedPartner?.name}`,
-                    stretch: selectedTour.duration,
-                    price: selectedTour.price,
-                    category: 'tours',
-                    city_id: selectedTour.city_id,
-                    vendor_id: selectedTour.vendor_id,
-                    commission_percentage: selectedTour.commission_percentage || selectedTour.vendors?.commission_percentage || 10,
-                    upi_discount: selectedTour.upi_discount,
-                    vendors: selectedPartner,
-                    slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
-                  })}
+                  onClick={() => {
+                    const pMode = selectedTour.payment_mode || 'commission_advance';
+                    const commPct = selectedTour.commission_percentage !== undefined && selectedTour.commission_percentage !== null ? Number(selectedTour.commission_percentage) : 10;
+                    const fixedAmt = selectedTour.fixed_advance_amount !== undefined && selectedTour.fixed_advance_amount !== null ? Number(selectedTour.fixed_advance_amount) : 0;
+
+                    openBookingModal({
+                      id: selectedTour.id,
+                      name: `${selectedTour.name} - ${selectedPartner?.name}`,
+                      stretch: selectedTour.duration,
+                      price: selectedTour.price,
+                      category: 'tours',
+                      city_id: selectedTour.city_id,
+                      vendor_id: selectedTour.vendor_id,
+                      payment_mode: pMode,
+                      commission_percentage: commPct,
+                      fixed_advance_amount: fixedAmt,
+                      upi_discount: selectedTour.upi_discount,
+                      vendors: selectedPartner,
+                      slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
+                    });
+                  }}
                   className="py-2.5 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
                 >
                   Book Now

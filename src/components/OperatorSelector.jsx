@@ -158,6 +158,28 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
           const contextHelper = getContextualHelperText(landmark);
           const reviewsCount = getConsistentReviewCount(vendorName);
 
+          // Dynamic Payment Terms calculation
+          const pMode = op.payment_mode || op.paymentMode || 'commission_advance';
+          const commPct = op.commission_percentage !== undefined && op.commission_percentage !== null ? Number(op.commission_percentage) : (op.commissionPercentage !== undefined && op.commissionPercentage !== null ? Number(op.commissionPercentage) : 10);
+          const fixedAmt = op.fixed_advance_amount !== undefined && op.fixed_advance_amount !== null ? Number(op.fixed_advance_amount) : (op.fixedAdvanceAmount !== undefined && op.fixedAdvanceAmount !== null ? Number(op.fixedAdvanceAmount) : 0);
+
+          let advanceAmount = 0;
+          if (pMode === 'full_payment') {
+            advanceAmount = displayPrice;
+          } else if (pMode === 'fixed_advance') {
+            advanceAmount = fixedAmt;
+          } else {
+            advanceAmount = Math.round((displayPrice * commPct) / 100);
+          }
+          const remainingAmount = Math.max(0, displayPrice - advanceAmount);
+
+          let paymentTermsLabel = '';
+          if (pMode === 'full_payment') {
+            paymentTermsLabel = 'Pay 100% Online';
+          } else {
+            paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} now • Pay ₹${remainingAmount.toLocaleString('en-IN')} at venue`;
+          }
+
           return (
             <div
               key={op.id || idx}
@@ -244,6 +266,9 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
                       💳 ₹{upiDiscount.toLocaleString('en-IN')} UPI Discount
                     </span>
                   )}
+                  <span className="text-[9px] font-extrabold text-[#FF6B00] mt-0.5 flex items-center gap-1">
+                    🟢 {paymentTermsLabel}
+                  </span>
                 </div>
 
                 {/* Premium continue button */}

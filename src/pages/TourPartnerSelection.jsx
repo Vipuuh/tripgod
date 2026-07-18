@@ -156,44 +156,76 @@ export default function TourPartnerSelection({ currentCity, openBookingModal, se
                   </div>
 
                   {/* Pricing row & booking button */}
-                  <div className="border-t border-gray-100 pt-3 mt-3 flex items-center justify-between gap-4">
-                    {/* Left: Prices */}
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-neutral-900">
-                        ₹{displayPrice.toLocaleString('en-IN')}
-                      </span>
-                      {hasDiscount && (
-                        <span className="text-xs text-gray-400 line-through font-medium">
-                          ₹{displayOriginalPrice.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                      {op.is_limited_offer && (
-                        <span className="flex items-center gap-0.5 text-[8px] font-black uppercase text-[#FF5722] bg-[#FF5722]/10 border border-[#FF5722]/20 px-1.5 py-0.5 rounded-md">
-                          <Tag size={8} /> Limited Offer
-                        </span>
-                      )}
-                    </div>
+                  {(() => {
+                    const pMode = op.payment_mode || 'commission_advance';
+                    const commPct = op.commission_percentage !== undefined && op.commission_percentage !== null ? Number(op.commission_percentage) : 10;
+                    const fixedAmt = op.fixed_advance_amount !== undefined && op.fixed_advance_amount !== null ? Number(op.fixed_advance_amount) : 0;
 
-                    {/* Right: Checkout Button */}
-                    <button
-                      onClick={() => {
-                        openBookingModal({
-                          id: op.id,
-                          name: `${selectedTour.name} - ${op.vendors?.name || op.name || 'Local Operator'}`,
-                          price: displayPrice,
-                          category: 'tour',
-                          city_id: op.city_id,
-                          vendor_id: op.vendor_id,
-                          commission_percentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
-                          vendors: op.vendors,
-                          slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
-                        });
-                      }}
-                      className="py-2.5 px-6 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] border-none font-display shrink-0"
-                    >
-                      Book Operator
-                    </button>
-                  </div>
+                    let advanceAmount = 0;
+                    if (pMode === 'full_payment') {
+                      advanceAmount = displayPrice;
+                    } else if (pMode === 'fixed_advance') {
+                      advanceAmount = fixedAmt;
+                    } else {
+                      advanceAmount = Math.round((displayPrice * commPct) / 100);
+                    }
+                    const remainingAmount = Math.max(0, displayPrice - advanceAmount);
+
+                    let paymentTermsLabel = '';
+                    if (pMode === 'full_payment') {
+                      paymentTermsLabel = 'Pay 100% Online';
+                    } else {
+                      paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} now • Pay ₹${remainingAmount.toLocaleString('en-IN')} at venue`;
+                    }
+
+                    return (
+                      <div className="border-t border-gray-100 pt-3 mt-3 flex items-center justify-between gap-4">
+                        {/* Left: Prices */}
+                        <div className="flex flex-col text-left">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-neutral-900">
+                              ₹{displayPrice.toLocaleString('en-IN')}
+                            </span>
+                            {hasDiscount && (
+                              <span className="text-xs text-gray-400 line-through font-medium">
+                                ₹{displayOriginalPrice.toLocaleString('en-IN')}
+                              </span>
+                            )}
+                            {op.is_limited_offer && (
+                              <span className="flex items-center gap-0.5 text-[8px] font-black uppercase text-[#FF5722] bg-[#FF5722]/10 border border-[#FF5722]/20 px-1.5 py-0.5 rounded-md">
+                                <Tag size={8} /> Limited Offer
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-[#FF5722] mt-0.5">
+                            🟢 {paymentTermsLabel}
+                          </span>
+                        </div>
+
+                        {/* Right: Checkout Button */}
+                        <button
+                          onClick={() => {
+                            openBookingModal({
+                              id: op.id,
+                              name: `${selectedTour.name} - ${op.vendors?.name || op.name || 'Local Operator'}`,
+                              price: displayPrice,
+                              category: 'tour',
+                              city_id: op.city_id,
+                              vendor_id: op.vendor_id,
+                              payment_mode: pMode,
+                              commission_percentage: commPct,
+                              fixed_advance_amount: fixedAmt,
+                              vendors: op.vendors,
+                              slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
+                            });
+                          }}
+                          className="py-2.5 px-6 bg-[#FF5722] hover:bg-[#E54A18] text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] border-none font-display shrink-0"
+                        >
+                          Book Operator
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

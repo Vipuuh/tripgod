@@ -939,52 +939,80 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
             </div>
 
             {/* Checkout Widget Card */}
-            <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
-              <div className="flex items-start gap-3.5">
-                <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
-                  <p className="text-xs text-slate-550 font-semibold leading-relaxed">
-                    Pay a 10% partial token advance online to secure your activity with <strong>{selectedPartner?.name}</strong>. Cancel up to 24 hours prior for a 100% refund.
-                  </p>
-                </div>
-              </div>
+            {(() => {
+              const pMode = selectedPackage.payment_mode || 'commission_advance';
+              const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
+              const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
 
-              {checkIfClosed(selectedPackage).closed ? (
-                <button
-                  disabled
-                  className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
-                >
-                  Closed Temporarily
-                </button>
-              ) : (
-                <button
-                  onClick={() => openBookingModal({
-                    id: selectedPackage.id,
-                    name: `${selectedPackage.name} - ${selectedPartner?.name}`,
-                    stretch: selectedPackage.route || selectedPackage.stretch,
-                    price: selectedPackage.price,
-                    category: activityType,
-                    city_id: selectedPackage.city_id,
-                    vendor_id: selectedPackage.vendor_id,
-                    free_video_type: selectedPackage.free_video_type || 'none',
-                    is_closed: selectedPackage.is_closed,
-                    closed_reason: selectedPackage.closed_reason,
-                    closed_from: selectedPackage.closed_from,
-                    closed_until: selectedPackage.closed_until,
-                    vendors: selectedPartner // Send partner info directly to checkout
-                  })}
-                  className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
-                >
-                  Book Operator
-                </button>
-              )}
-            </div>
+              let advanceAmount = 0;
+              if (pMode === 'full_payment') {
+                advanceAmount = selectedPackage.price;
+              } else if (pMode === 'fixed_advance') {
+                advanceAmount = fixedAmt;
+              } else {
+                advanceAmount = Math.round((selectedPackage.price * commPct) / 100);
+              }
+              const remainingAmount = Math.max(0, selectedPackage.price - advanceAmount);
+
+              let paymentTermsLabel = '';
+              if (pMode === 'full_payment') {
+                paymentTermsLabel = 'Pay 100% online now to secure your slot.';
+              } else {
+                paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} partial online token now to secure your slot • Pay remaining ₹${remainingAmount.toLocaleString('en-IN')} to operator at venue.`;
+              }
+
+              return (
+                <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
+                  <div className="flex items-start gap-3.5">
+                    <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
+                    <div className="space-y-1 text-left">
+                      <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
+                      <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                        {paymentTermsLabel} Cancel up to 24 hours prior for a 100% refund.
+                      </p>
+                    </div>
+                  </div>
+
+                  {checkIfClosed(selectedPackage).closed ? (
+                    <button
+                      disabled
+                      className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
+                    >
+                      Closed Temporarily
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openBookingModal({
+                        id: selectedPackage.id,
+                        name: `${selectedPackage.name} - ${selectedPartner?.name}`,
+                        stretch: selectedPackage.route || selectedPackage.stretch,
+                        price: selectedPackage.price,
+                        category: activityType,
+                        city_id: selectedPackage.city_id,
+                        vendor_id: selectedPackage.vendor_id,
+                        payment_mode: pMode,
+                        commission_percentage: commPct,
+                        fixed_advance_amount: fixedAmt,
+                        free_video_type: selectedPackage.free_video_type || 'none',
+                        is_closed: selectedPackage.is_closed,
+                        closed_reason: selectedPackage.closed_reason,
+                        closed_from: selectedPackage.closed_from,
+                        closed_until: selectedPackage.closed_until,
+                        vendors: selectedPartner // Send partner info directly to checkout
+                      })}
+                      className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
+                    >
+                      Book Operator
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Mobile Sticky Booking Bar */}
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-3.5 px-4 flex items-center justify-between gap-4 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
               <div>
-                <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Price</span>
+                <span className="text-[9px] font-bold text-slate-455 uppercase block">Total Price</span>
                 <span className="text-lg font-black text-slate-900">₹{selectedPackage.price.toLocaleString('en-IN')}</span>
               </div>
 
@@ -998,21 +1026,30 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   <MessageSquare size={16} />
                 </a>
                 <button
-                  onClick={() => openBookingModal({
-                    id: selectedPackage.id,
-                    name: `${selectedPackage.name} - ${selectedPartner?.name}`,
-                    stretch: selectedPackage.route || selectedPackage.stretch,
-                    price: selectedPackage.price,
-                    category: activityType,
-                    city_id: selectedPackage.city_id,
-                    vendor_id: selectedPackage.vendor_id,
-                    free_video_type: selectedPackage.free_video_type || 'none',
-                    is_closed: selectedPackage.is_closed,
-                    closed_reason: selectedPackage.closed_reason,
-                    closed_from: selectedPackage.closed_from,
-                    closed_until: selectedPackage.closed_until,
-                    vendors: selectedPartner
-                  })}
+                  onClick={() => {
+                    const pMode = selectedPackage.payment_mode || 'commission_advance';
+                    const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
+                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+
+                    openBookingModal({
+                      id: selectedPackage.id,
+                      name: `${selectedPackage.name} - ${selectedPartner?.name}`,
+                      stretch: selectedPackage.route || selectedPackage.stretch,
+                      price: selectedPackage.price,
+                      category: activityType,
+                      city_id: selectedPackage.city_id,
+                      vendor_id: selectedPackage.vendor_id,
+                      payment_mode: pMode,
+                      commission_percentage: commPct,
+                      fixed_advance_amount: fixedAmt,
+                      free_video_type: selectedPackage.free_video_type || 'none',
+                      is_closed: selectedPackage.is_closed,
+                      closed_reason: selectedPackage.closed_reason,
+                      closed_from: selectedPackage.closed_from,
+                      closed_until: selectedPackage.closed_until,
+                      vendors: selectedPartner
+                    });
+                  }}
                   className="py-2.5 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
                 >
                   Book Now

@@ -1830,6 +1830,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           is_govt_approved: false,
           safety_rating: 4.5,
           full_payment_upi_discount: 0,
+          payment_mode: 'commission_advance',
+          fixed_advance_amount: '',
           id: null
         };
       });
@@ -1848,6 +1850,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             is_govt_approved: !!op.is_govt_approved,
             safety_rating: op.safety_rating !== null && op.safety_rating !== undefined ? op.safety_rating : 4.5,
             full_payment_upi_discount: op.full_payment_upi_discount !== null && op.full_payment_upi_discount !== undefined ? op.full_payment_upi_discount : 0,
+            payment_mode: op.payment_mode || 'commission_advance',
+            fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
             id: op.id
           };
         });
@@ -1870,6 +1874,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           original_price: '',
           commission_percentage: '',
           whatsapp_number: v.whatsapp || '',
+          payment_mode: 'commission_advance',
+          fixed_advance_amount: '',
           id: null
         };
       });
@@ -1883,6 +1889,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             original_price: op.original_price !== null && op.original_price !== undefined ? op.original_price : '',
             commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
             whatsapp_number: op.whatsapp_number || op.vendors?.whatsapp || '',
+            payment_mode: op.payment_mode || 'commission_advance',
+            fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
             id: op.id
           };
         });
@@ -1904,6 +1912,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           price: '',
           deposit: 0,
           pickup_location: v.address || 'Rishikesh',
+          commission_percentage: '',
+          payment_mode: 'commission_advance',
+          fixed_advance_amount: '',
           id: null
         };
       });
@@ -1916,6 +1927,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             price: op.price || '',
             deposit: op.deposit !== undefined ? op.deposit : 0,
             pickup_location: op.pickup_location || op.vendors?.address || 'Rishikesh',
+            commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
+            payment_mode: op.payment_mode || 'commission_advance',
+            fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
             id: op.id
           };
         });
@@ -2148,6 +2162,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             price: Number(op.price),
             originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
             commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
+            paymentMode: op.payment_mode || 'commission_advance',
+            fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
             whatsappNumber: op.whatsapp_number || null,
             operatorLogo: op.operator_logo || null,
             yearsOfExperience: op.years_of_experience === '' || op.years_of_experience === null || op.years_of_experience === undefined ? null : Number(op.years_of_experience),
@@ -2223,7 +2239,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 vendor_id: op.vendorId,
                 price: op.price,
                 original_price: op.originalPrice,
-                commission_percentage: op.commissionPercentage,
+                payment_mode: op.paymentMode,
+                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
                 whatsapp_number: op.whatsappNumber,
                 operator_logo: op.operatorLogo,
                 years_of_experience: op.yearsOfExperience,
@@ -2238,7 +2256,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 vendor_id: op.vendorId,
                 price: op.price,
                 original_price: op.originalPrice,
-                commission_percentage: op.commissionPercentage,
+                payment_mode: op.paymentMode,
+                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
                 whatsapp_number: op.whatsappNumber,
                 operator_logo: op.operatorLogo,
                 years_of_experience: op.yearsOfExperience,
@@ -2274,7 +2294,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             vendor_id: op.vendorId,
             price: op.price,
             original_price: op.originalPrice,
-            commission_percentage: op.commissionPercentage,
+            payment_mode: op.paymentMode,
+            commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+            fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
             whatsapp_number: op.whatsappNumber,
             operator_logo: op.operatorLogo,
             years_of_experience: op.yearsOfExperience,
@@ -2299,6 +2321,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             price: Number(op.price),
             deposit: Number(op.deposit),
             pickupLocation: op.pickup_location || 'Rishikesh',
+            paymentMode: op.payment_mode || 'commission_advance',
+            commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
+            fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
             id: op.id
           }));
 
@@ -2342,7 +2367,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 vendor_id: op.vendorId,
                 price: op.price,
                 deposit: op.deposit,
-                pickup_location: op.pickupLocation
+                pickup_location: op.pickupLocation,
+                payment_mode: op.paymentMode,
+                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null
               });
               delete existingOpsMap[op.vendorId];
             } else {
@@ -2351,7 +2379,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 vendor_id: op.vendorId,
                 price: op.price,
                 deposit: op.deposit,
-                pickup_location: op.pickupLocation
+                pickup_location: op.pickupLocation,
+                payment_mode: op.paymentMode,
+                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null
               });
             }
           });
@@ -2381,7 +2412,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             vendor_id: op.vendorId,
             price: op.price,
             deposit: op.deposit,
-            pickup_location: op.pickupLocation
+            pickup_location: op.pickupLocation,
+            payment_mode: op.paymentMode,
+            commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+            fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null
           }));
 
           const { error: insertError } = await supabase.from('bikes').insert(recordsToInsert);
@@ -2399,6 +2433,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
             commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
             whatsappNumber: op.whatsapp_number || null,
+            paymentMode: op.payment_mode || 'commission_advance',
+            fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
             id: op.id
           }));
 
@@ -2472,7 +2508,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 vendor_id: op.vendorId,
                 price: op.price,
                 original_price: op.originalPrice,
-                commission_percentage: op.commissionPercentage,
+                payment_mode: op.paymentMode,
+                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
                 contact_number: op.whatsappNumber
               });
               delete existingOpsMap[op.vendorId];
@@ -2482,7 +2520,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 vendor_id: op.vendorId,
                 price: op.price,
                 original_price: op.originalPrice,
-                commission_percentage: op.commissionPercentage,
+                payment_mode: op.paymentMode,
+                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
                 contact_number: op.whatsappNumber
               });
             }
@@ -2512,7 +2552,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             vendor_id: op.vendorId,
             price: op.price,
             original_price: op.originalPrice,
-            commission_percentage: op.commissionPercentage,
+            payment_mode: op.paymentMode,
+            commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
+            fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
             contact_number: op.whatsappNumber
           }));
 
@@ -4439,25 +4481,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                           </div>
 
                           <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
-                            <input
-                              type="number"
-                              value={opState.commission_percentage}
-                              onChange={(e) => {
-                                setActivitiesOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
-                                  }
-                                }));
-                              }}
-                              placeholder="e.g. 10"
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
                             <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">WhatsApp</label>
                             <input
                               type="text"
@@ -4475,6 +4498,75 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
                             />
                           </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Payment Mode</label>
+                            <select
+                              value={opState.payment_mode || 'commission_advance'}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    payment_mode: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-slate-350 text-[11px] focus:outline-none font-semibold"
+                            >
+                              <option value="commission_advance">Percentage Advance</option>
+                              <option value="fixed_advance">Flat Rate Advance</option>
+                              <option value="full_payment">Full 100% Online</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Payment Settings Details Sub-Row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {(opState.payment_mode === 'commission_advance' || !opState.payment_mode) && (
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={opState.commission_percentage}
+                                onChange={(e) => {
+                                  setActivitiesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                placeholder="e.g. 10"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                              />
+                            </div>
+                          )}
+
+                          {opState.payment_mode === 'fixed_advance' && (
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Fixed Advance Amount (₹)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
+                                onChange={(e) => {
+                                  setActivitiesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                placeholder="e.g. 200"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                              />
+                            </div>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -4697,65 +4789,136 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
                       {/* Right: Price, Deposit & Location inputs (only editable if enabled) */}
                       {opState.enabled ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-grow">
-                          <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹ / day)</label>
-                            <input
-                              type="number"
-                              required
-                              value={opState.price}
-                              onChange={(e) => {
-                                setBikesOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    price: Number(e.target.value)
-                                  }
-                                }));
-                              }}
-                              placeholder="Price"
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                            />
+                        <div className="flex-grow space-y-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹ / day)</label>
+                              <input
+                                type="number"
+                                required
+                                value={opState.price}
+                                onChange={(e) => {
+                                  setBikesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      price: Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                placeholder="Price"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Security Deposit (₹)</label>
+                              <input
+                                type="number"
+                                required
+                                value={opState.deposit}
+                                onChange={(e) => {
+                                  setBikesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      deposit: Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                placeholder="Deposit"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Pickup Location</label>
+                              <input
+                                type="text"
+                                required
+                                value={opState.pickup_location}
+                                onChange={(e) => {
+                                  setBikesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      pickup_location: e.target.value
+                                    }
+                                  }));
+                                }}
+                                placeholder="e.g. Tapovan, Rishikesh"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Payment Mode</label>
+                              <select
+                                value={opState.payment_mode || 'commission_advance'}
+                                onChange={(e) => {
+                                  setBikesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      payment_mode: e.target.value
+                                    }
+                                  }));
+                                }}
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-slate-350 text-[11px] focus:outline-none font-semibold"
+                              >
+                                <option value="commission_advance">Percentage Advance</option>
+                                <option value="fixed_advance">Flat Rate Advance</option>
+                                <option value="full_payment">Full 100% Online</option>
+                              </select>
+                            </div>
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Security Deposit (₹)</label>
-                            <input
-                              type="number"
-                              required
-                              value={opState.deposit}
-                              onChange={(e) => {
-                                setBikesOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    deposit: Number(e.target.value)
-                                  }
-                                }));
-                              }}
-                              placeholder="Deposit"
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                            />
-                          </div>
+                          {/* Payment Settings Sub-Row */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {(opState.payment_mode === 'commission_advance' || !opState.payment_mode) && (
+                              <div className="space-y-1">
+                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={opState.commission_percentage !== null && opState.commission_percentage !== undefined ? opState.commission_percentage : ''}
+                                  onChange={(e) => {
+                                    setBikesOperators(prev => ({
+                                      ...prev,
+                                      [vendor.id]: {
+                                        ...prev[vendor.id],
+                                        commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
+                                      }
+                                    }));
+                                  }}
+                                  placeholder="e.g. 10"
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                                />
+                              </div>
+                            )}
 
-                          <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Pickup Location</label>
-                            <input
-                              type="text"
-                              required
-                              value={opState.pickup_location}
-                              onChange={(e) => {
-                                setBikesOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    pickup_location: e.target.value
-                                  }
-                                }));
-                              }}
-                              placeholder="e.g. Tapovan, Rishikesh"
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                            />
+                            {opState.payment_mode === 'fixed_advance' && (
+                              <div className="space-y-1">
+                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Fixed Advance Amount (₹)</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
+                                  onChange={(e) => {
+                                    setBikesOperators(prev => ({
+                                      ...prev,
+                                      [vendor.id]: {
+                                        ...prev[vendor.id],
+                                        fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
+                                      }
+                                    }));
+                                  }}
+                                  placeholder="e.g. 200"
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
@@ -6100,80 +6263,130 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
                       {/* Right: Price inputs (only editable if enabled) */}
                       {opState.enabled ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-grow">
-                          <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹)</label>
-                            <input
-                              type="number"
-                              required
-                              value={opState.price}
-                              onChange={(e) => {
-                                setToursOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    price: Number(e.target.value)
-                                  }
-                                }));
-                              }}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
-                            />
+                        <div className="flex-grow space-y-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Price (₹)</label>
+                              <input
+                                type="number"
+                                required
+                                value={opState.price}
+                                onChange={(e) => {
+                                  setToursOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      price: Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Orig Price (₹)</label>
+                              <input
+                                type="number"
+                                placeholder="Strikethrough"
+                                value={opState.original_price}
+                                onChange={(e) => {
+                                  setToursOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      original_price: e.target.value === '' ? '' : Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">WhatsApp Contact</label>
+                              <input
+                                type="text"
+                                value={opState.whatsapp_number}
+                                onChange={(e) => {
+                                  setToursOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      whatsapp_number: e.target.value
+                                    }
+                                  }));
+                                }}
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Payment Mode</label>
+                              <select
+                                value={opState.payment_mode || 'commission_advance'}
+                                onChange={(e) => {
+                                  setToursOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      payment_mode: e.target.value
+                                    }
+                                  }));
+                                }}
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-slate-350 text-[11px] focus:outline-none font-semibold"
+                              >
+                                <option value="commission_advance">Percentage Advance</option>
+                                <option value="fixed_advance">Flat Rate Advance</option>
+                                <option value="full_payment">Full 100% Online</option>
+                              </select>
+                            </div>
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Orig Price (₹)</label>
-                            <input
-                              type="number"
-                              placeholder="Strikethrough"
-                              value={opState.original_price}
-                              onChange={(e) => {
-                                setToursOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    original_price: e.target.value === '' ? '' : Number(e.target.value)
-                                  }
-                                }));
-                              }}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
-                            />
-                          </div>
+                          {/* Payment Settings Sub-Row */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {(opState.payment_mode === 'commission_advance' || !opState.payment_mode) && (
+                              <div className="space-y-1">
+                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Comm Override (%)</label>
+                                <input
+                                  type="number"
+                                  placeholder={`Default ${vendor.commission_percentage}%`}
+                                  value={opState.commission_percentage}
+                                  onChange={(e) => {
+                                    setToursOperators(prev => ({
+                                      ...prev,
+                                      [vendor.id]: {
+                                        ...prev[vendor.id],
+                                        commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
+                                      }
+                                    }));
+                                  }}
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                                />
+                              </div>
+                            )}
 
-                          <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Comm Override (%)</label>
-                            <input
-                              type="number"
-                              placeholder={`Default ${vendor.commission_percentage}%`}
-                              value={opState.commission_percentage}
-                              onChange={(e) => {
-                                setToursOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
-                                  }
-                                }));
-                              }}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">WhatsApp Contact</label>
-                            <input
-                              type="text"
-                              value={opState.whatsapp_number}
-                              onChange={(e) => {
-                                setToursOperators(prev => ({
-                                  ...prev,
-                                  [vendor.id]: {
-                                    ...prev[vendor.id],
-                                    whatsapp_number: e.target.value
-                                  }
-                                }));
-                              }}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
-                            />
+                            {opState.payment_mode === 'fixed_advance' && (
+                              <div className="space-y-1">
+                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Fixed Advance Amount (₹)</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
+                                  onChange={(e) => {
+                                    setToursOperators(prev => ({
+                                      ...prev,
+                                      [vendor.id]: {
+                                        ...prev[vendor.id],
+                                        fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
+                                      }
+                                    }));
+                                  }}
+                                  placeholder="e.g. 200"
+                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
@@ -6286,52 +6499,54 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       </div>
 
       {/* 5. Payment Configuration */}
-      <div className="space-y-4 border-t border-slate-900 pt-4">
-        <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">Payment Configuration</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Payment Mode</label>
-            <select
-              value={formData.payment_mode || 'commission_advance'}
-              onChange={(e) => setFormData(prev => ({ ...prev, payment_mode: e.target.value }))}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none font-bold"
-            >
-              <option value="commission_advance">Commission-Based Advance</option>
-              <option value="fixed_advance">Fixed Advance Amount</option>
-              <option value="full_payment">Full 100% Payment Online</option>
-            </select>
+      {type === 'hotels' && (
+        <div className="space-y-4 border-t border-slate-900 pt-4">
+          <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">Payment Configuration</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Payment Mode</label>
+              <select
+                value={formData.payment_mode || 'commission_advance'}
+                onChange={(e) => setFormData(prev => ({ ...prev, payment_mode: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none font-bold"
+              >
+                <option value="commission_advance">Commission-Based Advance</option>
+                <option value="fixed_advance">Fixed Advance Amount</option>
+                <option value="full_payment">Full 100% Payment Online</option>
+              </select>
+            </div>
+
+            {(formData.payment_mode === 'commission_advance' || !formData.payment_mode) && (
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Percentage (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.commission_percentage !== null && formData.commission_percentage !== undefined ? formData.commission_percentage : ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, commission_percentage: e.target.value === '' ? '' : Number(e.target.value) }))}
+                  placeholder="e.g. 20"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                />
+              </div>
+            )}
+
+            {formData.payment_mode === 'fixed_advance' && (
+              <div className="space-y-1">
+                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? formData.fixed_advance_amount : ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value) }))}
+                  placeholder="e.g. 500"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                />
+              </div>
+            )}
           </div>
-
-          {(formData.payment_mode === 'commission_advance' || !formData.payment_mode) && (
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Percentage (%)</label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={formData.commission_percentage !== null && formData.commission_percentage !== undefined ? formData.commission_percentage : ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, commission_percentage: e.target.value === '' ? '' : Number(e.target.value) }))}
-                placeholder="e.g. 20"
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
-            </div>
-          )}
-
-          {formData.payment_mode === 'fixed_advance' && (
-            <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
-              <input
-                type="number"
-                min="0"
-                value={formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? formData.fixed_advance_amount : ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value) }))}
-                placeholder="e.g. 500"
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-              />
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">

@@ -453,6 +453,8 @@ export default function ActivityDetail({
                     originalPrice: op.original_price ? Number(op.original_price) : null,
                     isLimitedOffer: !!op.is_limited_offer,
                     commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                    payment_mode: op.payment_mode || 'commission_advance',
+                    fixed_advance_amount: op.fixed_advance_amount || 0,
                     
                     // Pass stretch route and distance if available
                     stretchRoute: op.route || null,
@@ -471,6 +473,10 @@ export default function ActivityDetail({
                     setShowOperatorModal(false);
                     const raw = op._raw;
                     const isVideo = title?.toLowerCase().includes('with video') || title?.toLowerCase().includes('with dslr video') || raw.name?.toLowerCase().includes('with video') || false;
+                    const pMode = raw.payment_mode || 'commission_advance';
+                    const commPct = raw.commission_percentage !== undefined && raw.commission_percentage !== null ? Number(raw.commission_percentage) : 10;
+                    const fixedAmt = raw.fixed_advance_amount !== undefined && raw.fixed_advance_amount !== null ? Number(raw.fixed_advance_amount) : 0;
+
                     openBookingModal({
                       id: raw.id || id,
                       name: `${title} - ${op.vendorName}`,
@@ -478,7 +484,9 @@ export default function ActivityDetail({
                       category: category,
                       city_id: raw.city_id,
                       vendor_id: raw.vendor_id,
-                      commission_percentage: raw.commission_percentage || raw.vendors?.commission_percentage,
+                      payment_mode: pMode,
+                      commission_percentage: commPct,
+                      fixed_advance_amount: fixedAmt,
                       vendors: raw.vendors,
                       videoIncluded: isVideo,
                       free_video_type: raw.free_video_type || free_video_type || 'none'

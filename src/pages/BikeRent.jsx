@@ -676,48 +676,75 @@ export default function BikeRent({ currentCity, openBookingModal }) {
             </div>
 
             {/* Checkout Widget Card */}
-            <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
-              <div className="flex items-start gap-3.5">
-                <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
-                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Pay a partial token advance online to secure your vehicle booking with <strong>{selectedPartner?.name}</strong>. Free cancellation applies up to 24 hours prior.
-                  </p>
-                </div>
-              </div>
+            {(() => {
+              const pMode = selectedVehicle.payment_mode || 'commission_advance';
+              const commPct = selectedVehicle.commission_percentage !== undefined && selectedVehicle.commission_percentage !== null ? Number(selectedVehicle.commission_percentage) : 10;
+              const fixedAmt = selectedVehicle.fixed_advance_amount !== undefined && selectedVehicle.fixed_advance_amount !== null ? Number(selectedVehicle.fixed_advance_amount) : 0;
 
-              {checkIfClosed(selectedVehicle).closed ? (
-                <button
-                  disabled
-                  className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
-                >
-                  Closed Temporarily
-                </button>
-              ) : (
-                <button
-                  onClick={() => openBookingModal({
-                    id: selectedVehicle.id,
-                    name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
-                    price: selectedVehicle.price,
-                    category: 'bikerent',
-                    city_id: selectedVehicle.city_id,
-                    vendor_id: selectedVehicle.vendor_id,
-                    commission_percentage: selectedVehicle.commission_percentage || selectedVehicle.vendors?.commission_percentage || 10,
-                    upi_discount: selectedVehicle.upi_discount,
-                    vendors: selectedPartner, // Send partner info directly to checkout
-                    slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
-                    is_closed: selectedVehicle.is_closed,
-                    closed_reason: selectedVehicle.closed_reason,
-                    closed_from: selectedVehicle.closed_from,
-                    closed_until: selectedVehicle.closed_until
-                  })}
-                  className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
-                >
-                  Book Rental
-                </button>
-              )}
-            </div>
+              let advanceAmount = 0;
+              if (pMode === 'full_payment') {
+                advanceAmount = selectedVehicle.price;
+              } else if (pMode === 'fixed_advance') {
+                advanceAmount = fixedAmt;
+              } else {
+                advanceAmount = Math.round((selectedVehicle.price * commPct) / 100);
+              }
+              const remainingAmount = Math.max(0, selectedVehicle.price - advanceAmount);
+
+              let paymentTermsLabel = '';
+              if (pMode === 'full_payment') {
+                paymentTermsLabel = 'Pay 100% online now to secure your booking.';
+              } else {
+                paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} partial online token now to secure your booking • Pay remaining ₹${remainingAmount.toLocaleString('en-IN')} to operator at venue.`;
+              }
+
+              return (
+                <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
+                  <div className="flex items-start gap-3.5">
+                    <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
+                    <div className="space-y-1 text-left">
+                      <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
+                      <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                        {paymentTermsLabel} Free cancellation applies up to 24 hours prior.
+                      </p>
+                    </div>
+                  </div>
+
+                  {checkIfClosed(selectedVehicle).closed ? (
+                    <button
+                      disabled
+                      className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
+                    >
+                      Closed Temporarily
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openBookingModal({
+                        id: selectedVehicle.id,
+                        name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
+                        price: selectedVehicle.price,
+                        category: 'bikerent',
+                        city_id: selectedVehicle.city_id,
+                        vendor_id: selectedVehicle.vendor_id,
+                        payment_mode: pMode,
+                        commission_percentage: commPct,
+                        fixed_advance_amount: fixedAmt,
+                        upi_discount: selectedVehicle.upi_discount,
+                        vendors: selectedPartner, // Send partner info directly to checkout
+                        slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
+                        is_closed: selectedVehicle.is_closed,
+                        closed_reason: selectedVehicle.closed_reason,
+                        closed_from: selectedVehicle.closed_from,
+                        closed_until: selectedVehicle.closed_until
+                      })}
+                      className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
+                    >
+                      Book Rental
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Mobile Sticky Booking Bar */}
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-3.5 px-4 flex items-center justify-between gap-4 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
@@ -736,22 +763,30 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                   <MessageSquare size={16} />
                 </a>
                 <button
-                  onClick={() => openBookingModal({
-                    id: selectedVehicle.id,
-                    name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
-                    price: selectedVehicle.price,
-                    category: 'bikerent',
-                    city_id: selectedVehicle.city_id,
-                    vendor_id: selectedVehicle.vendor_id,
-                    commission_percentage: selectedVehicle.commission_percentage || selectedVehicle.vendors?.commission_percentage || 10,
-                    upi_discount: selectedVehicle.upi_discount,
-                    vendors: selectedPartner,
-                    slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
-                    is_closed: selectedVehicle.is_closed,
-                    closed_reason: selectedVehicle.closed_reason,
-                    closed_from: selectedVehicle.closed_from,
-                    closed_until: selectedVehicle.closed_until
-                  })}
+                  onClick={() => {
+                    const pMode = selectedVehicle.payment_mode || 'commission_advance';
+                    const commPct = selectedVehicle.commission_percentage !== undefined && selectedVehicle.commission_percentage !== null ? Number(selectedVehicle.commission_percentage) : 10;
+                    const fixedAmt = selectedVehicle.fixed_advance_amount !== undefined && selectedVehicle.fixed_advance_amount !== null ? Number(selectedVehicle.fixed_advance_amount) : 0;
+
+                    openBookingModal({
+                      id: selectedVehicle.id,
+                      name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
+                      price: selectedVehicle.price,
+                      category: 'bikerent',
+                      city_id: selectedVehicle.city_id,
+                      vendor_id: selectedVehicle.vendor_id,
+                      payment_mode: pMode,
+                      commission_percentage: commPct,
+                      fixed_advance_amount: fixedAmt,
+                      upi_discount: selectedVehicle.upi_discount,
+                      vendors: selectedPartner,
+                      slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
+                      is_closed: selectedVehicle.is_closed,
+                      closed_reason: selectedVehicle.closed_reason,
+                      closed_from: selectedVehicle.closed_from,
+                      closed_until: selectedVehicle.closed_until
+                    });
+                  }}
                   className="py-2.5 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
                 >
                   Book Now
