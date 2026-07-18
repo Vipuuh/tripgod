@@ -391,30 +391,43 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               <ChevronLeft size={16} /> Back to Operators
             </button>
 
-            {/* Profile banner */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-2xs flex flex-col md:flex-row items-start md:items-center gap-6">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
-                <img src={selectedPartner.shop_image} className="w-full h-full object-cover" />
-              </div>
-              <div className="space-y-2 flex-grow">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase font-display leading-tight">{selectedPartner.name}</h2>
-                  <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
-                    TripGod Verified
+            {/* Premium Cover Banner Header Section */}
+            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xs flex flex-col text-left">
+              {/* Cover Banner Image */}
+              <div className="w-full h-44 sm:h-64 relative bg-slate-900 overflow-hidden">
+                <img 
+                  src={selectedPartner.shop_image} 
+                  alt={selectedPartner.name} 
+                  className="w-full h-full object-cover opacity-80" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                <div className="absolute bottom-5 left-5 right-5 text-white space-y-1">
+                  <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider shadow-md w-max inline-block">
+                    ✓ TripGod Verified Partner
                   </span>
+                  <h2 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-white uppercase mt-1 drop-shadow-sm">
+                    {selectedPartner.name}
+                  </h2>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-slate-500">
-                  <div className="flex items-center gap-1">
-                    <Star size={13} className="fill-amber-500 text-amber-500" />
-                    <span>{selectedPartner.star_rating} Rating ({selectedPartner.bookings_count} bookings)</span>
+              </div>
+              
+              {/* Profile Details (Lower section) */}
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500 border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-1 text-slate-800">
+                    <Star size={14} className="fill-amber-500 text-amber-550 shrink-0" />
+                    <span className="font-extrabold">{selectedPartner.star_rating} Rating</span>
+                    <span className="text-slate-400">({selectedPartner.bookings_count} bookings)</span>
                   </div>
                   <span>•</span>
                   <span>📍 {selectedPartner.landmark || selectedPartner.address}</span>
                   <span>•</span>
                   <span>Since {selectedPartner.since}</span>
+                  <span>•</span>
+                  <span className="text-emerald-600">🛡️ Verified Desk</span>
                 </div>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed pt-1 max-w-2xl">
-                  {selectedPartner.short_highlight}. Standard rentals with verified registration documents. Explore Rishikesh, Tapovan, and surrounding sights.
+                <p className="text-xs sm:text-sm text-slate-655 leading-relaxed font-medium max-w-3xl">
+                  ⚡ {selectedPartner.short_highlight}. Standard rentals with verified registration documents. Explore Rishikesh, Tapovan, and surrounding sights.
                 </p>
               </div>
             </div>
@@ -649,20 +662,8 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                     <span className="text-[#FF6B00] font-black">🕒 Timings:</span>
                     <span>{selectedPartner?.reporting_time}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">📞 Desk Hotline:</span>
-                    <a href={`tel:${selectedPartner?.phone}`} className="text-slate-800 hover:text-accent font-bold">
-                      {selectedPartner?.phone}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">💬 WhatsApp:</span>
-                    <a href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}`} className="text-slate-800 hover:text-accent font-bold">
-                      {selectedPartner?.whatsapp}
-                    </a>
-                  </div>
-                  <p className="text-[10px] text-slate-500 leading-normal pt-1.5">
-                    <span className="font-bold uppercase text-slate-600 block">📝 Document Verification</span>
+                  <p className="text-[10px] text-slate-500 leading-normal pt-1.5 bg-white border border-slate-200/60 p-3 rounded-xl">
+                    <span className="font-bold uppercase text-slate-600 block mb-1">📝 Document Verification</span>
                     {selectedPartner?.meeting_instructions}
                   </p>
                 </div>
@@ -727,7 +728,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
               <div className="flex gap-2">
                 <a
-                  href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}?text=Hi%2C%20I%20want%20to%20rent%20the%20${encodeURIComponent(selectedVehicle.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
+                  href={`https://wa.me/918630027341?text=Hi%20TripGod%2C%20I%20want%20to%20rent%20the%20${encodeURIComponent(selectedVehicle.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-xl flex items-center justify-center text-white shrink-0 hover:scale-105 active:scale-95 transition-all shadow-xs"

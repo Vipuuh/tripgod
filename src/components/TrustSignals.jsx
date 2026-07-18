@@ -3,43 +3,36 @@ import { ShieldCheck, Compass, Lock, Zap, Award, Calendar } from 'lucide-react';
 
 export default function TrustSignals({ freeCancellation = true, instantConfirmation = true }) {
   const signals = [
-    { id: 'verified', label: 'TripGod Verified', desc: 'Pre-screened & safety certified operators', icon: ShieldCheck, color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
-    { id: 'guides', label: 'Certified Guides', desc: 'Government approved experts only', icon: Compass, color: 'text-sky-600 bg-sky-50 border-sky-100' },
-    { id: 'secure', label: 'Secure Booking', desc: '10% token payment, remaining on arrival', icon: Lock, color: 'text-rose-600 bg-rose-50 border-rose-100' },
-    { id: 'lowest', label: 'Lowest Price', desc: '100% price match guarantee', icon: Award, color: 'text-amber-600 bg-amber-50 border-amber-100' }
+    { id: 'verified', label: 'Verified Operator', icon: ShieldCheck, color: 'text-emerald-700 bg-emerald-50/80 border-emerald-100/80' },
+    { id: 'guides', label: 'Certified Guides', icon: Compass, color: 'text-sky-700 bg-sky-50/80 border-sky-100/80' },
+    { id: 'secure', label: '10% Advance Booking', icon: Lock, color: 'text-rose-700 bg-rose-50/80 border-rose-100/80' },
+    { id: 'lowest', label: 'Lowest Price Guarantee', icon: Award, color: 'text-amber-700 bg-amber-50/80 border-amber-100/80' }
   ];
 
   if (instantConfirmation) {
-    signals.push({ id: 'instant', label: 'Instant Confirmation', desc: 'Voucher sent on WhatsApp immediately', icon: Zap, color: 'text-indigo-650 bg-indigo-50 border-indigo-100' });
+    signals.push({ id: 'instant', label: 'Instant Confirmation', icon: Zap, color: 'text-indigo-700 bg-indigo-50/80 border-indigo-100/80' });
   }
 
   if (freeCancellation) {
-    signals.push({ id: 'cancellation', label: 'Free Cancellation', desc: '100% refund up to 24 hours prior', icon: Calendar, color: 'text-cyan-650 bg-cyan-50 border-cyan-100' });
+    signals.push({ id: 'cancellation', label: 'Free Cancellation (24h)', icon: Calendar, color: 'text-cyan-700 bg-cyan-50/80 border-cyan-100/80' });
   }
 
   return (
-    <div className="w-full space-y-4 font-sans text-left">
-      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Trust & Guarantees</h4>
+    <div className="w-full space-y-2 font-sans text-left">
+      <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Trust & Guarantees</h4>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="flex flex-wrap gap-1.5">
         {signals.map((sig) => {
           const Icon = sig.icon;
           return (
             <div 
               key={sig.id} 
-              className="flex gap-3 bg-white border border-slate-150 rounded-2xl p-4 shadow-3xs hover:border-slate-350 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 border rounded-lg shadow-3xs bg-white text-slate-800 border-slate-200"
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${sig.color} shadow-xs`}>
-                <Icon size={16} className="stroke-[2.5]" />
-              </div>
-              <div className="space-y-0.5">
-                <span className="block font-black text-xs text-slate-900 uppercase leading-snug">
-                  {sig.label}
-                </span>
-                <span className="block text-[10px] text-slate-500 font-semibold leading-normal">
-                  {sig.desc}
-                </span>
-              </div>
+              <Icon size={12} className="stroke-[2.5] shrink-0 text-[#FF6B00]" />
+              <span className="font-black text-[9px] uppercase tracking-wide text-slate-700">
+                {sig.label}
+              </span>
             </div>
           );
         })}

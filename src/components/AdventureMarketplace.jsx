@@ -4,7 +4,8 @@ import {
   ChevronLeft, Star, Clock, MapPin, ShieldCheck, 
   HelpCircle, Sparkles, Smartphone, Calendar, Phone, 
   MessageSquare, ExternalLink, Info, ArrowRight, Check,
-  Hotel, Utensils, Car, Compass, Users
+  Hotel, Utensils, Car, Compass, Users,
+  Shield, Camera, Award, Flame, Tent, Zap, Activity
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import MarketplaceFilters from './MarketplaceFilters';
@@ -19,6 +20,42 @@ const getHash = (str) => {
     hash = (hash << 5) - hash + str.charCodeAt(i);
   }
   return Math.abs(hash);
+};
+
+const getInclusionsRibbon = (activityType) => {
+  switch (activityType) {
+    case 'rafting':
+    case 'kayaking':
+      return [
+        { name: 'Professional Raft & Gear', icon: Shield, desc: 'Premium rafts & lifejackets' },
+        { name: 'Certified River Guide', icon: Compass, desc: 'Government approved experts' },
+        { name: 'DSLR Video Support', icon: Camera, desc: 'Optional media coverage' },
+        { name: 'Instant Slots', icon: Zap, desc: 'Immediate confirmations' }
+      ];
+    case 'camping':
+      return [
+        { name: 'Premium Swiss Tents', icon: Tent, desc: 'Comfortable stay with beds' },
+        { name: 'Buffet Meals Support', icon: Utensils, desc: 'Breakfast, Lunch & Dinner' },
+        { name: 'Bonfire & Music', icon: Flame, desc: 'Evening campfire activities' },
+        { name: 'In-camp Games', icon: Activity, desc: 'Volleyball, badminton, etc.' }
+      ];
+    case 'bungee':
+    case 'swing':
+    case 'zipline':
+    case 'paragliding':
+      return [
+        { name: 'Safety Harness & Gear', icon: Shield, desc: 'Triple redundant lock systems' },
+        { name: 'Certified Jump Master', icon: Award, desc: 'Trained instructors only' },
+        { name: 'GoPro Video Options', icon: Camera, desc: 'High-def action footage' },
+        { name: 'Instant Confirmation', icon: Zap, desc: 'Voucher on WhatsApp' }
+      ];
+    default:
+      return [
+        { name: 'Verified Operator', icon: ShieldCheck, desc: 'Safety certified partners' },
+        { name: 'Expert Guides', icon: Compass, desc: 'Trained professionals' },
+        { name: 'Safety Gear', icon: Shield, desc: 'Tested harness/helmets' }
+      ];
+  }
 };
 
 export default function AdventureMarketplace({ activityType, currentCity, openBookingModal }) {
@@ -337,7 +374,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               {/* Partners Listing Title */}
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h2 className="text-base font-black font-display text-slate-900 uppercase">
-                  Available Operators ({filteredPartners.length})
+                  Available Partners ({filteredPartners.length})
                 </h2>
               </div>
 
@@ -348,6 +385,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   const displayBadges = partner.badges.slice(0, 2);
                   const hVal = getHash(partner.name);
                   const verifiedBadge = hVal % 5 !== 0;
+                  const inclusions = getInclusionsRibbon(activityType);
 
                   return (
                     <motion.div
@@ -370,7 +408,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                           {verifiedBadge && (
                             <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
-                              Verified Operator
+                              Verified Partner
                             </span>
                           )}
                           {partner.star_rating >= 4.8 && (
@@ -413,14 +451,14 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         </div>
 
                         {/* Badges and Highlights */}
-                        <div className="flex flex-wrap items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
                           {displayBadges.map((badge, bIdx) => (
                             <span key={bIdx} className="text-[9px] font-black uppercase text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/10 px-2 py-0.5 rounded">
                               {badge}
                             </span>
                           ))}
-                          <span className="text-[10px] text-slate-500 font-semibold italic">
-                            "{partner.short_highlight}"
+                          <span className="text-[9px] text-slate-655 font-black uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded">
+                            ⚡ {partner.short_highlight}
                           </span>
                         </div>
 
@@ -428,22 +466,17 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         <div className="pt-3 border-t border-slate-100 flex flex-col xs:flex-row xs:items-center justify-between gap-3">
                           {/* Inclusions ribbon */}
                           <div className="flex gap-3 text-slate-400">
-                            <div className="group/inc relative">
-                              <Hotel size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
-                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Stay option</span>
-                            </div>
-                            <div className="group/inc relative">
-                              <Utensils size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
-                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Meals support</span>
-                            </div>
-                            <div className="group/inc relative">
-                              <Car size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
-                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Transport</span>
-                            </div>
-                            <div className="group/inc relative">
-                              <Compass size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
-                              <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">Expert Guide</span>
-                            </div>
+                            {inclusions.map((inc, iIdx) => {
+                              const IncIcon = inc.icon;
+                              return (
+                                <div key={iIdx} className="group/inc relative">
+                                  <IncIcon size={14} className="hover:text-[#FF6B00] transition-colors cursor-help" />
+                                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded opacity-0 group-hover/inc:opacity-100 transition-opacity whitespace-nowrap mb-1">
+                                    {inc.name}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
 
                           {/* Price & CTA */}
@@ -497,30 +530,43 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               <ChevronLeft size={16} /> Back to Operators
             </button>
 
-            {/* Premium Profile Header Section */}
-            <div className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-2xs flex flex-col md:flex-row items-start md:items-center gap-6">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-slate-200">
-                <img src={selectedPartner.shop_image} className="w-full h-full object-cover" />
-              </div>
-              <div className="space-y-2 flex-grow">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase font-display leading-tight">{selectedPartner.name}</h2>
-                  <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
-                    TripGod Verified
+            {/* Premium Cover Banner Header Section */}
+            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xs flex flex-col text-left">
+              {/* Cover Banner Image */}
+              <div className="w-full h-44 sm:h-64 relative bg-slate-900 overflow-hidden">
+                <img 
+                  src={selectedPartner.shop_image} 
+                  alt={selectedPartner.name} 
+                  className="w-full h-full object-cover opacity-80" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                <div className="absolute bottom-5 left-5 right-5 text-white space-y-1">
+                  <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider shadow-md w-max inline-block">
+                    ✓ TripGod Verified Partner
                   </span>
+                  <h2 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-white uppercase mt-1 drop-shadow-sm">
+                    {selectedPartner.name}
+                  </h2>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-slate-500">
-                  <div className="flex items-center gap-1">
-                    <Star size={13} className="fill-amber-500 text-amber-500" />
-                    <span>{selectedPartner.star_rating} Rating ({selectedPartner.bookings_count} bookings)</span>
+              </div>
+              
+              {/* Profile Details (Lower section) */}
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500 border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-1 text-slate-800">
+                    <Star size={14} className="fill-amber-500 text-amber-550 shrink-0" />
+                    <span className="font-extrabold">{selectedPartner.star_rating} Rating</span>
+                    <span className="text-slate-400">({selectedPartner.bookings_count} bookings)</span>
                   </div>
                   <span>•</span>
                   <span>📍 {selectedPartner.landmark || selectedPartner.address}</span>
                   <span>•</span>
                   <span>Since {selectedPartner.since}</span>
+                  <span>•</span>
+                  <span className="text-emerald-600">🛡️ Certified Crew</span>
                 </div>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed pt-1 max-w-2xl">
-                  {selectedPartner.short_highlight}. Highly trained operators offering pre-verified slot confirmations, top-grade safety standards and certified equipment.
+                <p className="text-xs sm:text-sm text-slate-655 leading-relaxed font-medium max-w-3xl">
+                  ⚡ {selectedPartner.short_highlight}. Highly trained operators offering pre-verified slot confirmations, top-grade safety standards and certified equipment.
                 </p>
               </div>
             </div>
@@ -753,10 +799,47 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               </div>
             </div>
 
+            {/* Safety & Eligibility Guidelines */}
+            <div className="space-y-3 pt-4 border-t border-slate-200">
+              <h3 className="text-xs font-bold font-display text-slate-900 uppercase">Safety & Eligibility Criteria</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">⚖️ Weight Range</span>
+                  <span className="text-xs font-black text-slate-800">
+                    {activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
+                     activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
+                     activityType === 'paragliding' ? '30 kg - 90 kg' :
+                     activityType === 'zipline' ? '30 kg - 115 kg' : 'No Limit'}
+                  </span>
+                </div>
+                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🎂 Age Limit</span>
+                  <span className="text-xs font-black text-slate-800">
+                    {activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
+                     activityType === 'bungee' || activityType === 'swing' ? '12 - 45 Years' :
+                     activityType === 'paragliding' ? '10 - 60 Years' :
+                     activityType === 'zipline' ? '10 - 65 Years' : 'All Ages'}
+                  </span>
+                </div>
+                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🤰 Pregnant Ladies</span>
+                  <span className="text-xs font-black text-red-650">
+                    {activityType === 'camping' ? 'Allowed with caution' : 'Strictly Not Allowed'}
+                  </span>
+                </div>
+                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🩺 Medical Fitness</span>
+                  <span className="text-[10px] font-semibold text-slate-600 leading-tight block">
+                    {activityType === 'camping' ? 'Basic physical fitness' : 'Avoid if Heart patient, Asthma or High BP'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Inclusions / Exclusions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
               <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Inclusions</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Inclusions</h4>
                 <ul className="space-y-2 text-xs text-slate-600 font-medium">
                   {selectedPackage.inclusions && selectedPackage.inclusions.length > 0 ? (
                     selectedPackage.inclusions.map((inc, i) => (
@@ -769,11 +852,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     <>
                       <li className="flex items-start gap-2">
                         <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                        <span>Certified guides & equipment</span>
+                        <span>Certified guides & safety equipment</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                        <span>Safety gear: helmets, life-jackets/harness</span>
+                        <span>Standard safety gear: helmet, life-jackets or harness</span>
                       </li>
                     </>
                   )}
@@ -781,7 +864,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900">Exclusions</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Exclusions</h4>
                 <ul className="space-y-2 text-xs text-slate-600 font-medium">
                   {selectedPackage.exclusions && selectedPackage.exclusions.length > 0 ? (
                     selectedPackage.exclusions.map((exc, i) => (
@@ -794,11 +877,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     <>
                       <li className="flex items-start gap-2">
                         <span className="text-rose-600 font-bold shrink-0">✗</span>
-                        <span>Photos & videos (GoPro) extra cost</span>
+                        <span>Photos & videos (GoPro/DSLR) extra cost</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-rose-600 font-bold shrink-0">✗</span>
-                        <span>Personal expenses</span>
+                        <span>Personal travel expenses</span>
                       </li>
                     </>
                   )}
@@ -806,12 +889,12 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               </div>
             </div>
 
-            {/* Dynamic Partner Contact & Location Info (Additional Fix) */}
+            {/* Dynamic Partner Location & Reporting Guidelines */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 bg-slate-50 border border-slate-200/60 rounded-3xl p-5 md:p-6 shadow-2xs">
               <div className="space-y-3">
-                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Reporting & Office Address</span>
+                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide font-display">Reporting & Office Location</span>
                 <div className="space-y-1.5">
-                  <p className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                  <p className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5 uppercase font-display">
                     <MapPin size={15} className="text-[#FF6B00]" />
                     {selectedPartner?.name} Office
                   </p>
@@ -830,32 +913,20 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   </a>
                 )}
                 <div className="pl-5 pt-1 text-[10px] text-slate-500 leading-normal">
-                  <span className="font-bold uppercase text-slate-600 block">🚗 Parking</span>
+                  <span className="font-bold uppercase text-slate-600 block">🚗 Parking Space</span>
                   {selectedPartner?.parking_details}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Logistics & Meeting Guidelines</span>
-                <div className="space-y-2 text-xs font-medium text-slate-600 pl-1">
+                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide font-display">Check-in & Reporting Instructions</span>
+                <div className="space-y-2.5 text-xs font-medium text-slate-600 pl-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[#FF6B00] font-black">🕒 Reporting:</span>
-                    <span>{selectedPartner?.reporting_time}</span>
+                    <span>15 Minutes Before Slot ({selectedPartner?.reporting_time})</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">📞 Hotline:</span>
-                    <a href={`tel:${selectedPartner?.phone}`} className="text-slate-800 hover:text-accent font-bold">
-                      {selectedPartner?.phone}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">💬 WhatsApp:</span>
-                    <a href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}`} className="text-slate-800 hover:text-accent font-bold">
-                      {selectedPartner?.whatsapp}
-                    </a>
-                  </div>
-                  <p className="text-[10px] text-slate-500 leading-normal pt-1.5">
-                    <span className="font-bold uppercase text-slate-600 block">📝 Instructions</span>
+                  <p className="text-[10px] text-slate-550 leading-normal pt-1 bg-white border border-slate-200/50 p-3 rounded-xl">
+                    <span className="font-bold uppercase text-slate-700 block mb-1">📝 Guidelines</span>
                     {selectedPartner?.meeting_instructions}
                   </p>
                 </div>
@@ -873,8 +944,8 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                 <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
-                  <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                    Pay a 10% advance to lock down your booking with <strong>{selectedPartner?.name}</strong>. Free cancellation applies up to 24 hours in advance.
+                  <p className="text-xs text-slate-550 font-semibold leading-relaxed">
+                    Pay a 10% partial token advance online to secure your activity with <strong>{selectedPartner?.name}</strong>. Cancel up to 24 hours prior for a 100% refund.
                   </p>
                 </div>
               </div>
@@ -919,7 +990,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
 
               <div className="flex gap-2">
                 <a
-                  href={`https://wa.me/${selectedPartner?.whatsapp?.replace(/\D/g, '')}?text=Hi%2C%20I%20want%20to%20book%20the%20${encodeURIComponent(selectedPackage.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
+                  href={`https://wa.me/918630027341?text=Hi%20TripGod%2C%20I%20want%20to%20book%20the%20${encodeURIComponent(selectedPackage.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-xl flex items-center justify-center text-white shrink-0 hover:scale-105 active:scale-95 transition-all shadow-xs"
