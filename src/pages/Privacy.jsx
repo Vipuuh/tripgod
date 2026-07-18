@@ -87,6 +87,27 @@ export default function Privacy() {
             </p>
           </div>
 
+          {/* Section 5 — Liability Disclaimer */}
+          <div className="p-6 bg-rose-50 rounded-2xl border border-rose-100 space-y-3.5 text-left">
+            <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
+              <Shield size={20} className="text-rose-500" />
+              5. Liability Disclaimer
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold">
+              TripGod is <strong>solely a booking and discovery platform</strong>. We connect travelers with local operators, hotels, and adventure service providers. By using TripGod and completing any booking, you acknowledge and agree to the following:
+            </p>
+            <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-650 font-bold">
+              <li>TripGod is not responsible for any accidents, injuries, losses, property damage, or mishaps occurring during tours, adventure activities, hotel stays, camping, or any other activities booked through our platform.</li>
+              <li>The selected local operator or service provider is <strong>solely responsible</strong> for service delivery, safety protocols, and guest welfare during the activity or stay.</li>
+              <li>You agree to comply with all safety instructions provided by the operator at the venue.</li>
+              <li>TripGod acts as an intermediary and does not guarantee the outcome or experience of any booked service beyond the confirmed booking details.</li>
+              <li>In case of disputes related to service quality, the local operator is the primary point of resolution. TripGod will assist in coordination where possible.</li>
+            </ul>
+            <p className="text-[11px] text-rose-700 font-extrabold bg-rose-100/80 border border-rose-200 px-4 py-2.5 rounded-xl">
+              ⚠️ By proceeding with any booking on TripGod, you confirm that you have read, understood, and accepted this Liability Disclaimer in full.
+            </p>
+          </div>
+
         </div>
 
         <div className="w-full h-[1px] bg-slate-100" />
