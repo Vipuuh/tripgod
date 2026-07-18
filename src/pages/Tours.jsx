@@ -485,7 +485,17 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                         </div>
                       )}
 
-                      {/* Top Row: Rating + Duration */}
+                      {/* Tour Image — top of card */}
+                      <div className="w-full h-44 relative overflow-hidden bg-slate-100 group">
+                        <img
+                          src={pkg.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'}
+                          alt={pkg.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                      </div>
+
+                      {/* Rating + Duration */}
                       <div className="flex items-center justify-between px-4 pt-3.5 pb-0">
                         <div className="flex items-center gap-1">
                           <span className="text-amber-500 text-xs">⭐</span>
