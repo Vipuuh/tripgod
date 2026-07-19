@@ -36,7 +36,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [checkoutLogId, setCheckoutLogId] = useState(null);
 
   // Guard: must come AFTER all hooks
-  if (!activity) return null;
+  // Note: We do NOT return null here - we let the AnimatePresence handle isOpen && activity check
+  // to avoid breaking Framer Motion exit animations and ErrorBoundary detection.
 
   const getSimpleBookingId = (id) => {
     if (!id) return 'TG-000000';
@@ -72,7 +73,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       defaultSlots = ['12:00 PM (Check-in)'];
     }
   }
-  const slots = activity.slots || defaultSlots;
+  const slots = (activity && activity.slots) || defaultSlots;
   
   const checkIfDateClosed = (targetDateStr) => {
     if (!activity) return { closed: false };
@@ -162,7 +163,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   }, [activity, initialDate, initialGuests]);
 
   const getSlotLabel = () => {
-    const cat = (activity.category || '').toLowerCase();
+    const cat = ((activity && activity.category) || '').toLowerCase();
     if (cat === 'hotels') return 'Room Type';
     if (cat === 'bikes' || cat === 'bikerent') return 'Select Vehicle';
     if (cat === 'tours') return 'Select Package';
@@ -170,19 +171,19 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   };
 
   // Determine payment configuration
-  const paymentMode = activity.payment_mode || 'commission_advance';
-  const commissionPercentage = activity.commission_percentage !== undefined && activity.commission_percentage !== null
+  const paymentMode = (activity && activity.payment_mode) || 'commission_advance';
+  const commissionPercentage = activity && activity.commission_percentage !== undefined && activity.commission_percentage !== null
     ? Number(activity.commission_percentage)
-    : (activity.vendors?.commission_percentage !== undefined && activity.vendors?.commission_percentage !== null
+    : (activity && activity.vendors?.commission_percentage !== undefined && activity.vendors?.commission_percentage !== null
         ? Number(activity.vendors.commission_percentage)
         : 10.0);
-  const fixedAdvanceAmount = activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
+  const fixedAdvanceAmount = activity && activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
     ? Number(activity.fixed_advance_amount)
     : 0;
 
   // Calculate nights for hotel bookings
   let nights = 1;
-  if (activity.category === 'hotels' && checkInDate && checkOutDate) {
+  if (activity && activity.category === 'hotels' && checkInDate && checkOutDate) {
     const start = new Date(checkInDate);
     const end = new Date(checkOutDate);
     const diffTime = Math.abs(end - start);
@@ -190,16 +191,16 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   }
 
   // Calculate pricing
-  const basePrice = activity.price || 0;
+  const basePrice = (activity && activity.price) || 0;
   const pricePerPerson = basePrice;
   // For hotels: price already = (room_price × rooms + meal costs) per night, so just multiply by nights
   // For other categories: multiply by guests
-  const rawTotalPrice = activity.category === 'hotels'
+  const rawTotalPrice = activity && activity.category === 'hotels'
     ? basePrice * nights
     : pricePerPerson * guests;
   
   // Calculate 12% tax dynamically for hotel bookings
-  const taxes = activity.category === 'hotels' ? Math.round(rawTotalPrice * 0.12) : 0;
+  const taxes = activity && activity.category === 'hotels' ? Math.round(rawTotalPrice * 0.12) : 0;
   const totalPrice = rawTotalPrice + taxes;
   
   // Calculate dynamic advance amount
@@ -216,7 +217,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const remainingPayment = totalPrice - amountToPayNow;
 
   // Calculate dynamic UPI Discount
-  const customUpiDiscount = activity.upi_discount !== undefined && activity.upi_discount !== null && activity.upi_discount !== ''
+  const customUpiDiscount = activity && activity.upi_discount !== undefined && activity.upi_discount !== null && activity.upi_discount !== ''
     ? Number(activity.upi_discount)
     : null;
 
@@ -236,7 +237,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const finalAmountToPay = Math.max(0, amountToPayNow - upiDiscountVal);
 
   const minDate = new Date().toISOString().split('T')[0];
-  const isBikeRent = activity.category === 'bikerent';
+  const isBikeRent = activity && activity.category === 'bikerent';
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
   const handleRazorpayPayment = () => {
@@ -522,7 +523,7 @@ My payment ID is verified. Please confirm my slots.`;
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && activity && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-hidden">
           {/* Glowing refractive backdrop blobs */}
           <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-[#FF5F00]/10 blur-[120px] pointer-events-none animate-pulse" />
@@ -681,7 +682,7 @@ My payment ID is verified. Please confirm my slots.`;
             <div className="flex items-center justify-between p-5 border-b border-black/5 bg-transparent text-black">
               <div>
                 <span className="text-[9px] tracking-wider uppercase text-[#FF5F00] font-black px-2 py-0.5 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded">
-                  {activity.category.toUpperCase()}
+                  {(activity.category || 'Booking').toUpperCase()}
                 </span>
                 <h3 className="text-xl font-bold tracking-tight mt-1 font-display">Book {activity.name}</h3>
               </div>

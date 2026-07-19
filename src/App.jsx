@@ -600,10 +600,14 @@ export default function App() {
       </a>
 
       {/* 6. Unified Booking Modal */}
-      <ErrorBoundary>
+      <ErrorBoundary key={bookingActivity?.id || 'booking-modal'}>
       <BookingModal
         isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
+        onClose={() => {
+          setIsBookingModalOpen(false);
+          // Reset activity after animation completes so modal remounts cleanly next time
+          setTimeout(() => setBookingActivity(null), 350);
+        }}
         activity={bookingActivity}
         onAddToCart={handleAddToCart}
         initialDate={initialBookingDate}
