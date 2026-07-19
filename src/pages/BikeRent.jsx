@@ -43,16 +43,18 @@ export default function BikeRent({ currentCity, openBookingModal }) {
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const mapped = data.map((item, idx) => ({
-            ...item,
-            price: Number(item.price),
-            deposit: Number(item.deposit || 0),
-            rating: item.rating || item.vendors?.star_rating || 4.7,
-            reviewsCount: item.reviews_count || (80 + (idx * 17) % 150),
-            upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
-            images: item.images && item.images.length > 0 ? item.images : ['/scooty-rent.jpg'],
-            type: item.name.toLowerCase().includes('scooty') || item.name.toLowerCase().includes('activa') ? 'Automatic Scooter' : 'Cruiser Motorcycle'
-          }));
+          const mapped = data
+            .filter(item => Number(item.price) > 0 && item.is_active !== false) // hide ₹0 and inactive test listings
+            .map((item, idx) => ({
+              ...item,
+              price: Number(item.price),
+              deposit: Number(item.deposit || 0),
+              rating: item.rating || item.vendors?.star_rating || 4.7,
+              reviewsCount: item.reviews_count || (80 + (idx * 17) % 150),
+              upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
+              images: item.images && item.images.length > 0 ? item.images : ['/scooty-rent.jpg'],
+              type: item.name.toLowerCase().includes('scooty') || item.name.toLowerCase().includes('activa') ? 'Automatic Scooter' : 'Cruiser Motorcycle'
+            }));
           setVehicles(mapped);
 
           // Group by partners

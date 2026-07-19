@@ -16,8 +16,7 @@ const formatDisplayPhone = (phone) => {
 };
 
 export default function BookingModal({ isOpen, onClose, activity, onAddToCart, initialDate, initialGuests }) {
-  if (!activity) return null;
-
+  // All hooks must be declared before any conditional returns (React Rules of Hooks)
   const [date, setDate] = useState('');
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
@@ -26,6 +25,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [hasVideoOption, setHasVideoOption] = useState(false);
   const [error, setError] = useState('');
   const [paymentOption, setPaymentOption] = useState('advance');
+  const [liabilityAgreed, setLiabilityAgreed] = useState(false);
 
   // Contact States for direct Razorpay prefilling
   const [name, setName] = useState('');
@@ -34,6 +34,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
   const [bookingSuccessData, setBookingSuccessData] = useState(null);
   const [checkoutLogId, setCheckoutLogId] = useState(null);
+
+  // Guard: must come AFTER all hooks
+  if (!activity) return null;
 
   const getSimpleBookingId = (id) => {
     if (!id) return 'TG-000000';

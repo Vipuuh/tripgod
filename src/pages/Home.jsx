@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import CountUp from '../components/CountUp';
 import { supabase } from '../supabase';
+import CustomerReelSection from '../components/CustomerReelSection';
 
 
 const RaftingIcon = (props) => (
@@ -130,14 +131,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       category: 'camping',
       icon: Compass,
       route: 'camping'
-    },
-    {
-      id: 'kayaking',
-      name: 'Kayaking',
-      price: 3000,
-      category: 'kayaking',
-      icon: Waves,
-      route: 'kayaking'
     },
     {
       id: 'bikerent',
@@ -340,14 +333,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       route: 'swing',
       coming_soon: true
     },
-    {
-      id: 'kayaking',
-      name: 'White Water Kayaking',
-      desc: 'Learn kayaking courses and navigate Grade I to III rapids.',
-      price: '3,000',
-      img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600',
-      route: 'kayaking'
-    }
   ]);
 
   const raftingStretches = [
@@ -1671,6 +1656,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           </motion.div>
         </div>
       </div>
+
+      {/* Customer Review Reels — auto-hidden when no active reels in DB */}
+      <CustomerReelSection />
 
       {/* 6.5. FAQ Section */}
       <div className="w-full bg-gray-50/80 py-20 border-y border-black/5">
