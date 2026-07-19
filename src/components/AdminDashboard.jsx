@@ -506,6 +506,7 @@ export default function AdminDashboard({ setRoute }) {
               { id: 'vendors', label: 'Vendors DB', icon: Users },
               { id: 'retargeting', label: 'Retargeting (Carts)', icon: Sparkles },
               { id: 'media', label: 'Media Library', icon: Image },
+              { id: 'reels', label: 'Customer Reels', icon: Star },
               { id: 'homepage', label: 'Manage Homepage', icon: LayoutDashboard }
             ].map(tab => (
               <button
@@ -1473,6 +1474,11 @@ export default function AdminDashboard({ setRoute }) {
             <HomepageManager hotels={hotels} toursList={toursList} bikesList={bikesList} />
           )}
 
+          {/* CUSTOMER REELS TAB */}
+          {activeTab === 'reels' && (
+            <ReelsManager />
+          )}
+
         </div>
       </main>
 
@@ -1526,9 +1532,206 @@ export default function AdminDashboard({ setRoute }) {
 }
 
 // =============================================================================
+// SUB-COMPONENT: REELS MANAGER
+// =============================================================================
+function ReelsManager() {
+  const [reels, setReels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingReel, setEditingReel] = useState(null);
+  const [form, setForm] = useState({
+    customer_name: '',
+    activity_type: '',
+    rating: 5,
+    location: 'Rishikesh',
+    video_url: '',
+    thumbnail_url: '',
+    sort_order: 0,
+    is_featured: false,
+    is_active: true
+  });
+
+  const fetchReels = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('customer_reels').select('*').order('sort_order', { ascending: true });
+    if (data) setReels(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchReels(); }, []);
+
+  const resetForm = () => {
+    setForm({ customer_name: '', activity_type: '', rating: 5, location: 'Rishikesh', video_url: '', thumbnail_url: '', sort_order: 0, is_featured: false, is_active: true });
+    setEditingReel(null);
+    setShowForm(false);
+  };
+
+  const handleEdit = (reel) => {
+    setEditingReel(reel);
+    setForm({ ...reel });
+    setShowForm(true);
+    window.scrollTo(0, 0);
+  };
+
+  const handleSave = async () => {
+    if (!form.customer_name || !form.video_url) {
+      alert('Customer Name aur Video URL required hain!');
+      return;
+    }
+    setSaving(true);
+    try {
+      if (editingReel) {
+        await supabase.from('customer_reels').update(form).eq('id', editingReel.id);
+      } else {
+        await supabase.from('customer_reels').insert([form]);
+      }
+      await fetchReels();
+      resetForm();
+    } catch (err) {
+      alert('Error saving reel: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Is reel ko delete karna chahte ho?')) return;
+    await supabase.from('customer_reels').delete().eq('id', id);
+    await fetchReels();
+  };
+
+  const toggleActive = async (reel) => {
+    await supabase.from('customer_reels').update({ is_active: !reel.is_active }).eq('id', reel.id);
+    await fetchReels();
+  };
+
+  const activityOptions = ['Rafting', 'Camping', 'Bungee', 'Paragliding', 'Giant Swing', 'Zipline', 'Hotel Stay', 'Bike Rent', 'Tour Package', 'Kayaking', 'Other'];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black text-white">Customer Review Reels</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Home page pe automatically dikhega jab 1+ active reel ho</p>
+        </div>
+        <button
+          onClick={() => { resetForm(); setShowForm(true); }}
+          className="flex items-center gap-2 px-4 py-2 bg-[#FF5F00] text-white rounded-xl font-bold text-xs uppercase border-none cursor-pointer hover:bg-[#e55500] transition-colors"
+        >
+          <Plus size={14} /> Add Reel
+        </button>
+      </div>
+
+      {/* Add/Edit Form */}
+      {showForm && (
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 space-y-4">
+          <h3 className="text-white font-bold text-sm uppercase tracking-wider">
+            {editingReel ? 'Edit Reel' : 'New Reel Add Karo'}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Customer Name *</label>
+              <input value={form.customer_name} onChange={e => setForm(f => ({ ...f, customer_name: e.target.value }))} placeholder="Rahul Sharma" className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FF5F00]" />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Activity Type</label>
+              <select value={form.activity_type} onChange={e => setForm(f => ({ ...f, activity_type: e.target.value }))} className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FF5F00]">
+                <option value="">Select Activity</option>
+                {activityOptions.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Video URL * (YouTube ya Direct Link)</label>
+              <input value={form.video_url} onChange={e => setForm(f => ({ ...f, video_url: e.target.value }))} placeholder="https://youtu.be/... ya direct .mp4 URL" className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FF5F00]" />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Thumbnail URL (Optional)</label>
+              <input value={form.thumbnail_url} onChange={e => setForm(f => ({ ...f, thumbnail_url: e.target.value }))} placeholder="https://..." className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FF5F00]" />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Location</label>
+              <input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Rishikesh" className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FF5F00]" />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Rating (1-5)</label>
+              <select value={form.rating} onChange={e => setForm(f => ({ ...f, rating: Number(e.target.value) }))} className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FF5F00]">
+                {[5, 4.5, 4, 3.5, 3].map(r => <option key={r} value={r}>{r} ⭐</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Sort Order (chota = pehle)</label>
+              <input type="number" value={form.sort_order} onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))} className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-[#FF5F00]" />
+            </div>
+            <div className="flex items-center gap-4 pt-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} className="accent-[#FF5F00] w-4 h-4" />
+                <span className="text-white text-xs font-bold">Active (Show on site)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} className="accent-[#FF5F00] w-4 h-4" />
+                <span className="text-white text-xs font-bold">Featured</span>
+              </label>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button onClick={handleSave} disabled={saving} className="px-6 py-2 bg-[#FF5F00] text-white rounded-xl font-black text-xs uppercase border-none cursor-pointer hover:bg-[#e55500] disabled:opacity-50 transition-colors">
+              {saving ? 'Saving...' : (editingReel ? 'Update Reel' : 'Save Reel')}
+            </button>
+            <button onClick={resetForm} className="px-6 py-2 bg-slate-700 text-white rounded-xl font-black text-xs uppercase border-none cursor-pointer hover:bg-slate-600 transition-colors">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* Reels List */}
+      {loading ? (
+        <div className="text-slate-400 text-sm py-8 text-center">Loading reels...</div>
+      ) : reels.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 text-center space-y-2">
+          <p className="text-slate-400 text-sm font-bold">Abhi koi reel nahi hai</p>
+          <p className="text-slate-500 text-xs">Add Reel button se YouTube link ya video URL add karo</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {reels.map(reel => (
+            <div key={reel.id} className="bg-slate-900 border border-slate-700 rounded-xl p-4 flex items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-white font-bold text-sm">{reel.customer_name}</span>
+                  {reel.activity_type && <span className="text-[10px] bg-[#FF5F00]/20 text-[#FF5F00] border border-[#FF5F00]/30 px-2 py-0.5 rounded-full font-bold">{reel.activity_type}</span>}
+                  {reel.is_featured && <span className="text-[10px] bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full font-bold">⭐ Featured</span>}
+                </div>
+                <p className="text-slate-400 text-xs mt-1 truncate">{reel.video_url}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-slate-500 text-[10px]">📍 {reel.location}</span>
+                  <span className="text-slate-500 text-[10px]">⭐ {reel.rating}</span>
+                  <span className="text-slate-500 text-[10px]">Order: {reel.sort_order}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => toggleActive(reel)} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase border-none cursor-pointer transition-colors ${reel.is_active ? 'bg-emerald-500/20 text-emerald-400 hover:bg-red-500/20 hover:text-red-400' : 'bg-slate-700 text-slate-400 hover:bg-emerald-500/20 hover:text-emerald-400'}`}>
+                  {reel.is_active ? '✅ Active' : '⏸ Inactive'}
+                </button>
+                <button onClick={() => handleEdit(reel)} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border-none cursor-pointer transition-colors">
+                  <Edit size={13} />
+                </button>
+                <button onClick={() => handleDelete(reel.id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border-none cursor-pointer transition-colors">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
 // SUB-COMPONENT: HOMEPAGE MANAGER
 // =============================================================================
 function HomepageManager({ hotels, toursList, bikesList }) {
+
   const [sections, setSections] = useState({
     hotels: [],
     tours: [],
