@@ -408,7 +408,7 @@ export default function App() {
             {route === 'kayaking' && <ErrorBoundary><Kayaking currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
             {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
             {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
-            {route === 'hotels' && <Hotels currentCity={currentCity} openBookingModal={openBookingModal} />}
+            {route === 'hotels' && <ErrorBoundary><Hotels currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
             {route === 'tours' && (
               <Tours
                 currentCity={currentCity}
@@ -600,6 +600,7 @@ export default function App() {
       </a>
 
       {/* 6. Unified Booking Modal */}
+      <ErrorBoundary>
       <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
@@ -608,6 +609,7 @@ export default function App() {
         initialDate={initialBookingDate}
         initialGuests={initialBookingGuests}
       />
+      </ErrorBoundary>
 
       {/* 7. Unified Cart Sidebar Drawer */}
       <CartModal
