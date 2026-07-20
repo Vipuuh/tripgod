@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import RetargetingTab from './RetargetingTab';
+import ReviewsSection from './ReviewsSection';
 
 const getSimpleBookingId = (id) => {
   if (!id) return 'TG-000000';
@@ -505,6 +506,7 @@ export default function AdminDashboard({ setRoute }) {
               { id: 'cities', label: 'Cities List', icon: MapPin },
               { id: 'vendors', label: 'Vendors DB', icon: Users },
               { id: 'retargeting', label: 'Retargeting (Carts)', icon: Sparkles },
+              { id: 'reviews', label: 'Customer Reviews DB', icon: Star },
               { id: 'media', label: 'Media Library', icon: Image },
               { id: 'reels', label: 'Customer Reels', icon: Star },
               { id: 'homepage', label: 'Manage Homepage', icon: LayoutDashboard }
@@ -1477,6 +1479,22 @@ export default function AdminDashboard({ setRoute }) {
           {/* CUSTOMER REELS TAB */}
           {activeTab === 'reels' && (
             <ReelsManager />
+          )}
+
+          {/* CUSTOMER REVIEWS MODERATION TAB */}
+          {activeTab === 'reviews' && (
+            <div className="p-6 bg-white border border-slate-200 rounded-3xl space-y-4 shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div>
+                  <h3 className="text-base font-black font-display text-slate-900 uppercase">Customer Reviews Moderation</h3>
+                  <p className="text-xs text-slate-500 font-medium">Delete fake, inappropriate, or spam customer reviews directly from database</p>
+                </div>
+                <span className="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+                  Admin Control Active
+                </span>
+              </div>
+              <ReviewsSection isAdmin={true} />
+            </div>
           )}
 
         </div>
