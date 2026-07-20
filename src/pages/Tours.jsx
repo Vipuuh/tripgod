@@ -801,75 +801,72 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
               </div>
             </div>
 
-            {/* Tour Reporting Office — Premium Card */}
+            {/* Tour Reporting Office — Apple iOS Frosted Glass Card */}
             <div className="pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
                   <MapPin size={16} className="text-[#FF6B00]" />
                   Tour Reporting Office
                 </h3>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
                   Verified Address
                 </span>
               </div>
-              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-2xl p-4 shadow-xl border border-slate-800/80 relative overflow-hidden">
-                {/* Decorative background glow */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF6B00]/10 rounded-full blur-2xl pointer-events-none" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+              <div className="bg-white/85 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Left Column: Location & Time */}
-                  <div className="space-y-3 md:border-r md:border-slate-800 md:pr-4">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="space-y-3.5 md:border-r md:border-slate-200/80 md:pr-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         <MapPin size={15} className="text-[#FF6B00]" />
                       </div>
                       <div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Reporting Location</span>
-                        <p className="text-xs font-black text-white font-display mt-0.5">{selectedPartner?.name || 'Local Tour Partner'} Office</p>
-                        <p className="text-[11px] text-slate-300 font-medium leading-snug">{selectedPartner?.landmark || selectedPartner?.address || 'Near Main Center, Rishikesh'}</p>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Reporting Location</span>
+                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.name || 'Local Tour Partner'} Office</p>
+                        <p className="text-[11px] text-slate-600 font-medium leading-snug">{selectedPartner?.landmark || selectedPartner?.address || 'Near Main Center, Rishikesh'}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Clock size={15} className="text-amber-400" />
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Clock size={15} className="text-amber-600" />
                       </div>
                       <div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Departure & Timing</span>
-                        <p className="text-xs font-black text-white font-display mt-0.5">{selectedPartner?.reporting_time || '07:30 AM Departure'}</p>
-                        <p className="text-[11px] text-amber-400/90 font-medium">Please arrive 15 minutes prior to departure</p>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Departure & Timing</span>
+                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.reporting_time || '07:30 AM Departure'}</p>
+                        <p className="text-[11px] text-slate-500 font-medium">Please arrive 15 minutes prior to departure</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Right Column: Parking & Maps Action */}
-                  <div className="space-y-3 flex flex-col justify-between">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Car size={15} className="text-sky-400" />
+                  <div className="space-y-3.5 flex flex-col justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Car size={15} className="text-sky-600" />
                       </div>
                       <div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Parking & Accessibility</span>
-                        <p className="text-[11px] text-slate-200 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free public parking available near office'}</p>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Parking & Directions</span>
+                        <p className="text-[11px] text-slate-800 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free public parking available near office'}</p>
                         {selectedPartner?.meeting_instructions && (
-                          <p className="text-[10px] text-slate-400 font-normal leading-tight mt-1">{selectedPartner.meeting_instructions.slice(0, 70)}...</p>
+                          <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPartner.meeting_instructions.slice(0, 70)}...</p>
                         )}
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-medium text-slate-400">Exact GPS Coordinates Provided</span>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-semibold text-slate-500">Exact GPS Coordinates Provided</span>
                       {selectedPartner?.google_maps_link ? (
                         <a
                           href={selectedPartner.google_maps_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] hover:from-[#FF7B1A] hover:to-[#FF5500] text-white text-[11px] font-black uppercase rounded-lg shadow-md hover:shadow-lg transition-all no-underline shrink-0"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:from-[#FF6F1A] hover:to-[#FF4E00] text-white text-[11px] font-black uppercase rounded-xl shadow-xs hover:shadow-md transition-all no-underline shrink-0 font-display"
                         >
                           <ExternalLink size={12} /> Open Maps
                         </a>
                       ) : (
-                        <span className="text-[11px] text-slate-500 font-bold">Maps link on confirmation</span>
+                        <span className="text-[11px] text-slate-400 font-bold">Maps link on confirmation</span>
                       )}
                     </div>
                   </div>

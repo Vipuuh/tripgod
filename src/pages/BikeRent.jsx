@@ -628,46 +628,72 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               </p>
             </div>
 
-            {/* Dynamic Partner Location & Contact Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 bg-slate-50 border border-slate-200/60 rounded-3xl p-5 md:p-6 shadow-2xs">
-              <div className="space-y-3">
-                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Reporting & Office Address</span>
-                <div className="space-y-1.5">
-                  <p className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
-                    <MapPin size={15} className="text-[#FF6B00]" />
-                    {selectedPartner?.name} Office
-                  </p>
-                  <p className="text-xs text-slate-600 font-medium pl-5 leading-normal">
-                    {selectedPartner?.address} ({selectedPartner?.landmark})
-                  </p>
-                </div>
-                {selectedPartner?.google_maps_link && (
-                  <a
-                    href={selectedPartner.google_maps_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase text-[#FF6B00] hover:text-[#FF3D00] pl-5"
-                  >
-                    Open in Google Maps <ExternalLink size={12} />
-                  </a>
-                )}
-                <div className="pl-5 pt-1 text-[10px] text-slate-500 leading-normal">
-                  <span className="font-bold uppercase text-slate-600 block">🚗 Customer Parking</span>
-                  {selectedPartner?.parking_details}
-                </div>
+            {/* Partner Pickup Office — Apple iOS Frosted Glass Card */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                  <MapPin size={16} className="text-[#FF6B00]" />
+                  Bike Pickup Office & Desk
+                </h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+                  Verified Desk
+                </span>
               </div>
+              <div className="bg-white/85 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Location & Maps */}
+                  <div className="space-y-3.5 md:border-r md:border-slate-200/80 md:pr-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <MapPin size={15} className="text-[#FF6B00]" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Pickup Location</span>
+                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.name || 'Local Rental Partner'} Desk</p>
+                        <p className="text-[11px] text-slate-600 font-medium leading-snug">{selectedPartner?.address} ({selectedPartner?.landmark})</p>
+                      </div>
+                    </div>
 
-              <div className="space-y-3">
-                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide">Pickup Desk & Document Rules</span>
-                <div className="space-y-2 text-xs font-medium text-slate-600 pl-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">🕒 Timings:</span>
-                    <span>{selectedPartner?.reporting_time}</span>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-semibold text-slate-500">GPS Directions</span>
+                      {selectedPartner?.google_maps_link ? (
+                        <a
+                          href={selectedPartner.google_maps_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:from-[#FF6F1A] hover:to-[#FF4E00] text-white text-[11px] font-black uppercase rounded-xl shadow-xs hover:shadow-md transition-all no-underline shrink-0 font-display"
+                        >
+                          <ExternalLink size={12} /> Open Maps
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 font-bold">Maps link on confirmation</span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-[10px] text-slate-500 leading-normal pt-1.5 bg-white border border-slate-200/60 p-3 rounded-xl">
-                    <span className="font-bold uppercase text-slate-600 block mb-1">📝 Document Verification</span>
-                    {selectedPartner?.meeting_instructions}
-                  </p>
+
+                  {/* Right Column: Timings & Rules */}
+                  <div className="space-y-3.5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Clock size={15} className="text-amber-600" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Pickup Desk Hours</span>
+                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.reporting_time || '08:00 AM - 08:00 PM'}</p>
+                        <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPartner?.meeting_instructions || 'Carry Original Driving License & Aadhar'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 pt-2 border-t border-slate-100">
+                      <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Car size={15} className="text-sky-600" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Vehicle Parking</span>
+                        <p className="text-[11px] text-slate-800 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Customer parking available at desk'}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -749,51 +775,53 @@ export default function BikeRent({ currentCity, openBookingModal }) {
             })()}
 
             {/* Mobile Sticky Booking Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-3.5 px-4 flex items-center justify-between gap-4 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3 px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
               <div>
-                <span className="text-[9px] font-bold text-slate-450 uppercase block">Daily Rent</span>
-                <span className="text-lg font-black text-slate-900">₹{selectedVehicle.price.toLocaleString('en-IN')}</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Daily Rent</span>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl font-black text-slate-900 leading-none">₹{selectedVehicle.price.toLocaleString('en-IN')}</span>
+                  {(selectedVehicle.original_price > selectedVehicle.price || selectedVehicle.price * 1.3 > selectedVehicle.price) && (
+                    <span className="text-[11px] text-slate-400 line-through font-semibold leading-none">
+                      ₹{(selectedVehicle.original_price || Math.round(selectedVehicle.price * 1.35)).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                  <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60 leading-none">
+                    Save {Math.round((((selectedVehicle.original_price || Math.round(selectedVehicle.price * 1.35)) - selectedVehicle.price) / (selectedVehicle.original_price || Math.round(selectedVehicle.price * 1.35))) * 100)}%
+                  </span>
+                </div>
+                <span className="text-[9px] text-slate-400 font-bold leading-none block mt-0.5">per day • zero deposit</span>
               </div>
 
-              <div className="flex gap-2">
-                <a
-                  href={`https://wa.me/918630027341?text=Hi%20TripGod%2C%20I%20want%20to%20rent%20the%20${encodeURIComponent(selectedVehicle.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-xl flex items-center justify-center text-white shrink-0 hover:scale-105 active:scale-95 transition-all shadow-xs"
-                >
-                  <MessageSquare size={16} />
-                </a>
-                <button
-                  onClick={() => {
-                    const pMode = selectedVehicle.payment_mode || 'commission_advance';
-                    const commPct = selectedVehicle.commission_percentage !== undefined && selectedVehicle.commission_percentage !== null ? Number(selectedVehicle.commission_percentage) : 10;
-                    const fixedAmt = selectedVehicle.fixed_advance_amount !== undefined && selectedVehicle.fixed_advance_amount !== null ? Number(selectedVehicle.fixed_advance_amount) : 0;
+              <button
+                onClick={() => {
+                  const pMode = selectedVehicle.payment_mode || 'commission_advance';
+                  const commPct = selectedVehicle.commission_percentage !== undefined && selectedVehicle.commission_percentage !== null ? Number(selectedVehicle.commission_percentage) : 10;
+                  const fixedAmt = selectedVehicle.fixed_advance_amount !== undefined && selectedVehicle.fixed_advance_amount !== null ? Number(selectedVehicle.fixed_advance_amount) : 0;
 
-                    openBookingModal({
-                      id: selectedVehicle.id,
-                      name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
-                      price: selectedVehicle.price,
-                      category: 'bikerent',
-                      city_id: selectedVehicle.city_id,
-                      vendor_id: selectedVehicle.vendor_id,
-                      payment_mode: pMode,
-                      commission_percentage: commPct,
-                      fixed_advance_amount: fixedAmt,
-                      upi_discount: selectedVehicle.upi_discount,
-                      vendors: selectedPartner,
-                      slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
-                      is_closed: selectedVehicle.is_closed,
-                      closed_reason: selectedVehicle.closed_reason,
-                      closed_from: selectedVehicle.closed_from,
-                      closed_until: selectedVehicle.closed_until
-                    });
-                  }}
-                  className="py-2.5 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
-                >
-                  Book Now
-                </button>
-              </div>
+                  openBookingModal({
+                    id: selectedVehicle.id,
+                    name: `${selectedVehicle.name} - ${selectedPartner?.name}`,
+                    price: selectedVehicle.price,
+                    category: 'bikerent',
+                    city_id: selectedVehicle.city_id,
+                    vendor_id: selectedVehicle.vendor_id,
+                    payment_mode: pMode,
+                    commission_percentage: commPct,
+                    fixed_advance_amount: fixedAmt,
+                    upi_discount: selectedVehicle.upi_discount,
+                    vendors: selectedPartner,
+                    slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
+                    is_closed: selectedVehicle.is_closed,
+                    closed_reason: selectedVehicle.closed_reason,
+                    closed_from: selectedVehicle.closed_from,
+                    closed_until: selectedVehicle.closed_until
+                  });
+                }}
+                className="py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl shadow-[0_4px_15px_rgba(255,95,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-1.5"
+              >
+                <span>Book Rental</span>
+                <ArrowRight size={14} />
+              </button>
             </div>
 
             {/* Reviews list */}

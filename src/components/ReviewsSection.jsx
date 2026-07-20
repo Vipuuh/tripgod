@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Star, User, ThumbsUp, Plus } from 'lucide-react';
+import { Star, User, ThumbsUp, Plus, Trash2, ShieldAlert } from 'lucide-react';
 
 const DEFAULT_REVIEWS = [
   {
@@ -36,10 +36,11 @@ const DEFAULT_REVIEWS = [
   }
 ];
 
-export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name = '' }) {
+export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name = '', isAdmin = false }) {
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
   const [likedReviews, setLikedReviews] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
+  const [adminMode, setAdminMode] = useState(isAdmin);
   
   // New review form states
   const [newName, setNewName] = useState('');
@@ -70,6 +71,12 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
       ...prev,
       [id]: !prev[id]
     }));
+  };
+
+  const handleDeleteReview = (id) => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      setReviews((prev) => prev.filter((r) => r.id !== id));
+    }
   };
 
   const handleSubmitReview = (e) => {
@@ -112,12 +119,27 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
     <div className="w-full space-y-5 font-sans text-left text-slate-800">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-black font-display text-black uppercase tracking-tight">Customer Reviews</h3>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-1 text-[10px] font-black uppercase text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/10 py-1.5 px-3 rounded-lg hover:bg-[#FF6B00]/10 transition-all cursor-pointer"
-        >
-          <Plus size={12} /> Write a Review
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setAdminMode(!adminMode)}
+            className={`text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
+              adminMode 
+                ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                : 'bg-slate-100 text-slate-500 border-slate-200 hover:text-slate-700'
+            }`}
+            title="Toggle Admin Moderate mode to delete reviews"
+          >
+            {adminMode ? '✓ Moderation Mode ON' : 'Moderate Reviews'}
+          </button>
+
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="flex items-center gap-1 text-[10px] font-black uppercase text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/10 py-1.5 px-3 rounded-lg hover:bg-[#FF6B00]/10 transition-all cursor-pointer"
+          >
+            <Plus size={12} /> Write a Review
+          </button>
+        </div>
       </div>
 
       {/* Write review form toggle */}
@@ -239,7 +261,7 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
           return (
             <div 
               key={rev.id} 
-              className="snap-start shrink-0 w-[85%] sm:w-[46%] bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-3xs hover:border-slate-300 transition-colors"
+              className="snap-start shrink-0 w-[85%] sm:w-[46%] bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-3xs hover:border-slate-300 transition-colors relative group"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -252,10 +274,23 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
                       <span className="text-[8px] text-slate-400 font-bold">{rev.date}</span>
                     </div>
                   </div>
-                  <div className="flex gap-0.5 text-amber-500">
-                    {[...Array(rev.rating)].map((_, i) => (
-                      <Star key={i} size={10} fill="currentColor" className="text-amber-500" />
-                    ))}
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex gap-0.5 text-amber-500">
+                      {[...Array(rev.rating)].map((_, i) => (
+                        <Star key={i} size={10} fill="currentColor" className="text-amber-500" />
+                      ))}
+                    </div>
+
+                    {adminMode && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReview(rev.id)}
+                        className="p-1 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md transition-colors border-none cursor-pointer"
+                        title="Delete fake/bad review"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
                   </div>
                 </div>
 

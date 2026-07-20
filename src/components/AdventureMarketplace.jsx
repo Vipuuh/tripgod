@@ -783,19 +783,52 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               </p>
             </div>
 
-            {/* Who is this perfect for? */}
-            <div className="space-y-2.5">
-              <h4 className="text-xs font-bold font-display text-slate-900 uppercase">Who is this perfect for?</h4>
-              <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
-                  <Users size={11} /> Families & Couples
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
-                  <Sparkles size={11} /> Adventure Seekers
-                </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-indigo-700 bg-indigo-50 border border-indigo-150 px-3 py-1 rounded-full">
-                  ✓ Beginners & First-Timers
-                </span>
+            {/* Who is this perfect for? — Symmetrical 4-Option Grid */}
+            <div className="space-y-2.5 pt-1">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black font-display text-slate-900 uppercase tracking-tight">Who is this perfect for?</h4>
+                <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/80">Safety Verified</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200/60 shadow-3xs">
+                  <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
+                    <Users size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <span className="block font-black text-[11px] text-indigo-950 uppercase font-display leading-tight">Adults & Teens (14-55 Yrs)</span>
+                    <span className="text-[9.5px] text-indigo-700/80 font-medium block">Adheres to Rafting Safety Standards</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/60 shadow-3xs">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                    <ShieldCheck size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <span className="block font-black text-[11px] text-emerald-950 uppercase font-display leading-tight">First-Timers & Beginners</span>
+                    <span className="text-[9.5px] text-emerald-700/80 font-medium block">Certified River Guide Included</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 shadow-3xs">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
+                    <Zap size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <span className="block font-black text-[11px] text-amber-950 uppercase font-display leading-tight">Thrill Seekers & Youth</span>
+                    <span className="text-[9.5px] text-amber-800/80 font-medium block">Grade III/IV Rapids & Cliff Jump</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/60 shadow-3xs">
+                  <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-700 shrink-0">
+                    <Sparkles size={14} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <span className="block font-black text-[11px] text-sky-950 uppercase font-display leading-tight">Friend Groups & Corporates</span>
+                    <span className="text-[9.5px] text-sky-700/80 font-medium block">8-Person Shared Rafts Available</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -889,46 +922,72 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               </div>
             </div>
 
-            {/* Dynamic Partner Location & Reporting Guidelines */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200 bg-slate-50 border border-slate-200/60 rounded-3xl p-5 md:p-6 shadow-2xs">
-              <div className="space-y-3">
-                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide font-display">Reporting & Office Location</span>
-                <div className="space-y-1.5">
-                  <p className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5 uppercase font-display">
-                    <MapPin size={15} className="text-[#FF6B00]" />
-                    {selectedPartner?.name} Office
-                  </p>
-                  <p className="text-xs text-slate-600 font-medium pl-5 leading-normal">
-                    {selectedPartner?.address} ({selectedPartner?.landmark})
-                  </p>
-                </div>
-                {selectedPartner?.google_maps_link && (
-                  <a
-                    href={selectedPartner.google_maps_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase text-[#FF6B00] hover:text-[#FF3D00] pl-5"
-                  >
-                    Open in Google Maps <ExternalLink size={12} />
-                  </a>
-                )}
-                <div className="pl-5 pt-1 text-[10px] text-slate-500 leading-normal">
-                  <span className="font-bold uppercase text-slate-600 block">🚗 Parking Space</span>
-                  {selectedPartner?.parking_details}
-                </div>
+            {/* Dynamic Partner Location & Reporting Guidelines — Apple iOS Frosted Glass */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                  <MapPin size={16} className="text-[#FF6B00]" />
+                  Activity Reporting Office
+                </h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+                  Verified Address
+                </span>
               </div>
+              <div className="bg-white/85 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Location & Maps */}
+                  <div className="space-y-3.5 md:border-r md:border-slate-200/80 md:pr-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <MapPin size={15} className="text-[#FF6B00]" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Reporting Location</span>
+                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.name || 'Local Activity Partner'} Office</p>
+                        <p className="text-[11px] text-slate-600 font-medium leading-snug">{selectedPartner?.address} ({selectedPartner?.landmark})</p>
+                      </div>
+                    </div>
 
-              <div className="space-y-3">
-                <span className="block text-[10px] font-black text-slate-450 uppercase tracking-wide font-display">Check-in & Reporting Instructions</span>
-                <div className="space-y-2.5 text-xs font-medium text-slate-600 pl-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#FF6B00] font-black">🕒 Reporting:</span>
-                    <span>15 Minutes Before Slot ({selectedPartner?.reporting_time})</span>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-semibold text-slate-500">Exact GPS Coordinates</span>
+                      {selectedPartner?.google_maps_link ? (
+                        <a
+                          href={selectedPartner.google_maps_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:from-[#FF6F1A] hover:to-[#FF4E00] text-white text-[11px] font-black uppercase rounded-xl shadow-xs hover:shadow-md transition-all no-underline shrink-0 font-display"
+                        >
+                          <ExternalLink size={12} /> Open Maps
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 font-bold">Maps link on confirmation</span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-[10px] text-slate-550 leading-normal pt-1 bg-white border border-slate-200/50 p-3 rounded-xl">
-                    <span className="font-bold uppercase text-slate-700 block mb-1">📝 Guidelines</span>
-                    {selectedPartner?.meeting_instructions}
-                  </p>
+
+                  {/* Right Column: Timing & Parking */}
+                  <div className="space-y-3.5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Clock size={15} className="text-amber-600" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Check-in & Reporting</span>
+                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">Arrive 15 mins before slot ({selectedPartner?.reporting_time || 'Morning Departure'})</p>
+                        <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPartner?.meeting_instructions || 'Show booking voucher at desk'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 pt-2 border-t border-slate-100">
+                      <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <Car size={15} className="text-sky-600" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Parking Facility</span>
+                        <p className="text-[11px] text-slate-800 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free parking available'}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1010,51 +1069,53 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
             })()}
 
             {/* Mobile Sticky Booking Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-3.5 px-4 flex items-center justify-between gap-4 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3 px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
               <div>
-                <span className="text-[9px] font-bold text-slate-455 uppercase block">Total Price</span>
-                <span className="text-lg font-black text-slate-900">₹{selectedPackage.price.toLocaleString('en-IN')}</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Total Price</span>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl font-black text-slate-900 leading-none">₹{selectedPackage.price.toLocaleString('en-IN')}</span>
+                  {(selectedPackage.original_price > selectedPackage.price || selectedPackage.price * 1.4 > selectedPackage.price) && (
+                    <span className="text-[11px] text-slate-400 line-through font-semibold leading-none">
+                      ₹{(selectedPackage.original_price || Math.round(selectedPackage.price * 1.4)).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                  <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60 leading-none">
+                    Save {Math.round((((selectedPackage.original_price || Math.round(selectedPackage.price * 1.4)) - selectedPackage.price) / (selectedPackage.original_price || Math.round(selectedPackage.price * 1.4))) * 100)}%
+                  </span>
+                </div>
+                <span className="text-[9px] text-slate-400 font-bold leading-none block mt-0.5">per person • direct voucher</span>
               </div>
 
-              <div className="flex gap-2">
-                <a
-                  href={`https://wa.me/918630027341?text=Hi%20TripGod%2C%20I%20want%20to%20book%20the%20${encodeURIComponent(selectedPackage.name)}%20from%20${encodeURIComponent(selectedPartner?.name)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-green-500 hover:bg-green-600 rounded-xl flex items-center justify-center text-white shrink-0 hover:scale-105 active:scale-95 transition-all shadow-xs"
-                >
-                  <MessageSquare size={16} />
-                </a>
-                <button
-                  onClick={() => {
-                    const pMode = selectedPackage.payment_mode || 'commission_advance';
-                    const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
-                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+              <button
+                onClick={() => {
+                  const pMode = selectedPackage.payment_mode || 'commission_advance';
+                  const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
+                  const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
 
-                    openBookingModal({
-                      id: selectedPackage.id,
-                      name: `${selectedPackage.name} - ${selectedPartner?.name}`,
-                      stretch: selectedPackage.route || selectedPackage.stretch,
-                      price: selectedPackage.price,
-                      category: activityType,
-                      city_id: selectedPackage.city_id,
-                      vendor_id: selectedPackage.vendor_id,
-                      payment_mode: pMode,
-                      commission_percentage: commPct,
-                      fixed_advance_amount: fixedAmt,
-                      free_video_type: selectedPackage.free_video_type || 'none',
-                      is_closed: selectedPackage.is_closed,
-                      closed_reason: selectedPackage.closed_reason,
-                      closed_from: selectedPackage.closed_from,
-                      closed_until: selectedPackage.closed_until,
-                      vendors: selectedPartner
-                    });
-                  }}
-                  className="py-2.5 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display"
-                >
-                  Book Now
-                </button>
-              </div>
+                  openBookingModal({
+                    id: selectedPackage.id,
+                    name: `${selectedPackage.name} - ${selectedPartner?.name}`,
+                    stretch: selectedPackage.route || selectedPackage.stretch,
+                    price: selectedPackage.price,
+                    category: activityType,
+                    city_id: selectedPackage.city_id,
+                    vendor_id: selectedPackage.vendor_id,
+                    payment_mode: pMode,
+                    commission_percentage: commPct,
+                    fixed_advance_amount: fixedAmt,
+                    free_video_type: selectedPackage.free_video_type || 'none',
+                    is_closed: selectedPackage.is_closed,
+                    closed_reason: selectedPackage.closed_reason,
+                    closed_from: selectedPackage.closed_from,
+                    closed_until: selectedPackage.closed_until,
+                    vendors: selectedPartner
+                  });
+                }}
+                className="py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl shadow-[0_4px_15px_rgba(255,95,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-1.5"
+              >
+                <span>Book Now</span>
+                <ArrowRight size={14} />
+              </button>
             </div>
 
             {/* Reviews list */}
