@@ -105,9 +105,9 @@ export default function RefundPolicy() {
               <span>+91 8630027341</span>
             </div>
             
-            <a href="mailto:hello@tripgod.in" className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 hover:border-[#FF5F00]/35 rounded-xl text-center gap-1.5 transition-all text-white">
-              <Mail size={14} className="text-[#FF5F00]" />
-              <span>hello@tripgod.in</span>
+            <a href="mailto:hi@tripgod.in" className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 hover:border-[#FF5F00]/35 rounded-xl text-center gap-1.5 transition-all text-white">
+              <Mail size={18} className="text-[#FF5F00]" />
+              <span>hi@tripgod.in</span>
             </a>
 
             <div className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 rounded-xl text-center gap-1.5">

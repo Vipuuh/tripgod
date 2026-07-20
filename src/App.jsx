@@ -557,7 +557,7 @@ export default function App() {
             </h4>
             <ul className={`${footerContactOpen ? 'block animate-fade-in' : 'hidden'} md:block space-y-2.5 text-xs font-medium text-gray-400 pl-1 md:pl-0`}>
               <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: 8630027341</li>
-              <li className="flex items-center gap-2"><Mail size={12} /> Email: hello@tripgod.in</li>
+              <li className="flex items-center gap-2"><Mail size={12} /> Email: hi@tripgod.in</li>
               <li className="flex items-center gap-2"><MapPin size={12} /> Rishikesh, Uttarakhand, India</li>
             </ul>
           </div>

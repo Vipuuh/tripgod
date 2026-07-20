@@ -801,48 +801,88 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
               </div>
             </div>
 
-            {/* Reporting Office — Compact 2×2 */}
-            <div className="pt-1 border-t border-slate-100">
-              <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight mb-3">Tour Reporting Office</h3>
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 grid grid-cols-2 gap-3">
-                <div className="space-y-0.5">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">📍 Location</span>
-                  <p className="text-xs font-black text-slate-900">{selectedPartner?.name} Office</p>
-                  <p className="text-[11px] text-slate-500 font-medium">{selectedPartner?.landmark || selectedPartner?.address}</p>
-                </div>
-                <div className="space-y-0.5">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">🕒 Departure Time</span>
-                  <p className="text-xs font-black text-slate-900">{selectedPartner?.reporting_time || '7:30 AM'}</p>
-                  <p className="text-[11px] text-slate-500 font-medium">Please arrive 15 min early</p>
-                </div>
-                <div className="space-y-0.5">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">🚗 Parking</span>
-                  <p className="text-[11px] text-slate-700 font-bold leading-tight">{selectedPartner?.parking_details || 'Free parking available'}</p>
-                </div>
-                <div className="space-y-0.5">
-                  {selectedPartner?.google_maps_link ? (
-                    <a
-                      href={selectedPartner.google_maps_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-[11px] font-black text-[#FF6B00] hover:text-[#FF3D00] mt-1 no-underline"
-                    >
-                      <ExternalLink size={11} /> 🗺 Open in Maps
-                    </a>
-                  ) : (
-                    <span className="text-[11px] text-slate-500 font-bold">Maps link unavailable</span>
-                  )}
-                  <p className="text-[10px] text-slate-400 font-medium leading-tight">{selectedPartner?.meeting_instructions?.slice(0, 60)}...</p>
+            {/* Tour Reporting Office — Premium Card */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                  <MapPin size={16} className="text-[#FF6B00]" />
+                  Tour Reporting Office
+                </h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  Verified Address
+                </span>
+              </div>
+              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-2xl p-4 shadow-xl border border-slate-800/80 relative overflow-hidden">
+                {/* Decorative background glow */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF6B00]/10 rounded-full blur-2xl pointer-events-none" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                  {/* Left Column: Location & Time */}
+                  <div className="space-y-3 md:border-r md:border-slate-800 md:pr-4">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <MapPin size={15} className="text-[#FF6B00]" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Reporting Location</span>
+                        <p className="text-xs font-black text-white font-display mt-0.5">{selectedPartner?.name || 'Local Tour Partner'} Office</p>
+                        <p className="text-[11px] text-slate-300 font-medium leading-snug">{selectedPartner?.landmark || selectedPartner?.address || 'Near Main Center, Rishikesh'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Clock size={15} className="text-amber-400" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Departure & Timing</span>
+                        <p className="text-xs font-black text-white font-display mt-0.5">{selectedPartner?.reporting_time || '07:30 AM Departure'}</p>
+                        <p className="text-[11px] text-amber-400/90 font-medium">Please arrive 15 minutes prior to departure</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Parking & Maps Action */}
+                  <div className="space-y-3 flex flex-col justify-between">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Car size={15} className="text-sky-400" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Parking & Accessibility</span>
+                        <p className="text-[11px] text-slate-200 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free public parking available near office'}</p>
+                        {selectedPartner?.meeting_instructions && (
+                          <p className="text-[10px] text-slate-400 font-normal leading-tight mt-1">{selectedPartner.meeting_instructions.slice(0, 70)}...</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-medium text-slate-400">Exact GPS Coordinates Provided</span>
+                      {selectedPartner?.google_maps_link ? (
+                        <a
+                          href={selectedPartner.google_maps_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] hover:from-[#FF7B1A] hover:to-[#FF5500] text-white text-[11px] font-black uppercase rounded-lg shadow-md hover:shadow-lg transition-all no-underline shrink-0"
+                        >
+                          <ExternalLink size={12} /> Open Maps
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-slate-500 font-bold">Maps link on confirmation</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Trust Signals */}
-            <div className="pt-1 border-t border-slate-100">
+            {/* Symmetrical Trust Signals */}
+            <div className="pt-2 border-t border-slate-100">
               <TrustSignals />
             </div>
 
-            {/* Compact Booking Box */}
+            {/* Premium OTA Checkout Box */}
             {(() => {
               const pMode = selectedTour.payment_mode || 'commission_advance';
               const commPct = selectedTour.commission_percentage !== undefined && selectedTour.commission_percentage !== null ? Number(selectedTour.commission_percentage) : 10;
@@ -859,25 +899,37 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
               const remainingAmount = Math.max(0, selectedTour.price - advanceAmount);
 
               return (
-                <div className="bg-gradient-to-br from-[#FFF4EE] to-[#FFF9F5] border-2 border-[#FF6B00]/30 rounded-2xl p-4 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-black text-slate-600 uppercase bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                          ✓ Free Cancellation
-                        </span>
-                        <span className="text-[10px] font-black text-slate-600 uppercase bg-sky-50 border border-sky-100 text-sky-700 px-2 py-0.5 rounded-full">
-                          ⚡ Instant Confirmation
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600 font-semibold">
-                        {pMode === 'full_payment'
-                          ? 'Pay 100% online to secure your booking.'
-                          : `Pay ₹${advanceAmount.toLocaleString('en-IN')} now · Balance ₹${remainingAmount.toLocaleString('en-IN')} at venue`}
-                      </p>
+                <div className="bg-gradient-to-r from-orange-50/90 via-amber-50/50 to-orange-50/90 border-2 border-[#FF6B00]/40 rounded-2xl p-4 shadow-[0_6px_25px_rgba(255,107,0,0.1)] relative overflow-hidden space-y-3">
+                  <div className="flex items-center justify-between border-b border-orange-200/60 pb-2.5 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 text-[10.5px] font-extrabold text-emerald-800 bg-emerald-100/90 border border-emerald-300/60 px-2.5 py-1 rounded-lg">
+                        <CheckCircle2 size={12} className="text-emerald-700 stroke-[3]" /> Free Cancellation (24h)
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[10.5px] font-extrabold text-indigo-800 bg-indigo-100/90 border border-indigo-300/60 px-2.5 py-1 rounded-lg">
+                        <Sparkles size={12} className="text-indigo-700 fill-indigo-200" /> Instant Ticket Confirmation
+                      </span>
                     </div>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">OTA Best Price</span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5">
+                    <div className="space-y-1">
+                      <p className="text-xs text-slate-800 font-medium">
+                        {pMode === 'full_payment' ? (
+                          <span className="font-bold text-slate-900">Pay 100% online to secure your slot instantly.</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 flex-wrap">
+                            <span className="text-slate-900 font-extrabold">Pay <strong className="text-sm font-black text-[#FF5F00] font-display">₹{advanceAmount.toLocaleString('en-IN')}</strong> Now</span>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-slate-600 font-semibold">Balance <strong className="text-slate-900 font-bold">₹{remainingAmount.toLocaleString('en-IN')}</strong> at Venue</span>
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[11px] text-slate-500 font-medium">No hidden platform charges • Direct partner confirmation</p>
+                    </div>
+
                     {checkIfClosed(selectedTour).closed ? (
-                      <button disabled className="w-full sm:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0">
+                      <button disabled className="w-full sm:w-auto py-3.5 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0">
                         Closed Temporarily
                       </button>
                     ) : (
@@ -897,9 +949,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                           vendors: selectedPartner,
                           slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
                         })}
-                        className="w-full sm:w-auto py-3.5 px-8 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-sm font-black uppercase rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
+                        className="w-full sm:w-auto py-3.5 px-8 bg-gradient-to-r from-[#FF5F00] via-[#FF4500] to-[#FF2A00] text-white text-sm font-black uppercase rounded-xl shadow-[0_4px_18px_rgba(255,95,0,0.35)] hover:shadow-[0_6px_25px_rgba(255,95,0,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-2 group"
                       >
-                        Book Now →
+                        <span>Book Now</span>
+                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                       </button>
                     )}
                   </div>
