@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Star, User, ThumbsUp, Plus, Trash2, ShieldAlert } from 'lucide-react';
+import { Star, User, ThumbsUp, Plus, Trash2 } from 'lucide-react';
+import { supabase } from '../supabase';
 
 const DEFAULT_REVIEWS = [
   {
-    id: 1,
+    id: '1',
     name: 'Amit Sharma',
     date: 'July 2026',
     rating: 5,
@@ -11,7 +12,7 @@ const DEFAULT_REVIEWS = [
     likes: 12
   },
   {
-    id: 2,
+    id: '2',
     name: 'Pooja V.',
     date: 'June 2026',
     rating: 5,
@@ -19,7 +20,7 @@ const DEFAULT_REVIEWS = [
     likes: 8
   },
   {
-    id: 3,
+    id: '3',
     name: 'Rohan Deshmukh',
     date: 'July 2026',
     rating: 4,
@@ -27,7 +28,7 @@ const DEFAULT_REVIEWS = [
     likes: 5
   },
   {
-    id: 4,
+    id: '4',
     name: 'Neha Kapoor',
     date: 'July 2026',
     rating: 5,
@@ -47,6 +48,34 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
   const [newText, setNewText] = useState('');
 
   const scrollRef = useRef(null);
+
+  // Fetch reviews from Supabase table on load
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          const mapped = data.map((r) => ({
+            id: r.id,
+            name: r.name,
+            date: new Date(r.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            rating: Number(r.rating) || 5,
+            text: r.comment || r.text,
+            likes: r.likes || 0
+          }));
+          setReviews([...mapped, ...DEFAULT_REVIEWS]);
+        }
+      } catch (err) {
+        console.warn('Using default reviews (Supabase reviews table offline):', err);
+      }
+    }
+
+    fetchReviews();
+  }, []);
 
   // Auto-scrolling horizontal logic
   useEffect(() => {
@@ -72,18 +101,26 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
     }));
   };
 
-  const handleDeleteReview = (id) => {
-    if (window.confirm('Are you sure you want to delete this review?')) {
+  const handleDeleteReview = async (id) => {
+    if (window.confirm('Are you sure you want to delete this review from backend database?')) {
+      // 1. Remove from state immediately
       setReviews((prev) => prev.filter((r) => r.id !== id));
+
+      // 2. Delete from Supabase Database
+      try {
+        await supabase.from('reviews').delete().eq('id', id);
+      } catch (err) {
+        console.error('Failed to delete review from Supabase:', err);
+      }
     }
   };
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!newName.trim() || !newText.trim()) return;
 
     const newRev = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name: newName,
       date: 'Today',
       rating: newRating,
@@ -92,6 +129,19 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
     };
 
     setReviews([newRev, ...reviews]);
+
+    // Save to Supabase table
+    try {
+      await supabase.from('reviews').insert([{
+        name: newName,
+        rating: newRating,
+        comment: newText,
+        activity_name: name || 'Rishikesh Adventure'
+      }]);
+    } catch (err) {
+      console.warn('Could not persist review to Supabase table:', err);
+    }
+
     setNewName('');
     setNewRating(5);
     setNewText('');
