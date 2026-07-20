@@ -40,7 +40,6 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
   const [reviews, setReviews] = useState(DEFAULT_REVIEWS);
   const [likedReviews, setLikedReviews] = useState({});
   const [showAddForm, setShowAddForm] = useState(false);
-  const [adminMode, setAdminMode] = useState(isAdmin);
   
   // New review form states
   const [newName, setNewName] = useState('');
@@ -119,27 +118,12 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
     <div className="w-full space-y-5 font-sans text-left text-slate-800">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-black font-display text-black uppercase tracking-tight">Customer Reviews</h3>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setAdminMode(!adminMode)}
-            className={`text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
-              adminMode 
-                ? 'bg-rose-50 text-rose-700 border-rose-200' 
-                : 'bg-slate-100 text-slate-500 border-slate-200 hover:text-slate-700'
-            }`}
-            title="Toggle Admin Moderate mode to delete reviews"
-          >
-            {adminMode ? '✓ Moderation Mode ON' : 'Moderate Reviews'}
-          </button>
-
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center gap-1 text-[10px] font-black uppercase text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/10 py-1.5 px-3 rounded-lg hover:bg-[#FF6B00]/10 transition-all cursor-pointer"
-          >
-            <Plus size={12} /> Write a Review
-          </button>
-        </div>
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="flex items-center gap-1 text-[10px] font-black uppercase text-[#FF6B00] bg-[#FF6B00]/5 border border-[#FF6B00]/10 py-1.5 px-3 rounded-lg hover:bg-[#FF6B00]/10 transition-all cursor-pointer"
+        >
+          <Plus size={12} /> Write a Review
+        </button>
       </div>
 
       {/* Write review form toggle */}
@@ -281,7 +265,7 @@ export default function ReviewsSection({ rating = 4.8, reviewsCount = 380, name 
                       ))}
                     </div>
 
-                    {adminMode && (
+                    {isAdmin && (
                       <button
                         type="button"
                         onClick={() => handleDeleteReview(rev.id)}
