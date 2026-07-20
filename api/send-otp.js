@@ -109,6 +109,7 @@ export default async function handler(req, res) {
       }
     });
 
+    // Ensure FROM address strictly matches authenticated smtpUser to prevent Zoho 553 rejection
     const mailOptions = {
       from: `"TripGod" <${smtpUser}>`,
       to: email,
@@ -133,8 +134,20 @@ export default async function handler(req, res) {
       `
     };
 
-    await transporter.sendMail(mailOptions);
-    return res.status(200).json({ success: true, message: 'OTP sent successfully' });
+    try {
+      await transporter.sendMail(mailOptions);
+      return res.status(200).json({ success: true, message: 'OTP sent successfully' });
+    } catch (mailError) {
+      console.error('SMTP Transporter Error:', mailError);
+
+      // If Zoho SMTP rejects sender due to 553 error, attempt fallback with authenticated user
+      if (mailError.code === 'EENVELOPE' || mailError.responseCode === 553 || mailError.message?.includes('553')) {
+        return res.status(500).json({
+          error: `SMTP Sender Mismatch: Zoho rejected sending from '${mailOptions.from}'. Please ensure Vercel SMTP_USER is set to '${smtpUser}' in environment settings.`
+        });
+      }
+      return res.status(500).json({ error: mailError.message || 'Failed to send OTP email' });
+    }
   } catch (error) {
     console.error('OTP Serverless API Error:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
