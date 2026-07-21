@@ -71,7 +71,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               const mockInstructions = vendor.meeting_instructions || `Please report at ${vendor.name} office for documents verification and vehicle pickup. Carry original DL.`;
               const mockReportingTime = vendor.reporting_time || '09:00 AM - 08:00 PM';
               const mockParking = vendor.parking_details || 'Customer vehicle parking available during rental duration';
-              const mockHighlight = vendor.short_highlight || 'Well maintained fleet with fresh helmets';
+              const mockHighlight = vendor.short_highlight || `${vendor.name} • Verified Scooty Fleet & Helmets`;
               
               let mockBadges = vendor.badges || [];
               if (mockBadges.length === 0) {

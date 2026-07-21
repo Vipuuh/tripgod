@@ -107,7 +107,18 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               const mockInstructions = vendor.meeting_instructions || `Please report at ${vendor.name} office. Bring extra clothes and valid ID.`;
               const mockReportingTime = vendor.reporting_time || '15 mins before slot';
               const mockParking = vendor.parking_details || 'Free customer parking available';
-              const mockHighlight = vendor.short_highlight || 'Highly experienced local safety crew';
+              const getCategoryHighlightFallback = (type, vName) => {
+                switch (type) {
+                  case 'rafting': return `${vName} • Certified River Crew & Equipment`;
+                  case 'camping': return `${vName} • Riverside Camp & Bonfire Host`;
+                  case 'bungee':
+                  case 'swing':
+                  case 'zipline': return `${vName} • Jump Masters & Safety Lock System`;
+                  case 'paragliding': return `${vName} • Tandem Flights with Veteran Pilots`;
+                  default: return `${vName} • Pre-verified Slot Confirmations`;
+                }
+              };
+              const mockHighlight = vendor.short_highlight || getCategoryHighlightFallback(activityType, vendor.name);
               
               // Generate badges
               let mockBadges = vendor.badges || [];
@@ -566,7 +577,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   <span className="text-emerald-600">🛡️ Certified Crew</span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-655 leading-relaxed font-medium max-w-3xl">
-                  ⚡ {selectedPartner.short_highlight}. Highly trained operators offering pre-verified slot confirmations, top-grade safety standards and certified equipment.
+                  ⚡ {selectedPartner.short_highlight || `${selectedPartner.name} • Verified Operator in ${selectedPartner.landmark || 'Rishikesh'}`}. {selectedPartner.meeting_instructions || `Certified safety standards, top-grade equipment, and instant slot confirmations.`}
                 </p>
               </div>
             </div>

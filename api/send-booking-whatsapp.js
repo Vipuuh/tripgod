@@ -286,22 +286,44 @@ async function sendEmailAlert(data) {
     return null;
   }
 
-  const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-  const smtpPort = parseInt(process.env.SMTP_PORT || "465");
-  const smtpSecure = smtpPort === 465; // true for 465 (SSL), false for 587 (TLS)
+  let smtpHost = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
+  if (!smtpHost.includes('.') || /^\d[\d\.]*$/.test(smtpHost) || smtpHost.startsWith('0.0.')) {
+    if (smtpUser.includes('@gmail.com')) {
+      smtpHost = "smtp.gmail.com";
+    } else if (smtpUser.includes('@zoho') || smtpUser.includes('tripgod.in')) {
+      smtpHost = "smtppro.zoho.in";
+    } else {
+      smtpHost = "smtp.gmail.com";
+    }
+  }
+
+  let smtpPort = parseInt(process.env.SMTP_PORT || "465");
+  if (isNaN(smtpPort) || smtpPort === 587) {
+    smtpPort = 465;
+  }
+  const smtpSecure = smtpPort === 465;
 
   const notificationEmail = process.env.NOTIFICATION_EMAIL || smtpUser;
 
-  // Create transporter
-  const transporter = nodemailer.createTransport({
+  const transportOpts = {
     host: smtpHost,
     port: smtpPort,
     secure: smtpSecure,
     auth: {
       user: smtpUser,
       pass: smtpPass
-    }
-  });
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000
+  };
+
+  if (smtpHost.toLowerCase().includes('gmail')) {
+    transportOpts.service = 'gmail';
+  }
+
+  // Create transporter
+  const transporter = nodemailer.createTransport(transportOpts);
 
   const isBikeRent = data.category === 'bikerent';
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';

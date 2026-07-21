@@ -95,19 +95,43 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, message: 'Mock OTP sent (SMTP not configured)' });
     }
 
-    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-    const smtpPort = parseInt(process.env.SMTP_PORT || "465");
+    let smtpHost = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
+    // Sanitize SMTP Host: If host is IP like "0.0.1.209", "127.0.0.1", or lacks domain dots, auto-detect from user email domain or fallback
+    if (!smtpHost.includes('.') || /^\d[\d\.]*$/.test(smtpHost) || smtpHost.startsWith('0.0.')) {
+      if (smtpUser.includes('@gmail.com')) {
+        smtpHost = "smtp.gmail.com";
+      } else if (smtpUser.includes('@zoho') || smtpUser.includes('tripgod.in')) {
+        smtpHost = "smtppro.zoho.in"; // Default for Zoho India or custom domain unless specified
+      } else {
+        smtpHost = "smtp.gmail.com";
+      }
+    }
+
+    let smtpPort = parseInt(process.env.SMTP_PORT || "465");
+    // Standardize to port 465 (SSL) for Vercel serverless environments (Port 587 is blocked by Vercel firewall causing ETIMEDOUT)
+    if (isNaN(smtpPort) || smtpPort === 587) {
+      smtpPort = 465;
+    }
     const smtpSecure = smtpPort === 465;
 
-    const transporter = nodemailer.createTransport({
+    const transportOpts = {
       host: smtpHost,
       port: smtpPort,
       secure: smtpSecure,
       auth: {
         user: smtpUser,
         pass: smtpPass
-      }
-    });
+      },
+      connectionTimeout: 10000, // 10s connection timeout
+      greetingTimeout: 10000,
+      socketTimeout: 10000
+    };
+
+    if (smtpHost.toLowerCase().includes('gmail')) {
+      transportOpts.service = 'gmail';
+    }
+
+    const transporter = nodemailer.createTransport(transportOpts);
 
     // Ensure FROM address strictly matches authenticated smtpUser to prevent Zoho 553 rejection
     const mailOptions = {

@@ -394,4 +394,37 @@ ALTER TABLE bikes ADD COLUMN IF NOT EXISTS free_cancellation BOOLEAN DEFAULT tru
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
 
+-- =========================================================================
+-- CUSTOMER REELS TABLE & POLICIES (July 2026)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS customer_reels (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    customer_name TEXT NOT NULL,
+    activity_type TEXT,
+    rating NUMERIC DEFAULT 5,
+    location TEXT DEFAULT 'Rishikesh',
+    video_url TEXT NOT NULL,
+    thumbnail_url TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_featured BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE customer_reels ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read on customer_reels" ON customer_reels;
+DROP POLICY IF EXISTS "Allow public write on customer_reels" ON customer_reels;
+DROP POLICY IF EXISTS "Allow public insert on customer_reels" ON customer_reels;
+DROP POLICY IF EXISTS "Allow public update on customer_reels" ON customer_reels;
+DROP POLICY IF EXISTS "Allow public delete on customer_reels" ON customer_reels;
+
+CREATE POLICY "Allow public read on customer_reels" ON customer_reels FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on customer_reels" ON customer_reels FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on customer_reels" ON customer_reels FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete on customer_reels" ON customer_reels FOR DELETE USING (true);
+
+NOTIFY pgrst, 'reload schema';
+
+
 

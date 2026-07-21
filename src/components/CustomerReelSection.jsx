@@ -19,16 +19,25 @@ const getYouTubeId = (url) => {
   return null;
 };
 
+// Extract Instagram Reel/Post ID
+const getInstagramId = (url) => {
+  if (!url) return null;
+  const pattern = /(?:instagram\.com|instagr\.am)\/(?:reel|p)\/([^/?&]+)/;
+  const match = url.match(pattern);
+  return match ? match[1] : null;
+};
+
 // Single Reel Card
 function ReelCard({ reel }) {
   const [muted, setMuted] = useState(true);
   const videoRef = useRef(null);
   const cardRef = useRef(null);
   const youtubeId = getYouTubeId(reel.video_url);
+  const instaId = getInstagramId(reel.video_url);
 
   // IntersectionObserver for autoplay on direct videos
   useEffect(() => {
-    if (youtubeId || !videoRef.current) return;
+    if (youtubeId || instaId || !videoRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -43,7 +52,7 @@ function ReelCard({ reel }) {
     );
     if (cardRef.current) observer.observe(cardRef.current);
     return () => observer.disconnect();
-  }, [youtubeId]);
+  }, [youtubeId, instaId]);
 
   const toggleMute = (e) => {
     e.stopPropagation();
@@ -59,7 +68,7 @@ function ReelCard({ reel }) {
       className="relative flex-shrink-0 w-[220px] sm:w-[250px] rounded-2xl overflow-hidden shadow-lg bg-black"
       style={{ aspectRatio: '9/16', maxHeight: '420px' }}
     >
-      {/* Video or YouTube iframe */}
+      {/* Video or YouTube / Instagram iframe */}
       {youtubeId ? (
         <iframe
           src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&modestbranding=1&rel=0`}
@@ -68,6 +77,14 @@ function ReelCard({ reel }) {
           allowFullScreen
           title={reel.customer_name}
           style={{ border: 'none', pointerEvents: 'none' }}
+        />
+      ) : instaId ? (
+        <iframe
+          src={`https://www.instagram.com/reel/${instaId}/embed`}
+          className="w-full h-full object-cover bg-slate-900"
+          allowFullScreen
+          title={reel.customer_name}
+          style={{ border: 'none' }}
         />
       ) : (
         <video
@@ -85,7 +102,7 @@ function ReelCard({ reel }) {
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
 
       {/* Mute/Unmute — only for direct video uploads */}
-      {!youtubeId && (
+      {!youtubeId && !instaId && (
         <button
           onClick={toggleMute}
           className="absolute top-3 right-3 w-8 h-8 bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 transition-all z-10 cursor-pointer"
@@ -125,28 +142,44 @@ function ReelCard({ reel }) {
   );
 }
 
-// Main Section — returns null if no active reels exist in DB
+// Main Section — returns null if no active reels exist
 export default function CustomerReelSection() {
   const [reels, setReels] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchReels = async () => {
+      let supabaseActive = [];
       try {
         const { data, error } = await supabase
           .from('customer_reels')
           .select('*')
           .eq('is_active', true)
           .order('sort_order', { ascending: true });
-        if (!error && data) setReels(data);
+        if (!error && data) supabaseActive = data;
       } catch (err) {
-        console.error('Error fetching reels:', err);
-      } finally {
-        setLoading(false);
+        console.warn('Error fetching reels from Supabase:', err);
       }
+
+      // Check localStorage for active reels as fallback/sync
+      let localActive = [];
+      try {
+        localActive = JSON.parse(localStorage.getItem('tripgod_customer_reels') || '[]')
+          .filter(r => r.is_active);
+      } catch (e) {
+        localActive = [];
+      }
+
+      const dbIds = new Set(supabaseActive.map(r => String(r.id)));
+      const uniqueLocal = localActive.filter(r => !dbIds.has(String(r.id)));
+      const combined = [...supabaseActive, ...uniqueLocal].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
+      setReels(combined);
+      setLoading(false);
     };
     fetchReels();
   }, []);
+
 
   // Hidden when 0 active reels — no heading, no empty space
   if (loading || reels.length === 0) return null;

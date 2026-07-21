@@ -1572,8 +1572,31 @@ function ReelsManager() {
 
   const fetchReels = async () => {
     setLoading(true);
-    const { data } = await supabase.from('customer_reels').select('*').order('sort_order', { ascending: true });
-    if (data) setReels(data);
+    let supabaseReels = [];
+    try {
+      const { data, error } = await supabase.from('customer_reels').select('*').order('sort_order', { ascending: true });
+      if (error) {
+        console.warn('Could not fetch reels from Supabase customer_reels table:', error.message);
+      } else if (data) {
+        supabaseReels = data;
+      }
+    } catch (err) {
+      console.warn('Supabase fetch exception:', err);
+    }
+
+    // Combine with localStorage fallback
+    let localReels = [];
+    try {
+      localReels = JSON.parse(localStorage.getItem('tripgod_customer_reels') || '[]');
+    } catch (e) {
+      localReels = [];
+    }
+
+    const dbIds = new Set(supabaseReels.map(r => String(r.id)));
+    const uniqueLocal = localReels.filter(r => !dbIds.has(String(r.id)));
+    const combined = [...supabaseReels, ...uniqueLocal].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
+    setReels(combined);
     setLoading(false);
   };
 
@@ -1598,33 +1621,113 @@ function ReelsManager() {
       return;
     }
     setSaving(true);
+    
+    // Clean up payload (remove non-updatable fields)
+    const { id, created_at, ...payload } = form;
+
+    let savedItem = null;
+    let dbSuccess = false;
+
     try {
       if (editingReel) {
-        await supabase.from('customer_reels').update(form).eq('id', editingReel.id);
+        const { data, error } = await supabase
+          .from('customer_reels')
+          .update(payload)
+          .eq('id', editingReel.id)
+          .select();
+        
+        if (error) {
+          console.error('Supabase update error:', error);
+          alert('Supabase Notice: ' + error.message + '\n\nReel will be saved locally as fallback.');
+        } else {
+          dbSuccess = true;
+          savedItem = data && data[0] ? data[0] : { ...form, id: editingReel.id };
+        }
       } else {
-        await supabase.from('customer_reels').insert([form]);
+        const newItem = {
+          ...payload,
+          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'reel_' + Date.now()
+        };
+
+        const { data, error } = await supabase
+          .from('customer_reels')
+          .insert([newItem])
+          .select();
+
+        if (error) {
+          console.error('Supabase insert error:', error);
+          alert('Supabase Notice: ' + error.message + '\n\nReel will be saved locally as fallback.');
+          savedItem = newItem;
+        } else {
+          dbSuccess = true;
+          savedItem = data && data[0] ? data[0] : newItem;
+        }
       }
-      await fetchReels();
-      resetForm();
     } catch (err) {
+      console.error('Save exception:', err);
       alert('Error saving reel: ' + err.message);
-    } finally {
-      setSaving(false);
     }
+
+    // Save to localStorage as sync/fallback
+    try {
+      const existingLocal = JSON.parse(localStorage.getItem('tripgod_customer_reels') || '[]');
+      let updatedLocal = [];
+      const itemToSave = savedItem || { ...form, id: editingReel ? editingReel.id : ('reel_' + Date.now()) };
+
+      if (editingReel) {
+        updatedLocal = existingLocal.map(r => String(r.id) === String(editingReel.id) ? { ...r, ...itemToSave } : r);
+      } else {
+        updatedLocal = [itemToSave, ...existingLocal];
+      }
+      localStorage.setItem('tripgod_customer_reels', JSON.stringify(updatedLocal));
+    } catch (e) {
+      console.error('LocalStorage error:', e);
+    }
+
+    await fetchReels();
+    resetForm();
+    setSaving(false);
+    alert(editingReel ? 'Reel successfully updated!' : 'Reel successfully saved!');
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Is reel ko delete karna chahte ho?')) return;
-    await supabase.from('customer_reels').delete().eq('id', id);
+    try {
+      const { error } = await supabase.from('customer_reels').delete().eq('id', id);
+      if (error) console.error('Supabase delete error:', error);
+    } catch (e) {
+      console.error('Delete error:', e);
+    }
+
+    try {
+      const existingLocal = JSON.parse(localStorage.getItem('tripgod_customer_reels') || '[]');
+      const updatedLocal = existingLocal.filter(r => String(r.id) !== String(id));
+      localStorage.setItem('tripgod_customer_reels', JSON.stringify(updatedLocal));
+    } catch (e) {}
+
     await fetchReels();
   };
 
   const toggleActive = async (reel) => {
-    await supabase.from('customer_reels').update({ is_active: !reel.is_active }).eq('id', reel.id);
+    const nextActive = !reel.is_active;
+    try {
+      const { error } = await supabase.from('customer_reels').update({ is_active: nextActive }).eq('id', reel.id);
+      if (error) console.error('Supabase toggle error:', error);
+    } catch (e) {
+      console.error('Toggle error:', e);
+    }
+
+    try {
+      const existingLocal = JSON.parse(localStorage.getItem('tripgod_customer_reels') || '[]');
+      const updatedLocal = existingLocal.map(r => String(r.id) === String(reel.id) ? { ...r, is_active: nextActive } : r);
+      localStorage.setItem('tripgod_customer_reels', JSON.stringify(updatedLocal));
+    } catch (e) {}
+
     await fetchReels();
   };
 
   const activityOptions = ['Rafting', 'Camping', 'Bungee', 'Paragliding', 'Giant Swing', 'Zipline', 'Hotel Stay', 'Bike Rent', 'Tour Package', 'Kayaking', 'Other'];
+
 
   return (
     <div className="space-y-6">

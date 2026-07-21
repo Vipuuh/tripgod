@@ -457,7 +457,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                   <span className="text-emerald-600">🛡️ Verified Tour Operator</span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-655 leading-relaxed font-medium max-w-3xl">
-                  ⚡ {selectedPartner.short_highlight}. Experienced pilgrimage planners coordinating comfortable stays, certified guides, and transport.
+                  ⚡ {selectedPartner.short_highlight || `${selectedPartner.name} • Verified Tour Operator in ${selectedPartner.landmark || 'Rishikesh'}`}. {selectedPartner.meeting_instructions || `Trusted travel partner coordinating tour itineraries, verified stays, and local support.`}
                 </p>
               </div>
             </div>
@@ -542,7 +542,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600">
                           <span>👨</span>
-                          <span>Guide Included</span>
+                          <span>{pkg.guide_included ? 'Guide Included' : 'No Guide'}</span>
                         </div>
                       </div>
 
@@ -695,7 +695,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                 <span className="text-lg shrink-0">👨</span>
                 <div>
                   <span className="block text-[9px] text-slate-400 uppercase font-black tracking-wider">Guide</span>
-                  <span className="text-white font-black text-xs">Certified Guide</span>
+                  <span className="text-white font-black text-xs">{selectedTour.guide_included ? 'Certified Guide' : 'Not Included'}</span>
                 </div>
               </div>
             </div>
@@ -735,7 +735,13 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                   {(selectedTour.inclusions && selectedTour.inclusions.length > 0
                     ? selectedTour.inclusions
-                    : ['Hotels & camp stays', 'Cab transport', 'All meals', 'Guide service', 'Permits', 'Coordination']
+                    : [
+                        selectedTour.hotel_included && 'Hotels & camp stays',
+                        selectedTour.meals_included && 'Buffet meals',
+                        selectedTour.transport_included && 'Cab transport',
+                        selectedTour.guide_included && 'Certified Guide service',
+                        'Permits & Coordination'
+                      ].filter(Boolean)
                   ).map((inc, i) => (
                     <div key={i} className="flex items-start gap-1.5 text-[11px] font-bold text-emerald-900">
                       <span className="text-emerald-600 font-black shrink-0 mt-0.5">✓</span>
