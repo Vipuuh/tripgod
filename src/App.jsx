@@ -158,6 +158,13 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Disable browser auto-scroll restoration to prevent jumping to footer on back button press
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
   // Sync path routing if user uses back/forward buttons (HTML5 History API)
   useEffect(() => {
     const handlePathChange = () => {
@@ -187,21 +194,14 @@ export default function App() {
         else if (path.startsWith('tours/')) resolvedRoute = 'tours';
 
         setRoute(resolvedRoute);
-        if (resolvedRoute === 'home') {
-          const savedScroll = sessionStorage.getItem('home_scroll_pos');
-          if (hash === '#adventures') {
-            setTimeout(() => {
-              document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
-            }, 150);
-          } else if (savedScroll) {
-            setTimeout(() => {
-              window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'auto' });
-            }, 100);
-          } else {
-            window.scrollTo(0, 0);
-          }
-        } else {
-          window.scrollTo(0, 0);
+
+        // Instant reset scroll to top on back navigation to prevent footer jumps
+        window.scrollTo(0, 0);
+
+        if (resolvedRoute === 'home' && hash === '#adventures') {
+          setTimeout(() => {
+            document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
         }
       } else {
         setRoute('home');
@@ -218,10 +218,6 @@ export default function App() {
 
   // Update URL path when route changes
   const navigateTo = (newRoute) => {
-    if (route === 'home') {
-      sessionStorage.setItem('home_scroll_pos', window.scrollY);
-    }
-
     if (newRoute === 'adventures') {
       window.history.pushState(null, '', '/#adventures');
       setRoute('home');
@@ -229,10 +225,6 @@ export default function App() {
         document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
       }, 150);
     } else {
-      if (newRoute === 'home') {
-        sessionStorage.removeItem('home_scroll_pos');
-      }
-      
       let targetPath;
       let resolvedRoute = newRoute;
       

@@ -8,7 +8,7 @@ import {
   Wifi, Wind, Car, Utensils, Tv, Mountain, Waves, Bell, Zap, Flame,
   Lock, CalendarCheck, RefreshCw, HelpCircle, Eye,
   Share2, Heart, Phone, Compass, Smile, ThumbsUp, Users, Award, Sparkles,
-  Coffee, CircleDollarSign
+  Coffee, CircleDollarSign, Clock
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -1616,8 +1616,32 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
+              {/* SECTION: PROPERTY TIMINGS & SCHEDULE */}
+              <div className="bg-gradient-to-r from-orange-50/70 via-amber-50/60 to-orange-50/40 p-4 border border-orange-200/60 rounded-3xl text-left border-t border-gray-100 pt-5">
+                <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider font-display flex items-center gap-1.5 mb-3">
+                  <Clock size={15} className="text-[#FF5F00]" />
+                  <span>Property Timings & Schedule</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-white/90 rounded-2xl border border-orange-100 shadow-3xs flex flex-col justify-center">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Check-In Time</span>
+                    <span className="text-xs font-extrabold text-slate-900 mt-1 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                      {selectedHotel.check_in || '12:00 PM'}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-white/90 rounded-2xl border border-orange-100 shadow-3xs flex flex-col justify-center">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Check-Out Time</span>
+                    <span className="text-xs font-extrabold text-slate-900 mt-1 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                      {selectedHotel.check_out || '11:00 AM'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* SECTION 11: HOUSE RULES & SECTION 12: CANCELLATION POLICY */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-gray-100 pt-5 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 text-left">
                 {selectedHotel.rules && Object.keys(selectedHotel.rules).length > 0 && (
                   <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
                     <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">House Rules</h4>

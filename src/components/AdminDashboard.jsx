@@ -2936,11 +2936,15 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.best_for = formData.best_for || [];
         submitData.perfect_for = formData.perfect_for || [];
         submitData.benefits = formData.benefits || [];
-        submitData.featured_image = formData.featured_image || '';
+        if (formData.check_in) submitData.check_in = formData.check_in;
+        if (formData.check_out) submitData.check_out = formData.check_out;
       } else if (type === 'bikes') {
         submitData.deposit = Number(formData.deposit || 0);
         submitData.documents = formData.documents || [];
         submitData.pickup_location = formData.pickup_location || '';
+      } else {
+        if (formData.check_in) submitData.check_in = formData.check_in;
+        if (formData.check_out) submitData.check_out = formData.check_out;
       }
       if (data) {
         // Edit Row
@@ -6821,6 +6825,41 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
         />
       </div>
+
+      {/* Check-in & Check-out Timings */}
+      {(type === 'hotels' || type === 'tours' || ['rafting', 'adventures'].includes(type)) && (
+        <div className="space-y-3 border-t border-slate-800 pt-4">
+          <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display flex items-center gap-1.5">
+            <span>⏰ Property Timings (Check-In & Check-Out)</span>
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-slate-300 tracking-wider">
+                Check-In / Reporting Time
+              </label>
+              <input
+                type="text"
+                value={formData.check_in || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, check_in: e.target.value }))}
+                placeholder="e.g. 12:00 PM or 11:00 AM"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none text-xs font-bold"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-slate-300 tracking-wider">
+                Check-Out / Departure Time
+              </label>
+              <input
+                type="text"
+                value={formData.check_out || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, check_out: e.target.value }))}
+                placeholder="e.g. 11:00 AM or 10:00 AM"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none text-xs font-bold"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 5. Payment Configuration */}
       {type === 'hotels' && (

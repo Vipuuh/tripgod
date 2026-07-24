@@ -199,9 +199,13 @@ ALTER TABLE vendors ADD COLUMN IF NOT EXISTS star_rating NUMERIC DEFAULT 4.5;
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS landmark TEXT;
 
 -- =========================================================================
--- Schema Extensions (Adventure Packages — June 2026)
+-- Schema Extensions (Adventure Packages & Timings — June 2026)
 -- =========================================================================
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS activity_type TEXT DEFAULT 'rafting';
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS check_in TEXT DEFAULT '12:00 PM';
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS check_out TEXT DEFAULT '11:00 AM';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS check_in TEXT DEFAULT '12:00 PM';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS check_out TEXT DEFAULT '11:00 AM';
 
 -- =========================================================================
 -- Schema Extensions (Premium Hotels Detail Page — June 2026)
