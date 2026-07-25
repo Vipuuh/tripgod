@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Users, Clock, ShieldCheck, CreditCard, MessageSquare } from 'lucide-react';
+import { X, Calendar, Users, Clock, ShieldCheck, CreditCard, MessageSquare, Mail, Phone } from 'lucide-react';
 import { supabase } from '../supabase';
 
 const formatDisplayPhone = (phone) => {
@@ -414,9 +414,7 @@ My payment ID is verified. Please confirm my slots.`;
             if (error) {
               console.error('Error inserting booking to Supabase:', error);
             }
-            const opPhone = activity.category === 'hotels'
-              ? (activity.whatsapp_number || activity.vendors?.whatsapp || activity.vendors?.phone || '9410572857')
-              : (activity.vendors?.whatsapp || activity.vendors?.phone || '9410572857');
+            const opPhone = activity.whatsapp_number || activity.whatsapp || activity.vendors?.whatsapp || activity.vendors?.phone || activity.phone_number || activity.operatorPhone || '9410572857';
 
             // Trigger background automated WhatsApp notifications
             fetch('/api/send-booking-whatsapp', {
@@ -546,19 +544,19 @@ My payment ID is verified. Please confirm my slots.`;
             className="relative w-full max-w-lg overflow-hidden bg-white/80 border border-white/40 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] z-10 flex flex-col max-h-[90vh] backdrop-blur-2xl text-black"
           >
             {bookingSuccessData ? (
-              <div className="p-8 text-center flex flex-col items-center space-y-5">
+              <div className="p-6 sm:p-8 overflow-y-auto space-y-4 text-center flex flex-col items-center max-h-[85vh] scrollbar-thin">
                 {/* Success Animation Checkmark */}
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 shadow-3xs animate-bounce mt-2">
-                  <svg className="w-8 h-8 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 shadow-3xs animate-bounce shrink-0 mt-1">
+                  <svg className="w-7 h-7 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
                   </svg>
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-black font-display tracking-tight text-neutral-900">
-                    Booking Confirmed! 🎉
+                <div className="space-y-0.5">
+                  <h3 className="text-xl sm:text-2xl font-black font-display tracking-tight text-neutral-900">
+                    Booking Confirmed!
                   </h3>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+                  <p className="text-[11px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider">
                     Your stay has been reserved successfully
                   </p>
                 </div>
@@ -651,15 +649,15 @@ My payment ID is verified. Please confirm my slots.`;
                 )}
 
                 {/* Next Steps Container */}
-                <div className="w-full p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-2">
-                  <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">✨ What happens next?</h4>
-                  <ul className="text-[10px] text-emerald-850 font-semibold space-y-1.5 list-none pl-0">
-                    <li className="flex items-start gap-1.5">
-                      <span>📩</span> 
-                      <span>Confirmation tickets containing full booking ticket layout have been sent to your registered Gmail and WhatsApp.</span>
+                <div className="w-full p-3.5 sm:p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-2">
+                  <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">What happens next?</h4>
+                  <ul className="text-[10px] sm:text-[11px] text-emerald-850 font-semibold space-y-2 list-none pl-0">
+                    <li className="flex items-start gap-2">
+                      <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" /> 
+                      <span>Confirmation tickets containing full booking details have been sent to your registered Email and WhatsApp.</span>
                     </li>
-                    <li className="flex items-start gap-1.5">
-                      <span>📞</span> 
+                    <li className="flex items-start gap-2">
+                      <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" /> 
                       <span>You can directly contact the Host/Hotel desk at <strong>{formatDisplayPhone(bookingSuccessData.operatorPhone)}</strong> to coordinate check-in or booking slots.</span>
                     </li>
                   </ul>

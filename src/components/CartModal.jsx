@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Calendar, Clock, Users, ShieldAlert, CheckCircle, CreditCard } from 'lucide-react';
+import { X, Trash2, Calendar, Clock, Users, ShieldAlert, CheckCircle, CreditCard, Mail, Phone } from 'lucide-react';
 import { supabase } from '../supabase';
 
 export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClearCart }) {
@@ -258,9 +258,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
 
             // Trigger background automated WhatsApp notifications for each cart item
             cart.forEach((item) => {
-              const opPhone = item.category === 'hotels'
-                ? (item.whatsapp_number || item.vendors?.whatsapp || item.vendors?.phone || '9410572857')
-                : (item.vendors?.whatsapp || item.vendors?.phone || '9410572857');
+              const opPhone = item.whatsapp_number || item.whatsapp || item.vendors?.whatsapp || item.vendors?.phone || item.phone_number || item.operatorPhone || '9410572857';
 
               fetch('/api/send-booking-whatsapp', {
                 method: 'POST',
@@ -351,19 +349,19 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
             className="relative w-full max-w-md h-full bg-white/80 border-l border-white/40 shadow-2xl z-10 flex flex-col backdrop-blur-2xl text-black"
           >
              {bookingSuccessData ? (
-               <div className="p-8 text-center flex flex-col items-center justify-center h-full space-y-6">
+               <div className="p-6 sm:p-8 overflow-y-auto space-y-4 text-center flex flex-col items-center max-h-[85vh] scrollbar-thin">
                  {/* Success Animation Checkmark */}
-                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 shadow-3xs animate-bounce">
-                   <svg className="w-8 h-8 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                 <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-500 shadow-3xs animate-bounce shrink-0 mt-1">
+                   <svg className="w-7 h-7 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
                    </svg>
                  </div>
 
-                 <div className="space-y-1">
-                   <h3 className="text-2xl font-black font-display tracking-tight text-neutral-900">
-                     Booking Confirmed! 🎉
+                 <div className="space-y-0.5">
+                   <h3 className="text-xl sm:text-2xl font-black font-display tracking-tight text-neutral-900">
+                     Booking Confirmed!
                    </h3>
-                   <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+                   <p className="text-[11px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider">
                      All items in your cart are reserved
                    </p>
                  </div>
@@ -391,11 +389,17 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
                  </div>
 
                  {/* Next Steps Container */}
-                 <div className="w-full p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-2">
-                   <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">✨ What happens next?</h4>
-                   <ul className="text-[10px] text-emerald-850 font-semibold space-y-1.5 list-none pl-0">
-                     <li className="flex items-start gap-1.5"><span>📩</span> <span>Booking tickets have been sent to your email and WhatsApp number.</span></li>
-                     <li className="flex items-start gap-1.5"><span>📞</span> <span>The local guides/hotels will contact you shortly to coordinate slot details.</span></li>
+                 <div className="w-full p-3.5 sm:p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl text-left space-y-2">
+                   <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">What happens next?</h4>
+                   <ul className="text-[10px] sm:text-[11px] text-emerald-850 font-semibold space-y-2 list-none pl-0">
+                     <li className="flex items-start gap-2">
+                       <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" /> 
+                       <span>Booking tickets have been sent to your registered Email and WhatsApp.</span>
+                     </li>
+                     <li className="flex items-start gap-2">
+                       <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" /> 
+                       <span>The local guides/hotels will contact you shortly to coordinate check-in or slot details.</span>
+                     </li>
                    </ul>
                  </div>
 
@@ -404,7 +408,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
                      setBookingSuccessData(null);
                      onClose();
                    }}
-                   className="w-full py-4 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer font-display"
+                   className="w-full py-3.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.01] transition-all border-none cursor-pointer font-display"
                  >
                    Close & Continue
                  </button>
