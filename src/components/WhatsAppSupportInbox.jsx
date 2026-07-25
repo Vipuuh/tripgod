@@ -341,7 +341,7 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             Meta WhatsApp Cloud API Live
           </div>
-          <span className="hidden sm:inline text-slate-400 font-medium">| Official Number: +91 86300 27341</span>
+          <span className="hidden sm:inline text-slate-400 font-medium">| Official Number: +91 94105 72857</span>
         </div>
 
         <div className="flex items-center gap-3">
