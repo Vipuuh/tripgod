@@ -1,0 +1,16 @@
+{
+  "short_name": "TripGod Support",
+  "name": "TripGod WhatsApp Live Support & Admin",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/?tab=whatsapp",
+  "background_color": "#090d16",
+  "theme_color": "#ff5f00",
+  "display": "standalone",
+  "orientation": "portrait"
+}

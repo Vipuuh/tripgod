@@ -4,11 +4,12 @@ import {
   Activity, ShoppingBag, Building2, Waves, Bike, MapPin, Users, Image, 
   Trash2, Edit, Plus, LogOut, Search, Filter, ShieldCheck, ChevronRight,
   TrendingUp, CircleDollarSign, Check, X, PlusCircle, Sparkles, MapPinned,
-  LayoutDashboard, GripVertical, Star
+  LayoutDashboard, GripVertical, Star, MessageSquare
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import RetargetingTab from './RetargetingTab';
 import ReviewsSection from './ReviewsSection';
+import WhatsAppSupportInbox from './WhatsAppSupportInbox';
 
 const getSimpleBookingId = (id) => {
   if (!id) return 'TG-000000';
@@ -498,6 +499,7 @@ export default function AdminDashboard({ setRoute }) {
           <nav className="flex flex-col gap-1.5">
             {[
               { id: 'analytics', label: 'Analytics', icon: Activity },
+              { id: 'whatsapp', label: '💬 WhatsApp Support', icon: MessageSquare },
               { id: 'bookings', label: 'Bookings', icon: ShoppingBag },
               { id: 'hotels', label: 'Hotels', icon: Building2 },
               { id: 'adventures', label: 'Adventure Packages', icon: Waves },
@@ -1495,6 +1497,11 @@ export default function AdminDashboard({ setRoute }) {
               </div>
               <ReviewsSection isAdmin={true} />
             </div>
+          )}
+
+          {/* WHATSAPP LIVE SUPPORT INBOX TAB */}
+          {activeTab === 'whatsapp' && (
+            <WhatsAppSupportInbox currentUser={{ name: adminEmail || 'Vipu (Admin)' }} />
           )}
 
         </div>

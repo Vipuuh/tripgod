@@ -430,5 +430,69 @@ CREATE POLICY "Allow public delete on customer_reels" ON customer_reels FOR DELE
 
 NOTIFY pgrst, 'reload schema';
 
+-- =========================================================================
+-- WHATSAPP LIVE SUPPORT INBOX & MESSAGES (July 2026)
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS whatsapp_chats (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    phone_number TEXT NOT NULL UNIQUE,
+    customer_name TEXT,
+    customer_email TEXT,
+    last_message TEXT,
+    last_message_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    unread_count INTEGER DEFAULT 0 NOT NULL,
+    status TEXT DEFAULT 'open' NOT NULL, -- 'open', 'closed', 'starred', 'abandoned_cart'
+    assigned_to TEXT DEFAULT 'unassigned' NOT NULL,
+    window_expires_at TIMESTAMP WITH TIME ZONE,
+    metadata JSONB DEFAULT '{}'::JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS whatsapp_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    chat_id UUID REFERENCES whatsapp_chats(id) ON DELETE CASCADE NOT NULL,
+    wa_message_id TEXT,
+    direction TEXT NOT NULL, -- 'inbound' or 'outbound'
+    sender_type TEXT DEFAULT 'customer' NOT NULL, -- 'customer', 'agent', 'bot', 'system'
+    sender_name TEXT,
+    message_type TEXT DEFAULT 'text' NOT NULL, -- 'text', 'image', 'document', 'location', 'template'
+    content TEXT,
+    media_url TEXT,
+    media_mime_type TEXT,
+    status TEXT DEFAULT 'sent' NOT NULL, -- 'sent', 'delivered', 'read', 'failed'
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE whatsapp_chats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE whatsapp_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read on whatsapp_chats" ON whatsapp_chats;
+DROP POLICY IF EXISTS "Allow public write on whatsapp_chats" ON whatsapp_chats;
+DROP POLICY IF EXISTS "Allow public insert on whatsapp_chats" ON whatsapp_chats;
+DROP POLICY IF EXISTS "Allow public update on whatsapp_chats" ON whatsapp_chats;
+DROP POLICY IF EXISTS "Allow public delete on whatsapp_chats" ON whatsapp_chats;
+
+CREATE POLICY "Allow public read on whatsapp_chats" ON whatsapp_chats FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on whatsapp_chats" ON whatsapp_chats FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on whatsapp_chats" ON whatsapp_chats FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete on whatsapp_chats" ON whatsapp_chats FOR DELETE USING (true);
+
+DROP POLICY IF EXISTS "Allow public read on whatsapp_messages" ON whatsapp_messages;
+DROP POLICY IF EXISTS "Allow public write on whatsapp_messages" ON whatsapp_messages;
+DROP POLICY IF EXISTS "Allow public insert on whatsapp_messages" ON whatsapp_messages;
+DROP POLICY IF EXISTS "Allow public update on whatsapp_messages" ON whatsapp_messages;
+DROP POLICY IF EXISTS "Allow public delete on whatsapp_messages" ON whatsapp_messages;
+
+CREATE POLICY "Allow public read on whatsapp_messages" ON whatsapp_messages FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on whatsapp_messages" ON whatsapp_messages FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on whatsapp_messages" ON whatsapp_messages FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete on whatsapp_messages" ON whatsapp_messages FOR DELETE USING (true);
+
+-- Enable Realtime publication
+ALTER PUBLICATION supabase_realtime ADD TABLE whatsapp_chats;
+ALTER PUBLICATION supabase_realtime ADD TABLE whatsapp_messages;
+
+NOTIFY pgrst, 'reload schema';
+
 
 
