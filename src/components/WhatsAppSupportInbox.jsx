@@ -332,7 +332,7 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] bg-slate-950 text-slate-100 font-sans rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
+    <div className="flex flex-col h-[100dvh] lg:h-[calc(100vh-80px)] bg-slate-950 text-slate-100 font-sans rounded-none lg:rounded-3xl overflow-hidden border-0 lg:border border-slate-800 shadow-2xl">
       
       {/* Top Header Status Bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 text-xs">
