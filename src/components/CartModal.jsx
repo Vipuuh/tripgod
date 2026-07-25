@@ -120,6 +120,13 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       name: "TripGod",
       description: `Cart Checkout (${cart.length} Activities) - ${paymentOption === 'full' ? '100% Full Payment' : 'Advances'}`,
       image: "/tripgod-logo-padded.jpg",
+      notes: {
+        cart_id: logId,
+        customer_name: name,
+        customer_phone: phone,
+        customer_email: email,
+        item_count: cart.length
+      },
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
 
@@ -234,7 +241,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
               service_type: item.category === 'hotels' ? 'Hotel' : item.category === 'rafting' ? 'Rafting' : item.category === 'bikerent' ? 'Bike Rental' : item.category === 'tour' ? 'Tour' : item.category === 'camping' ? 'Camping' : 'Rafting',
               service_id: item.id && isValidUUID(item.id) ? item.id : '00000000-0000-0000-0000-000000000000',
               travel_date: item.date,
-              status: 'pending',
+              status: 'confirmed',
               payment_type: paymentOption === 'full' ? 'full_online' : 'advance_custom',
               amount_paid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
               remaining_amount: paymentOption === 'full' ? 0 : item.remainingPayment,
