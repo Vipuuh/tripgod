@@ -426,20 +426,20 @@ export default function App() {
 
 
         {/* MAIN FOOTER GRID */}
-        <div className="py-16 border-b border-white/5">
-          <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div className="py-8 md:py-16 border-b border-white/5">
+          <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-10">
           
           {/* Logo, Tagline & Payment Logos */}
-          <div className="space-y-5 md:col-span-1">
+          <div className="space-y-4 md:space-y-5 md:col-span-1">
             <div className="flex items-center select-none">
               <span className="font-black text-2xl tracking-tighter text-white">TRIP</span>
               <span className="font-black text-2xl tracking-tighter text-white bg-accent-gradient px-2 py-0.5 rounded-lg ml-1 shadow-sm">GOD</span>
             </div>
 
             {/* Partner With Us */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               <a
-                href="https://wa.me/918630027341?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
+                href="https://wa.me/919410572857?text=Hi%2C%20I%20want%20to%20partner%20with%20TripGod%20as%20a%20vendor."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 group w-fit"
@@ -459,7 +459,7 @@ export default function App() {
             </p>
             {/* Embedded WhatsApp block */}
             <a 
-              href="https://wa.me/918630027341"
+              href="https://wa.me/919410572857"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#D5F538] text-black font-black text-xs px-4 py-2.5 rounded-xl uppercase tracking-wider hover-glow transition-all"
@@ -468,7 +468,7 @@ export default function App() {
             </a>
 
             {/* Secure Payment Logos — Bucketlistt style */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2 pt-1">
               <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
                 <Lock size={10} className="text-gray-500" /> Secure Payments
               </p>
@@ -502,10 +502,10 @@ export default function App() {
           </div>
 
           {/* Column 1: Adventures */}
-          <div className="space-y-3 border-b border-white/5 md:border-b-0 pb-4 md:pb-0">
+          <div className="space-y-3 border-b border-white/5 md:border-b-0 pb-3 md:pb-0">
             <h4 
               onClick={() => setFooterAdventuresOpen(!footerAdventuresOpen)}
-              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-2 md:py-0 select-none"
+              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-1 md:py-0 select-none"
             >
               <span>Adventures</span>
               <span className="md:hidden text-gray-500 text-sm font-black pr-2">
@@ -523,10 +523,10 @@ export default function App() {
           </div>
 
           {/* Column 2: Services */}
-          <div className="space-y-3 border-b border-white/5 md:border-b-0 pb-4 md:pb-0">
+          <div className="space-y-3 border-b border-white/5 md:border-b-0 pb-3 md:pb-0">
             <h4 
               onClick={() => setFooterServicesOpen(!footerServicesOpen)}
-              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-2 md:py-0 select-none"
+              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-1 md:py-0 select-none"
             >
               <span>Services</span>
               <span className="md:hidden text-gray-500 text-sm font-black pr-2">
@@ -540,10 +540,10 @@ export default function App() {
           </div>
 
           {/* Column 3: Contact */}
-          <div className="space-y-3 pb-2 md:pb-0">
+          <div className="space-y-3 pb-1 md:pb-0">
             <h4 
               onClick={() => setFooterContactOpen(!footerContactOpen)}
-              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-2 md:py-0 select-none"
+              className="font-bold text-xs uppercase tracking-widest text-accent font-display flex items-center justify-between md:block cursor-pointer md:cursor-default py-1 md:py-0 select-none"
             >
               <span>Contact</span>
               <span className="md:hidden text-gray-500 text-sm font-black pr-2">
@@ -551,7 +551,7 @@ export default function App() {
               </span>
             </h4>
             <ul className={`${footerContactOpen ? 'block animate-fade-in' : 'hidden'} md:block space-y-2.5 text-xs font-medium text-gray-400 pl-1 md:pl-0`}>
-              <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: 8630027341</li>
+              <li className="flex items-center gap-2"><Phone size={12} /> WhatsApp: +91 9410572857</li>
               <li className="flex items-center gap-2"><Mail size={12} /> Email: hi@tripgod.in</li>
               <li className="flex items-center gap-2"><MapPin size={12} /> Rishikesh, Uttarakhand, India</li>
             </ul>
@@ -561,7 +561,7 @@ export default function App() {
         </div>
 
         {/* Copyright */}
-        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+        <div className="max-w-6xl mx-auto px-6 py-6 md:py-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
           <span>&copy; 2026 TripGod.in. All rights reserved.</span>
           <div className="flex flex-wrap gap-4 sm:gap-6 justify-center sm:justify-end">
             <button onClick={() => navigateTo('privacy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
@@ -576,7 +576,7 @@ export default function App() {
       {/* 5. Floating WhatsApp Pulsing Button */}
       {route !== 'admin' && (
       <a
-        href="https://wa.me/918630027341"
+        href="https://wa.me/919410572857"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-20 right-6 sm:bottom-6 sm:right-6 z-40 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform group cursor-pointer"

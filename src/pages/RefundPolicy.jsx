@@ -102,7 +102,7 @@ export default function RefundPolicy() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 text-xs font-semibold text-slate-200">
             <div className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 rounded-xl text-center gap-1.5">
               <Phone size={14} className="text-[#FF5F00]" />
-              <span>+91 8630027341</span>
+              <span>+91 9410572857</span>
             </div>
             
             <a href="mailto:hi@tripgod.in" className="flex flex-col items-center p-3.5 bg-white/5 border border-white/5 hover:border-[#FF5F00]/35 rounded-xl text-center gap-1.5 transition-all text-white">

@@ -2,7 +2,7 @@
 // Vercel Serverless Function to send WhatsApp notifications and Gmail Alerts
 import nodemailer from 'nodemailer';
 
-const ADMIN_PHONE = "918630027341"; // TripGod Admin Number
+const ADMIN_PHONE = "919410572857"; // TripGod Admin Number
 
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "EAAVjnkkrc1ABR0CzprLuR7dFOZClD3yfQ2vhZC39tQjAI7PLL1ZCRSEzc9ZCDZCwxoDZBh6G4N2SafXr4a1KQQtZBJMh1ypMXxB2wZBPoufA83MjR5xdr4yOVEaptkvdgZBnPOxkVM5cP5HlNiI51brQi305GkVegMR67AVjZAMCPZBytCvUqPCcbQZB5OeBxcVi6wZDZD";
 const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID || "1242547802272575";
@@ -47,15 +47,15 @@ const LOCATION_MAPS = {
 
 // Mapping of categories to Agency/Vendor Phone numbers
 const AGENCY_PHONES = {
-  rafting: "918630027341",
-  bungee: "918630027341",
-  camping: "918630027341",
-  bikerent: "918630027341",
-  zipline: "918630027341",
-  paragliding: "918630027341",
-  swing: "918630027341",
-  pickup: "918630027341",
-  hotels: "918630027341"
+  rafting: "919410572857",
+  bungee: "919410572857",
+  camping: "919410572857",
+  bikerent: "919410572857",
+  zipline: "919410572857",
+  paragliding: "919410572857",
+  swing: "919410572857",
+  pickup: "919410572857",
+  hotels: "919410572857"
 };
 
 export default async function handler(req, res) {

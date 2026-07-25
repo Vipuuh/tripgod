@@ -1111,7 +1111,7 @@ export default function AdminDashboard({ setRoute }) {
                         required
                         value={newVendor.phone}
                         onChange={(e) => setNewVendor(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="e.g. 8630027341"
+                        placeholder="e.g. 9410572857"
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
                       />
                     </div>
@@ -1123,7 +1123,7 @@ export default function AdminDashboard({ setRoute }) {
                         required
                         value={newVendor.whatsapp}
                         onChange={(e) => setNewVendor(prev => ({ ...prev, whatsapp: e.target.value }))}
-                        placeholder="e.g. 8630027341"
+                        placeholder="e.g. 9410572857"
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
                       />
                     </div>
@@ -3164,7 +3164,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                   value={formData.whatsapp_number || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                  placeholder="e.g. 8630027341"
+                  placeholder="e.g. 9410572857"
                 />
               </div>
             )}

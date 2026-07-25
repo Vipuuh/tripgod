@@ -416,8 +416,8 @@ My payment ID is verified. Please confirm my slots.`;
               console.error('Error inserting booking to Supabase:', error);
             }
             const opPhone = activity.category === 'hotels'
-              ? (activity.whatsapp_number || activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341')
-              : (activity.vendors?.whatsapp || activity.vendors?.phone || '8630027341');
+              ? (activity.whatsapp_number || activity.vendors?.whatsapp || activity.vendors?.phone || '9410572857')
+              : (activity.vendors?.whatsapp || activity.vendors?.phone || '9410572857');
 
             // Trigger background automated WhatsApp notifications
             fetch('/api/send-booking-whatsapp', {

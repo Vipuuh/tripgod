@@ -416,8 +416,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
               best_for: data.best_for || [],
               perfect_for: data.perfect_for || [],
               benefits: data.benefits || [],
-              phone_number: data.phone_number || '+918630027341',
-              whatsapp_number: data.whatsapp_number || '918630027341',
+              phone_number: data.phone_number || '+919410572857',
+              whatsapp_number: data.whatsapp_number || '919410572857',
               featured_image: data.featured_image || '',
               payment_mode: data.payment_mode || 'commission_advance',
               commission_percentage: data.commission_percentage !== null && data.commission_percentage !== undefined ? Number(data.commission_percentage) : 10,
@@ -526,8 +526,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
             best_for: item.best_for || [],
             perfect_for: item.perfect_for || [],
             benefits: item.benefits || [],
-            phone_number: item.phone_number || '+918630027341',
-            whatsapp_number: item.whatsapp_number || '918630027341',
+            phone_number: item.phone_number || '+919410572857',
+            whatsapp_number: item.whatsapp_number || '919410572857',
             featured_image: item.featured_image || '',
             payment_mode: item.payment_mode || 'commission_advance',
             commission_percentage: item.commission_percentage !== null && item.commission_percentage !== undefined ? Number(item.commission_percentage) : 10,
@@ -592,7 +592,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
   const handleContactWhatsApp = () => {
     const text = encodeURIComponent(`*ENQUIRY ABOUT STAYS - TRIPGOD*\nHello! I am planning a trip to Rishikesh and want to book accommodations. Please let me know what options are available.`);
-    window.open(`https://wa.me/918630027341?text=${text}`, '_blank');
+    window.open(`https://wa.me/919410572857?text=${text}`, '_blank');
   };
 
   const handleShare = () => {

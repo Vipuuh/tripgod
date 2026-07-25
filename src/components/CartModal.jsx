@@ -252,8 +252,8 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
             // Trigger background automated WhatsApp notifications for each cart item
             cart.forEach((item) => {
               const opPhone = item.category === 'hotels'
-                ? (item.whatsapp_number || item.vendors?.whatsapp || item.vendors?.phone || '8630027341')
-                : (item.vendors?.whatsapp || item.vendors?.phone || '8630027341');
+                ? (item.whatsapp_number || item.vendors?.whatsapp || item.vendors?.phone || '9410572857')
+                : (item.vendors?.whatsapp || item.vendors?.phone || '9410572857');
 
               fetch('/api/send-booking-whatsapp', {
                 method: 'POST',

@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
     const variableUrlPart = `cart?recover=${cartId}`;
     const textCheckoutLink = `https://tripgod.in/${variableUrlPart}`;
-    const textSupportLink = `https://wa.me/918630027341`;
+    const textSupportLink = `https://wa.me/919410572857`;
 
     const payload = {
       messaging_product: "whatsapp",
