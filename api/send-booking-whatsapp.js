@@ -1,13 +1,21 @@
 // api/send-booking-whatsapp.js
 // Vercel Serverless Function to send WhatsApp notifications and Gmail Alerts
 import nodemailer from 'nodemailer';
+import { createClient } from '@supabase/supabase-js';
 
 const ADMIN_PHONE = "919410572857"; // TripGod Admin Number
 
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "EAAVjnkkrc1ABR0CzprLuR7dFOZClD3yfQ2vhZC39tQjAI7PLL1ZCRSEzc9ZCDZCwxoDZBh6G4N2SafXr4a1KQQtZBJMh1ypMXxB2wZBPoufA83MjR5xdr4yOVEaptkvdgZBnPOxkVM5cP5HlNiI51brQi305GkVegMR67AVjZAMCPZBytCvUqPCcbQZB5OeBxcVi6wZDZD";
 const META_PHONE_NUMBER_ID = process.env.META_PHONE_NUMBER_ID || "1242547802272575";
 
-// Helper to format phone number to E.164 (without plus sign) for UltraMsg
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY 
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY) 
+  : null;
+
+// Helper to format phone number to E.164 (without plus sign)
 function formatPhone(phone) {
   if (!phone) return "";
   let digits = phone.replace(/\D/g, ''); // Keep only digits
@@ -114,83 +122,103 @@ export default async function handler(req, res) {
     const simpleBookingCode = getSimpleBookingId(paymentId);
     
     const category = data.category || "rafting";
-    
+    const isHotel = category === 'hotels';
+
+    // Auto-resolve operator/hotel/vendor WhatsApp number from DB if needed
+    let rawOperatorPhone = data.operatorPhone;
+    if ((!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) && supabase) {
+      try {
+        if (isHotel && activityName) {
+          const cleanHotelName = activityName.replace(/ - .*/, '').trim();
+          const { data: hotelRow } = await supabase
+            .from('hotels')
+            .select('whatsapp_number, phone_number, vendors(whatsapp, phone)')
+            .ilike('name', `%${cleanHotelName}%`)
+            .limit(1)
+            .maybeSingle();
+          if (hotelRow) {
+            rawOperatorPhone = hotelRow.whatsapp_number || hotelRow.vendors?.whatsapp || hotelRow.vendors?.phone || hotelRow.phone_number;
+          }
+        }
+        if ((!rawOperatorPhone || rawOperatorPhone.endsWith('9410572857')) && data.vendor_id) {
+          const { data: vendorRow } = await supabase
+            .from('vendors')
+            .select('whatsapp, phone')
+            .eq('id', data.vendor_id)
+            .maybeSingle();
+          if (vendorRow) {
+            rawOperatorPhone = vendorRow.whatsapp || vendorRow.phone;
+          }
+        }
+      } catch (dbErr) {
+        console.error('Error auto-resolving vendor phone from Supabase DB:', dbErr);
+      }
+    }
+
+    const cleanAgencyPhone = formatPhone(rawOperatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
     const locationLink = LOCATION_MAPS[category] || LOCATION_MAPS.rafting;
-    const agencyPhone = formatPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
-    const upiDiscount = Number(data.upiDiscount || 0);
-    const commissionPercentage = Number(data.commissionPercentage || 10);
-
     const isFullPayment = paymentOption === 'full' || remainingPaid <= 0;
-    const pctPaid = isFullPayment ? 100 : commissionPercentage;
-    const remainingPct = 100 - pctPaid;
 
     const checkInDate = data.checkInDate || "";
     const checkOutDate = data.checkOutDate || "";
     const nights = data.nights || "";
 
-    const isHotel = category === 'hotels';
     const paramDate = isHotel && checkInDate ? checkInDate.split('-').reverse().join('/') : date;
     const paramTime = isHotel && checkOutDate ? checkOutDate.split('-').reverse().join('/') : slot;
-    
-    const paramDetails = isHotel 
-      ? `${guests} Guest(s), ${nights} Night(s) [Room: ${slot}]` 
-      : `${guests} ${unitLabel}`;
 
-    const cleanAgencyPhone = formatPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
+    // Parameters for approved tripgod_booking_confirmed template:
 
-    // Dynamic Parameter Mappings for Meta WhatsApp API:
-
-    // 1. Customer Parameters (for new sequential template: tripgod_booking_confirmed)
+    // 1. Customer Parameters
     const customerParams = [
       customerName,                                                            // {{1}} - Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
       `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Your Trip
-      `*${paramDate}*`,                                                        // {{4}} - Check-in
-      `*${paramTime}*`,                                                        // {{5}} - Check-out
-      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Booking Details
+      `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
+      `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
       locationLink,                                                            // {{7}} - Location
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
-        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment Status
-      `*Confirmed!*`,                                                          // {{9}} - Booking Status
-      `*${formatDisplayPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE)}*` // {{10}} - Helpline Contact
+        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
+      `*Confirmed!*`,                                                          // {{9}} - Status
+      `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{10}} - Helpline Contact
     ];
 
-    // 2. Vendor Parameters (still uses booking_alert template)
-    const vendorParams = [
-      `*${simpleBookingCode}*`,                                                // {{1}}
-      `*${customerName}* (${formatDisplayPhone(customerPhone)})`,              // {{2}}
-      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}}
-      `*${paramDate}*`,                                                        // {{4}}
-      `*${paramTime}*`,                                                        // {{5}}
-      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}}
-      locationLink,                                                            // {{7}}
-      `*${formatDisplayPhone(ADMIN_PHONE)}* (TripGod Support)`,                 // {{8}}
+    // 2. Vendor Parameters (formatted for approved tripgod_booking_confirmed template)
+    const vendorParamsConfirmed = [
+      `PARTNER ALERT: ${customerName}`,                                       // {{1}} - Vendor Header
+      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
+      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Trip/Hotel
+      `*${paramDate}*`,                                                        // {{4}} - Date
+      `*${paramTime}*`,                                                        // {{5}} - Slot/Time
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
+      locationLink,                                                            // {{7}} - Location
       isFullPayment 
         ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Payment)`
-        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Collect: *₹${remainingPaid.toLocaleString('en-IN')}* at venue`, // {{9}}
-      `*New Booking Alert!* Please provide premium service.`                  // {{10}}
+        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Collect: *₹${remainingPaid.toLocaleString('en-IN')}* at venue`, // {{8}} - Payment
+      `*NEW BOOKING ALERT!*`,                                                 // {{9}} - Alert Tag
+      `*Customer Contact: ${formatDisplayPhone(customerPhone)}*`              // {{10}} - Customer Contact
     ];
 
-    // 3. Admin Parameters (still uses booking_alert template)
-    const adminParams = [
-      `*${simpleBookingCode}*`,                                                // {{1}}
-      `*${customerName}* (${formatDisplayPhone(customerPhone)})`,              // {{2}}
-      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}}
-      `*${paramDate}*`,                                                        // {{4}}
-      `*${paramTime}*`,                                                        // {{5}}
-      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}}
-      locationLink,                                                            // {{7}}
-      `*${formatDisplayPhone(data.operatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE)}* (Operator)`, // {{8}}
+    // 3. Admin Parameters (formatted for approved tripgod_booking_confirmed template)
+    const adminParamsConfirmed = [
+      `ADMIN ALERT: ${customerName}`,                                         // {{1}} - Admin Header
+      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
+      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Trip/Hotel
+      `*${paramDate}*`,                                                        // {{4}} - Date
+      `*${paramTime}*`,                                                        // {{5}} - Slot/Time
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
+      locationLink,                                                            // {{7}} - Location
       isFullPayment 
-        ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Payment)`
-        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Balance: *₹${remainingPaid.toLocaleString('en-IN')}* (Razorpay ID: ${paymentId})`, // {{9}}
-      `*New Booking Alert* - Have a great time!`                               // {{10}}
+        ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (Full Online)`
+        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Razorpay: ${paymentId})`, // {{8}} - Payment
+      `*NEW BOOKING ALERT*`,                                                   // {{9}} - Alert Tag
+      `*Operator: ${formatDisplayPhone(cleanAgencyPhone)}*`                    // {{10}} - Operator Contact
     ];
 
-    // Helper to send message using Meta Cloud API
+    // Helper to send message using Meta Cloud API with fallback support
     const sendWhatsAppMeta = async (to, templateName, parameters) => {
       const cleanTo = to.replace(/\D/g, ''); 
       if (!cleanTo) return null;
@@ -217,7 +245,7 @@ export default async function handler(req, res) {
         }
       };
 
-      console.log(`Sending Meta WhatsApp template ${templateName} to ${cleanTo}...`);
+      console.log(`Sending Meta WhatsApp template '${templateName}' to ${cleanTo}...`);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -228,7 +256,14 @@ export default async function handler(req, res) {
       });
       
       const result = await response.json();
-      console.log(`Meta API response for ${cleanTo}:`, result);
+      console.log(`Meta API response for ${cleanTo} (${templateName}):`, JSON.stringify(result));
+
+      // If template fails and was not already tripgod_booking_confirmed, retry with tripgod_booking_confirmed
+      if (result.error && templateName !== 'tripgod_booking_confirmed') {
+        console.warn(`Template '${templateName}' failed for ${cleanTo}. Retrying with approved 'tripgod_booking_confirmed'...`);
+        return sendWhatsAppMeta(to, 'tripgod_booking_confirmed', customerParams);
+      }
+
       return result;
     };
 
@@ -241,11 +276,11 @@ export default async function handler(req, res) {
     }
     
     // 2. Send to Admin
-    promises.push(sendWhatsAppMeta(ADMIN_PHONE, "booking_alert", adminParams).catch(err => console.error("Error sending to admin:", err)));
+    promises.push(sendWhatsAppMeta(ADMIN_PHONE, "tripgod_booking_confirmed", adminParamsConfirmed).catch(err => console.error("Error sending to admin:", err)));
     
-    // 3. Send to Agency/Vendor
-    if (cleanAgencyPhone && cleanAgencyPhone !== ADMIN_PHONE) {
-      promises.push(sendWhatsAppMeta(cleanAgencyPhone, "booking_alert", vendorParams).catch(err => console.error("Error sending to agency:", err)));
+    // 3. Send to Hotel / Agency / Vendor
+    if (cleanAgencyPhone) {
+      promises.push(sendWhatsAppMeta(cleanAgencyPhone, "tripgod_booking_confirmed", vendorParamsConfirmed).catch(err => console.error("Error sending to vendor:", err)));
     }
 
     // 4. Send Gmail Alerts (to Admin and Customer) via Nodemailer
@@ -264,18 +299,24 @@ export default async function handler(req, res) {
       remainingPaid,
       paymentId,
       locationLink,
-      agencyPhone
+      agencyPhone: cleanAgencyPhone
     }).catch(err => console.error("Error sending booking alert email:", err)));
 
     await Promise.all(promises);
 
-    return res.status(200).json({ success: true, message: 'Notifications sent successfully' });
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Notifications sent successfully', 
+      customerPhone, 
+      vendorPhone: cleanAgencyPhone 
+    });
 
   } catch (error) {
     console.error('WhatsApp Notification API Error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
 // Helper to send email notifications using SMTP (Gmail or Hostinger) via Nodemailer
 async function sendEmailAlert(data) {
   const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
@@ -348,14 +389,8 @@ async function sendEmailAlert(data) {
   const simpleBookingCode = getSimpleBookingId(data.paymentId);
 
   const paymentOption = data.paymentOption || (data.totalPrice > 0 && data.remainingPaid === 0 ? 'full' : 'advance');
-  const upiDiscount = Number(data.upiDiscount || 0);
-  const commissionPercentage = Number(data.commissionPercentage || 10);
 
-  const isFullPayment = paymentOption === 'full' || data.remainingPaid <= 0;
-  const pctPaid = isFullPayment ? 100 : commissionPercentage;
-  const remainingPct = 100 - pctPaid;
-
-  // --- Email 1: To Customer (Booking Confirmation / Ticket) ---
+  // --- Email 1: To Customer ---
   const customerMailOptions = {
     from: `"TripGod" <${smtpUser}>`,
     to: data.customerEmail,
@@ -398,131 +433,48 @@ async function sendEmailAlert(data) {
             <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Location:</td>
             <td style="padding: 12px; border-bottom: 1px solid #eee;"><a href="${data.locationLink}" style="color: #FF6B00; font-weight: bold; text-decoration: none;">Open in Google Maps 📍</a></td>
           </tr>
-          <tr>
-            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Local Contact / Host:</td>
-            <td style="padding: 12px; border-bottom: 1px solid #eee;">+${data.agencyPhone}</td>
-          </tr>
         </table>
 
-        <h3 style="color: #111; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 25px;">Payment Details</h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 12px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Total Price:</td>
-            <td style="padding: 12px; font-weight: bold; color: #111; border-bottom: 1px solid #eee;">₹${data.totalPrice.toLocaleString('en-IN')}</td>
-          </tr>
-          ${upiDiscount > 0 ? `
-          <tr>
-            <td style="padding: 12px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">UPI Discount:</td>
-            <td style="padding: 12px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">- ₹${upiDiscount.toLocaleString('en-IN')}</td>
-          </tr>
-          ` : ''}
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 12px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">${isFullPayment ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:</td>
-            <td style="padding: 12px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">₹${data.advancePaid.toLocaleString('en-IN')}</td>
-          </tr>
-          <tr>
-            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">${isFullPayment ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:</td>
-            <td style="padding: 12px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">₹${data.remainingPaid.toLocaleString('en-IN')} ${isFullPayment ? '(Paid in Full)' : '(To be paid at venue)'}</td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Booking Transaction ID:</td>
-            <td style="padding: 12px; font-family: monospace; font-size: 13px; border-bottom: 1px solid #eee;">${data.paymentId}</td>
-          </tr>
-        </table>
-        
-        <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center; font-size: 12px; color: #888;">
-          <p style="margin: 0 0 5px 0;">Need help? Contact TripGod Support at +91 8630027341 or reply to this email.</p>
-          <p style="margin: 0;">© 2026 TripGod Rishikesh. All rights reserved.</p>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; margin-top: 25px;">
+          <p style="margin: 0; font-size: 13px; color: #64748b;">Need help with your booking? Contact TripGod Support at <strong>+91 9410572857</strong></p>
         </div>
       </div>
     `
   };
 
-  // --- Email 2: To Admin (Booking Alert) ---
+  // --- Email 2: To Admin ---
   const adminMailOptions = {
-    from: `"TripGod Alert" <${smtpUser}>`,
+    from: `"TripGod Booking Engine" <${smtpUser}>`,
     to: notificationEmail,
-    subject: `🔔 New Booking Alert: ${data.activityName} - ${data.customerName}`,
+    subject: `🚨 NEW BOOKING: ${data.activityName} - ${data.customerName} (${simpleBookingCode})`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; background-color: #ffffff; color: #333333;">
-        <h2 style="color: #FF6B00; margin-top: 0; border-bottom: 2px solid #FF6B00; padding-bottom: 10px;">New Booking Confirmed! 🏔️</h2>
-        <p>A new customer booking has been completed successfully via TripGod. Here are the details:</p>
-        
-        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Activity:</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.activityName} ${data.stretch ? `(${data.stretch})` : ''}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Customer Name:</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.customerName}</td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Customer Email:</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.customerEmail}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Customer Phone:</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">+${data.customerPhone}</td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Arrival Date:</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.date}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Arrival Time/Slot:</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.slot}</td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Total Booked:</td>
-            <td style="padding: 10px; border-bottom: 1px solid #eee;">${data.guests} ${unitLabel}</td>
-          </tr>
-        </table>
-        
-        <h3 style="color: #111; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 25px;">Payment Details</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Total Amount:</td>
-            <td style="padding: 10px; font-weight: bold; color: #111; border-bottom: 1px solid #eee;">₹${data.totalPrice.toLocaleString('en-IN')}</td>
-          </tr>
-          ${upiDiscount > 0 ? `
-          <tr>
-            <td style="padding: 10px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">UPI Discount:</td>
-            <td style="padding: 10px; font-weight: bold; color: #10B981; border-bottom: 1px solid #eee;">- ₹${upiDiscount.toLocaleString('en-IN')}</td>
-          </tr>
-          ` : ''}
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">${isFullPayment ? 'Paid Online (100%)' : `Paid Advance (${pctPaid}%)`}:</td>
-            <td style="padding: 10px; font-weight: bold; color: green; border-bottom: 1px solid #eee;">₹${data.advancePaid.toLocaleString('en-IN')}</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">${isFullPayment ? 'Remaining Balance' : `Remaining Balance (${remainingPct}%)`}:</td>
-            <td style="padding: 10px; font-weight: bold; color: #d97706; border-bottom: 1px solid #eee;">₹${data.remainingPaid.toLocaleString('en-IN')}</td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #eee;">Razorpay Payment ID:</td>
-            <td style="padding: 10px; font-family: monospace; font-size: 13px; border-bottom: 1px solid #eee;">${data.paymentId}</td>
-          </tr>
-        </table>
-        
-        <div style="margin-top: 30px; padding: 15px; background-color: #FFF0E5; border-left: 4px solid #FF6B00; border-radius: 4px; font-size: 12px; color: #555;">
-          <strong>TipGod Operator Helpdesk Alert:</strong> Please ensure the client slot is reserved with the local guide/agency.
-        </div>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #FF6B00; border-radius: 10px; background-color: #ffffff;">
+        <h2 style="color: #FF6B00; margin-top: 0;">⚡ New Booking Notification</h2>
+        <p>A new customer booking has been successfully processed online.</p>
+
+        <h3>Booking Overview</h3>
+        <ul>
+          <li><strong>Booking Code:</strong> ${simpleBookingCode}</li>
+          <li><strong>Customer Name:</strong> ${data.customerName}</li>
+          <li><strong>Phone:</strong> ${formatDisplayPhone(data.customerPhone)}</li>
+          <li><strong>Email:</strong> ${data.customerEmail}</li>
+          <li><strong>Service / Activity:</strong> ${data.activityName} ${data.stretch ? `(${data.stretch})` : ''}</li>
+          <li><strong>Date & Slot:</strong> ${data.date} @ ${data.slot}</li>
+          <li><strong>Guests / Units:</strong> ${data.guests} ${unitLabel}</li>
+          <li><strong>Total Amount:</strong> ₹${data.totalPrice.toLocaleString('en-IN')}</li>
+          <li><strong>Amount Paid Online:</strong> ₹${data.advancePaid.toLocaleString('en-IN')}</li>
+          <li><strong>Remaining to Collect at Venue:</strong> ₹${data.remainingPaid.toLocaleString('en-IN')}</li>
+          <li><strong>Operator WhatsApp:</strong> ${formatDisplayPhone(data.agencyPhone)}</li>
+        </ul>
       </div>
     `
   };
 
-  const mailPromises = [];
-  
-  // 1. Send confirmation ticket to customer
-  if (data.customerEmail && data.customerEmail !== "N/A" && data.customerEmail.includes('@')) {
-    console.log(`Sending customer booking ticket to ${data.customerEmail}...`);
-    mailPromises.push(transporter.sendMail(customerMailOptions).catch(err => console.error("Error sending email to customer:", err)));
+  try {
+    await transporter.sendMail(customerMailOptions);
+    await transporter.sendMail(adminMailOptions);
+    console.log("Email alerts sent successfully via Nodemailer");
+  } catch (emailErr) {
+    console.error("Failed to send email alert:", emailErr);
   }
-
-  // 2. Send booking alert to admin
-  console.log(`Sending admin booking alert to ${notificationEmail}...`);
-  mailPromises.push(transporter.sendMail(adminMailOptions).catch(err => console.error("Error sending email to admin:", err)));
-
-  return Promise.all(mailPromises);
 }
