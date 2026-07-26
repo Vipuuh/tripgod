@@ -382,11 +382,14 @@ ALTER TABLE vendors ADD COLUMN IF NOT EXISTS parking_details TEXT;
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS badges TEXT[];
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS short_highlight TEXT;
 
--- Rafting (Adventures) updates
+-- Rafting (Adventures & Camps) updates
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS instant_confirmation BOOLEAN DEFAULT true;
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS free_cancellation BOOLEAN DEFAULT true;
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS highlights_data JSONB DEFAULT '[]'::JSONB;
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS badges TEXT[];
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS rules JSONB DEFAULT '{}'::JSONB;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS rooms_left INTEGER DEFAULT 5;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS max_guests_per_tent INTEGER DEFAULT 3;
 
 -- Bikes (Rentals) updates
 ALTER TABLE bikes ADD COLUMN IF NOT EXISTS instant_confirmation BOOLEAN DEFAULT true;

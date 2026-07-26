@@ -1260,6 +1260,15 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               )}
                             </div>
                             <span style={{display:'block', fontSize:9, fontWeight:800, color:'#FF5F00', textTransform:'uppercase', letterSpacing:'0.06em', marginTop:4}}>Upgrade Room</span>
+                            {Array.isArray(room.features) && room.features.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                {room.features.map((feat, fIdx) => (
+                                  <span key={fIdx} style={{ fontSize: 8, fontWeight: 800, color: '#FF5F00', background: '#fff0e5', border: '1px solid #ffd8c2', borderRadius: 4, padding: '1px 5px' }}>
+                                    {feat}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           {roomImages.length > 0 && (
                             <div style={{borderRadius:'0.6rem', overflow:'hidden', height:72, marginTop:6}}>

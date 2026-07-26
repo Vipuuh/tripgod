@@ -193,9 +193,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   // Calculate pricing
   const basePrice = (activity && activity.price) || 0;
   const pricePerPerson = basePrice;
-  // For hotels: price already = (room_price × rooms + meal costs) per night, so just multiply by nights
+  // For hotels/camps with room_price: price already = (room_price × rooms/tents + meal costs) per night, so just multiply by nights
   // For other categories: multiply by guests
-  const rawTotalPrice = activity && activity.category === 'hotels'
+  const rawTotalPrice = activity && (activity.category === 'hotels' || (activity.category === 'camping' && activity.room_price))
     ? basePrice * nights
     : pricePerPerson * guests;
   
@@ -874,7 +874,9 @@ My payment ID is verified. Please confirm my slots.`;
                                 <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
                               </svg>
                               <span className="font-black text-black">{activity.num_rooms || 1}</span>
-                              <span className="text-gray-500 text-xs">room{(activity.num_rooms || 1) > 1 ? 's' : ''}</span>
+                              <span className="text-gray-500 text-xs">
+                                {activity.category === 'camping' ? `tent${(activity.num_rooms || 1) > 1 ? 's' : ''}` : `room${(activity.num_rooms || 1) > 1 ? 's' : ''}`}
+                              </span>
                             </span>
                             <span className="text-gray-300">·</span>
                             <span className="flex items-center gap-1.5 text-gray-700">

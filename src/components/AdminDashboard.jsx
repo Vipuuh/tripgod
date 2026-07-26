@@ -2433,6 +2433,28 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.age_limit = 12;
         defaults.inclusions = [];
         defaults.exclusions = [];
+        defaults.rooms_left = data?.rooms_left !== null && data?.rooms_left !== undefined ? Number(data.rooms_left) : 5;
+        defaults.max_guests_per_tent = data?.max_guests_per_tent !== null && data?.max_guests_per_tent !== undefined ? Number(data.max_guests_per_tent) : 3;
+        defaults.rules = {
+          room_categories: [],
+          meals: {
+            breakfast: { status: 'none', price: 150 },
+            lunch: { status: 'none', price: 250 },
+            dinner: { status: 'none', price: 300 }
+          },
+          camp_rules: {
+            alcohol_allowed: true,
+            non_veg_allowed: true,
+            riverside_view: true,
+            ac_available: true,
+            attached_washroom: true,
+            bonfire_music: true,
+            parking_available: true,
+            swimming_pool: false
+          },
+          badge_settings: { home: '', list: '', detail: '' },
+          ...(typeof data?.rules === 'string' ? JSON.parse(data.rules) : (data?.rules || {}))
+        };
       } else if (type === 'bikes') {
         defaults.deposit = 0;
         defaults.documents = ['Driving License', 'Aadhar Card'];
@@ -2547,7 +2569,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           closed_reason: formData.closed_reason || '',
           closed_from: formData.closed_from || null,
           closed_until: formData.closed_until || null,
-          coming_soon: !!formData.coming_soon
+          coming_soon: !!formData.coming_soon,
+          rules: formData.rules || {},
+          rooms_left: formData.rooms_left === undefined || formData.rooms_left === '' ? 5 : Number(formData.rooms_left),
+          max_guests_per_tent: formData.max_guests_per_tent === undefined || formData.max_guests_per_tent === '' ? 3 : Number(formData.max_guests_per_tent)
         };
 
         if (data) {
@@ -4723,6 +4748,371 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               </div>
             </div>
           </div>
+
+          {/* ----------------- CAMPING SPECIFIC CONFIGURATION (Categories, Rules, Food, Inventory) ----------------- */}
+          {(['rafting', 'adventures', 'camping'].includes(type) || formData.activity_type === 'camping' || formData.rules?.room_categories?.length > 0) && (
+            <div className="space-y-4 pt-4 border-t border-slate-900">
+              
+              {/* Tent Inventory & Occupancy Limits */}
+              <div className="bg-slate-950/80 border border-slate-850 p-4 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">⛺</span>
+                  <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Camp Inventory & Capacity Control</label>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Total Tents Available (Inventory Limit)</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      placeholder="e.g. 5 Tents Total"
+                      value={formData.rooms_left === undefined ? 5 : formData.rooms_left}
+                      onChange={(e) => setFormData(prev => ({ ...prev, rooms_left: Number(e.target.value) }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                    <span className="text-[8px] text-slate-500 block">Shows "Only X Tents Left!" and caps overbooking.</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Max Guests per Tent (Sharing Limit)</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      placeholder="e.g. 3 Guests per tent"
+                      value={formData.max_guests_per_tent === undefined ? 3 : formData.max_guests_per_tent}
+                      onChange={(e) => setFormData(prev => ({ ...prev, max_guests_per_tent: Number(e.target.value) }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                    <span className="text-[8px] text-slate-500 block">Auto-calculates tent count (e.g. 4 guests = 2 tents).</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Camp Rules & Key Points Checklist */}
+              <div className="bg-slate-950/80 border border-slate-850 p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+                  <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Camp Verified Rules & Highlights</label>
+                  <span className="text-[9px] text-slate-500">Proactively answers guest questions</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  {[
+                    { key: 'alcohol_allowed', label: '🍷 Alcohol Allowed' },
+                    { key: 'non_veg_allowed', label: '🍗 Non-Veg Served' },
+                    { key: 'riverside_view', label: '🌊 Riverside Beach' },
+                    { key: 'ac_available', label: '❄️ AC / Cooler Tents' },
+                    { key: 'attached_washroom', label: '🚽 Attached Washroom' },
+                    { key: 'bonfire_music', label: '🔥 Evening Bonfire & DJ' },
+                    { key: 'parking_available', label: '🚗 Free In-Camp Parking' },
+                    { key: 'swimming_pool', label: '🏊 Swimming Pool Access' }
+                  ].map(rule => (
+                    <label key={rule.key} className="flex items-center gap-2 cursor-pointer select-none bg-slate-900/60 p-2 rounded-xl border border-slate-850 hover:border-slate-700 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={!!(formData.rules?.camp_rules?.[rule.key] ?? true)}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          setFormData(prev => ({
+                            ...prev,
+                            rules: {
+                              ...prev.rules,
+                              camp_rules: { ...(prev.rules?.camp_rules || {}), [rule.key]: val }
+                            }
+                          }));
+                        }}
+                        className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0 w-3.5 h-3.5"
+                      />
+                      <span className="text-[10px] font-semibold text-slate-300">{rule.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Food & Dining Options */}
+              <div className="bg-slate-950/80 border border-slate-850 p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+                  <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Camp Dining & Meal Options</label>
+                  <span className="text-[9px] text-slate-500">Configure complimentary or paid meals</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { key: 'breakfast', label: 'Breakfast', defaultPrice: 150 },
+                    { key: 'lunch', label: 'Lunch', defaultPrice: 250 },
+                    { key: 'dinner', label: 'Dinner', defaultPrice: 300 }
+                  ].map(meal => {
+                    const mealState = formData.rules?.meals?.[meal.key] || { status: 'none', price: meal.defaultPrice };
+                    return (
+                      <div key={meal.key} className="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
+                        <span className="block text-[10px] font-black text-slate-300 uppercase">{meal.label} Option</span>
+                        <select
+                          value={mealState.status || 'none'}
+                          onChange={(e) => {
+                            const status = e.target.value;
+                            setFormData(prev => ({
+                              ...prev,
+                              rules: {
+                                ...prev.rules,
+                                meals: {
+                                  ...(prev.rules?.meals || {}),
+                                  [meal.key]: { ...mealState, status }
+                                }
+                              }
+                            }));
+                          }}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                        >
+                          <option value="none">Not Included</option>
+                          <option value="free">Free / Included in Stay</option>
+                          <option value="paid">Paid Meal Add-on</option>
+                        </select>
+
+                        {mealState.status === 'paid' && (
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black text-gray-400 uppercase">Price per guest (₹)</label>
+                            <input
+                              type="number"
+                              value={mealState.price || ''}
+                              onChange={(e) => {
+                                const price = Number(e.target.value);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  rules: {
+                                    ...prev.rules,
+                                    meals: {
+                                      ...(prev.rules?.meals || {}),
+                                      [meal.key]: { ...mealState, price }
+                                    }
+                                  }
+                                }));
+                              }}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Camp Categories Configuration */}
+              <div className="bg-slate-950/80 border border-slate-850 p-4 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+                  <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Camp Tent Categories (Multiple Stay Types)</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentRooms = formData.rules?.room_categories || [];
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...prev.rules,
+                          room_categories: [
+                            ...currentRooms,
+                            { name: 'Luxury Swiss AC Tent', price: 2500, original_price: 3500, images: [], features: ['AC Included', 'River View', 'Attached Washroom'] }
+                          ]
+                        }
+                      }));
+                    }}
+                    className="text-[10px] font-bold text-accent hover:text-white bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    + Add Camp Category
+                  </button>
+                </div>
+
+                {(!formData.rules?.room_categories || formData.rules.room_categories.length === 0) ? (
+                  <p className="text-[10px] text-gray-500 italic">No upgrade tent categories defined. Guests will book at primary rate (₹{formData.price || 0}/Night).</p>
+                ) : (
+                  <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-1">
+                    {formData.rules.room_categories.map((room, rIdx) => (
+                      <div key={rIdx} className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl relative space-y-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentRooms = [...(formData.rules?.room_categories || [])];
+                            currentRooms.splice(rIdx, 1);
+                            setFormData(prev => ({
+                              ...prev,
+                              rules: { ...prev.rules, room_categories: currentRooms }
+                            }));
+                          }}
+                          className="absolute top-2.5 right-2.5 text-red-500 hover:text-red-400 font-black text-[10px] bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                        >
+                          Delete Category
+                        </button>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-24">
+                          <div className="space-y-1">
+                            <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Camp/Tent Name</label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="e.g. Luxury Swiss AC Tent"
+                              value={room.name || ''}
+                              onChange={(e) => {
+                                const rooms = [...(formData.rules?.room_categories || [])];
+                                rooms[rIdx].name = e.target.value;
+                                setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                              }}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Price / Night (₹)</label>
+                            <input
+                              type="number"
+                              required
+                              placeholder="Price per night"
+                              value={room.price || ''}
+                              onChange={(e) => {
+                                const rooms = [...(formData.rules?.room_categories || [])];
+                                rooms[rIdx].price = e.target.value === '' ? '' : Number(e.target.value);
+                                setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                              }}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Original Price (₹ - Optional)</label>
+                            <input
+                              type="number"
+                              placeholder="Strikethrough Price"
+                              value={room.original_price || ''}
+                              onChange={(e) => {
+                                const rooms = [...(formData.rules?.room_categories || [])];
+                                rooms[rIdx].original_price = e.target.value === '' ? '' : Number(e.target.value);
+                                setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                              }}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Extra Features Tags */}
+                        <div className="space-y-1.5">
+                          <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Category Extra Features (e.g., AC, River View, Attached Washroom)</label>
+                          <input
+                            type="text"
+                            placeholder="Type comma-separated e.g. AC Included, River View, Attached Washroom"
+                            value={Array.isArray(room.features) ? room.features.join(', ') : (room.features || '')}
+                            onChange={(e) => {
+                              const featArr = e.target.value.split(',').map(s => s.trim());
+                              const rooms = [...(formData.rules?.room_categories || [])];
+                              rooms[rIdx].features = featArr;
+                              setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                            }}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none font-mono"
+                          />
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {['⚡ AC Included', '🌊 River View', '🚿 Attached Washroom', '🌅 Balcony', '🔥 Private Bonfire'].map(preset => {
+                              const curArr = Array.isArray(room.features) ? room.features : [];
+                              const active = curArr.includes(preset);
+                              return (
+                                <button
+                                  type="button"
+                                  key={preset}
+                                  onClick={() => {
+                                    const rooms = [...(formData.rules?.room_categories || [])];
+                                    const existing = Array.isArray(rooms[rIdx].features) ? [...rooms[rIdx].features] : [];
+                                    if (existing.includes(preset)) {
+                                      rooms[rIdx].features = existing.filter(f => f !== preset);
+                                    } else {
+                                      rooms[rIdx].features = [...existing, preset];
+                                    }
+                                    setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                                  }}
+                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full border cursor-pointer transition-colors ${
+                                    active ? 'bg-accent/20 border-accent text-accent' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                                  }`}
+                                >
+                                  {preset}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Images Upload / Paste */}
+                        <div className="space-y-1.5">
+                          <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Tent Category Images</label>
+                          {Array.isArray(room.images) && room.images.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-1">
+                              {room.images.map((url, imgIdx) => (
+                                <div key={imgIdx} className="relative group w-14 h-14 rounded-lg overflow-hidden border border-slate-700">
+                                  <img src={url} alt={`Category ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const rooms = [...(formData.rules?.room_categories || [])];
+                                      rooms[rIdx].images = rooms[rIdx].images.filter((_, i) => i !== imgIdx);
+                                      setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                                    }}
+                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
+                                  >
+                                    <X size={12} className="text-white" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <label className="px-2.5 py-1 bg-accent/10 border border-accent/30 text-accent rounded-lg text-[9.5px] font-bold cursor-pointer hover:bg-accent/20">
+                              + Upload Images
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const files = Array.from(e.target.files);
+                                  if (!files.length) return;
+                                  const uploadedUrls = [];
+                                  for (const file of files) {
+                                    const ext = file.name.split('.').pop();
+                                    const randName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
+                                    const filePath = `listings/${randName}`;
+                                    const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
+                                    if (uploadError) { alert('Upload failed: ' + uploadError.message); continue; }
+                                    const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath);
+                                    uploadedUrls.push(urlData.publicUrl);
+                                  }
+                                  if (uploadedUrls.length > 0) {
+                                    const rooms = [...(formData.rules?.room_categories || [])];
+                                    rooms[rIdx].images = [...(Array.isArray(rooms[rIdx].images) ? rooms[rIdx].images : []), ...uploadedUrls];
+                                    setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Or paste comma-separated image URLs..."
+                              className="flex-grow bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none"
+                              value=""
+                              onChange={(e) => {
+                                const newUrls = e.target.value.split(',').map(u => u.trim()).filter(Boolean);
+                                if (newUrls.length > 0) {
+                                  const rooms = [...(formData.rules?.room_categories || [])];
+                                  rooms[rIdx].images = [...(Array.isArray(rooms[rIdx].images) ? rooms[rIdx].images : []), ...newUrls];
+                                  setFormData(prev => ({ ...prev, rules: { ...prev.rules, room_categories: rooms } }));
+                                  e.target.value = '';
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
 
           {/* Operators & Pricing */}
           <div className="space-y-3 pt-4 border-t border-slate-900">

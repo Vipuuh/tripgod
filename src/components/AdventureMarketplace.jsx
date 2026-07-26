@@ -11,6 +11,7 @@ import { supabase } from '../supabase';
 import MarketplaceFilters from './MarketplaceFilters';
 import ReviewsSection from './ReviewsSection';
 import TrustSignals from './TrustSignals';
+import DiningAndMealPanel from './DiningAndMealPanel';
 
 // Consistent hash generator for mock data
 const getHash = (str) => {
@@ -67,6 +68,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
   const [activeFilter, setActiveFilter] = useState(null);
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [activeFaq, setActiveFaq] = useState(null);
+
+  const [selectedRoomIdx, setSelectedRoomIdx] = useState(null);
+  const [numAdults, setNumAdults] = useState(2);
+  const [numKids, setNumKids] = useState(0);
+  const [selectedMeals, setSelectedMeals] = useState({});
 
   // 1. Fetch category data from Supabase
   useEffect(() => {
@@ -234,6 +240,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
 
   const navigateToPackage = (pkg) => {
     setSelectedPackage(pkg);
+    setSelectedRoomIdx(null);
+    setNumAdults(2);
+    setNumKids(0);
+    setSelectedMeals({});
+    setCurrentImgIdx(0);
     if (pkg) {
       window.history.pushState(null, '', `/${activityType}/${pkg.id}`);
     } else {
@@ -650,6 +661,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             <span className="bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded">
                               ✓ Free Cancellation
                             </span>
+                            {pkg.rooms_left !== undefined && pkg.rooms_left !== null && Number(pkg.rooms_left) > 0 && Number(pkg.rooms_left) <= 5 && (
+                              <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded font-black animate-pulse">
+                                🔥 Only {pkg.rooms_left} Tents Left!
+                              </span>
+                            )}
                           </div>
 
                           {/* Price & button */}
@@ -701,438 +717,724 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               <ChevronLeft size={16} /> Back to Packages
             </button>
 
-            {/* Title & Stats block */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] bg-black text-accent font-black tracking-widest px-2 py-0.5 rounded uppercase">
-                    {activityType}
-                  </span>
-                  <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-black tracking-widest px-2 py-0.5 rounded uppercase flex items-center gap-1">
-                    <Sparkles size={10} /> BEST IN CLASS
-                  </span>
-                </div>
-                <h1 className="text-xl md:text-2xl font-bold font-display text-slate-900 uppercase">
-                  {selectedPackage.name}
-                </h1>
-                
-                <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-500">
-                  <div className="flex items-center gap-1 text-slate-800">
-                    <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                    <span>{selectedPartner?.star_rating || 4.7}</span>
-                    <span className="text-slate-400">({selectedPartner?.bookings_count || 120} reviews)</span>
-                  </div>
-                  <span>•</span>
-                  <span className="text-emerald-700">Operator: {selectedPartner?.name}</span>
-                </div>
-              </div>
-
-              {/* Price card styled as checkout widget */}
-              <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-4 rounded-2xl flex flex-col min-w-[160px] xs:text-right shrink-0">
-                <span className="text-[9px] font-bold text-slate-450 uppercase block">Starting From</span>
-                <div className="flex items-baseline gap-1 xs:justify-end">
-                  <span className="text-2xl font-black text-slate-900">₹{selectedPackage.price.toLocaleString('en-IN')}</span>
-                  <span className="text-xs text-slate-400 line-through font-semibold">₹{selectedPackage.original_price.toLocaleString('en-IN')}</span>
-                </div>
-                <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
-                  Book with Token Advance
-                </span>
-              </div>
-            </div>
-
-            {/* Slider / Image Gallery */}
-            <div className="h-52 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-slate-200 group">
-              <img 
-                src={selectedPackage.images[currentImgIdx] || selectedPackage.img || '/rafting-4.jpg'} 
-                alt={selectedPackage.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35" />
-              
-              {/* Slider dots */}
-              {selectedPackage.images.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-xs">
-                  {selectedPackage.images.map((_, dotIdx) => (
-                    <button
-                      key={dotIdx}
-                      onClick={() => setCurrentImgIdx(dotIdx)}
-                      className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer border-none ${dotIdx === currentImgIdx ? 'bg-white w-3' : 'bg-white/40'}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Specs card below image */}
-            <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-xs bg-slate-900 p-4 rounded-2xl shadow-sm">
-              <div className="flex gap-6 flex-wrap">
-                <div>
-                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Duration</span>
-                  <span className="font-bold text-white">{selectedPackage.duration}</span>
-                </div>
-                {selectedPackage.distance_km > 0 && (
-                  <div>
-                    <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Distance</span>
-                    <span className="font-bold text-white">{selectedPackage.distance_km} KM</span>
-                  </div>
-                )}
-                <div>
-                  <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Operator</span>
-                  <span className="font-bold text-white">{selectedPartner?.name}</span>
-                </div>
-              </div>
-              <div className="px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs shrink-0 self-start xs:self-auto">
-                <ShieldCheck size={12} /> Safe & Verified
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-3">
-              <h3 className="text-base font-bold font-display text-slate-900 uppercase">About this Experience</h3>
-              <p className="text-xs sm:text-sm text-slate-650 leading-relaxed font-medium">
-                {selectedPackage.description || `Experience thrilling ${selectedPackage.name} with ${selectedPartner?.name}. Enjoy state-of-the-art equipment, detailed safety briefings from certified local guides, and standard support. Instant booking confirmation guarantees slots.`}
-              </p>
-            </div>
-
-            {/* Who is this perfect for? — Symmetrical 4-Option Grid */}
-            <div className="space-y-2.5 pt-1">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black font-display text-slate-900 uppercase tracking-tight">Who is this perfect for?</h4>
-                <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/80">Safety Verified</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200/60 shadow-3xs">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
-                    <Users size={14} className="stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <span className="block font-black text-[11px] text-indigo-950 uppercase font-display leading-tight">Adults & Teens (14-55 Yrs)</span>
-                    <span className="text-[9.5px] text-indigo-700/80 font-medium block">Adheres to Rafting Safety Standards</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/60 shadow-3xs">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
-                    <ShieldCheck size={14} className="stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <span className="block font-black text-[11px] text-emerald-950 uppercase font-display leading-tight">First-Timers & Beginners</span>
-                    <span className="text-[9.5px] text-emerald-700/80 font-medium block">Certified River Guide Included</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 shadow-3xs">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
-                    <Zap size={14} className="stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <span className="block font-black text-[11px] text-amber-950 uppercase font-display leading-tight">Thrill Seekers & Youth</span>
-                    <span className="text-[9.5px] text-amber-800/80 font-medium block">Grade III/IV Rapids & Cliff Jump</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/60 shadow-3xs">
-                  <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-700 shrink-0">
-                    <Sparkles size={14} className="stroke-[2.5]" />
-                  </div>
-                  <div>
-                    <span className="block font-black text-[11px] text-sky-950 uppercase font-display leading-tight">Friend Groups & Corporates</span>
-                    <span className="text-[9.5px] text-sky-700/80 font-medium block">8-Person Shared Rafts Available</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Safety & Eligibility Guidelines */}
-            <div className="space-y-3 pt-4 border-t border-slate-200">
-              <h3 className="text-xs font-bold font-display text-slate-900 uppercase">Safety & Eligibility Criteria</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">⚖️ Weight Range</span>
-                  <span className="text-xs font-black text-slate-800">
-                    {activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
-                     activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
-                     activityType === 'paragliding' ? '30 kg - 90 kg' :
-                     activityType === 'zipline' ? '30 kg - 115 kg' : 'No Limit'}
-                  </span>
-                </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🎂 Age Limit</span>
-                  <span className="text-xs font-black text-slate-800">
-                    {activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
-                     activityType === 'bungee' || activityType === 'swing' ? '12 - 45 Years' :
-                     activityType === 'paragliding' ? '10 - 60 Years' :
-                     activityType === 'zipline' ? '10 - 65 Years' : 'All Ages'}
-                  </span>
-                </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🤰 Pregnant Ladies</span>
-                  <span className="text-xs font-black text-red-650">
-                    {activityType === 'camping' ? 'Allowed with caution' : 'Strictly Not Allowed'}
-                  </span>
-                </div>
-                <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🩺 Medical Fitness</span>
-                  <span className="text-[10px] font-semibold text-slate-600 leading-tight block">
-                    {activityType === 'camping' ? 'Basic physical fitness' : 'Avoid if Heart patient, Asthma or High BP'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Inclusions / Exclusions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Inclusions</h4>
-                <ul className="space-y-2 text-xs text-slate-600 font-medium">
-                  {selectedPackage.inclusions && selectedPackage.inclusions.length > 0 ? (
-                    selectedPackage.inclusions.map((inc, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                        <span>{inc}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                        <span>Certified guides & safety equipment</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                        <span>Standard safety gear: helmet, life-jackets or harness</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Exclusions</h4>
-                <ul className="space-y-2 text-xs text-slate-600 font-medium">
-                  {selectedPackage.exclusions && selectedPackage.exclusions.length > 0 ? (
-                    selectedPackage.exclusions.map((exc, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-rose-600 font-bold shrink-0">✗</span>
-                        <span>{exc}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <span className="text-rose-600 font-bold shrink-0">✗</span>
-                        <span>Photos & videos (GoPro/DSLR) extra cost</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-rose-600 font-bold shrink-0">✗</span>
-                        <span>Personal travel expenses</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
-              </div>
-            </div>
-
-            {/* Dynamic Partner Location & Reporting Guidelines — Apple iOS Frosted Glass */}
-            <div className="pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                  <MapPin size={16} className="text-[#FF6B00]" />
-                  Activity Reporting Office
-                </h3>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
-                  Verified Address
-                </span>
-              </div>
-              <div className="bg-white/85 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Left Column: Location & Maps */}
-                  <div className="space-y-3.5 md:border-r md:border-slate-200/80 md:pr-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <MapPin size={15} className="text-[#FF6B00]" />
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Reporting Location</span>
-                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.name || 'Local Activity Partner'} Office</p>
-                        <p className="text-[11px] text-slate-600 font-medium leading-snug">{selectedPartner?.address} ({selectedPartner?.landmark})</p>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-semibold text-slate-500">Exact GPS Coordinates</span>
-                      {selectedPartner?.google_maps_link ? (
-                        <a
-                          href={selectedPartner.google_maps_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:from-[#FF6F1A] hover:to-[#FF4E00] text-white text-[11px] font-black uppercase rounded-xl shadow-xs hover:shadow-md transition-all no-underline shrink-0 font-display"
-                        >
-                          <ExternalLink size={12} /> Open Maps
-                        </a>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 font-bold">Maps link on confirmation</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right Column: Timing & Parking */}
-                  <div className="space-y-3.5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <Clock size={15} className="text-amber-600" />
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Check-in & Reporting</span>
-                        <p className="text-xs font-black text-slate-900 font-display mt-0.5">Arrive 15 mins before slot ({selectedPartner?.reporting_time || 'Morning Departure'})</p>
-                        <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPartner?.meeting_instructions || 'Show booking voucher at desk'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 pt-2 border-t border-slate-100">
-                      <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <Car size={15} className="text-sky-600" />
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Parking Facility</span>
-                        <p className="text-[11px] text-slate-800 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free parking available'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Trust and Reviews Section */}
-            <div className="pt-6 border-t border-slate-200">
-              <TrustSignals />
-            </div>
-
-            {/* Checkout Widget Card */}
+            {/* Title & Stats block & Dynamic Pricing Calculations */}
             {(() => {
-              const pMode = selectedPackage.payment_mode || 'commission_advance';
-              const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
-              const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+              const activeRoomPrice = (selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.price)
+                ? Number(selectedPackage.rules.room_categories[selectedRoomIdx].price)
+                : Number(selectedPackage.price);
 
-              let advanceAmount = 0;
-              if (pMode === 'full_payment') {
-                advanceAmount = selectedPackage.price;
-              } else if (pMode === 'fixed_advance') {
-                advanceAmount = fixedAmt;
-              } else {
-                advanceAmount = Math.round((selectedPackage.price * commPct) / 100);
-              }
-              const remainingAmount = Math.max(0, selectedPackage.price - advanceAmount);
+              const activeOriginalPrice = (selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.original_price)
+                ? Number(selectedPackage.rules.room_categories[selectedRoomIdx].original_price)
+                : (selectedPackage.original_price ? Number(selectedPackage.original_price) : null);
 
-              let paymentTermsLabel = '';
-              if (pMode === 'full_payment') {
-                paymentTermsLabel = 'Pay 100% online now to secure your slot.';
-              } else {
-                paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} partial online token now to secure your slot • Pay remaining ₹${remainingAmount.toLocaleString('en-IN')} to operator at venue.`;
+              const activeImages = (selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.images?.length > 0)
+                ? selectedPackage.rules.room_categories[selectedRoomIdx].images
+                : selectedPackage.images;
+
+              const maxPerTent = selectedPackage.max_guests_per_tent || selectedPackage.rules?.max_guests_per_tent || 3;
+              const totalGuests = Math.max(1, numAdults + numKids);
+              const calculatedTents = activityType === 'camping' ? Math.max(1, Math.ceil(totalGuests / maxPerTent)) : 1;
+              const tentsLeft = selectedPackage.rooms_left !== undefined && selectedPackage.rooms_left !== null ? Number(selectedPackage.rooms_left) : 5;
+
+              // Meal Costs calculation
+              let mealCostPerGuestPerNight = 0;
+              const mealsRule = selectedPackage.rules?.meals;
+              if (mealsRule) {
+                if (mealsRule.breakfast?.status === 'paid' && selectedMeals.breakfast) mealCostPerGuestPerNight += (Number(mealsRule.breakfast.price) || 150);
+                if (mealsRule.lunch?.status === 'paid' && selectedMeals.lunch) mealCostPerGuestPerNight += (Number(mealsRule.lunch.price) || 250);
+                if (mealsRule.dinner?.status === 'paid' && selectedMeals.dinner) mealCostPerGuestPerNight += (Number(mealsRule.dinner.price) || 300);
               }
+              const totalMealCost = activityType === 'camping' ? (mealCostPerGuestPerNight * totalGuests) : 0;
+              const totalPrice = activityType === 'camping' ? ((activeRoomPrice * calculatedTents) + totalMealCost) : (activeRoomPrice * totalGuests);
+
+              const selectedCategoryName = selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.name
+                ? selectedPackage.rules.room_categories[selectedRoomIdx].name
+                : (activityType === 'camping' ? 'Standard Tent' : '');
 
               return (
-                <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
-                  <div className="flex items-start gap-3.5">
-                    <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
-                    <div className="space-y-1 text-left">
-                      <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
-                      <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                        {paymentTermsLabel} Cancel up to 24 hours prior for a 100% refund.
-                      </p>
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-black text-accent font-black tracking-widest px-2 py-0.5 rounded uppercase">
+                          {activityType}
+                        </span>
+                        <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-black tracking-widest px-2 py-0.5 rounded uppercase flex items-center gap-1">
+                          <Sparkles size={10} /> BEST IN CLASS
+                        </span>
+                      </div>
+                      <h1 className="text-xl md:text-2xl font-bold font-display text-slate-900 uppercase">
+                        {selectedPackage.name}
+                      </h1>
+                      
+                      <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-500">
+                        <div className="flex items-center gap-1 text-slate-800">
+                          <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                          <span>{selectedPartner?.star_rating || 4.7}</span>
+                          <span className="text-slate-400">({selectedPartner?.bookings_count || 120} reviews)</span>
+                        </div>
+                        <span>•</span>
+                        <span className="text-emerald-700">Operator: {selectedPartner?.name}</span>
+                      </div>
+                    </div>
+
+                    {/* Price card styled as checkout widget */}
+                    <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-4 rounded-2xl flex flex-col min-w-[160px] xs:text-right shrink-0">
+                      <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Price</span>
+                      <div className="flex items-baseline gap-1 xs:justify-end">
+                        <span className="text-2xl font-black text-slate-900">₹{totalPrice.toLocaleString('en-IN')}</span>
+                        {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
+                          <span className="text-xs text-slate-400 line-through font-semibold">₹{(activeOriginalPrice * (activityType === 'camping' ? calculatedTents : totalGuests)).toLocaleString('en-IN')}</span>
+                        )}
+                      </div>
+                      <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
+                        {activityType === 'camping' ? `${calculatedTents} Tent${calculatedTents > 1 ? 's' : ''} · ${totalGuests} Guest${totalGuests > 1 ? 's' : ''}` : 'Book with Token Advance'}
+                      </span>
                     </div>
                   </div>
 
-                  {checkIfClosed(selectedPackage).closed ? (
-                    <button
-                      disabled
-                      className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
-                    >
-                      Closed Temporarily
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => openBookingModal({
-                        id: selectedPackage.id,
-                        name: `${selectedPackage.name} - ${selectedPartner?.name}`,
-                        stretch: selectedPackage.route || selectedPackage.stretch,
-                        price: selectedPackage.price,
-                        category: activityType,
-                        city_id: selectedPackage.city_id,
-                        vendor_id: selectedPackage.vendor_id,
-                        payment_mode: pMode,
-                        commission_percentage: commPct,
-                        fixed_advance_amount: fixedAmt,
-                        free_video_type: selectedPackage.free_video_type || 'none',
-                        is_closed: selectedPackage.is_closed,
-                        closed_reason: selectedPackage.closed_reason,
-                        closed_from: selectedPackage.closed_from,
-                        closed_until: selectedPackage.closed_until,
-                        vendors: selectedPartner // Send partner info directly to checkout
-                      })}
-                      className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
-                    >
-                      Book Operator
-                    </button>
+                  {/* Slider / Image Gallery */}
+                  <div className="h-52 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-slate-200 group">
+                    <img 
+                      src={activeImages[currentImgIdx] || selectedPackage.images[0] || selectedPackage.img || '/rafting-4.jpg'} 
+                      alt={selectedPackage.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35" />
+                    
+                    {/* Slider dots */}
+                    {activeImages.length > 1 && (
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-xs">
+                        {activeImages.map((_, dotIdx) => (
+                          <button
+                            key={dotIdx}
+                            onClick={() => setCurrentImgIdx(dotIdx)}
+                            className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer border-none ${dotIdx === currentImgIdx ? 'bg-white w-3' : 'bg-white/40'}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Specs card below image */}
+                  <div className="flex flex-col xs:flex-row gap-2.5 xs:items-center justify-between text-white text-xs bg-slate-900 p-4 rounded-2xl shadow-sm">
+                    <div className="flex gap-6 flex-wrap">
+                      <div>
+                        <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Duration</span>
+                        <span className="font-bold text-white">{selectedPackage.duration}</span>
+                      </div>
+                      {activityType === 'camping' ? (
+                        <div>
+                          <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Stay Capacity</span>
+                          <span className="font-bold text-white">{calculatedTents} Tent{calculatedTents > 1 ? 's' : ''} ({maxPerTent} Max/Tent)</span>
+                        </div>
+                      ) : (
+                        selectedPackage.distance_km > 0 && (
+                          <div>
+                            <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Distance</span>
+                            <span className="font-bold text-white">{selectedPackage.distance_km} KM</span>
+                          </div>
+                        )
+                      )}
+                      <div>
+                        <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Operator</span>
+                        <span className="font-bold text-white">{selectedPartner?.name}</span>
+                      </div>
+                    </div>
+                    <div className="px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs shrink-0 self-start xs:self-auto">
+                      <ShieldCheck size={12} /> Safe & Verified
+                    </div>
+                  </div>
+
+                  {/* SECTION: CAMP CATEGORY SELECTOR */}
+                  {selectedPackage.rules?.room_categories && selectedPackage.rules.room_categories.length > 0 && (
+                    <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs text-left space-y-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#FF5F00] to-[#FF8533] flex items-center justify-center text-white shadow-xs">
+                          <Tent size={14} />
+                        </div>
+                        <div>
+                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Select Camp / Room Category</h3>
+                          <p className="text-[10px] text-slate-400 font-semibold">Choose your preferred tent accommodation type</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Base Tent Option */}
+                        {(() => {
+                          const isSelected = selectedRoomIdx === null;
+                          const discount = selectedPackage.original_price && Number(selectedPackage.original_price) > Number(selectedPackage.price)
+                            ? Math.round((1 - Number(selectedPackage.price) / Number(selectedPackage.original_price)) * 100) : null;
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => { setSelectedRoomIdx(null); setCurrentImgIdx(0); }}
+                              className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all relative overflow-hidden flex flex-col justify-between ${
+                                isSelected ? 'bg-gradient-to-br from-orange-50/70 to-orange-100/40 border-2 border-[#FF5F00] shadow-sm scale-[1.01]' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              {isSelected && (
+                                <span className="absolute top-2.5 right-2.5 bg-[#FF5F00] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">Selected</span>
+                              )}
+                              {discount && (
+                                <span className={`absolute ${isSelected ? 'top-8' : 'top-2.5'} right-2.5 bg-emerald-100 text-emerald-700 border border-emerald-200 text-[8px] font-black uppercase px-2 py-0.5 rounded-full`}>{discount}% OFF</span>
+                              )}
+                              <div>
+                                <span className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Standard Tent Stay</span>
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-lg font-black text-slate-900">₹{Number(selectedPackage.price).toLocaleString('en-IN')}</span>
+                                  {selectedPackage.original_price && Number(selectedPackage.original_price) > Number(selectedPackage.price) && (
+                                    <span className="text-xs text-slate-400 line-through">₹{Number(selectedPackage.original_price).toLocaleString('en-IN')}</span>
+                                  )}
+                                </div>
+                                <span className="block text-[9px] font-bold text-emerald-600 uppercase mt-1">Base Stay Rate</span>
+                              </div>
+                              {selectedPackage.images && selectedPackage.images.length > 0 && (
+                                <div className="w-full h-20 rounded-xl overflow-hidden mt-3 bg-slate-200">
+                                  <img src={selectedPackage.images[0]} alt="Standard Tent" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })()}
+
+                        {/* Upgraded Tent Categories */}
+                        {selectedPackage.rules.room_categories.map((room, rIdx) => {
+                          const isSelected = selectedRoomIdx === rIdx;
+                          const discount = room.original_price && Number(room.original_price) > Number(room.price)
+                            ? Math.round((1 - Number(room.price) / Number(room.original_price)) * 100) : null;
+                          const roomImages = Array.isArray(room.images) ? room.images : [];
+                          return (
+                            <button
+                              type="button"
+                              key={rIdx}
+                              onClick={() => { setSelectedRoomIdx(rIdx); setCurrentImgIdx(0); }}
+                              className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all relative overflow-hidden flex flex-col justify-between ${
+                                isSelected ? 'bg-gradient-to-br from-orange-50/70 to-orange-100/40 border-2 border-[#FF5F00] shadow-sm scale-[1.01]' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                              }`}
+                            >
+                              {isSelected && (
+                                <span className="absolute top-2.5 right-2.5 bg-[#FF5F00] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full tracking-wider">Selected</span>
+                              )}
+                              {discount && (
+                                <span className={`absolute ${isSelected ? 'top-8' : 'top-2.5'} right-2.5 bg-emerald-100 text-emerald-700 border border-emerald-200 text-[8px] font-black uppercase px-2 py-0.5 rounded-full`}>{discount}% OFF</span>
+                              )}
+                              <div>
+                                <span className="block text-[10px] font-black text-slate-800 uppercase tracking-wider mb-1">{room.name}</span>
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-lg font-black text-slate-900">₹{Number(room.price).toLocaleString('en-IN')}</span>
+                                  {room.original_price && Number(room.original_price) > Number(room.price) && (
+                                    <span className="text-xs text-slate-400 line-through">₹{Number(room.original_price).toLocaleString('en-IN')}</span>
+                                  )}
+                                </div>
+                                <span className="block text-[9px] font-bold text-[#FF5F00] uppercase mt-1">Upgrade Tent Option</span>
+
+                                {/* Extra Feature Badges */}
+                                {Array.isArray(room.features) && room.features.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {room.features.map((feat, fIdx) => (
+                                      <span key={fIdx} className="text-[8px] font-black text-[#FF5F00] bg-orange-100/80 border border-orange-200/80 px-1.5 py-0.5 rounded">
+                                        {feat}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              {roomImages.length > 0 && (
+                                <div className="w-full h-20 rounded-xl overflow-hidden mt-3 bg-slate-200">
+                                  <img src={roomImages[0]} alt={room.name} className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
-                </div>
+
+                  {/* SECTION: GUESTS & AUTO-TENT CALCULATOR */}
+                  {activityType === 'camping' && (
+                    <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs text-left space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-orange-100 text-[#FF5F00] flex items-center justify-center">
+                            <Users size={15} />
+                          </div>
+                          <div>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Select Guests & Tents Calculation</h3>
+                            <p className="text-[10px] text-slate-400 font-semibold">Tents automatically calculated (Max {maxPerTent} guests / tent)</p>
+                          </div>
+                        </div>
+
+                        {tentsLeft <= 5 && (
+                          <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full animate-pulse">
+                            🔥 Only {tentsLeft} Tents Left!
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Adults Counter */}
+                        <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                          <div>
+                            <span className="block text-xs font-black text-slate-900 uppercase">Adults</span>
+                            <span className="text-[10px] text-slate-400 font-medium">18+ Years</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setNumAdults(prev => Math.max(1, prev - 1))}
+                              className="w-7 h-7 rounded-lg bg-white border border-slate-200 font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+                            >-</button>
+                            <span className="text-sm font-black text-slate-900 min-w-[16px] text-center">{numAdults}</span>
+                            <button
+                              type="button"
+                              onClick={() => setNumAdults(prev => prev + 1)}
+                              className="w-7 h-7 rounded-lg bg-white border border-slate-200 font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+                            >+</button>
+                          </div>
+                        </div>
+
+                        {/* Kids Counter */}
+                        <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                          <div>
+                            <span className="block text-xs font-black text-slate-900 uppercase">Children</span>
+                            <span className="text-[10px] text-slate-400 font-medium">5-17 Years</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setNumKids(prev => Math.max(0, prev - 1))}
+                              className="w-7 h-7 rounded-lg bg-white border border-slate-200 font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+                            >-</button>
+                            <span className="text-sm font-black text-slate-900 min-w-[16px] text-center">{numKids}</span>
+                            <button
+                              type="button"
+                              onClick={() => setNumKids(prev => prev + 1)}
+                              className="w-7 h-7 rounded-lg bg-white border border-slate-200 font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+                            >+</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Calculation Summary Bar */}
+                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/80 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <Tent size={18} className="text-[#FF5F00] shrink-0" />
+                          <div>
+                            <span className="text-xs font-black text-slate-900 block font-display">
+                              {totalGuests} Guest{totalGuests > 1 ? 's' : ''} = {calculatedTents} Tent{calculatedTents > 1 ? 's' : ''} Selected
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-medium block">
+                              Max {maxPerTent} guests per tent sharing basis
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black text-[#FF5F00] bg-white px-3 py-1 rounded-xl border border-orange-200 shadow-2xs shrink-0 font-display">
+                          ₹{activeRoomPrice.toLocaleString('en-IN')} / Tent
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SECTION: CAMP VERIFIED RULES & HIGHLIGHTS */}
+                  {activityType === 'camping' && (
+                    <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs text-left space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Verified Camp Highlights & Rules</h3>
+                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">On-Ground Verified</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {[
+                          { key: 'alcohol_allowed', label: 'Alcohol Allowed', icon: '🍷', color: 'text-amber-800 bg-amber-50 border-amber-200' },
+                          { key: 'non_veg_allowed', label: 'Non-Veg Food', icon: '🍗', color: 'text-red-800 bg-red-50 border-red-200' },
+                          { key: 'riverside_view', label: 'Riverside Beach', icon: '🌊', color: 'text-sky-800 bg-sky-50 border-sky-200' },
+                          { key: 'ac_available', label: 'AC / Cooler Tent', icon: '❄️', color: 'text-indigo-800 bg-indigo-50 border-indigo-200' },
+                          { key: 'attached_washroom', label: 'Attached Washroom', icon: '🚽', color: 'text-emerald-800 bg-emerald-50 border-emerald-200' },
+                          { key: 'bonfire_music', label: 'Bonfire & DJ', icon: '🔥', color: 'text-orange-800 bg-orange-50 border-orange-200' },
+                          { key: 'parking_available', label: 'Free Parking', icon: '🚗', color: 'text-slate-800 bg-slate-100 border-slate-200' },
+                          { key: 'swimming_pool', label: 'Swimming Pool', icon: '🏊', color: 'text-cyan-800 bg-cyan-50 border-cyan-200' }
+                        ].map(item => {
+                          const isAllowed = selectedPackage.rules?.camp_rules?.[item.key] ?? true;
+                          if (!isAllowed) return null;
+                          return (
+                            <div key={item.key} className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold ${item.color}`}>
+                              <span className="text-base leading-none">{item.icon}</span>
+                              <span className="truncate">{item.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SECTION: MEALS & DINING PANEL */}
+                  {selectedPackage.rules?.meals && (
+                    <DiningAndMealPanel
+                      selectedHotel={{ rules: selectedPackage.rules }}
+                      selectedMeals={selectedMeals}
+                      setSelectedMeals={setSelectedMeals}
+                    />
+                  )}
+
+                  {/* Description */}
+                  <div className="space-y-3">
+                    <h3 className="text-base font-bold font-display text-slate-900 uppercase">About this Experience</h3>
+                    <p className="text-xs sm:text-sm text-slate-650 leading-relaxed font-medium">
+                      {selectedPackage.description || `Experience thrilling ${selectedPackage.name} with ${selectedPartner?.name}. Enjoy state-of-the-art equipment, detailed safety briefings from certified local guides, and standard support. Instant booking confirmation guarantees slots.`}
+                    </p>
+                  </div>
+
+                  {/* Who is this perfect for? — Symmetrical 4-Option Grid */}
+                  <div className="space-y-2.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black font-display text-slate-900 uppercase tracking-tight">Who is this perfect for?</h4>
+                      <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/80">Safety Verified</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200/60 shadow-3xs">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
+                          <Users size={14} className="stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-[11px] text-indigo-950 uppercase font-display leading-tight">Adults & Teens (14-55 Yrs)</span>
+                          <span className="text-[9.5px] text-indigo-700/80 font-medium block">Adheres to Rafting Safety Standards</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/60 shadow-3xs">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                          <ShieldCheck size={14} className="stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-[11px] text-emerald-950 uppercase font-display leading-tight">First-Timers & Beginners</span>
+                          <span className="text-[9.5px] text-emerald-700/80 font-medium block">Certified River Guide Included</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 shadow-3xs">
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
+                          <Zap size={14} className="stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-[11px] text-amber-950 uppercase font-display leading-tight">Thrill Seekers & Youth</span>
+                          <span className="text-[9.5px] text-amber-800/80 font-medium block">Grade III/IV Rapids & Cliff Jump</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/60 shadow-3xs">
+                        <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-700 shrink-0">
+                          <Sparkles size={14} className="stroke-[2.5]" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-[11px] text-sky-950 uppercase font-display leading-tight">Friend Groups & Corporates</span>
+                          <span className="text-[9.5px] text-sky-700/80 font-medium block">8-Person Shared Rafts Available</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Safety & Eligibility Guidelines */}
+                  <div className="space-y-3 pt-4 border-t border-slate-200">
+                    <h3 className="text-xs font-bold font-display text-slate-900 uppercase">Safety & Eligibility Criteria</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">⚖️ Weight Range</span>
+                        <span className="text-xs font-black text-slate-800">
+                          {activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
+                           activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
+                           activityType === 'paragliding' ? '30 kg - 90 kg' :
+                           activityType === 'zipline' ? '30 kg - 115 kg' : 'No Limit'}
+                        </span>
+                      </div>
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🎂 Age Limit</span>
+                        <span className="text-xs font-black text-slate-800">
+                          {activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
+                           activityType === 'bungee' || activityType === 'swing' ? '12 - 45 Years' :
+                           activityType === 'paragliding' ? '10 - 60 Years' :
+                           activityType === 'zipline' ? '10 - 65 Years' : 'All Ages'}
+                        </span>
+                      </div>
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🤰 Pregnant Ladies</span>
+                        <span className="text-xs font-black text-red-650">
+                          {activityType === 'camping' ? 'Allowed with caution' : 'Strictly Not Allowed'}
+                        </span>
+                      </div>
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🩺 Medical Fitness</span>
+                        <span className="text-[10px] font-semibold text-slate-600 leading-tight block">
+                          {activityType === 'camping' ? 'Basic physical fitness' : 'Avoid if Heart patient, Asthma or High BP'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Inclusions / Exclusions */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Inclusions</h4>
+                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                        {selectedPackage.inclusions && selectedPackage.inclusions.length > 0 ? (
+                          selectedPackage.inclusions.map((inc, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                              <span>{inc}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                              <span>Certified guides & safety equipment</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                              <span>Standard safety gear: helmet, life-jackets or harness</span>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Exclusions</h4>
+                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                        {selectedPackage.exclusions && selectedPackage.exclusions.length > 0 ? (
+                          selectedPackage.exclusions.map((exc, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-rose-600 font-bold shrink-0">✗</span>
+                              <span>{exc}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <>
+                            <li className="flex items-start gap-2">
+                              <span className="text-rose-600 font-bold shrink-0">✗</span>
+                              <span>Photos & videos (GoPro/DSLR) extra cost</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-rose-600 font-bold shrink-0">✗</span>
+                              <span>Personal travel expenses</span>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Partner Location & Reporting Guidelines */}
+                  <div className="pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                        <MapPin size={16} className="text-[#FF6B00]" />
+                        Activity Reporting Office
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+                        Verified Address
+                      </span>
+                    </div>
+                    <div className="bg-white/85 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Left Column: Location & Maps */}
+                        <div className="space-y-3.5 md:border-r md:border-slate-200/80 md:pr-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                              <MapPin size={15} className="text-[#FF6B00]" />
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Reporting Location</span>
+                              <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.name || 'Local Activity Partner'} Office</p>
+                              <p className="text-[11px] text-slate-600 font-medium leading-snug">{selectedPartner?.address} ({selectedPartner?.landmark})</p>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-semibold text-slate-500">Exact GPS Coordinates</span>
+                            {selectedPartner?.google_maps_link ? (
+                              <a
+                                href={selectedPartner.google_maps_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:from-[#FF6F1A] hover:to-[#FF4E00] text-white text-[11px] font-black uppercase rounded-xl shadow-xs hover:shadow-md transition-all no-underline shrink-0 font-display"
+                              >
+                                <ExternalLink size={12} /> Open Maps
+                              </a>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 font-bold">Maps link on confirmation</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right Column: Timing & Parking */}
+                        <div className="space-y-3.5">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                              <Clock size={15} className="text-amber-600" />
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Check-in & Reporting</span>
+                              <p className="text-xs font-black text-slate-900 font-display mt-0.5">Arrive 15 mins before slot ({selectedPartner?.reporting_time || 'Morning Departure'})</p>
+                              <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPartner?.meeting_instructions || 'Show booking voucher at desk'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 pt-2 border-t border-slate-100">
+                            <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                              <Car size={15} className="text-sky-600" />
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Parking Facility</span>
+                              <p className="text-[11px] text-slate-800 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free parking available'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Trust and Reviews Section */}
+                  <div className="pt-6 border-t border-slate-200">
+                    <TrustSignals />
+                  </div>
+
+                  {/* Checkout Widget Card */}
+                  {(() => {
+                    const pMode = selectedPackage.payment_mode || 'commission_advance';
+                    const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
+                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+
+                    let advanceAmount = 0;
+                    if (pMode === 'full_payment') {
+                      advanceAmount = totalPrice;
+                    } else if (pMode === 'fixed_advance') {
+                      advanceAmount = fixedAmt;
+                    } else {
+                      advanceAmount = Math.round((totalPrice * commPct) / 100);
+                    }
+                    const remainingAmount = Math.max(0, totalPrice - advanceAmount);
+
+                    let paymentTermsLabel = '';
+                    if (pMode === 'full_payment') {
+                      paymentTermsLabel = 'Pay 100% online now to secure your slot.';
+                    } else {
+                      paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} partial online token now to secure your slot • Pay remaining ₹${remainingAmount.toLocaleString('en-IN')} to operator at venue.`;
+                    }
+
+                    return (
+                      <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
+                        <div className="flex items-start gap-3.5">
+                          <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
+                          <div className="space-y-1 text-left">
+                            <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
+                            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
+                              {paymentTermsLabel} Cancel up to 24 hours prior for a 100% refund.
+                            </p>
+                          </div>
+                        </div>
+
+                        {checkIfClosed(selectedPackage).closed ? (
+                          <button
+                            disabled
+                            className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
+                          >
+                            Closed Temporarily
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => openBookingModal({
+                              id: selectedPackage.id,
+                              name: `${selectedPackage.name}${selectedCategoryName ? ' (' + selectedCategoryName + ')' : ''} - ${selectedPartner?.name}`,
+                              stretch: selectedPackage.route || selectedPackage.stretch,
+                              price: totalPrice,
+                              room_price: activeRoomPrice,
+                              num_rooms: calculatedTents,
+                              num_adults: numAdults,
+                              num_kids: numKids,
+                              rooms_left: tentsLeft,
+                              tents_left: tentsLeft,
+                              selected_meals: selectedMeals,
+                              category: activityType,
+                              city_id: selectedPackage.city_id,
+                              vendor_id: selectedPackage.vendor_id,
+                              payment_mode: pMode,
+                              commission_percentage: commPct,
+                              fixed_advance_amount: fixedAmt,
+                              free_video_type: selectedPackage.free_video_type || 'none',
+                              is_closed: selectedPackage.is_closed,
+                              closed_reason: selectedPackage.closed_reason,
+                              closed_from: selectedPackage.closed_from,
+                              closed_until: selectedPackage.closed_until,
+                              vendors: selectedPartner
+                            })}
+                            className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
+                          >
+                            Book Operator
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Mobile Sticky Booking Bar */}
+                  <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3 px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+                    <div>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Total Price</span>
+                      <div className="flex items-baseline gap-1.5 mt-0.5">
+                        <span className="text-xl font-black text-slate-900 leading-none">₹{totalPrice.toLocaleString('en-IN')}</span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-bold leading-none block mt-0.5">
+                        {activityType === 'camping' ? `${calculatedTents} Tent(s) · ${totalGuests} Guest(s)` : 'per person • direct voucher'}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const pMode = selectedPackage.payment_mode || 'commission_advance';
+                        const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
+                        const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+
+                        openBookingModal({
+                          id: selectedPackage.id,
+                          name: `${selectedPackage.name}${selectedCategoryName ? ' (' + selectedCategoryName + ')' : ''} - ${selectedPartner?.name}`,
+                          stretch: selectedPackage.route || selectedPackage.stretch,
+                          price: totalPrice,
+                          room_price: activeRoomPrice,
+                          num_rooms: calculatedTents,
+                          num_adults: numAdults,
+                          num_kids: numKids,
+                          rooms_left: tentsLeft,
+                          tents_left: tentsLeft,
+                          selected_meals: selectedMeals,
+                          category: activityType,
+                          city_id: selectedPackage.city_id,
+                          vendor_id: selectedPackage.vendor_id,
+                          payment_mode: pMode,
+                          commission_percentage: commPct,
+                          fixed_advance_amount: fixedAmt,
+                          free_video_type: selectedPackage.free_video_type || 'none',
+                          is_closed: selectedPackage.is_closed,
+                          closed_reason: selectedPackage.closed_reason,
+                          closed_from: selectedPackage.closed_from,
+                          closed_until: selectedPackage.closed_until,
+                          vendors: selectedPartner
+                        });
+                      }}
+                      className="py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl shadow-[0_4px_15px_rgba(255,95,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-1.5"
+                    >
+                      <span>Book Now</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+
+                  {/* Reviews list */}
+                  <div className="pt-8 border-t border-slate-200">
+                    <ReviewsSection rating={selectedPartner?.star_rating || 4.7} reviewsCount={selectedPartner?.bookings_count || 120} name={selectedPartner?.name} />
+                  </div>
+                </>
               );
             })()}
-
-            {/* Mobile Sticky Booking Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3 px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
-              <div>
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Total Price</span>
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-xl font-black text-slate-900 leading-none">₹{selectedPackage.price.toLocaleString('en-IN')}</span>
-                  {(selectedPackage.original_price > selectedPackage.price || selectedPackage.price * 1.4 > selectedPackage.price) && (
-                    <span className="text-[11px] text-slate-400 line-through font-semibold leading-none">
-                      ₹{(selectedPackage.original_price || Math.round(selectedPackage.price * 1.4)).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                  <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60 leading-none">
-                    Save {Math.round((((selectedPackage.original_price || Math.round(selectedPackage.price * 1.4)) - selectedPackage.price) / (selectedPackage.original_price || Math.round(selectedPackage.price * 1.4))) * 100)}%
-                  </span>
-                </div>
-                <span className="text-[9px] text-slate-400 font-bold leading-none block mt-0.5">per person • direct voucher</span>
-              </div>
-
-              <button
-                onClick={() => {
-                  const pMode = selectedPackage.payment_mode || 'commission_advance';
-                  const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
-                  const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
-
-                  openBookingModal({
-                    id: selectedPackage.id,
-                    name: `${selectedPackage.name} - ${selectedPartner?.name}`,
-                    stretch: selectedPackage.route || selectedPackage.stretch,
-                    price: selectedPackage.price,
-                    category: activityType,
-                    city_id: selectedPackage.city_id,
-                    vendor_id: selectedPackage.vendor_id,
-                    payment_mode: pMode,
-                    commission_percentage: commPct,
-                    fixed_advance_amount: fixedAmt,
-                    free_video_type: selectedPackage.free_video_type || 'none',
-                    is_closed: selectedPackage.is_closed,
-                    closed_reason: selectedPackage.closed_reason,
-                    closed_from: selectedPackage.closed_from,
-                    closed_until: selectedPackage.closed_until,
-                    vendors: selectedPartner
-                  });
-                }}
-                className="py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl shadow-[0_4px_15px_rgba(255,95,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-1.5"
-              >
-                <span>Book Now</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-
-            {/* Reviews list */}
-            <div className="pt-8 border-t border-slate-200">
-              <ReviewsSection rating={selectedPartner?.star_rating || 4.7} reviewsCount={selectedPartner?.bookings_count || 120} name={selectedPartner?.name} />
-            </div>
 
           </motion.div>
         )}
