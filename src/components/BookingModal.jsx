@@ -784,49 +784,7 @@ My payment ID is verified. Please confirm my slots.`;
                 </div>
               </div>
 
-              {/* Date selection */}
-              {activity.category === 'hotels' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                      <Calendar size={14} className="text-[#FF5F00]" /> Check-in Date
-                    </label>
-                    <input
-                      type="date"
-                      min={minDate}
-                      value={checkInDate}
-                      onChange={(e) => {
-                        setCheckInDate(e.target.value);
-                        setError('');
-                        if (checkOutDate <= e.target.value) {
-                          const nextDay = new Date(e.target.value);
-                          nextDay.setDate(nextDay.getDate() + 1);
-                          setCheckOutDate(nextDay.toISOString().split('T')[0]);
-                        }
-                      }}
-                      className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                      <Calendar size={14} className="text-[#FF5F00]" /> Check-out Date
-                    </label>
-                    <input
-                      type="date"
-                      min={checkInDate ? (() => {
-                        const next = new Date(checkInDate);
-                        next.setDate(next.getDate() + 1);
-                        return next.toISOString().split('T')[0];
-                      })() : minDate}
-                      value={checkOutDate}
-                      onChange={(e) => {
-                        setCheckOutDate(e.target.value);
-                        setError('');
-                      }}
-                      className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
-                    />
-                  </div>
-                </div>
+              {/* Date & Slot selection */}
               {isBikeRent ? (
                 <div className="space-y-4">
                   {/* Select Start Date */}
@@ -855,7 +813,7 @@ My payment ID is verified. Please confirm my slots.`;
                       <select
                         value={rentalDays}
                         onChange={(e) => setRentalDays(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                        className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200 font-bold"
                       >
                         <option value={1}>1 Day (24 Hours)</option>
                         <option value={2}>2 Days</option>
@@ -907,8 +865,92 @@ My payment ID is verified. Please confirm my slots.`;
                     </select>
                   </div>
                 </div>
+              ) : activity.category === 'hotels' ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                        <Calendar size={14} className="text-[#FF5F00]" /> Check-in Date
+                      </label>
+                      <input
+                        type="date"
+                        min={minDate}
+                        value={checkInDate}
+                        onChange={(e) => {
+                          setCheckInDate(e.target.value);
+                          setError('');
+                          if (checkOutDate <= e.target.value) {
+                            const nextDay = new Date(e.target.value);
+                            nextDay.setDate(nextDay.getDate() + 1);
+                            setCheckOutDate(nextDay.toISOString().split('T')[0]);
+                          }
+                        }}
+                        className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                        <Calendar size={14} className="text-[#FF5F00]" /> Check-out Date
+                      </label>
+                      <input
+                        type="date"
+                        min={checkInDate ? (() => {
+                          const next = new Date(checkInDate);
+                          next.setDate(next.getDate() + 1);
+                          return next.toISOString().split('T')[0];
+                        })() : minDate}
+                        value={checkOutDate}
+                        onChange={(e) => {
+                          setCheckOutDate(e.target.value);
+                          setError('');
+                        }}
+                        className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                      <Users size={14} className="text-[#FF5F00]" /> Guests &amp; Rooms
+                    </label>
+                    <div className="w-full px-4 py-3 border border-black/10 rounded-xl bg-gray-50 text-sm font-semibold text-black">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <span className="flex items-center gap-1.5 text-gray-700">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF5F00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
+                              </svg>
+                              <span className="font-black text-black">{activity.num_rooms || 1}</span>
+                              <span className="text-gray-500 text-xs">
+                                {activity.category === 'camping' ? `tent${(activity.num_rooms || 1) > 1 ? 's' : ''}` : `room${(activity.num_rooms || 1) > 1 ? 's' : ''}`}
+                              </span>
+                            </span>
+                            <span className="text-gray-300">·</span>
+                            <span className="flex items-center gap-1.5 text-gray-700">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
+                              </svg>
+                              <span className="font-black text-black">{activity.num_adults || 2}</span>
+                              <span className="text-gray-500 text-xs">adult{(activity.num_adults || 2) > 1 ? 's' : ''}</span>
+                            </span>
+                            <span className="text-gray-300">·</span>
+                            <span className="flex items-center gap-1.5 text-gray-700">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="9" r="3"/><path d="M12 12v3"/><path d="M9.5 17.5 12 15l2.5 2.5"/>
+                              </svg>
+                              <span className="font-black text-black">{activity.num_kids || 1}</span>
+                              <span className="text-gray-500 text-xs">child{(activity.num_kids || 1) !== 1 ? 'ren' : ''}</span>
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-medium mt-0.5">Set in hotel details · Go back to change</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <>
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
                       <Calendar size={14} className="text-[#FF5F00]" /> Select Date
@@ -925,7 +967,6 @@ My payment ID is verified. Please confirm my slots.`;
                     />
                   </div>
 
-                  {/* Time slot and Guests */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
@@ -942,70 +983,27 @@ My payment ID is verified. Please confirm my slots.`;
                       </select>
                     </div>
 
-                    {/* Guests field — hotel shows structured summary, others show editable number */}
-                    {activity.category === 'hotels' ? (
-                      <div className="space-y-2">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                          <Users size={14} className="text-[#FF5F00]" /> Guests &amp; Rooms
-                        </label>
-                        <div className="w-full px-4 py-3 border border-black/10 rounded-xl bg-gray-50 text-sm font-semibold text-black">
-                          <div className="flex items-center justify-between">
-                            <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <span className="flex items-center gap-1.5 text-gray-700">
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF5F00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
-                                  </svg>
-                                  <span className="font-black text-black">{activity.num_rooms || 1}</span>
-                                  <span className="text-gray-500 text-xs">
-                                    {activity.category === 'camping' ? `tent${(activity.num_rooms || 1) > 1 ? 's' : ''}` : `room${(activity.num_rooms || 1) > 1 ? 's' : ''}`}
-                                  </span>
-                                </span>
-                                <span className="text-gray-300">·</span>
-                                <span className="flex items-center gap-1.5 text-gray-700">
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
-                                  </svg>
-                                  <span className="font-black text-black">{activity.num_adults || 2}</span>
-                                  <span className="text-gray-500 text-xs">adult{(activity.num_adults || 2) > 1 ? 's' : ''}</span>
-                                </span>
-                                <span className="text-gray-300">·</span>
-                                <span className="flex items-center gap-1.5 text-gray-700">
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="9" r="3"/><path d="M12 12v3"/><path d="M9.5 17.5 12 15l2.5 2.5"/>
-                                  </svg>
-                                  <span className="font-black text-black">{activity.num_kids || 1}</span>
-                                  <span className="text-gray-500 text-xs">child{(activity.num_kids || 1) !== 1 ? 'ren' : ''}</span>
-                                </span>
-                              </div>
-                              <span className="text-[10px] text-gray-400 font-medium mt-0.5">Set in hotel details · Go back to change</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                          <Users size={14} className="text-[#FF5F00]" /> Total Guests
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="30"
-                          value={guests}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setGuests(val === '' ? '' : Math.max(1, parseInt(val) || 1));
-                          }}
-                          onBlur={() => {
-                            if (guests === '' || guests < 1) setGuests(1);
-                          }}
-                          className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
-                        />
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                        <Users size={14} className="text-[#FF5F00]" /> Total Guests
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={guests}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setGuests(val === '' ? '' : Math.max(1, parseInt(val) || 1));
+                        }}
+                        onBlur={() => {
+                          if (guests === '' || guests < 1) setGuests(1);
+                        }}
+                        className="w-full px-4 py-3 border border-black/10 rounded-xl text-black bg-white/70 focus:outline-none focus:border-[#FF5F00] focus:ring-2 focus:ring-[#FF5F00]/10 font-semibold text-sm transition-all duration-200"
+                      />
+                    </div>
                   </div>
-                </>
+                </div>
               )}
 
               {/* Optional extras depending on category & free video selection */}
