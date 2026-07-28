@@ -5602,13 +5602,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                                 placeholder="Deposit"
                                 className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
                               />
-                            </div>                       deposit: Number(e.target.value)
-                                    }
-                                  }));
-                                }}
-                                placeholder="Deposit"
-                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                              />
                             </div>
 
                             <div className="space-y-1">
