@@ -29,6 +29,32 @@ const getSimpleBookingId = (id) => {
   return `TG-${String(Math.abs(hash)).slice(-6)}`;
 };
 
+function AdminExpandableText({ text, maxLength = 100, className = "" }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  if (!text) return null;
+  if (text.length <= maxLength) {
+    return <p className={className}>{text}</p>;
+  }
+
+  return (
+    <div className={className}>
+      <p className="inline leading-relaxed font-medium">
+        {isExpanded ? text : `${text.slice(0, maxLength)}... `}
+      </p>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsExpanded(!isExpanded);
+        }}
+        className="inline-flex items-center gap-0.5 text-[#FF5F00] hover:underline font-black text-[10px] uppercase cursor-pointer border-none bg-transparent ml-1.5"
+      >
+        {isExpanded ? 'Show Less ▲' : 'View More ▼'}
+      </button>
+    </div>
+  );
+}
+
 const STANDARD_ADVENTURE_NAMES = {
   rafting: [
     "12 KM Rafting",
@@ -152,7 +178,19 @@ export default function AdminDashboard({ setRoute }) {
       if (bookingsData) setBookings(bookingsData);
       if (hotelsData) setHotels(hotelsData);
       if (raftingData) setRaftingList(raftingData);
-      if (bikesData) setBikesList(bikesData);
+      if (bikesData) {
+        const validBikes = bikesData.filter(b => {
+          if (Number(b.price) <= 0) {
+            const hasValidRow = bikesData.some(other => other.name === b.name && other.vendor_id === b.vendor_id && Number(other.price) > 0);
+            if (hasValidRow) {
+              supabase.from('bikes').delete().eq('id', b.id).then();
+              return false;
+            }
+          }
+          return true;
+        });
+        setBikesList(validBikes);
+      }
       if (toursData) setToursList(toursData);
 
       // Fetch images from media bucket
@@ -919,9 +957,7 @@ export default function AdminDashboard({ setRoute }) {
                             </div>
                           )}
 
-                          <p className="text-[11px] text-slate-400 leading-relaxed font-medium line-clamp-3 pt-2">
-                            {item.description}
-                          </p>
+                          <AdminExpandableText text={item.description} maxLength={100} className="text-[11px] text-slate-400 leading-relaxed font-medium pt-2" />
                         </div>
                       </div>
 
@@ -2253,16 +2289,20 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       // If editing, populate from existing operators
       if (data && data.operators) {
         data.operators.forEach(op => {
-          initialOps[op.vendor_id] = {
-            enabled: true,
-            price: op.price || '',
-            deposit: op.deposit !== undefined ? op.deposit : 0,
-            pickup_location: op.pickup_location || op.vendors?.address || 'Rishikesh',
-            commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
-            payment_mode: op.payment_mode || 'commission_advance',
-            fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
-            id: op.id
-          };
+          const currentPrice = Number(op.price) || 0;
+          const existingOp = initialOps[op.vendor_id];
+          if (!existingOp || !existingOp.enabled || (currentPrice > 0 && Number(existingOp.price || 0) <= 0)) {
+            initialOps[op.vendor_id] = {
+              enabled: true,
+              price: currentPrice > 0 ? op.price : (existingOp?.price || ''),
+              deposit: op.deposit !== undefined ? op.deposit : 0,
+              pickup_location: op.pickup_location || op.vendors?.address || 'Rishikesh',
+              commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
+              payment_mode: op.payment_mode || 'commission_advance',
+              fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
+              id: op.id
+            };
+          }
         });
       }
       
@@ -2706,19 +2746,23 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         if (data) {
           // Editing existing bike model
           const existingOpsMap = {};
-          data.operators.forEach(op => {
-            existingOpsMap[op.vendor_id] = op.id;
-          });
+          if (data.operators) {
+            data.operators.forEach(op => {
+              if (!existingOpsMap[op.vendor_id]) existingOpsMap[op.vendor_id] = [];
+              existingOpsMap[op.vendor_id].push(op.id);
+            });
+          }
 
           const opsToInsert = [];
           const opsToUpdate = [];
           const opsToDelete = [];
 
           enabledOps.forEach(op => {
-            const existingId = existingOpsMap[op.vendorId];
-            if (existingId) {
+            const existingIds = existingOpsMap[op.vendorId];
+            if (existingIds && existingIds.length > 0) {
+              const updateId = existingIds.shift();
               opsToUpdate.push({
-                id: existingId,
+                id: updateId,
                 ...commonProps,
                 vendor_id: op.vendorId,
                 price: op.price,
@@ -2728,6 +2772,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
                 fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null
               });
+              // Push any extra duplicate IDs to opsToDelete
+              existingIds.forEach(extraId => opsToDelete.push(extraId));
               delete existingOpsMap[op.vendorId];
             } else {
               opsToInsert.push({
@@ -2743,8 +2789,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             }
           });
 
-          Object.values(existingOpsMap).forEach(id => {
-            opsToDelete.push(id);
+          Object.values(existingOpsMap).forEach(idsArray => {
+            idsArray.forEach(id => opsToDelete.push(id));
           });
 
           if (opsToDelete.length > 0) {
@@ -5523,15 +5569,16 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                                 required
                                 value={opState.price}
                                 onChange={(e) => {
+                                  const val = e.target.value;
                                   setBikesOperators(prev => ({
                                     ...prev,
                                     [vendor.id]: {
                                       ...prev[vendor.id],
-                                      price: Number(e.target.value)
+                                      price: val === '' ? '' : Number(val)
                                     }
                                   }));
                                 }}
-                                placeholder="Price"
+                                placeholder="Enter price"
                                 className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
                               />
                             </div>
@@ -5543,11 +5590,19 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                                 required
                                 value={opState.deposit}
                                 onChange={(e) => {
+                                  const val = e.target.value;
                                   setBikesOperators(prev => ({
                                     ...prev,
                                     [vendor.id]: {
                                       ...prev[vendor.id],
-                                      deposit: Number(e.target.value)
+                                      deposit: val === '' ? '' : Number(val)
+                                    }
+                                  }));
+                                }}
+                                placeholder="Deposit"
+                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
+                              />
+                            </div>                       deposit: Number(e.target.value)
                                     }
                                   }));
                                 }}
@@ -7380,9 +7435,10 @@ const groupBikesByName = (list) => {
       };
     }
     grouped[key].operators.push(item);
-    if (Number(item.price) < Number(grouped[key].price)) {
-      grouped[key].price = item.price;
-    }
+  });
+  Object.values(grouped).forEach(g => {
+    const validPrices = g.operators.map(op => Number(op.price)).filter(p => p > 0);
+    g.price = validPrices.length > 0 ? Math.min(...validPrices) : 0;
   });
   return Object.values(grouped);
 };

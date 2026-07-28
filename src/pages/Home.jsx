@@ -11,6 +11,33 @@ import CountUp from '../components/CountUp';
 import { supabase } from '../supabase';
 import CustomerReelSection from '../components/CustomerReelSection';
 
+function ExpandableText({ text, maxLength = 90, className = "" }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  if (!text) return null;
+  if (text.length <= maxLength) {
+    return <p className={className}>{text}</p>;
+  }
+
+  return (
+    <div className={className}>
+      <p className="inline leading-relaxed font-medium">
+        {isExpanded ? text : `${text.slice(0, maxLength)}... `}
+      </p>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsExpanded(!isExpanded);
+        }}
+        className="inline-flex items-center gap-0.5 text-[#FF5F00] hover:text-[#FF3E00] font-black text-[10px] uppercase cursor-pointer border-none bg-transparent ml-1 underline decoration-accent/30 underline-offset-2"
+      >
+        {isExpanded ? 'Show Less ▲' : 'Read More ▼'}
+      </button>
+    </div>
+  );
+}
+
+
 
 const RaftingIcon = (props) => (
   <svg viewBox="0 0 100 100" className="w-10 h-10" stroke="#FF6B00" fill="none" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -588,6 +615,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             const mappedBikes = [];
             uniqueFeaturedNames.forEach(name => {
               const matches = allBikes.filter(b => b.name === name && Number(b.price) > 0);
+              const nLower = name.toLowerCase();
+              const catType = (nLower.includes('scooty') || nLower.includes('activa') || nLower.includes('burgman') || nLower.includes('jupiter') || nLower.includes('access') || nLower.includes('dio') || nLower.includes('vespa')) ? 'Automatic Scooter' : 'Cruiser Motorcycle';
               if (matches.length > 0) {
                 const minPrice = Math.min(...matches.map(m => Number(m.price)));
                 const bestMatch = matches.find(m => Number(m.price) === minPrice) || matches[0];
@@ -596,7 +625,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   name: name,
                   price: minPrice,
                   img: bestMatch.images && bestMatch.images[0] ? bestMatch.images[0] : '/scooty-rent.jpg',
-                  type: bestMatch.description || 'Motorcycle'
+                  type: catType,
+                  description: bestMatch.description || ''
                 });
               } else {
                 const fallbackMatch = allBikes.find(b => b.name === name);
@@ -606,7 +636,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     name: name,
                     price: Number(fallbackMatch.price) || 800,
                     img: fallbackMatch.images && fallbackMatch.images[0] ? fallbackMatch.images[0] : '/scooty-rent.jpg',
-                    type: fallbackMatch.description || 'Motorcycle'
+                    type: catType,
+                    description: fallbackMatch.description || ''
                   });
                 }
               }
@@ -1561,11 +1592,14 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 </div>
 
                 <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
-                      {bike.type}
+                      {bike.type || 'Automatic Scooter'}
                     </span>
                     <h3 className="font-bold text-base font-display text-black">{bike.name}</h3>
+                    {bike.description && (
+                      <ExpandableText text={bike.description} maxLength={85} className="text-xs text-gray-500 font-medium pt-1" />
+                    )}
                   </div>
 
                   <div className="pt-3 border-t border-black/5">

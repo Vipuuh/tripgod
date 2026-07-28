@@ -21,6 +21,32 @@ const getHash = (str) => {
   return Math.abs(hash);
 };
 
+function ExpandableText({ text, maxLength = 120, className = "" }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  if (!text) return null;
+  if (text.length <= maxLength) {
+    return <p className={className}>{text}</p>;
+  }
+
+  return (
+    <div className={className}>
+      <p className="inline leading-relaxed font-medium">
+        {isExpanded ? text : `${text.slice(0, maxLength)}... `}
+      </p>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsExpanded(!isExpanded);
+        }}
+        className="inline-flex items-center gap-0.5 text-[#FF5F00] hover:text-[#FF3E00] font-black text-[10px] uppercase cursor-pointer border-none bg-transparent ml-1.5 underline decoration-accent/30 underline-offset-2"
+      >
+        {isExpanded ? 'Show Less ▲' : 'Read More ▼'}
+      </button>
+    </div>
+  );
+}
+
 export default function BikeRent({ currentCity, openBookingModal }) {
   const [vehicles, setVehicles] = useState([]);
   const [partnersData, setPartnersData] = useState([]);
@@ -39,22 +65,33 @@ export default function BikeRent({ currentCity, openBookingModal }) {
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
-        const { data, error } = await query;
+        let { data, error } = await query;
         if (error) throw error;
+
+        if ((!data || data.length === 0) && currentCity && currentCity.id !== 'default') {
+          const fallbackRes = await supabase.from('bikes').select('*, vendors(*)');
+          if (!fallbackRes.error && fallbackRes.data) {
+            data = fallbackRes.data;
+          }
+        }
 
         if (data && data.length > 0) {
           const mapped = data
             .filter(item => Number(item.price) > 0 && item.is_active !== false) // hide ₹0 and inactive test listings
-            .map((item, idx) => ({
-              ...item,
-              price: Number(item.price),
-              deposit: Number(item.deposit || 0),
-              rating: item.rating || item.vendors?.star_rating || 4.7,
-              reviewsCount: item.reviews_count || (80 + (idx * 17) % 150),
-              upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
-              images: item.images && item.images.length > 0 ? item.images : ['/scooty-rent.jpg'],
-              type: item.name.toLowerCase().includes('scooty') || item.name.toLowerCase().includes('activa') ? 'Automatic Scooter' : 'Cruiser Motorcycle'
-            }));
+            .map((item, idx) => {
+              const nLower = item.name.toLowerCase();
+              const isScooter = nLower.includes('scooty') || nLower.includes('activa') || nLower.includes('burgman') || nLower.includes('jupiter') || nLower.includes('access') || nLower.includes('dio') || nLower.includes('vespa');
+              return {
+                ...item,
+                price: Number(item.price),
+                deposit: Number(item.deposit || 0),
+                rating: item.rating || item.vendors?.star_rating || 4.7,
+                reviewsCount: item.reviews_count || (80 + (idx * 17) % 150),
+                upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
+                images: item.images && item.images.length > 0 ? item.images : ['/scooty-rent.jpg'],
+                type: isScooter ? 'Automatic Scooter' : 'Cruiser Motorcycle'
+              };
+            });
           setVehicles(mapped);
 
           // Group by partners
@@ -477,9 +514,11 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                             <span>Docs: {pkg.documents?.join(', ') || 'DL & Aadhar'}</span>
                           </div>
 
-                          <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">
-                            {pkg.description || `Rent the reliable ${pkg.name} scooter in Rishikesh. High mileage, regular maintenance, and dual mirrors included.`}
-                          </p>
+                          <ExpandableText
+                            text={pkg.description || `Rent the reliable ${pkg.name} scooter in Rishikesh. High mileage, regular maintenance, and dual mirrors included.`}
+                            maxLength={100}
+                            className="text-xs text-slate-500 font-medium leading-relaxed"
+                          />
                         </div>
 
                         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -622,10 +661,12 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
             {/* Description */}
             <div className="space-y-3">
-              <h3 className="text-base font-bold font-display text-slate-900 uppercase">Fleet Specifications</h3>
-              <p className="text-xs sm:text-sm text-slate-650 leading-relaxed font-medium">
-                {selectedVehicle.description || `Clean, regularly serviced ${selectedVehicle.name} available for self-drive rental in Rishikesh. Perfect for sightseeing tours around Ganga beaches, temples, and cafes.`}
-              </p>
+              <h3 className="text-base font-bold font-display text-slate-900 uppercase">Fleet Specifications & Details</h3>
+              <ExpandableText
+                text={selectedVehicle.description || `Clean, regularly serviced ${selectedVehicle.name} available for self-drive rental in Rishikesh. Perfect for sightseeing tours around Ganga beaches, temples, and cafes.`}
+                maxLength={120}
+                className="text-xs sm:text-sm text-slate-650 leading-relaxed font-medium"
+              />
             </div>
 
             {/* Partner Pickup Office — Apple iOS Frosted Glass Card */}
