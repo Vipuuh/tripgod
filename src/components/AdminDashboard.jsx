@@ -2824,6 +2824,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           if (insertError) throw insertError;
         }
 
+        onClose();
+        return;
       }
 
       if (type === 'tours') {
