@@ -800,7 +800,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                         fixed_advance_amount: fixedAmt,
                         upi_discount: selectedVehicle.upi_discount,
                         vendors: selectedPartner, // Send partner info directly to checkout
-                        slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
+                        slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', 'Flexible (Anytime during shop hours)'],
                         is_closed: selectedVehicle.is_closed,
                         closed_reason: selectedVehicle.closed_reason,
                         closed_from: selectedVehicle.closed_from,
@@ -851,7 +851,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                     fixed_advance_amount: fixedAmt,
                     upi_discount: selectedVehicle.upi_discount,
                     vendors: selectedPartner,
-                    slots: ['Full Day (09:00 AM - 09:00 PM)', '24 Hours Rent'],
+                    slots: ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', 'Flexible (Anytime during shop hours)'],
                     is_closed: selectedVehicle.is_closed,
                     closed_reason: selectedVehicle.closed_reason,
                     closed_from: selectedVehicle.closed_from,
