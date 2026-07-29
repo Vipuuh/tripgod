@@ -19,7 +19,21 @@ export default function VendorImageCarousel({
       return images.filter(img => typeof img === 'string' && img.trim().length > 0);
     }
     if (typeof images === 'string' && images.trim().length > 0) {
-      return [images];
+      const trimmed = images.trim();
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.filter(img => typeof img === 'string' && img.trim().length > 0);
+          }
+        } catch (e) {
+          // ignore parse error
+        }
+      }
+      if (trimmed.includes('|||')) {
+        return trimmed.split('|||').map(s => s.trim()).filter(Boolean);
+      }
+      return [trimmed];
     }
     return [];
   }, [images]);

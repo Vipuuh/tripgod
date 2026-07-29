@@ -364,18 +364,43 @@ export default function AdminDashboard({ setRoute }) {
     }
   };
 
+  const getVendorImages = (v) => {
+    if (!v) return [];
+    if (Array.isArray(v.shop_images) && v.shop_images.length > 0) {
+      return v.shop_images.filter(Boolean);
+    }
+    const imgStr = v.shop_image;
+    if (typeof imgStr === 'string' && imgStr.trim().length > 0) {
+      const trimmed = imgStr.trim();
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed.filter(Boolean);
+        } catch (e) {}
+      }
+      if (trimmed.includes('|||')) {
+        return trimmed.split('|||').map(s => s.trim()).filter(Boolean);
+      }
+      return [trimmed];
+    }
+    return [];
+  };
+
   // Add/Edit Vendor Handler
   const handleSaveVendor = async (e) => {
     e.preventDefault();
     try {
       const currentImages = Array.isArray(newVendor.shop_images) && newVendor.shop_images.length > 0
         ? newVendor.shop_images.filter(Boolean)
-        : (newVendor.shop_image ? [newVendor.shop_image] : []);
+        : (newVendor.shop_image ? getVendorImages(newVendor) : []);
+
+      const primaryImage = currentImages[0] || newVendor.shop_image || '';
+      const fallbackShopImage = currentImages.length > 1 ? currentImages.join('|||') : primaryImage;
 
       const vendorData = {
         ...newVendor,
         shop_images: currentImages,
-        shop_image: currentImages[0] || newVendor.shop_image || '',
+        shop_image: fallbackShopImage,
         since: newVendor.since ? Number(newVendor.since) : 2020,
         bookings_count: newVendor.bookings_count ? Number(newVendor.bookings_count) : 50,
         badges: typeof newVendor.badges === 'string'
@@ -384,12 +409,27 @@ export default function AdminDashboard({ setRoute }) {
       };
 
       if (editingItem && editingItem.type === 'vendor') {
-        const { error } = await supabase.from('vendors').update(vendorData).eq('id', editingItem.data.id);
-        if (error) throw error;
+        let { error } = await supabase.from('vendors').update(vendorData).eq('id', editingItem.data.id);
+        // Fallback if 'shop_images' column is missing in Supabase schema cache
+        if (error && (error.message?.includes('shop_images') || error.code === 'PGRST204')) {
+          const { shop_images, ...fallbackData } = vendorData;
+          const { error: retryErr } = await supabase.from('vendors').update(fallbackData).eq('id', editingItem.data.id);
+          if (retryErr) throw retryErr;
+        } else if (error) {
+          throw error;
+        }
       } else {
-        const { error } = await supabase.from('vendors').insert(vendorData);
-        if (error) throw error;
+        let { error } = await supabase.from('vendors').insert(vendorData);
+        // Fallback if 'shop_images' column is missing in Supabase schema cache
+        if (error && (error.message?.includes('shop_images') || error.code === 'PGRST204')) {
+          const { shop_images, ...fallbackData } = vendorData;
+          const { error: retryErr } = await supabase.from('vendors').insert(fallbackData);
+          if (retryErr) throw retryErr;
+        } else if (error) {
+          throw error;
+        }
       }
+
       setNewVendor({
         name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
         shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
@@ -1520,12 +1560,10 @@ export default function AdminDashboard({ setRoute }) {
                               <button
                                 onClick={() => {
                                   setEditingItem({ type: 'vendor', data: v });
-                                  const imgs = Array.isArray(v.shop_images) && v.shop_images.length > 0
-                                    ? v.shop_images
-                                    : (v.shop_image ? [v.shop_image] : []);
+                                  const imgs = getVendorImages(v);
                                   setNewVendor({
                                     ...v,
-                                    shop_image: v.shop_image || (imgs[0] || ''),
+                                    shop_image: imgs[0] || v.shop_image || '',
                                     shop_images: imgs,
                                     star_rating: v.star_rating !== null && v.star_rating !== undefined ? v.star_rating : 4.5,
                                     landmark: v.landmark || '',
