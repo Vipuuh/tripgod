@@ -1160,6 +1160,8 @@ export default function AdminDashboard({ setRoute }) {
                         onChange={(e) => setNewVendor(prev => ({ ...prev, category: e.target.value }))}
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-xs focus:outline-none cursor-pointer"
                       >
+                        <option value="Multi-Service / All Services">Multi-Service (Bike, Rafting, Camping & Tours)</option>
+                        <option value="Adventure & Bike Rentals">Adventure & Bike Rentals</option>
                         <option value="Hotel">Hotel</option>
                         <option value="Rafting">Rafting</option>
                         <option value="Bungee">Bungee Jumping</option>
