@@ -447,6 +447,7 @@ export default function ActivityDetail({
                     id: op.id,
                     vendorName: op.vendors?.name || op.name || 'Local Operator',
                     shopImage: op.vendors?.shop_image || null,
+                    shopImages: op.vendors?.shop_images || (op.vendors?.shop_image ? [op.vendors.shop_image] : null),
                     starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
                     landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
                     price: Number(op.price || price),

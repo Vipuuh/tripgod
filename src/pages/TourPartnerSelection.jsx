@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { ChevronLeft, Star, MapPin, Tag } from 'lucide-react';
 
+import VendorImageCarousel from '../components/VendorImageCarousel';
+
 export default function TourPartnerSelection({ currentCity, openBookingModal, selectedTour, setSelectedTour, navigateTo }) {
   useEffect(() => {
     // If user refreshes and selectedTour is lost, redirect back to tours listing
@@ -100,12 +102,14 @@ export default function TourPartnerSelection({ currentCity, openBookingModal, se
                   {/* Header Row: logo and details */}
                   <div className="flex gap-4.5 items-start">
                     {/* Partner Logo */}
-                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 bg-slate-50 flex-shrink-0 flex items-center justify-center">
-                      {op.vendors?.shop_image ? (
-                        <img
-                          src={op.vendors.shop_image}
-                          alt={op.vendors.name}
-                          className="w-full h-full object-cover"
+                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 bg-slate-50 flex-shrink-0 flex items-center justify-center relative">
+                      {op.vendors?.shop_images || op.vendors?.shop_image ? (
+                        <VendorImageCarousel
+                          images={op.vendors?.shop_images && op.vendors.shop_images.length > 0 ? op.vendors.shop_images : [op.vendors.shop_image]}
+                          alt={op.vendors?.name || 'Vendor'}
+                          showControls={false}
+                          showDots={false}
+                          showBadgeCount={false}
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center text-center p-1 text-[#FF5722]">

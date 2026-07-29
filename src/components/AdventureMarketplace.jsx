@@ -12,6 +12,7 @@ import MarketplaceFilters from './MarketplaceFilters';
 import ReviewsSection from './ReviewsSection';
 import TrustSignals from './TrustSignals';
 import DiningAndMealPanel from './DiningAndMealPanel';
+import VendorImageCarousel from './VendorImageCarousel';
 
 // Consistent hash generator for mock data
 const getHash = (str) => {
@@ -140,7 +141,10 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                 star_rating: vendor.star_rating || 4.7,
                 address: vendor.address || 'Rishikesh, Uttarakhand',
                 landmark: vendor.landmark || 'Tapovan',
-                shop_image: vendor.shop_image || 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
+                shop_image: vendor.shop_image || (vendor.shop_images && vendor.shop_images[0]) || 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
+                shop_images: Array.isArray(vendor.shop_images) && vendor.shop_images.length > 0 
+                  ? vendor.shop_images 
+                  : [(vendor.shop_image || 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600')],
                 phone: vendor.phone || vendor.whatsapp || '+919410572857',
                 whatsapp: vendor.whatsapp || vendor.phone || '+919410572857',
                 since: mockSince,
@@ -421,24 +425,25 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     >
                       {/* Left Side: Cover Image */}
                       <div className="w-full sm:w-[220px] h-44 sm:h-auto shrink-0 relative overflow-hidden bg-slate-100">
-                        <img
-                          src={partner.shop_image}
+                        <VendorImageCarousel
+                          images={partner.shop_images && partner.shop_images.length > 0 ? partner.shop_images : [partner.shop_image]}
                           alt={partner.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
-                        {/* Overlay badges (max 2) */}
-                        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-                          {verifiedBadge && (
-                            <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
-                              Verified Partner
-                            </span>
-                          )}
-                          {partner.star_rating >= 4.8 && (
-                            <span className="bg-indigo-650/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
-                              Top Rated
-                            </span>
-                          )}
-                        </div>
+                          interval={3000}
+                        >
+                          {/* Overlay badges (max 2) */}
+                          <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
+                            {verifiedBadge && (
+                              <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
+                                Verified Partner
+                              </span>
+                            )}
+                            {partner.star_rating >= 4.8 && (
+                              <span className="bg-indigo-650/95 backdrop-blur-xs text-white text-[8px] font-black uppercase px-2 py-1 rounded shadow-md tracking-wider">
+                                Top Rated
+                              </span>
+                            )}
+                          </div>
+                        </VendorImageCarousel>
                       </div>
 
                       {/* Right Side: Information rows */}
@@ -556,20 +561,21 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
             <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xs flex flex-col text-left">
               {/* Cover Banner Image */}
               <div className="w-full h-44 sm:h-64 relative bg-slate-900 overflow-hidden">
-                <img 
-                  src={selectedPartner.shop_image} 
-                  alt={selectedPartner.name} 
-                  className="w-full h-full object-cover opacity-80" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                <div className="absolute bottom-5 left-5 right-5 text-white space-y-1">
-                  <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider shadow-md w-max inline-block">
-                    ✓ TripGod Verified Partner
-                  </span>
-                  <h2 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-white uppercase mt-1 drop-shadow-sm">
-                    {selectedPartner.name}
-                  </h2>
-                </div>
+                <VendorImageCarousel
+                  images={selectedPartner.shop_images && selectedPartner.shop_images.length > 0 ? selectedPartner.shop_images : [selectedPartner.shop_image]}
+                  alt={selectedPartner.name}
+                  interval={3000}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-5 left-5 right-5 text-white space-y-1 z-10 pointer-events-none">
+                    <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider shadow-md w-max inline-block">
+                      ✓ TripGod Verified Partner
+                    </span>
+                    <h2 className="text-2xl sm:text-4xl font-black font-display tracking-tight text-white uppercase mt-1 drop-shadow-sm">
+                      {selectedPartner.name}
+                    </h2>
+                  </div>
+                </VendorImageCarousel>
               </div>
               
               {/* Profile Details (Lower section) */}

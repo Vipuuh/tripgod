@@ -10,6 +10,7 @@ import { supabase } from '../supabase';
 import RetargetingTab from './RetargetingTab';
 import ReviewsSection from './ReviewsSection';
 import WhatsAppSupportInbox from './WhatsAppSupportInbox';
+import VendorImageCarousel from './VendorImageCarousel';
 
 const getSimpleBookingId = (id) => {
   if (!id) return 'TG-000000';
@@ -125,7 +126,7 @@ export default function AdminDashboard({ setRoute }) {
   const [newCitySlug, setNewCitySlug] = useState('');
   const [newVendor, setNewVendor] = useState({
     name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
-    shop_image: '', star_rating: 4.5, landmark: '',
+    shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
     since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
     reporting_time: '', parking_details: '', badges: '', short_highlight: ''
   });
@@ -367,8 +368,14 @@ export default function AdminDashboard({ setRoute }) {
   const handleSaveVendor = async (e) => {
     e.preventDefault();
     try {
+      const currentImages = Array.isArray(newVendor.shop_images) && newVendor.shop_images.length > 0
+        ? newVendor.shop_images.filter(Boolean)
+        : (newVendor.shop_image ? [newVendor.shop_image] : []);
+
       const vendorData = {
         ...newVendor,
+        shop_images: currentImages,
+        shop_image: currentImages[0] || newVendor.shop_image || '',
         since: newVendor.since ? Number(newVendor.since) : 2020,
         bookings_count: newVendor.bookings_count ? Number(newVendor.bookings_count) : 50,
         badges: typeof newVendor.badges === 'string'
@@ -385,7 +392,7 @@ export default function AdminDashboard({ setRoute }) {
       }
       setNewVendor({
         name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
-        shop_image: '', star_rating: 4.5, landmark: '',
+        shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
         since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
         reporting_time: '', parking_details: '', badges: '', short_highlight: ''
       });
@@ -1177,27 +1184,125 @@ export default function AdminDashboard({ setRoute }) {
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Shop Photo</label>
-                    {newVendor.shop_image && (
-                      <img src={newVendor.shop_image} alt="Shop" className="w-20 h-20 rounded-xl object-cover border border-slate-800 mb-2" />
+                  <div className="space-y-3 bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-[10px] font-black uppercase text-gray-300 tracking-wider">
+                        Shop Photos / Gallery (Multiple Photos Supported)
+                      </label>
+                      <span className="text-[9px] font-bold text-[#FF5F00]">
+                        {(newVendor.shop_images || []).length} Photos Added
+                      </span>
+                    </div>
+
+                    {/* Live Carousel Preview inside modal */}
+                    {((newVendor.shop_images && newVendor.shop_images.length > 0) || newVendor.shop_image) && (
+                      <div className="space-y-1.5">
+                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                          <Sparkles size={12} className="text-[#FF5F00]" /> Live Auto-Slideshow Preview (3s & Swipe)
+                        </div>
+                        <div className="h-44 w-full rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                          <VendorImageCarousel
+                            images={newVendor.shop_images && newVendor.shop_images.length > 0 ? newVendor.shop_images : [newVendor.shop_image]}
+                            alt={newVendor.name || 'Shop Preview'}
+                            interval={3000}
+                          />
+                        </div>
+                      </div>
                     )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const ext = file.name.split('.').pop();
-                        const randName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
-                        const filePath = `vendors/${randName}`;
-                        const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
-                        if (uploadError) { alert('Upload failed: ' + uploadError.message); return; }
-                        const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath);
-                        setNewVendor(prev => ({ ...prev, shop_image: urlData.publicUrl }));
-                      }}
-                      className="text-slate-300 text-xs w-full file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-[#FF5F00]/10 file:text-[#FF5F00] hover:file:bg-[#FF5F00]/20 cursor-pointer"
-                    />
+
+                    {/* Image Thumbnails List */}
+                    {newVendor.shop_images && newVendor.shop_images.length > 0 && (
+                      <div className="grid grid-cols-4 gap-2 pt-1">
+                        {newVendor.shop_images.map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                            <img src={imgUrl} alt={`Photo ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                            {imgIdx === 0 ? (
+                              <span className="absolute top-1 left-1 bg-[#FF5F00] text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase shadow">
+                                Main
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated = [...newVendor.shop_images];
+                                  const [selected] = updated.splice(imgIdx, 1);
+                                  updated.unshift(selected);
+                                  setNewVendor(prev => ({
+                                    ...prev,
+                                    shop_images: updated,
+                                    shop_image: updated[0]
+                                  }));
+                                }}
+                                className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 bg-black/80 hover:bg-emerald-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase transition-all cursor-pointer"
+                              >
+                                Set Main
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = newVendor.shop_images.filter((_, idx) => idx !== imgIdx);
+                                setNewVendor(prev => ({
+                                  ...prev,
+                                  shop_images: updated,
+                                  shop_image: updated[0] || ''
+                                }));
+                              }}
+                              className="absolute top-1 right-1 p-1 bg-red-600/90 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all cursor-pointer shadow"
+                            >
+                              <Trash2 size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Multi-file Upload Input */}
+                    <div className="pt-1">
+                      <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-slate-800 hover:border-[#FF5F00]/50 rounded-xl cursor-pointer bg-slate-950/40 hover:bg-slate-900 transition-all">
+                        <div className="flex items-center gap-2 text-slate-300">
+                          <PlusCircle size={16} className="text-[#FF5F00]" />
+                          <span className="text-xs font-bold">Choose Photos (Select Multiple)</span>
+                        </div>
+                        <span className="text-[9px] text-slate-500 mt-0.5 font-medium">Select multiple images at once</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length === 0) return;
+                            const uploadedUrls = [];
+                            for (const file of files) {
+                              const ext = file.name.split('.').pop();
+                              const randName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
+                              const filePath = `vendors/${randName}`;
+                              const { error: uploadError } = await supabase.storage.from('media').upload(filePath, file);
+                              if (!uploadError) {
+                                const { data: urlData } = supabase.storage.from('media').getPublicUrl(filePath);
+                                if (urlData?.publicUrl) {
+                                  uploadedUrls.push(urlData.publicUrl);
+                                }
+                              }
+                            }
+                            if (uploadedUrls.length > 0) {
+                              setNewVendor(prev => {
+                                const existing = Array.isArray(prev.shop_images) && prev.shop_images.length > 0 
+                                  ? prev.shop_images 
+                                  : (prev.shop_image ? [prev.shop_image] : []);
+                                const combined = [...existing, ...uploadedUrls];
+                                return {
+                                  ...prev,
+                                  shop_images: combined,
+                                  shop_image: combined[0] || ''
+                                };
+                              });
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1347,7 +1452,7 @@ export default function AdminDashboard({ setRoute }) {
                         onClick={() => {
                           setNewVendor({
                             name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
-                            shop_image: '', star_rating: 4.5, landmark: '',
+                            shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
                             since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
                             reporting_time: '', parking_details: '', badges: '', short_highlight: ''
                           });
@@ -1415,9 +1520,13 @@ export default function AdminDashboard({ setRoute }) {
                               <button
                                 onClick={() => {
                                   setEditingItem({ type: 'vendor', data: v });
+                                  const imgs = Array.isArray(v.shop_images) && v.shop_images.length > 0
+                                    ? v.shop_images
+                                    : (v.shop_image ? [v.shop_image] : []);
                                   setNewVendor({
                                     ...v,
-                                    shop_image: v.shop_image || '',
+                                    shop_image: v.shop_image || (imgs[0] || ''),
+                                    shop_images: imgs,
                                     star_rating: v.star_rating !== null && v.star_rating !== undefined ? v.star_rating : 4.5,
                                     landmark: v.landmark || '',
                                     since: v.since || 2020,
