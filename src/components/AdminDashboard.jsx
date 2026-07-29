@@ -2315,6 +2315,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       setFormData({ 
         ...data,
         original_price: data.original_price !== null && data.original_price !== undefined ? data.original_price : '',
+        cancellation_policy: (data.cancellation_policy && data.cancellation_policy.trim() !== '') ? data.cancellation_policy : 'Free Cancellation up to 24 Hours',
         commission_percentage: data.commission_percentage !== null && data.commission_percentage !== undefined ? data.commission_percentage : '',
         is_limited_offer: !!data.is_limited_offer,
         rating: data.rating !== null && data.rating !== undefined ? data.rating : 4.5,
@@ -2420,7 +2421,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         is_limited_offer: false,
         images: [],
         whatsapp_number: '',
-        cancellation_policy: '100% refund up to 24 hours prior to arrival.',
+        cancellation_policy: 'Free Cancellation up to 24 Hours',
         payment_mode: 'commission_advance',
         fixed_advance_amount: 0,
         upi_discount: null,
@@ -2598,7 +2599,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           images: formData.images || [],
           inclusions: formData.inclusions || [],
           exclusions: formData.exclusions || [],
-          cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
+          cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
           activity_type: formData.activity_type || 'rafting',
           payment_mode: formData.payment_mode || 'commission_advance',
           commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
@@ -2867,7 +2868,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           pickup_drop: formData.pickup_drop || { pickup_point: '', drop_point: '', reporting_time: '', coordinator_number: '' },
           landmarks_data: formData.landmarks_data || [],
           faq_data: formData.faq_data || [],
-          cancellation_policy: formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.',
+          cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
           images: formData.images || [],
           payment_mode: formData.payment_mode || 'commission_advance',
           commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
@@ -2979,6 +2980,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         price: Number(formData.price),
         whatsapp_number: formData.whatsapp_number || null,
         images: formData.images || [],
+        cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
         is_closed: !!formData.is_closed,
         closed_reason: formData.closed_reason || '',
         closed_from: formData.closed_from || null,
@@ -2996,7 +2998,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.maps_link = formData.maps_link || '';
         submitData.check_in = formData.check_in || '12:00 PM';
         submitData.check_out = formData.check_out || '11:00 AM';
-        submitData.cancellation_policy = formData.cancellation_policy || '100% refund up to 24 hours prior to arrival.';
+        submitData.cancellation_policy = formData.cancellation_policy || 'Free Cancellation up to 24 Hours';
         submitData.amenities = formData.amenities || {};
         submitData.rules = formData.rules || {};
         submitData.landmarks = formData.landmarks || [];
@@ -7266,9 +7268,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Cancellation Policy</label>
         <input
           type="text"
-          required
-          value={formData.cancellation_policy || ''}
+          value={formData.cancellation_policy !== undefined && formData.cancellation_policy !== null ? formData.cancellation_policy : 'Free Cancellation up to 24 Hours'}
           onChange={(e) => setFormData(prev => ({ ...prev, cancellation_policy: e.target.value }))}
+          placeholder="Free Cancellation up to 24 Hours"
           className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
         />
       </div>

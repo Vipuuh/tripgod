@@ -213,8 +213,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const totalPrice = rawTotalPrice + taxes;
   
   // Calculate dynamic advance amount
+  const flatAdvanceTotal = isBikeRent ? (fixedAdvanceAmount * guests * rentalDays) : fixedAdvanceAmount;
   const calculatedAdvance = paymentMode === 'fixed_advance'
-    ? Math.min(fixedAdvanceAmount, totalPrice)
+    ? Math.min(flatAdvanceTotal, totalPrice)
     : (paymentMode === 'full_payment'
         ? totalPrice
         : Math.round(totalPrice * (commissionPercentage / 100)));
@@ -410,7 +411,7 @@ My payment ID is verified. Please confirm my slots.`;
             amount_paid: finalAmountToPay,
             remaining_amount: remainingPayment,
             commission_earned: paymentMode === 'fixed_advance'
-              ? Math.min(fixedAdvanceAmount, totalPrice)
+              ? Math.min(calculatedAdvance, totalPrice)
               : Math.round(totalPrice * (commissionPercentage / 100))
           };
           supabase.from('bookings').insert([bookingInsertData]).then(({ error }) => {

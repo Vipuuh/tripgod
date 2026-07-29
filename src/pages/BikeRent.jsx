@@ -774,7 +774,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                     <div className="space-y-1 text-left">
                       <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
                       <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                        {paymentTermsLabel} Free cancellation applies up to 24 hours prior.
+                        {paymentTermsLabel} {selectedVehicle.cancellation_policy || 'Free Cancellation up to 24 Hours.'}
                       </p>
                     </div>
                   </div>
