@@ -28,6 +28,8 @@ const getSimpleBookingId = (id) => {
     hash = hash & hash;
   }
   return `TG-${String(Math.abs(hash)).slice(-6)}`;
+};
+
 const isVendorMultiService = (v) => {
   if (!v || !v.category) return false;
   const cat = v.category.toLowerCase();
