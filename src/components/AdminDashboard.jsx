@@ -28,6 +28,15 @@ const getSimpleBookingId = (id) => {
     hash = hash & hash;
   }
   return `TG-${String(Math.abs(hash)).slice(-6)}`;
+const isVendorMultiService = (v) => {
+  if (!v || !v.category) return false;
+  const cat = v.category.toLowerCase();
+  return (
+    cat.includes('multi') || 
+    cat.includes('all services') || 
+    cat.includes('all-in-one') || 
+    cat.includes('adventure & bike')
+  );
 };
 
 function AdminExpandableText({ text, maxLength = 100, className = "" }) {
@@ -2561,7 +2570,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       // Set defaults for empty forms
       const defaults = {
         city_id: cities.length > 0 ? cities[0].id : '',
-        vendor_id: vendors.length > 0 ? vendors.filter(v => v.category === (type === 'bikes' ? 'Bike Rental' : type === 'hotels' ? 'Hotel' : ['rafting', 'adventures'].includes(type) ? 'Rafting' : 'Tour'))[0]?.id || vendors[0]?.id : '',
+        vendor_id: vendors.length > 0 ? (vendors.find(v => isVendorMultiService(v) || v.category === (type === 'bikes' ? 'Bike Rental' : type === 'hotels' ? 'Hotel' : ['rafting', 'adventures'].includes(type) ? 'Rafting' : 'Tour'))?.id || vendors[0]?.id) : '',
         name: '',
         description: '',
         price: 0,
@@ -5675,13 +5684,13 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
             
             <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
-              {vendors.filter(v => v.category === 'Bike Rental').length === 0 ? (
+              {vendors.filter(v => v.category === 'Bike Rental' || isVendorMultiService(v) || (v.category && v.category.toLowerCase().includes('bike'))).length === 0 ? (
                 <div className="p-4 text-center text-slate-500 font-semibold italic text-[11px]">
-                  No vendors found with category 'Bike Rental'. Please add a vendor in the Vendors tab first!
+                  No vendors found for Bike Rental. Please add a vendor in the Vendors tab first!
                 </div>
               ) : (
                 vendors
-                  .filter(v => v.category === 'Bike Rental')
+                  .filter(v => v.category === 'Bike Rental' || isVendorMultiService(v) || (v.category && v.category.toLowerCase().includes('bike')))
                   .map(vendor => {
                   const opState = bikesOperators[vendor.id] || { enabled: false, price: '', deposit: 0, pickup_location: '' };
                   return (
@@ -7156,7 +7165,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             
             <div className="bg-slate-950 border border-slate-900 rounded-2xl overflow-hidden divide-y divide-slate-900">
               {vendors
-                .filter(v => v.category === 'Tour')
+                .filter(v => v.category === 'Tour' || v.category === 'Tour Package' || isVendorMultiService(v) || (v.category && v.category.toLowerCase().includes('tour')))
                 .map(vendor => {
                   const opState = toursOperators[vendor.id] || { enabled: false, price: '', original_price: '', commission_percentage: '', whatsapp_number: '' };
                   return (
@@ -7323,7 +7332,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                     </div>
                   );
                 })}
-              {vendors.filter(v => v.category === 'Tour').length === 0 && (
+              {vendors.filter(v => v.category === 'Tour' || v.category === 'Tour Package' || isVendorMultiService(v) || (v.category && v.category.toLowerCase().includes('tour'))).length === 0 && (
                 <div className="p-4 text-center text-xs text-slate-500">
                   No vendors found with category "Tour Package". Please create one first.
                 </div>
@@ -7632,27 +7641,17 @@ const getVendorsForType = (activityType, vendorsList) => {
   if (!vendorsList || vendorsList.length === 0) return [];
   const typeLower = (activityType || '').toLowerCase();
   
-  if (typeLower === 'rafting') {
-    return vendorsList.filter(v => v.category === 'Rafting');
-  }
-  if (typeLower === 'camping') {
-    return vendorsList.filter(v => v.category === 'Camping');
-  }
-  if (typeLower === 'bungee') {
-    return vendorsList.filter(v => v.category === 'Bungee' || v.category === 'Bungee Jumping');
-  }
-  if (typeLower === 'zipline') {
-    return vendorsList.filter(v => v.category === 'Zipline' || v.category === 'Ganga Zipline');
-  }
-  if (typeLower === 'swing') {
-    return vendorsList.filter(v => v.category === 'Giant Swing' || v.category === 'Swing');
-  }
-  if (typeLower === 'paragliding') {
-    return vendorsList.filter(v => v.category === 'Paragliding');
-  }
-  
-  const fallback = vendorsList.filter(v => ['Rafting', 'Camping'].includes(v.category));
-  return fallback.length > 0 ? fallback : vendorsList;
+  return vendorsList.filter(v => {
+    if (isVendorMultiService(v)) return true;
+    const cat = (v.category || '').toLowerCase();
+    if (typeLower === 'rafting') return cat.includes('rafting') || cat.includes('adventure');
+    if (typeLower === 'camping') return cat.includes('camping') || cat.includes('adventure');
+    if (typeLower === 'bungee') return cat.includes('bungee');
+    if (typeLower === 'zipline') return cat.includes('zipline');
+    if (typeLower === 'swing') return cat.includes('swing');
+    if (typeLower === 'paragliding') return cat.includes('paragliding');
+    return cat.includes('rafting') || cat.includes('camping');
+  });
 };
 
 
