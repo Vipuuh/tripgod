@@ -577,7 +577,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
         {/* VIEW 3: VEHICLE DETAILS VIEW */}
         {selectedVehicle && (
-          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="pb-24 pt-6 max-w-4xl mx-auto px-4 sm:px-6 space-y-6 text-left">
+          <motion.div key="detail" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="pb-32 pt-6 max-w-4xl mx-auto px-4 sm:px-6 space-y-6 text-left">
             
             <button
               onClick={() => navigateToVehicle(null)}
@@ -822,7 +822,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
             })()}
 
             {/* Mobile Sticky Booking Bar */}
-            <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-10px_35px_rgba(0,0,0,0.12)]">
+            <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200/90 pt-3.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-12px_40px_rgba(0,0,0,0.15)] after:content-[''] after:absolute after:top-full after:left-0 after:right-0 after:h-40 after:bg-white">
               <div>
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Daily Rent</span>
                 <div className="flex items-baseline gap-1.5 mt-0.5">
