@@ -175,6 +175,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               const mockInstructions = getActivityInstructions(activityType, vendor.name, item.meeting_instructions, vendor.meeting_instructions);
               const mockReportingTime = vendor.reporting_time || '15 mins before slot';
               const mockParking = vendor.parking_details || 'Free customer parking available';
+              const mockMapsLink = vendor.google_maps_link || vendor.maps_link || item.google_maps_link || item.maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.name + ' Rishikesh')}`;
               const getCategoryHighlightFallback = (type, vName) => {
                 switch (type) {
                   case 'rafting': return `${vName} • Certified River Crew & Equipment`;
