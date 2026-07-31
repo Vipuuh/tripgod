@@ -93,10 +93,43 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
           query = query.eq('city_id', currentCity.id);
         }
 
-        const { data, error } = await query;
+        let { data, error } = await query;
         if (error) throw error;
 
+        // Fallback: If filtering by currentCity returned no results, retry without city_id constraint
+        if ((!data || data.length === 0) && currentCity && currentCity.id !== 'default') {
+          let fallbackQuery = supabase.from('rafting').select('*, vendors(*)');
+          if (activityType === 'rafting') {
+            fallbackQuery = fallbackQuery.or('activity_type.eq.rafting,activity_type.is.null');
+          } else {
+            fallbackQuery = fallbackQuery.eq('activity_type', activityType);
+          }
+          const fallbackRes = await fallbackQuery;
+          if (!fallbackRes.error && fallbackRes.data) {
+            data = fallbackRes.data;
+          }
+        }
+
         if (data && data.length > 0) {
+          // Check for any items missing vendor join and fetch them
+          const missingVendorIds = [...new Set(data.filter(item => !item.vendors && item.vendor_id).map(item => item.vendor_id))];
+          if (missingVendorIds.length > 0) {
+            const { data: fetchedVendors } = await supabase
+              .from('vendors')
+              .select('*')
+              .in('id', missingVendorIds);
+
+            if (fetchedVendors && fetchedVendors.length > 0) {
+              const vMap = {};
+              fetchedVendors.forEach(v => { vMap[v.id] = v; });
+              data.forEach(item => {
+                if (!item.vendors && item.vendor_id && vMap[item.vendor_id]) {
+                  item.vendors = vMap[item.vendor_id];
+                }
+              });
+            }
+          }
+
           setRawPackages(data);
 
           // Group by vendor

@@ -3360,11 +3360,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </div>
         )}
 
-        {(!['bikes', 'tours'].includes(type) || ['rafting', 'adventures'].includes(type)) && (
+        {type === 'hotels' && (
           <>
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                {['rafting', 'adventures'].includes(type) ? 'Fallback Showcase Price (₹)' : 'Price (₹)'}
+                Price (₹)
               </label>
               <input
                 type="number"
@@ -3372,20 +3372,20 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 value={formData.price === undefined || formData.price === null ? '' : formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value === '' ? '' : Number(e.target.value) }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder={['rafting', 'adventures'].includes(type) ? 'e.g. 1290' : ''}
+                placeholder=""
               />
             </div>
 
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                {['rafting', 'adventures'].includes(type) ? 'Showcase Original Price (₹)' : 'Original Price (₹ - Strikethrough)'}
+                Original Price (₹ - Strikethrough)
               </label>
               <input
                 type="number"
                 value={formData.original_price !== null && formData.original_price !== undefined ? formData.original_price : ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, original_price: e.target.value === '' ? null : Number(e.target.value) }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                placeholder={['rafting', 'adventures'].includes(type) ? 'e.g. 1800' : 'e.g. 2999 (Leave blank if no discount)'}
+                placeholder="e.g. 2999 (Leave blank if no discount)"
               />
             </div>
           </>
@@ -4960,7 +4960,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           </div>
 
           {/* ----------------- CAMPING SPECIFIC CONFIGURATION (Categories, Rules, Food, Inventory) ----------------- */}
-          {(['rafting', 'adventures', 'camping'].includes(type) || formData.activity_type === 'camping' || formData.rules?.room_categories?.length > 0) && (
+          {(type === 'camping' || formData.activity_type === 'camping') && (
             <div className="space-y-4 pt-4 border-t border-slate-900">
               
               {/* Tent Inventory & Occupancy Limits */}
