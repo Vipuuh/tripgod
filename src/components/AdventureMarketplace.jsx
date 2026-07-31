@@ -80,54 +80,53 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
     const fetchData = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('rafting')
-          .select('*, vendors(*)');
+        // Query rafting table with select('*') first to avoid FK join schema cache errors
+        let { data, error } = await supabase.from('rafting').select('*');
 
-        if (activityType === 'rafting') {
-          query = query.or('activity_type.eq.rafting,activity_type.eq.Rafting,activity_type.is.null');
-        } else {
-          query = query.or(`activity_type.eq.${activityType},activity_type.eq.${activityType.toLowerCase()}`);
-        }
-
-        if (currentCity && currentCity.id !== 'default') {
-          query = query.eq('city_id', currentCity.id);
-        }
-
-        let { data, error } = await query;
         if (error || !data || data.length === 0) {
-          // Fallback: fetch without city or activity_type filter if initial query was empty
-          let fallbackQuery = supabase.from('rafting').select('*, vendors(*)');
-          const fallbackRes = await fallbackQuery;
-          if (!fallbackRes.error && fallbackRes.data) {
-            data = fallbackRes.data;
+          setPartnersData([]);
+          setRawPackages([]);
+          return;
+        }
+
+        // Filter by activityType in JS (case-insensitive with fallback)
+        let filteredData = data;
+        if (activityType) {
+          const act = activityType.toLowerCase();
+          const matched = data.filter(item => {
+            if (!item.activity_type) return act === 'rafting';
+            return item.activity_type.toLowerCase() === act;
+          });
+          if (matched.length > 0) {
+            filteredData = matched;
           }
         }
 
-        if (data && data.length > 0) {
-          // Check for any items missing vendor join and fetch them
-          const missingVendorIds = [...new Set(data.filter(item => !item.vendors && item.vendor_id).map(item => item.vendor_id))];
-          if (missingVendorIds.length > 0) {
-            const { data: fetchedVendors } = await supabase
-              .from('vendors')
-              .select('*')
-              .in('id', missingVendorIds);
+        // Fetch associated vendor records from vendors table
+        const vendorIds = [...new Set(filteredData.map(item => item.vendor_id).filter(Boolean))];
+        let vendorsMap = {};
+        if (vendorIds.length > 0) {
+          const { data: fetchedVendors } = await supabase
+            .from('vendors')
+            .select('*')
+            .in('id', vendorIds);
 
-            if (fetchedVendors && fetchedVendors.length > 0) {
-              const vMap = {};
-              fetchedVendors.forEach(v => { vMap[v.id] = v; });
-              data.forEach(item => {
-                if (!item.vendors && item.vendor_id && vMap[item.vendor_id]) {
-                  item.vendors = vMap[item.vendor_id];
-                }
-              });
-            }
+          if (fetchedVendors && fetchedVendors.length > 0) {
+            fetchedVendors.forEach(v => { vendorsMap[v.id] = v; });
           }
+        }
 
-          setRawPackages(data);
+        filteredData.forEach(item => {
+          if (item.vendor_id && vendorsMap[item.vendor_id]) {
+            item.vendors = vendorsMap[item.vendor_id];
+          }
+        });
 
-          // Group by vendor
-          const partnersMap = {};
-          data.forEach(item => {
+        setRawPackages(filteredData);
+
+        // Group by vendor
+        const partnersMap = {};
+        filteredData.forEach(item => {
             let vendor = item.vendors;
             if (!vendor) {
               // Construct fallback vendor object if item.vendors join is null
