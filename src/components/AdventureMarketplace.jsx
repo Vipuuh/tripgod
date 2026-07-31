@@ -232,11 +232,6 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
           });
 
           setPartnersData(Object.values(partnersMap));
-        } else {
-          // Empty state fallbacks
-          setPartnersData([]);
-          setRawPackages([]);
-        }
       } catch (err) {
         console.error(`Failed to fetch ${activityType} marketplace data:`, err);
       } finally {
