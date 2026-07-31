@@ -702,7 +702,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             </span>
                             {pkg.rooms_left !== undefined && pkg.rooms_left !== null && Number(pkg.rooms_left) > 0 && Number(pkg.rooms_left) <= 5 && (
                               <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded font-black animate-pulse">
-                                🔥 Only {pkg.rooms_left} Tents Left!
+                                🔥 Only {pkg.rooms_left} {activityType === 'camping' ? 'Tents' : 'Slots'} Left!
                               </span>
                             )}
                           </div>
@@ -1000,14 +1000,18 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             <Users size={15} />
                           </div>
                           <div>
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Select Guests & Tents Calculation</h3>
-                            <p className="text-[10px] text-slate-400 font-semibold">Tents automatically calculated (Max {maxPerTent} guests / tent)</p>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">
+                              {activityType === 'camping' ? 'Select Guests & Tents Calculation' : 'Select Guests'}
+                            </h3>
+                            <p className="text-[10px] text-slate-400 font-semibold">
+                              {activityType === 'camping' ? `Tents automatically calculated (Max ${maxPerTent} guests / tent)` : 'Select total number of guests for booking'}
+                            </p>
                           </div>
                         </div>
 
                         {tentsLeft <= 5 && (
                           <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full animate-pulse">
-                            🔥 Only {tentsLeft} Tents Left!
+                            🔥 Only {tentsLeft} {activityType === 'camping' ? 'Tents' : 'Slots'} Left!
                           </span>
                         )}
                       </div>
@@ -1417,7 +1421,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   })()}
 
                   {/* Mobile Sticky Booking Bar */}
-                  <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3 px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+                  <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-10px_35px_rgba(0,0,0,0.12)]">
                     <div>
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Total Price</span>
                       <div className="flex items-baseline gap-1.5 mt-0.5">

@@ -822,7 +822,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
             })()}
 
             {/* Mobile Sticky Booking Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 py-3 px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+            <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-10px_35px_rgba(0,0,0,0.12)]">
               <div>
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Daily Rent</span>
                 <div className="flex items-baseline gap-1.5 mt-0.5">
