@@ -8,6 +8,7 @@ export default function VendorImageCarousel({
   className = 'w-full h-full relative overflow-hidden bg-slate-900 group',
   imageClassName = 'w-full h-full object-cover',
   interval = 3000,
+  autoSlide = false,
   showControls = true,
   showDots = true,
   showBadgeCount = true,
@@ -50,9 +51,9 @@ export default function VendorImageCarousel({
     }
   }, [normalizedImages, currentIndex]);
 
-  // Auto-advance slideshow every 3 seconds (or specified interval)
+  // Auto-advance slideshow (only if autoSlide is true)
   useEffect(() => {
-    if (normalizedImages.length <= 1 || isHovered || isDragging) return;
+    if (!autoSlide || normalizedImages.length <= 1 || isHovered || isDragging) return;
 
     const timer = setInterval(() => {
       setDirection(1);
@@ -60,7 +61,7 @@ export default function VendorImageCarousel({
     }, interval);
 
     return () => clearInterval(timer);
-  }, [normalizedImages.length, isHovered, isDragging, interval]);
+  }, [autoSlide, normalizedImages.length, isHovered, isDragging, interval]);
 
   const handleNext = (e) => {
     if (e) e.stopPropagation();

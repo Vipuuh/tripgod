@@ -143,8 +143,31 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               const hVal = getHash(vendor.name);
               const mockSince = vendor.since || ((hVal % 8) + 2016);
               const mockBookings = vendor.bookings_count || ((hVal % 180) + 120);
-              const mockMapsLink = vendor.google_maps_link || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.name + ' Rishikesh')}`;
-              const mockInstructions = vendor.meeting_instructions || `Please report at ${vendor.name} office. Bring extra clothes and valid ID.`;
+              const getActivityInstructions = (type, vName, itemInst, vendorInst) => {
+                if (itemInst && itemInst.trim()) return itemInst;
+                const act = (type || '').toLowerCase();
+                if (vendorInst && vendorInst.trim()) {
+                  const isVehicleInst = vendorInst.toLowerCase().includes('driving') || vendorInst.toLowerCase().includes('licence') || vendorInst.toLowerCase().includes('license') || vendorInst.toLowerCase().includes('vehicle');
+                  if (!isVehicleInst || act.includes('bike') || act.includes('scoot') || act.includes('rent')) {
+                    return vendorInst;
+                  }
+                }
+                if (act.includes('rafting') || act.includes('kayaking')) {
+                  return `Please report at raft desk 15 mins before slot time. Wear comfortable synthetic/nylon clothes. Changing room & dry bags provided.`;
+                }
+                if (act.includes('camping')) {
+                  return `Check-in starts at 12:00 PM. Carry personal toiletries, valid photo ID, and warm clothing for evening bonfire.`;
+                }
+                if (act.includes('bungee') || act.includes('swing') || act.includes('zipline')) {
+                  return `Please report 30 mins prior to slot for safety harness & briefing. Body weight limits apply (35kg - 120kg).`;
+                }
+                if (act.includes('paragliding')) {
+                  return `Please report 20 mins prior to slot time. Wear sturdy sports shoes and comfortable clothing.`;
+                }
+                return `Please report at ${vName} office 15 mins before slot time with your booking confirmation voucher.`;
+              };
+
+              const mockInstructions = getActivityInstructions(activityType, vendor.name, item.meeting_instructions, vendor.meeting_instructions);
               const mockReportingTime = vendor.reporting_time || '15 mins before slot';
               const mockParking = vendor.parking_details || 'Free customer parking available';
               const getCategoryHighlightFallback = (type, vName) => {
