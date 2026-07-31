@@ -71,7 +71,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
   const [activeFaq, setActiveFaq] = useState(null);
 
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(null);
-  const [numAdults, setNumAdults] = useState(2);
+  const [numAdults, setNumAdults] = useState(1);
   const [numKids, setNumKids] = useState(0);
   const [selectedMeals, setSelectedMeals] = useState({});
 
@@ -278,7 +278,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
   const navigateToPackage = (pkg) => {
     setSelectedPackage(pkg);
     setSelectedRoomIdx(null);
-    setNumAdults(2);
+    setNumAdults(1);
     setNumKids(0);
     setSelectedMeals({});
     setCurrentImgIdx(0);
@@ -1424,7 +1424,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         <span className="text-xl font-black text-slate-900 leading-none">₹{totalPrice.toLocaleString('en-IN')}</span>
                       </div>
                       <span className="text-[9px] text-slate-400 font-bold leading-none block mt-0.5">
-                        {activityType === 'camping' ? `${calculatedTents} Tent(s) · ${totalGuests} Guest(s)` : 'per person • direct voucher'}
+                        {activityType === 'camping' 
+                          ? `${calculatedTents} Tent(s) · ${totalGuests} Guest(s)` 
+                          : (totalGuests > 1 ? `${totalGuests} Guests (₹${activeRoomPrice}/person)` : 'per person • direct voucher')}
                       </span>
                     </div>
 
