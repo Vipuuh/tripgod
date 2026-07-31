@@ -84,9 +84,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
           .select('*, vendors(*)');
 
         if (activityType === 'rafting') {
-          query = query.or('activity_type.eq.rafting,activity_type.is.null');
+          query = query.or('activity_type.eq.rafting,activity_type.eq.Rafting,activity_type.is.null');
         } else {
-          query = query.eq('activity_type', activityType);
+          query = query.or(`activity_type.eq.${activityType},activity_type.eq.${activityType.toLowerCase()}`);
         }
 
         if (currentCity && currentCity.id !== 'default') {
@@ -94,16 +94,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
         }
 
         let { data, error } = await query;
-        if (error) throw error;
-
-        // Fallback: If filtering by currentCity returned no results, retry without city_id constraint
-        if ((!data || data.length === 0) && currentCity && currentCity.id !== 'default') {
+        if (error || !data || data.length === 0) {
+          // Fallback: fetch without city or activity_type filter if initial query was empty
           let fallbackQuery = supabase.from('rafting').select('*, vendors(*)');
-          if (activityType === 'rafting') {
-            fallbackQuery = fallbackQuery.or('activity_type.eq.rafting,activity_type.is.null');
-          } else {
-            fallbackQuery = fallbackQuery.eq('activity_type', activityType);
-          }
           const fallbackRes = await fallbackQuery;
           if (!fallbackRes.error && fallbackRes.data) {
             data = fallbackRes.data;
@@ -135,8 +128,21 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
           // Group by vendor
           const partnersMap = {};
           data.forEach(item => {
-            const vendor = item.vendors;
-            if (!vendor) return;
+            let vendor = item.vendors;
+            if (!vendor) {
+              // Construct fallback vendor object if item.vendors join is null
+              const vName = item.vendor_name || item.operator_name || (item.vendor_id ? `Operator ${item.vendor_id}` : 'Verified River Crew');
+              const vId = item.vendor_id || `v-${getHash(vName)}`;
+              vendor = {
+                id: vId,
+                name: vName,
+                star_rating: item.rating || 4.7,
+                address: item.address || item.pickup_location || 'Rishikesh, Uttarakhand',
+                landmark: item.landmark || 'Tapovan',
+                phone: item.whatsapp_number || item.phone || '+919410572857',
+                whatsapp: item.whatsapp_number || '+919410572857'
+              };
+            }
 
             if (!partnersMap[vendor.id]) {
               // Generate mock data consistent with vendor id/name if missing
@@ -336,31 +342,32 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
     return { closed: false };
   };
 
-  // Filter application
+  // Filter application connected to vendor backend landmark fields
   const getFilteredPartners = () => {
     let list = [...partnersData];
     if (!activeFilter) return list;
 
-    switch (activeFilter) {
-      case 'most_booked':
-        return list.sort((a, b) => b.bookings_count - a.bookings_count);
-      case 'best_rated':
-        return list.sort((a, b) => b.star_rating - a.star_rating);
-      case 'lowest_price':
-        return list.sort((a, b) => {
-          const aMin = a.packages.length > 0 ? Math.min(...a.packages.map(p => p.price)) : 999999;
-          const bMin = b.packages.length > 0 ? Math.min(...b.packages.map(p => p.price)) : 999999;
-          return aMin - bMin;
-        });
-      case 'nearest':
-        return list.filter(p => p.landmark.toLowerCase().includes('tapovan') || p.landmark.toLowerCase().includes('laxman'));
-      case 'choice':
-        return list.filter(p => p.badges.some(b => b.toLowerCase().includes('choice') || b.toLowerCase().includes('booked')));
-      case 'family':
-        return list.filter(p => p.badges.some(b => b.toLowerCase().includes('family') || b.toLowerCase().includes('rated')));
-      default:
-        return list;
+    const LOCATION_MAP = {
+      'ramjhula': ['ram jhula', 'ramjhula', 'shivanand'],
+      'laxmanjhula': ['laxman jhula', 'lakshman jhula', 'laxmanjhula'],
+      'jankisetu': ['janki setu', 'jankisetu'],
+      'tapovan': ['tapovan'],
+      'busstand': ['bus stand', 'isbt', 'busstand', 'main bus'],
+      'yognagri': ['yog nagri', 'yognagri', 'yog nagari'],
+      'oldrailway': ['old railway', 'railway station', 'station']
+    };
+
+    const terms = LOCATION_MAP[activeFilter];
+    if (terms && terms.length > 0) {
+      const matched = list.filter(p => {
+        const landmarkText = (p.landmark || '').toLowerCase();
+        const addressText = (p.address || '').toLowerCase();
+        const nameText = (p.name || '').toLowerCase();
+        return terms.some(t => landmarkText.includes(t) || addressText.includes(t) || nameText.includes(t));
+      });
+      return matched;
     }
+    return list;
   };
 
   const filteredPartners = getFilteredPartners();
@@ -422,42 +429,66 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
         {!selectedPartner && !selectedPackage && (
           <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pb-24">
             
-            {/* Category Hero Banner */}
-            <div className="relative h-[40vh] bg-black flex items-center justify-center text-center">
+            {/* Compact Category Hero Banner */}
+            <div className="relative py-6 sm:py-9 bg-slate-950 flex items-center justify-center text-center border-b border-slate-800/80 overflow-hidden">
               <div 
-                className="absolute inset-0 bg-cover bg-center opacity-70"
+                className="absolute inset-0 bg-cover bg-center opacity-40 blur-xs scale-105"
                 style={{ backgroundImage: `url('${getCategoryBannerImg()}')` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <div className="relative z-10 space-y-3 px-6">
-                <span className="text-[10px] font-black text-accent tracking-widest uppercase bg-black/40 px-3 py-1 rounded-full border border-accent/20">
-                  Rishikesh Adventure
-                </span>
-                <h1 className="text-3xl sm:text-5xl font-black text-white font-display tracking-tight uppercase">
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/90 to-slate-950" />
+              <div className="relative z-10 space-y-1.5 px-4 max-w-2xl mx-auto">
+                <div className="inline-flex items-center gap-1.5 bg-accent/15 text-[#FF5F00] text-[9px] font-black px-2.5 py-0.5 rounded-full border border-accent/30 tracking-widest uppercase mb-0.5">
+                  RISHIKESH ADVENTURE
+                </div>
+                <h1 className="text-xl sm:text-3xl font-black text-white font-display tracking-tight uppercase leading-tight">
                   {getCategoryTitle()}
                 </h1>
-                <p className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm font-medium leading-relaxed">
+                <p className="text-slate-300 text-[11px] sm:text-xs font-medium leading-normal max-w-md mx-auto">
                   {getCategorySubtitle()}
                 </p>
               </div>
             </div>
 
             {/* Main Marketplace Area */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
               
-              {/* Filters chips */}
-              <div className="space-y-3">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-left block">
-                  Quick Filters
-                </span>
-                <MarketplaceFilters activeFilter={activeFilter} onChangeFilter={setActiveFilter} />
-              </div>
-
-              {/* Partners Listing Title */}
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                <h2 className="text-base font-black font-display text-slate-900 uppercase">
-                  Available Partners ({filteredPartners.length})
-                </h2>
+              {/* Premium Location Quick Filters Bar (Hotel Style) */}
+              <div className="sticky top-4 z-30 w-full max-w-full bg-gradient-to-r from-blue-950 to-blue-900 border border-blue-800 rounded-2xl p-3 sm:p-4 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 overflow-hidden">
+                {/* Result Counter */}
+                <div className="text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 shrink-0">
+                  <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
+                  Showing {filteredPartners.length} Available Partners
+                </div>
+                
+                {/* Horizontal Scrollable Location Chips UI (No Emojis, Connected to Backend Landmark) */}
+                <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
+                  {[
+                    { id: null, label: 'All Partners' },
+                    { id: 'ramjhula', label: 'Ram Jhula' },
+                    { id: 'laxmanjhula', label: 'Laxman Jhula' },
+                    { id: 'jankisetu', label: 'Janki Setu' },
+                    { id: 'tapovan', label: 'Tapovan' },
+                    { id: 'busstand', label: 'Rishikesh Bus Stand' },
+                    { id: 'yognagri', label: 'Yog Nagri Rishikesh' },
+                    { id: 'oldrailway', label: 'Old Railway Station' }
+                  ].map(chip => {
+                    const isActive = activeFilter === chip.id;
+                    return (
+                      <button
+                        key={chip.id || 'all'}
+                        type="button"
+                        onClick={() => setActiveFilter(chip.id)}
+                        className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 transition-all border cursor-pointer ${
+                          isActive
+                            ? 'bg-[#FF5F00] text-white border-[#FF5F00] shadow-[0_4px_12px_rgba(255,95,0,0.4)] scale-105'
+                            : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+                        }`}
+                      >
+                        {chip.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Partners list cards (Horizontal layout) */}
