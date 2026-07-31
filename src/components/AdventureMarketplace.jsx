@@ -700,9 +700,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             <span className="bg-sky-50 text-sky-700 border border-sky-100 px-2 py-0.5 rounded">
                               ✓ Free Cancellation
                             </span>
-                            {pkg.rooms_left !== undefined && pkg.rooms_left !== null && Number(pkg.rooms_left) > 0 && Number(pkg.rooms_left) <= 5 && (
+                            {activityType === 'camping' && pkg.rooms_left !== undefined && pkg.rooms_left !== null && Number(pkg.rooms_left) > 0 && Number(pkg.rooms_left) <= 5 && (
                               <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded font-black animate-pulse">
-                                🔥 Only {pkg.rooms_left} {activityType === 'camping' ? 'Tents' : 'Slots'} Left!
+                                🔥 Only {pkg.rooms_left} Tents Left!
                               </span>
                             )}
                           </div>
@@ -1009,9 +1009,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                           </div>
                         </div>
 
-                        {tentsLeft <= 5 && (
+                        {activityType === 'camping' && tentsLeft <= 5 && (
                           <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full animate-pulse">
-                            🔥 Only {tentsLeft} {activityType === 'camping' ? 'Tents' : 'Slots'} Left!
+                            🔥 Only {tentsLeft} Tents Left!
                           </span>
                         )}
                       </div>
