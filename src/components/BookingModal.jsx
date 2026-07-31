@@ -213,7 +213,10 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const totalPrice = rawTotalPrice + taxes;
   
   // Calculate dynamic advance amount
-  const flatAdvanceTotal = isBikeRent ? (fixedAdvanceAmount * guests * rentalDays) : fixedAdvanceAmount;
+  const flatAdvanceTotal = isBikeRent 
+    ? (fixedAdvanceAmount * guests * rentalDays) 
+    : (activity && activity.category === 'hotels' ? fixedAdvanceAmount : fixedAdvanceAmount * guests);
+
   const calculatedAdvance = paymentMode === 'fixed_advance'
     ? Math.min(flatAdvanceTotal, totalPrice)
     : (paymentMode === 'full_payment'
@@ -317,7 +320,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       description: effectivePaymentOption === 'full' 
         ? `${activity.name} - 100% Full Payment` 
         : (paymentMode === 'fixed_advance'
-            ? `${activity.name} - ₹${fixedAdvanceAmount} Advance`
+            ? `${activity.name} - ₹${calculatedAdvance.toLocaleString('en-IN')} Advance`
             : `${activity.name} - ${commissionPercentage}% Advance`),
       image: "/tripgod-logo-padded.jpg",
       notes: {
@@ -1037,7 +1040,7 @@ My payment ID is verified. Please confirm my slots.`;
                   <CreditCard size={14} className="flex-shrink-0 text-gray-400" />
                   <span>
                     {paymentMode === 'fixed_advance'
-                      ? `PAY ONLY ₹${fixedAdvanceAmount} ADVANCE`
+                      ? `PAY ONLY ₹${calculatedAdvance.toLocaleString('en-IN')} ADVANCE`
                       : (paymentMode === 'full_payment'
                           ? '100% SECURE FULL PAYMENT'
                           : `PAY ONLY ${commissionPercentage}% ADVANCE`)}
@@ -1070,9 +1073,9 @@ My payment ID is verified. Please confirm my slots.`;
                       )}
                       <div>
                         <span className="block text-xs font-black">Pay Advance</span>
-                        <span className="block text-[10px] text-gray-500 mt-0.5 font-medium">
+                        <span className="block text-[10px] text-[#FF5F00] font-black tracking-wide mt-0.5">
                           {paymentMode === 'fixed_advance'
-                            ? `Pay ₹${fixedAdvanceAmount} flat advance`
+                            ? `₹${fixedAdvanceAmount}/person × ${guests} guest${guests > 1 ? 's' : ''}`
                             : `Pay ${commissionPercentage}% online`}
                         </span>
                       </div>
