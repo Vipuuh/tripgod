@@ -88,11 +88,44 @@ export default async function handler(req, res) {
           if (mediaId) {
             mediaUrl = await fetchMetaMediaUrl(mediaId);
           }
+        } else if (msgType === 'audio' || msgType === 'voice') {
+          messageContent = '🎤 Voice / Audio Note';
+          mediaMimeType = message.audio?.mime_type || message.voice?.mime_type || 'audio/ogg';
+          const mediaId = message.audio?.id || message.voice?.id;
+          if (mediaId) {
+            mediaUrl = await fetchMetaMediaUrl(mediaId);
+          }
+        } else if (msgType === 'video') {
+          messageContent = message.video?.caption || '🎥 Video Clip';
+          mediaMimeType = message.video?.mime_type || 'video/mp4';
+          const mediaId = message.video?.id;
+          if (mediaId) {
+            mediaUrl = await fetchMetaMediaUrl(mediaId);
+          }
+        } else if (msgType === 'sticker') {
+          messageContent = '🎨 Sticker';
+          mediaMimeType = message.sticker?.mime_type || 'image/webp';
+          const mediaId = message.sticker?.id;
+          if (mediaId) {
+            mediaUrl = await fetchMetaMediaUrl(mediaId);
+          }
         } else if (msgType === 'location') {
           const loc = message.location;
-          messageContent = `📍 Location: ${loc?.name || 'Shared Location'} (${loc?.latitude}, ${loc?.longitude})`;
+          const locName = loc?.name || loc?.address || 'Shared Location';
+          messageContent = `📍 Location: ${locName} (https://maps.google.com/?q=${loc?.latitude},${loc?.longitude})`;
+        } else if (msgType === 'contacts') {
+          const contactObj = message.contacts?.[0];
+          const contactName = contactObj?.name?.formatted_name || 'Contact Card';
+          const contactPhone = contactObj?.phones?.[0]?.phone || '';
+          messageContent = `👤 Contact: ${contactName} ${contactPhone ? `(${contactPhone})` : ''}`;
         } else if (msgType === 'button' || msgType === 'interactive') {
-          messageContent = message.button?.text || message.interactive?.button_reply?.title || 'Interactive Reply';
+          const btnReply = message.button?.text || message.interactive?.button_reply?.title || message.interactive?.list_reply?.title;
+          messageContent = btnReply ? `🔘 ${btnReply}` : 'Interactive Reply';
+        } else if (msgType === 'reaction') {
+          const emoji = message.reaction?.emoji || '👍';
+          messageContent = `Reacted ${emoji} to a message`;
+        } else if (msgType === 'unsupported') {
+          messageContent = '[UNSUPPORTED Message]';
         } else {
           messageContent = `[${msgType.toUpperCase()} Message]`;
         }

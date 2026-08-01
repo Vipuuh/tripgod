@@ -56,7 +56,10 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   const messagesEndRef = useRef(null);
+  const messageContainerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const isAtBottomRef = useRef(true);
+  const isInitialLoadRef = useRef(true);
 
   // Play audio chime on new inbound message
   const playNotificationSound = () => {
@@ -105,7 +108,9 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
 
   // 2. Fetch Messages & Linked Bookings when Active Chat Changes
   useEffect(() => {
-    if (activeChat) {
+    if (activeChat?.id) {
+      isInitialLoadRef.current = true;
+      isAtBottomRef.current = true;
       fetchMessages(activeChat.id);
       fetchCustomerBookings(activeChat.phone_number);
       markChatAsRead(activeChat.id);
@@ -118,11 +123,13 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
           { event: 'INSERT', schema: 'public', table: 'whatsapp_messages', filter: `chat_id=eq.${activeChat.id}` },
           (payload) => {
             if (payload.new) {
-              setMessages((prev) => [...prev, payload.new]);
+              setMessages((prev) => {
+                if (prev.some((m) => m.id === payload.new.id)) return prev;
+                return [...prev, payload.new];
+              });
               if (payload.new.direction === 'inbound' && soundEnabled) {
                 playNotificationSound();
               }
-              scrollToBottom();
             }
           }
         )
@@ -132,14 +139,28 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
         supabase.removeChannel(msgsChannel);
       };
     }
-  }, [activeChat]);
+  }, [activeChat?.id]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const handleScroll = () => {
+    if (!messageContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messageContainerRef.current;
+    const nearBottom = scrollHeight - scrollTop - clientHeight < 120;
+    isAtBottomRef.current = nearBottom;
+  };
+
+  const scrollToBottom = (force = false) => {
+    if (force || isAtBottomRef.current || isInitialLoadRef.current) {
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: isInitialLoadRef.current ? 'auto' : 'smooth' });
+          isInitialLoadRef.current = false;
+        }
+      }, 50);
+    }
   };
 
   const fetchChats = async () => {
@@ -151,9 +172,16 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
 
       if (!error && data) {
         setChats(data);
-        if (data.length > 0 && !activeChat && window.innerWidth >= 1024) {
-          setActiveChat(data[0]);
-        }
+        setActiveChat((prevActive) => {
+          if (prevActive) {
+            const updated = data.find((c) => c.id === prevActive.id);
+            return updated ? { ...prevActive, ...updated } : prevActive;
+          }
+          if (data.length > 0 && window.innerWidth >= 1024) {
+            return data[0];
+          }
+          return null;
+        });
       }
     } catch (err) {
       console.error('Error fetching chats:', err);
@@ -268,6 +296,7 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
         setSelectedFile(null);
         setMediaCaption('');
         setShowMediaModal(false);
+        scrollToBottom(true);
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -543,7 +572,11 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
             )}
 
             {/* Message Stream Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] scrollbar-thin">
+            <div 
+              ref={messageContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto p-4 space-y-3 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] scrollbar-thin"
+            >
               {loadingMessages ? (
                 <div className="text-center py-12 text-slate-500 text-xs">Loading message history...</div>
               ) : messages.length === 0 ? (
@@ -553,6 +586,8 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
               ) : (
                 messages.map((msg) => {
                   const isInbound = msg.direction === 'inbound';
+                  const isUnsupported = msg.content === '[UNSUPPORTED Message]' || msg.message_type === 'unsupported';
+                  const isLocation = msg.message_type === 'location' || msg.content?.includes('📍 Location:');
 
                   return (
                     <div
@@ -574,8 +609,12 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                         {/* Media Display if Present */}
                         {msg.media_url && (
                           <div className="my-1 rounded-2xl overflow-hidden border border-black/20 max-w-sm">
-                            {msg.message_type === 'image' ? (
+                            {msg.message_type === 'image' || msg.media_mime_type?.startsWith('image/') ? (
                               <img src={msg.media_url} alt="Attachment" className="w-full max-h-60 object-cover" />
+                            ) : msg.message_type === 'video' || msg.media_mime_type?.startsWith('video/') ? (
+                              <video src={msg.media_url} controls className="w-full max-h-60 rounded-xl" />
+                            ) : msg.message_type === 'audio' || msg.message_type === 'voice' || msg.media_mime_type?.startsWith('audio/') ? (
+                              <audio src={msg.media_url} controls className="w-full p-1" />
                             ) : (
                               <a
                                 href={msg.media_url}
@@ -584,7 +623,7 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                                 className="flex items-center gap-2 p-3 bg-black/30 text-white hover:bg-black/50 transition-all font-bold"
                               >
                                 <FileText className="w-5 h-5 text-orange-400" />
-                                <span>Download PDF Document</span>
+                                <span>Download Attachment Document</span>
                                 <ArrowUpRight className="w-4 h-4 ml-auto" />
                               </a>
                             )}
@@ -592,9 +631,32 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                         )}
 
                         {/* Text Message Content */}
-                        <p className="whitespace-pre-wrap leading-relaxed text-[12.5px] font-normal">
-                          {msg.content}
-                        </p>
+                        {isUnsupported ? (
+                          <div className="flex items-center gap-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-[11px]">
+                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                            <span>Media format or feature unsupported by WhatsApp Cloud API (e.g. Voice Note, Live Location, or View Once).</span>
+                          </div>
+                        ) : isLocation ? (
+                          <div className="space-y-1.5">
+                            <p className="whitespace-pre-wrap leading-relaxed text-[12.5px] font-normal">{msg.content}</p>
+                            {msg.content.includes('https://') && (
+                              <a
+                                href={msg.content.match(/https:\/\/[^\s)]+/)?.[0] || '#'}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-all"
+                              >
+                                <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                                Open Map Location
+                                <ArrowUpRight className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap leading-relaxed text-[12.5px] font-normal">
+                            {msg.content}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

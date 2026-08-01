@@ -1228,7 +1228,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     <h3 className="text-xs font-bold font-display text-slate-900 uppercase">Safety & Eligibility Criteria</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">⚖️ Weight Range</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Weight Range</span>
                         <span className="text-xs font-black text-slate-800">
                           {activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
                            activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
@@ -1237,7 +1237,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         </span>
                       </div>
                       <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🎂 Age Limit</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Age Limit</span>
                         <span className="text-xs font-black text-slate-800">
                           {activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
                            activityType === 'bungee' || activityType === 'swing' ? '12 - 45 Years' :
@@ -1246,13 +1246,13 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         </span>
                       </div>
                       <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🤰 Pregnant Ladies</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pregnant Ladies</span>
                         <span className="text-xs font-black text-red-650">
                           {activityType === 'camping' ? 'Allowed with caution' : 'Strictly Not Allowed'}
                         </span>
                       </div>
                       <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🩺 Medical Fitness</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Medical Fitness</span>
                         <span className="text-[10px] font-semibold text-slate-600 leading-tight block">
                           {activityType === 'camping' ? 'Basic physical fitness' : 'Avoid if Heart patient, Asthma or High BP'}
                         </span>
