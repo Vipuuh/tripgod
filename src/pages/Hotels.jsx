@@ -455,26 +455,34 @@ export default function Hotels({ currentCity, openBookingModal }) {
     const fetchHotels = async () => {
       setLoading(true);
       try {
-        let query = supabase.from('hotels')
-          .select('*, vendors(*)');
+        let query = supabase.from('hotels').select('*');
         
         if (currentCity && currentCity.id !== 'default') {
           query = query.eq('city_id', currentCity.id);
         }
 
-        // Apply sorting
-        if (sortBy === 'price-asc') {
-          query = query.order('price', { ascending: true });
-        } else if (sortBy === 'price-desc') {
-          query = query.order('price', { ascending: false });
-        } else {
-          query = query.order('rating', { ascending: false });
-        }
-        
-        const { data, error } = await query;
+        let { data, error } = await query;
         if (error) throw error;
 
-        if (data) {
+        // Fallback: If city_id query returned 0 hotels, fetch all hotels so newly added hotels are never hidden
+        if ((!data || data.length === 0) && currentCity && currentCity.id !== 'default') {
+          const { data: allHotels } = await supabase.from('hotels').select('*');
+          if (allHotels && allHotels.length > 0) {
+            data = allHotels;
+          }
+        }
+
+        if (data && data.length > 0) {
+          // Fetch vendors gracefully
+          const vendorIds = [...new Set(data.map(h => h.vendor_id).filter(Boolean))];
+          let vendorsMap = {};
+          if (vendorIds.length > 0) {
+            const { data: vData } = await supabase.from('vendors').select('*').in('id', vendorIds);
+            if (vData && vData.length > 0) {
+              vData.forEach(v => { vendorsMap[v.id] = v; });
+            }
+          }
+
           const mapped = data.map(item => ({
             id: item.id,
             name: item.name,
@@ -487,18 +495,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
             check_out: item.check_out,
             cancellation_policy: item.cancellation_policy,
             images: item.images && item.images.length > 0 ? item.images : [
-              'https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200', // Room
-              'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200', // Bathroom
-              'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1200', // View
-              'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200', // Restaurant
-              'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'  // Exterior
+              'https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=1200',
+              'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=1200',
+              'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1200',
+              'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200',
+              'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'
             ],
             amenities: typeof item.amenities === 'string' ? JSON.parse(item.amenities) : (item.amenities || {}),
             rules: typeof item.rules === 'string' ? JSON.parse(item.rules) : (item.rules || {}),
             landmarks: item.landmarks || [],
             city_id: item.city_id,
             vendor_id: item.vendor_id,
-            vendors: item.vendors,
+            vendors: vendorsMap[item.vendor_id] || item.vendors || null,
             rating: item.rating !== null && item.rating !== undefined ? Number(item.rating) : 4.5,
             reviewsCount: item.reviews_count !== null && item.reviews_count !== undefined ? Number(item.reviews_count) : 100,
             is_limited_offer: !!item.is_limited_offer,
@@ -526,8 +534,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
             best_for: item.best_for || [],
             perfect_for: item.perfect_for || [],
             benefits: item.benefits || [],
-            phone_number: item.phone_number || item.vendors?.phone || '+919410572857',
-            whatsapp_number: item.whatsapp_number || item.vendors?.whatsapp || item.vendors?.phone || item.phone_number || '919410572857',
+            phone_number: item.phone_number || (vendorsMap[item.vendor_id]?.phone) || '+919410572857',
+            whatsapp_number: item.whatsapp_number || (vendorsMap[item.vendor_id]?.whatsapp) || '+919410572857',
             featured_image: item.featured_image || '',
             payment_mode: item.payment_mode || 'commission_advance',
             commission_percentage: item.commission_percentage !== null && item.commission_percentage !== undefined ? Number(item.commission_percentage) : 10,
@@ -536,52 +544,54 @@ export default function Hotels({ currentCity, openBookingModal }) {
           }));
 
           const hasKeyword = (h, keywords) => {
-            const textToSearch = `${h.name} ${h.address} ${(h.landmarks || []).join(' ')}`.toLowerCase();
+            const textToSearch = `${h.name || ''} ${h.address || ''} ${h.description || ''} ${(h.landmarks || []).join(' ')}`.toLowerCase();
             return keywords.some(kw => textToSearch.includes(kw.toLowerCase()));
           };
 
-          let finalMapped = mapped;
+          let finalMapped = [...mapped];
 
-          if (sortBy === 'near-ramjhula') {
-            finalMapped.sort((a, b) => {
-              const aNear = hasKeyword(a, ['ram jhula', 'ramjhula']);
-              const bNear = hasKeyword(b, ['ram jhula', 'ramjhula']);
-              if (aNear && !bNear) return -1;
-              if (!aNear && bNear) return 1;
-              return 0;
+          if (sortBy === 'couple-friendly') {
+            const couples = mapped.filter(h => {
+              const ruleCouple = h.rules?.unmarried_couples === true;
+              const textMatch = hasKeyword(h, ['couple', 'unmarried', 'couples']);
+              return ruleCouple || textMatch;
             });
+            finalMapped = couples.length > 0 ? couples : mapped;
+          } else if (sortBy === 'near-ramjhula') {
+            const matched = mapped.filter(h => hasKeyword(h, ['ram jhula', 'ramjhula', 'swargashram', 'swarg ashram']));
+            finalMapped = matched.length > 0 ? matched : mapped;
+          } else if (sortBy === 'near-tapovan') {
+            const matched = mapped.filter(h => hasKeyword(h, ['tapovan', 'balaknath', 'badrinath road', 'shisham bari']));
+            finalMapped = matched.length > 0 ? matched : mapped;
           } else if (sortBy === 'near-laxmanjhula') {
-            finalMapped.sort((a, b) => {
-              const aNear = hasKeyword(a, ['laxman jhula', 'laxmanjhula', 'janki jhula', 'jankijhula']);
-              const bNear = hasKeyword(b, ['laxman jhula', 'laxmanjhula', 'janki jhula', 'jankijhula']);
-              if (aNear && !bNear) return -1;
-              if (!aNear && bNear) return 1;
-              return 0;
-            });
-          } else if (sortBy === 'near-yognagri') {
-            finalMapped.sort((a, b) => {
-              const aNear = hasKeyword(a, ['yog nagri', 'yognagri', 'yog nagari', 'yognagari', 'railway station', 'station']);
-              const bNear = hasKeyword(b, ['yog nagri', 'yognagri', 'yog nagari', 'yognagari', 'railway station', 'station']);
-              if (aNear && !bNear) return -1;
-              if (!aNear && bNear) return 1;
-              return 0;
-            });
+            const matched = mapped.filter(h => hasKeyword(h, ['laxman jhula', 'laxmanjhula', 'lakshman jhula']));
+            finalMapped = matched.length > 0 ? matched : mapped;
+          } else if (sortBy === 'near-jankisetui') {
+            const matched = mapped.filter(h => hasKeyword(h, ['janki setu', 'jankisetui', 'janki jhula', 'jankijhula', 'pashulok']));
+            finalMapped = matched.length > 0 ? matched : mapped;
+          } else if (sortBy === 'near-trivenighat') {
+            const matched = mapped.filter(h => hasKeyword(h, ['triveni ghat', 'trivenighat', 'triveni', 'main market', 'ghat']));
+            finalMapped = matched.length > 0 ? matched : mapped;
           } else if (sortBy === 'near-busstand') {
-            finalMapped.sort((a, b) => {
-              const aNear = hasKeyword(a, ['bus stand', 'busstand', 'bus stop', 'shrinagar bypass', 'roadways']);
-              const bNear = hasKeyword(b, ['bus stand', 'busstand', 'bus stop', 'shrinagar bypass', 'roadways']);
-              if (aNear && !bNear) return -1;
-              if (!aNear && bNear) return 1;
-              return 0;
-            });
-          } else if (sortBy === 'couple-friendly') {
-            finalMapped = mapped.filter(h => h.rules?.unmarried_couples === true);
+            const matched = mapped.filter(h => hasKeyword(h, ['bus stand', 'busstand', 'bus stop', 'isbt', 'shrinagar bypass', 'roadways']));
+            finalMapped = matched.length > 0 ? matched : mapped;
+          } else if (sortBy === 'most-booked') {
+            finalMapped.sort((a, b) => (b.bookings_count || 0) - (a.bookings_count || 0));
+          } else if (sortBy === 'top-rated') {
+            finalMapped.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          } else if (sortBy === 'price-asc') {
+            finalMapped.sort((a, b) => Number(a.price) - Number(b.price));
+          } else if (sortBy === 'price-desc') {
+            finalMapped.sort((a, b) => Number(b.price) - Number(a.price));
           }
 
           setHotels(finalMapped);
+        } else {
+          setHotels([]);
         }
       } catch (err) {
         console.error('Error fetching hotels:', err);
+        setHotels([]);
       } finally {
         setLoading(false);
       }
@@ -649,21 +659,24 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Horizontal Scrollable Chips UI */}
                 <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
-                    { val: 'rating-desc', label: '⭐ Recommended' },
-                    { val: 'top-rated', label: '🔥 Top Rated' },
-                    { val: 'near-ramjhula', label: '📍 Ram Jhula' },
-                    { val: 'near-laxmanjhula', label: '📍 Laxman Jhula' },
-                    { val: 'near-busstand', label: '🚌 ISBT' },
-                    { val: 'price-asc', label: '💰 Cheapest' },
-                    { val: 'price-desc', label: '💎 Premium' },
-                    { val: 'couple-friendly', label: '💕 Couple Friendly' }
+                    { val: 'couple-friendly', label: 'Couple Friendly' },
+                    { val: 'near-ramjhula', label: 'Ram Jhula' },
+                    { val: 'near-tapovan', label: 'Tapovan' },
+                    { val: 'near-laxmanjhula', label: 'Laxman Jhula' },
+                    { val: 'near-jankisetui', label: 'Janki Setu' },
+                    { val: 'near-trivenighat', label: 'Triveni Ghat' },
+                    { val: 'near-busstand', label: 'Bus Stand' },
+                    { val: 'most-booked', label: 'Most Booked' },
+                    { val: 'top-rated', label: 'Top Rated' },
+                    { val: 'price-asc', label: 'Lowest Price' },
+                    { val: 'price-desc', label: 'Highest Price' }
                   ].map(chip => (
                     <button
                       key={chip.val}
                       type="button"
                       onClick={() => setSortBy(chip.val)}
                       className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 transition-all border cursor-pointer ${
-                        sortBy === chip.val || (chip.val === 'top-rated' && sortBy === 'rating-desc')
+                        sortBy === chip.val
                           ? 'bg-[#FF5F00] text-white border-[#FF5F00] shadow-[0_4px_12px_rgba(255,95,0,0.3)]'
                           : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
                       }`}

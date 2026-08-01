@@ -1173,7 +1173,6 @@ export default function AdminDashboard({ setRoute }) {
                       >
                         <option value="Multi-Service / All Services">Multi-Service (Bike, Rafting, Camping & Tours)</option>
                         <option value="Adventure & Bike Rentals">Adventure & Bike Rentals</option>
-                        <option value="Hotel">Hotel</option>
                         <option value="Rafting">Rafting</option>
                         <option value="Bungee">Bungee Jumping</option>
                         <option value="Giant Swing">Giant Swing</option>
@@ -1466,17 +1465,6 @@ export default function AdminDashboard({ setRoute }) {
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
                       />
                     </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Meeting Instructions</label>
-                    <textarea
-                      rows="2"
-                      value={newVendor.meeting_instructions}
-                      onChange={(e) => setNewVendor(prev => ({ ...prev, meeting_instructions: e.target.value }))}
-                      placeholder="Please report at the office with DL..."
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent resize-none"
-                    />
                   </div>
 
                   <div className="space-y-1">
@@ -3150,7 +3138,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage === '' || formData.commission_percentage === null || formData.commission_percentage === undefined ? null : Number(formData.commission_percentage)) : null,
         fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null || formData.fixed_advance_amount === undefined ? null : Number(formData.fixed_advance_amount)) : null,
         is_limited_offer: !!formData.is_limited_offer,
-        upi_discount: formData.upi_discount !== null && formData.upi_discount !== undefined && formData.upi_discount !== '' ? Number(formData.upi_discount) : null
+        upi_discount: formData.upi_discount !== null && formData.upi_discount !== undefined && formData.upi_discount !== '' ? Number(formData.upi_discount) : null,
+        meeting_instructions: formData.meeting_instructions || null
       };
 
       if (type === 'hotels') {
@@ -7432,6 +7421,18 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           onChange={(e) => setFormData(prev => ({ ...prev, cancellation_policy: e.target.value }))}
           placeholder="Free Cancellation up to 24 Hours"
           className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+        />
+      </div>
+
+      {/* Meeting Instructions */}
+      <div className="space-y-1">
+        <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Meeting Instructions</label>
+        <textarea
+          rows="2"
+          value={formData.meeting_instructions || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, meeting_instructions: e.target.value }))}
+          placeholder="e.g. Please report at the office 15 mins prior with DL/Aadhar..."
+          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent resize-none"
         />
       </div>
 

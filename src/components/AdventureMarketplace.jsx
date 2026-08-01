@@ -89,17 +89,14 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
           return;
         }
 
-        // Filter by activityType in JS (case-insensitive with fallback)
+        // Filter by activityType in JS (case-insensitive)
         let filteredData = data;
         if (activityType) {
           const act = activityType.toLowerCase();
-          const matched = data.filter(item => {
+          filteredData = data.filter(item => {
             if (!item.activity_type) return act === 'rafting';
             return item.activity_type.toLowerCase() === act;
           });
-          if (matched.length > 0) {
-            filteredData = matched;
-          }
         }
 
         // Fetch associated vendor records from vendors table
@@ -1368,7 +1365,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             <div>
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Check-in & Reporting</span>
                               <p className="text-xs font-black text-slate-900 font-display mt-0.5">Arrive 15 mins before slot ({selectedPartner?.reporting_time || 'Morning Departure'})</p>
-                              <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPartner?.meeting_instructions || 'Show booking voucher at desk'}</p>
+                              <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPackage?.meeting_instructions || selectedPartner?.meeting_instructions || 'Show booking voucher at desk'}</p>
                             </div>
                           </div>
 
