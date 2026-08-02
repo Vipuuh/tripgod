@@ -993,6 +993,10 @@ export default function AdminDashboard({ setRoute }) {
                               <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
                                 <Users size={10} /> {item.operators?.length || 0} Vendors
                               </span>
+                            ) : activeTab === 'hotels' ? (
+                              <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-amber-400 font-bold px-2 py-0.5 rounded">
+                                <Building2 size={10} /> {item.property_type || 'Hotel'}
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[9px] bg-slate-900 border border-slate-800 text-[#FF5F00] font-bold px-2 py-0.5 rounded">
                                 <Users size={10} /> {vendor?.name || 'No Vendor'}
