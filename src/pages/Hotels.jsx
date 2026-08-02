@@ -298,16 +298,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [selectedMeals, setSelectedMeals] = useState({ breakfast: false, lunch: false, dinner: false });
   const [numRooms, setNumRooms] = useState(1);
   const [numAdults, setNumAdults] = useState(2);
-  const [numKids, setNumKids] = useState(1);
-  const [childAges, setChildAges] = useState([3]);
+  const [numKids, setNumKids] = useState(0);
+  const [childAges, setChildAges] = useState([]);
 
   useEffect(() => {
     setSelectedRoomIdx(null);
     setSelectedMeals({ breakfast: false, lunch: false, dinner: false });
     setNumRooms(1);
     setNumAdults(2);
-    setNumKids(1);
-    setChildAges([3]);
+    setNumKids(0);
+    setChildAges([]);
   }, [selectedHotel]);
 
   useEffect(() => {
@@ -1017,30 +1017,28 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   {selectedHotel.name}
                 </h1>
                 
-                {/* Micro info rows */}
-                <div className="flex flex-col gap-1.5 text-slate-600 text-[11px] font-extrabold select-none pt-1">
-                  <div className="flex flex-wrap items-center gap-x-4.5 gap-y-1.5">
-                    {selectedHotel.is_verified && (
-                      <span className="text-[#008F5D] font-black flex items-center gap-0.5 uppercase tracking-wide">
-                        🛡️ Verified by TripGod
-                      </span>
-                    )}
-                    {selectedHotel.is_verified && <span className="text-slate-300">•</span>}
-                    <span className="flex items-center gap-0.5 text-slate-800">
-                      ⭐ {selectedHotel.rating.toFixed(1)} Excellent ({selectedHotel.reviewsCount} Verified Reviews)
+                {/* Micro info rows - Compact pill container layout */}
+                <div className="flex flex-wrap items-center gap-2 text-slate-700 text-[11px] font-extrabold select-none pt-1">
+                  {selectedHotel.is_verified && (
+                    <span className="text-[#008F5D] bg-emerald-50 border border-emerald-100/80 px-2.5 py-1 rounded-lg font-black flex items-center gap-1 uppercase tracking-wider text-[10px]">
+                      ✓ Verified by TripGod
                     </span>
-                    <span className="text-slate-300">•</span>
-                    <span className="flex items-center gap-0.5 text-slate-800">
-                      📍 {(() => {
-                        if (selectedHotel.landmarks && selectedHotel.landmarks[0] && selectedHotel.landmarks[0].trim() !== '') {
-                          return selectedHotel.landmarks[0].trim();
-                        }
-                        const addLower = (selectedHotel.address || '').toLowerCase();
-                        const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
-                        return isLaxman ? 'Laxman Jhula' : 'Ram Jhula';
-                      })()}
-                    </span>
-                  </div>
+                  )}
+                  
+                  <span className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-800 text-[10.5px]">
+                    <span className="text-[#FF5F00]">⭐</span> {selectedHotel.rating.toFixed(1)} Excellent ({selectedHotel.reviewsCount} Verified Reviews)
+                  </span>
+
+                  <span className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-700 text-[10.5px]">
+                    📍 {(() => {
+                      if (selectedHotel.landmarks && selectedHotel.landmarks[0] && selectedHotel.landmarks[0].trim() !== '') {
+                        return selectedHotel.landmarks[0].trim();
+                      }
+                      const addLower = (selectedHotel.address || '').toLowerCase();
+                      const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
+                      return isLaxman ? 'Laxman Jhula' : 'Ram Jhula';
+                    })()}
+                  </span>
                 </div>
               </div>
 
