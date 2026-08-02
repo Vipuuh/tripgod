@@ -1311,7 +1311,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             }}>{discount}% OFF</div>
                           )}
                           <div style={{marginBottom:'0.5rem'}}>
-                            <span style={{display:'block', fontSize:10, fontWeight:900, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4}}>Standard Room</span>
+                            <span style={{display:'block', fontSize:10, fontWeight:900, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:4}}>{selectedHotel.room_type || 'Standard Room'}</span>
                             <div style={{display:'flex', alignItems:'baseline', gap:6}}>
                               <span style={{fontSize:18, fontWeight:900, color:'#0f172a', letterSpacing:'-0.02em'}}>₹{Number(selectedHotel.price).toLocaleString('en-IN')}</span>
                               {selectedHotel.original_price && Number(selectedHotel.original_price) > Number(selectedHotel.price) && (
@@ -1322,7 +1322,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           </div>
                           {selectedHotel.images && selectedHotel.images.length > 0 && (
                             <div style={{borderRadius:'0.6rem', overflow:'hidden', height:72, marginTop:6}}>
-                              <img src={selectedHotel.images[0]} alt="Standard Room" style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                              <img src={selectedHotel.images[0]} alt={selectedHotel.room_type || 'Standard Room'} style={{width:'100%', height:'100%', objectFit:'cover'}} />
                             </div>
                           )}
                         </button>
@@ -1953,6 +1953,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <button
                       onClick={() => {
                         const hotelToBook = selectedHotel;
+                        const activeRoomName = selectedRoomIdx !== null 
+                          ? (hotelToBook.rules?.room_categories?.[selectedRoomIdx]?.name || 'Upgrade Room') 
+                          : (hotelToBook.room_type || 'Standard Room');
                         openBookingModal({
                           id: hotelToBook.id,
                           name: hotelToBook.name,
@@ -1974,7 +1977,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           fixed_advance_amount: hotelToBook.fixed_advance_amount,
                           upi_discount: hotelToBook.upi_discount,
                           whatsapp_number: hotelToBook.whatsapp_number || hotelToBook.whatsapp || hotelToBook.vendors?.whatsapp || hotelToBook.vendors?.phone || hotelToBook.phone_number,
-                          slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)'],
+                          slots: [`${activeRoomName} (Check-in 12:00 PM)`, 'Early Check-in (Subject to Availability)'],
                           is_closed: hotelToBook.is_closed,
                           closed_reason: hotelToBook.closed_reason,
                           closed_from: hotelToBook.closed_from,
@@ -2027,6 +2030,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   <button
                     onClick={() => {
                       const hotelToBook = selectedHotel;
+                      const activeRoomName = selectedRoomIdx !== null 
+                        ? (hotelToBook.rules?.room_categories?.[selectedRoomIdx]?.name || 'Upgrade Room') 
+                        : (hotelToBook.room_type || 'Standard Room');
                       openBookingModal({
                         id: hotelToBook.id,
                         name: hotelToBook.name,
@@ -2046,7 +2052,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         fixed_advance_amount: hotelToBook.fixed_advance_amount,
                         upi_discount: hotelToBook.upi_discount,
                         whatsapp_number: hotelToBook.whatsapp_number || hotelToBook.whatsapp || hotelToBook.vendors?.whatsapp || hotelToBook.vendors?.phone || hotelToBook.phone_number,
-                        slots: ['Standard Stay (Check-in 12:00 PM)', 'Early Check-in (Subject to Availability)'],
+                        slots: [`${activeRoomName} (Check-in 12:00 PM)`, 'Early Check-in (Subject to Availability)'],
                         is_closed: hotelToBook.is_closed,
                         closed_reason: hotelToBook.closed_reason,
                         closed_from: hotelToBook.closed_from,
