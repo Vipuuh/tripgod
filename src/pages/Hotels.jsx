@@ -8,7 +8,7 @@ import {
   Wifi, Wind, Car, Utensils, Tv, Mountain, Waves, Bell, Zap, Flame,
   Lock, CalendarCheck, RefreshCw, HelpCircle, Eye,
   Share2, Heart, Phone, Compass, Smile, ThumbsUp, Users, Award, Sparkles,
-  Coffee, CircleDollarSign, Clock
+  Coffee, CircleDollarSign, Clock, Baby
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -1664,8 +1664,36 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
               </div>
 
-              {/* SECTION 11: HOUSE RULES & SECTION 12: CANCELLATION POLICY */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 text-left">
+              {/* SECTION 11: HOUSE RULES & CHILD POLICY & CANCELLATION POLICY */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2 text-left">
+                {/* Child & Extra Bed Policy */}
+                <div className="space-y-3 bg-sky-50/40 p-5 border border-sky-200/60 rounded-3xl shadow-3xs">
+                  <h4 className="text-xs font-black uppercase text-sky-900 tracking-wider font-display flex items-center gap-1.5">
+                    <Baby size={15} className="text-sky-600 shrink-0" />
+                    <span>Child Policy</span>
+                  </h4>
+                  <div className="space-y-2 text-[11px]">
+                    <div className="flex items-start gap-2 bg-white/90 p-2 rounded-xl border border-sky-100/80 shadow-3xs">
+                      <span className="bg-sky-100 text-sky-800 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 mt-0.5">0–5 Yrs</span>
+                      <span className="leading-tight text-slate-800 font-semibold text-[10.5px]">
+                        <strong>Free Stay</strong> (without extra bed). Max 2 kids stay free per room.
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2 bg-white/90 p-2 rounded-xl border border-sky-100/80 shadow-3xs">
+                      <span className="bg-emerald-100 text-emerald-800 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 mt-0.5">6–11 Yrs</span>
+                      <span className="leading-tight text-slate-800 font-semibold text-[10.5px]">
+                        <strong>Free Stay</strong> on existing bed. Extra mattress chargeable at hotel reception if required.
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2 bg-white/90 p-2 rounded-xl border border-sky-100/80 shadow-3xs">
+                      <span className="bg-amber-100 text-amber-900 text-[8.5px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 mt-0.5">12+ Yrs</span>
+                      <span className="leading-tight text-slate-800 font-semibold text-[10.5px]">
+                        Considered an <strong>Adult</strong>.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {selectedHotel.rules && Object.keys(selectedHotel.rules).length > 0 && (
                   <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
                     <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">House Rules</h4>
