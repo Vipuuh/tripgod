@@ -3673,6 +3673,19 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none font-medium"
               />
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Extra Mattress / Bed Charge (₹/Night at Check-in)</label>
+              <input
+                type="number"
+                min="0"
+                placeholder="e.g. 300 (0 = Free / Included)"
+                value={formData.rules?.extra_bed_charge === undefined ? '' : formData.rules.extra_bed_charge}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  rules: { ...prev.rules, extra_bed_charge: e.target.value === '' ? 0 : Number(e.target.value) }
+                }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none font-medium"
+              />
             </div>
 
             <div className="space-y-1">

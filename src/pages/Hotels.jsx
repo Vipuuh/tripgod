@@ -4,7 +4,7 @@ import DiningAndMealPanel from '../components/DiningAndMealPanel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Star, MapPin, Check, X, ShieldCheck, 
-  ChevronLeft, ChevronRight, MessageSquare, ShieldAlert, Map,
+  ChevronLeft, ChevronRight, MessageSquare, ShieldAlert, Map, AlertCircle,
   Wifi, Wind, Car, Utensils, Tv, Mountain, Waves, Bell, Zap, Flame,
   Lock, CalendarCheck, RefreshCw, HelpCircle, Eye,
   Share2, Heart, Phone, Compass, Smile, ThumbsUp, Users, Award, Sparkles,
@@ -299,6 +299,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [numRooms, setNumRooms] = useState(1);
   const [numAdults, setNumAdults] = useState(2);
   const [numKids, setNumKids] = useState(1);
+  const [childAges, setChildAges] = useState([3]);
 
   useEffect(() => {
     setSelectedRoomIdx(null);
@@ -306,7 +307,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
     setNumRooms(1);
     setNumAdults(2);
     setNumKids(1);
+    setChildAges([3]);
   }, [selectedHotel]);
+
+  useEffect(() => {
+    setChildAges(prev => {
+      if (prev.length < numKids) {
+        const added = Array(numKids - prev.length).fill(3);
+        return [...prev, ...added];
+      }
+      return prev.slice(0, numKids);
+    });
+  }, [numKids]);
 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -1335,12 +1347,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
                     </svg>
                   )},
-                  { label: 'Adults', sub: '12+ years', val: numAdults, min: 1, max: 20, set: setNumAdults, icon: (
+                  { label: 'Adults', sub: '18+ years', val: numAdults, min: 1, max: 20, set: setNumAdults, icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
                     </svg>
                   )},
-                  { label: 'Children', sub: '0–11 years (0–5 yrs stay free)', val: numKids, min: 0, max: 10, set: setNumKids, icon: (
+                  { label: 'Children', sub: '0–17 years (0–5 yrs stay free)', val: numKids, min: 0, max: 10, set: setNumKids, icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="9" r="3"/><path d="M12 12v3"/><path d="M9.5 17.5 12 15l2.5 2.5"/>
                     </svg>
@@ -1398,6 +1410,62 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   </div>
                 ))}
 
+                {/* Mandatory Child Age Selection Dropdowns (MakeMyTrip style) */}
+                {numKids > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-150 text-left space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-slate-700 tracking-wider font-display flex items-center gap-1">
+                        <Baby size={13} className="text-[#FF5F00]" />
+                        <span>Select Age of Children (Mandatory)</span>
+                      </span>
+                      <span className="text-[8.5px] font-bold text-[#FF5F00] bg-orange-50 px-2 py-0.5 rounded border border-orange-100 uppercase">
+                        Hotel Policy Check
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {Array.from({ length: numKids }).map((_, idx) => {
+                        const age = childAges[idx] !== undefined ? childAges[idx] : 3;
+                        const isFree = age <= 5;
+                        return (
+                          <div key={idx} className="bg-slate-50 border border-slate-200/80 rounded-xl p-2 flex flex-col text-left shadow-3xs">
+                            <label className="text-[9px] font-black text-slate-500 uppercase tracking-wide">
+                              Child {idx + 1} Age
+                            </label>
+                            <select
+                              value={age}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setChildAges(prev => {
+                                  const updated = [...prev];
+                                  updated[idx] = val;
+                                  return updated;
+                                });
+                              }}
+                              className="mt-1 bg-white border border-slate-300 rounded-lg text-xs font-black text-slate-900 px-2 py-1.5 focus:outline-none focus:border-[#FF5F00] cursor-pointer"
+                            >
+                              {Array.from({ length: 18 }).map((_, aIdx) => (
+                                <option key={aIdx} value={aIdx}>
+                                  {aIdx === 0 ? '< 1 Yr (Infant)' : `${aIdx} Year${aIdx > 1 ? 's' : ''} Old`}
+                                </option>
+                              ))}
+                            </select>
+                            {isFree ? (
+                              <span className="text-[8.5px] text-emerald-600 font-extrabold mt-1 leading-none">
+                                ✓ Free Stay (No extra bed)
+                              </span>
+                            ) : (
+                              <span className="text-[8.5px] text-amber-600 font-extrabold mt-1 leading-none">
+                                ⚠ Extra mattress fee at check-in
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Capacity hint */}
                 {(() => {
                   const maxPerRoom = selectedHotel.rules?.max_guests_per_room || 3;
@@ -1425,6 +1493,21 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     </div>
                   );
                 })()}
+
+                {/* Dynamic Child Check-in Extra Bed Note */}
+                {numKids > 0 && childAges.some(a => a >= 6) && (
+                  <div className="mt-2.5 p-2.5 bg-amber-50/90 border border-amber-200 rounded-xl flex items-start gap-2 text-left shadow-3xs">
+                    <AlertCircle size={14} className="text-amber-700 shrink-0 mt-0.5" />
+                    <div className="text-[10px] text-amber-900 font-semibold leading-relaxed">
+                      <strong>Hotel Mattress Policy:</strong> Children 6–17 yrs stay on existing bed or extra mattress.
+                      {selectedHotel.rules?.extra_bed_charge ? (
+                        <span> Extra mattress charge of <strong>₹{selectedHotel.rules.extra_bed_charge}/night</strong> will be paid directly at hotel reception upon check-in.</span>
+                      ) : (
+                        <span> Extra mattress charge (if requested) will be paid directly at hotel reception upon check-in.</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Price breakdown */}
                 <div style={{
@@ -1788,6 +1871,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
                           num_rooms: numRooms,
                           num_adults: numAdults,
                           num_kids: numKids,
+                          child_ages: childAges,
+                          extra_bed_charge: hotelToBook.rules?.extra_bed_charge || 0,
                           meal_cost_per_night: window._mealCostPerNight || 0,
                           selected_meals: selectedMeals,
                           category: 'hotels',
