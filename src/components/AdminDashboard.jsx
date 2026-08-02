@@ -2467,6 +2467,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       setFormData({ 
         ...data,
         original_price: data.original_price !== null && data.original_price !== undefined ? data.original_price : '',
+        competitor_name: data.competitor_name || 'MakeMyTrip',
+        competitor_price: data.competitor_price !== null && data.competitor_price !== undefined ? data.competitor_price : '',
+        mmt_url: data.mmt_url || '',
         cancellation_policy: (data.cancellation_policy && data.cancellation_policy.trim() !== '') ? data.cancellation_policy : 'Free Cancellation up to 24 Hours',
         commission_percentage: data.commission_percentage !== null && data.commission_percentage !== undefined ? data.commission_percentage : '',
         is_limited_offer: !!data.is_limited_offer,
@@ -2569,6 +2572,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         description: '',
         price: 0,
         original_price: '',
+        competitor_name: 'MakeMyTrip',
+        competitor_price: '',
+        mmt_url: '',
         commission_percentage: '',
         is_limited_offer: false,
         images: [],
@@ -3138,6 +3144,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         closed_from: formData.closed_from || null,
         closed_until: formData.closed_until || null,
         original_price: formData.original_price === '' || formData.original_price === null || formData.original_price === undefined ? null : Number(formData.original_price),
+        competitor_name: formData.competitor_name || 'MakeMyTrip',
+        competitor_price: formData.competitor_price === '' || formData.competitor_price === null || formData.competitor_price === undefined ? null : Number(formData.competitor_price),
+        mmt_url: formData.mmt_url || null,
         payment_mode: formData.payment_mode || 'commission_advance',
         commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage === '' || formData.commission_percentage === null || formData.commission_percentage === undefined ? null : Number(formData.commission_percentage)) : null,
         fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null || formData.fixed_advance_amount === undefined ? null : Number(formData.fixed_advance_amount)) : null,
@@ -3381,6 +3390,49 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 placeholder="e.g. 2999 (Leave blank if no discount)"
               />
             </div>
+
+            {['hotels', 'tours'].includes(type) && (
+              <>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                    Competitor Platform Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.competitor_name || 'MakeMyTrip'}
+                    onChange={(e) => setFormData(prev => ({ ...prev, competitor_name: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none text-sm"
+                    placeholder="MakeMyTrip"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                    Competitor Price (₹ Today)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.competitor_price !== null && formData.competitor_price !== undefined ? formData.competitor_price : ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, competitor_price: e.target.value === '' ? null : Number(e.target.value) }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none text-sm"
+                    placeholder="e.g. 5400 (Leave blank if exclusive to TripGod)"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                    MakeMyTrip / Competitor Listing Link
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.mmt_url || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mmt_url: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none text-sm"
+                    placeholder="https://www.makemytrip.com/hotels/..."
+                  />
+                </div>
+              </>
+            )}
           </>
         )}
 

@@ -69,6 +69,9 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
             ...item,
             price: Number(item.price),
             original_price: item.original_price ? Number(item.original_price) : Math.round(Number(item.price) * 1.4),
+            competitor_name: item.competitor_name || 'MakeMyTrip',
+            competitor_price: item.competitor_price ? Number(item.competitor_price) : null,
+            mmt_url: item.mmt_url || null,
             rating: item.rating || item.vendors?.star_rating || 4.8,
             reviewsCount: item.reviews_count || (60 + (idx * 23) % 180),
             upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
@@ -557,15 +560,31 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                       {/* Price + CTA */}
                       <div className="px-4 py-3.5 flex items-center justify-between gap-3">
                         <div>
-                          <div className="flex items-baseline gap-1.5 flex-wrap">
-                            <span className="text-lg font-black text-slate-950">₹{pkg.price.toLocaleString('en-IN')}</span>
-                            {pkg.original_price > pkg.price && (
-                              <span className="text-[11px] text-slate-400 line-through font-semibold">₹{pkg.original_price.toLocaleString('en-IN')}</span>
-                            )}
-                            {discountPct > 0 && (
-                              <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded uppercase">{discountPct}% off</span>
-                            )}
-                          </div>
+                          {pkg.competitor_price && Number(pkg.competitor_price) > pkg.price ? (
+                            <div className="flex flex-col">
+                              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wide">
+                                {pkg.competitor_name || 'MakeMyTrip'} Today: <span className="line-through">₹{Number(pkg.competitor_price).toLocaleString('en-IN')}</span>
+                              </span>
+                              <div className="flex items-baseline gap-1.5 flex-wrap mt-0.5">
+                                <span className="text-lg font-black text-slate-950">₹{pkg.price.toLocaleString('en-IN')}</span>
+                                <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded uppercase">
+                                  Save ₹{(Number(pkg.competitor_price) - pkg.price).toLocaleString('en-IN')}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col">
+                              <span className="text-[8px] text-amber-600 font-black uppercase tracking-wider">
+                                TripGod Exclusive
+                              </span>
+                              <div className="flex items-baseline gap-1.5 flex-wrap mt-0.5">
+                                <span className="text-lg font-black text-slate-950">₹{pkg.price.toLocaleString('en-IN')}</span>
+                                {pkg.original_price > pkg.price && (
+                                  <span className="text-[11px] text-slate-400 line-through font-semibold">₹{pkg.original_price.toLocaleString('en-IN')}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
                           <span className="text-[9px] text-slate-400 font-bold uppercase">per person</span>
                         </div>
 
@@ -622,16 +641,31 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                   </div>
                 </div>
                 {/* Price pill */}
-                <div className="bg-[#FF5F00]/8 border border-[#FF5F00]/20 px-4 py-3 rounded-2xl shrink-0 text-left sm:text-right">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase block">Starting From</span>
-                  <div className="flex items-baseline gap-1.5 sm:justify-end">
-                    <span className="text-2xl font-black text-slate-900">₹{selectedTour.price.toLocaleString('en-IN')}</span>
-                    {selectedTour.original_price > selectedTour.price && (
-                      <span className="text-xs text-slate-400 line-through font-semibold">₹{selectedTour.original_price.toLocaleString('en-IN')}</span>
-                    )}
+                {selectedTour.competitor_price && Number(selectedTour.competitor_price) > selectedTour.price ? (
+                  <div className="bg-[#FF5F00]/8 border border-[#FF5F00]/20 px-4 py-3 rounded-2xl shrink-0 text-left sm:text-right">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase block">
+                      {selectedTour.competitor_name || 'MakeMyTrip'} Today: <span className="line-through text-slate-400">₹{Number(selectedTour.competitor_price).toLocaleString('en-IN')}</span>
+                    </span>
+                    <div className="flex items-baseline gap-1.5 sm:justify-end mt-0.5">
+                      <span className="text-2xl font-black text-slate-900">₹{selectedTour.price.toLocaleString('en-IN')}</span>
+                      <span className="text-[9.5px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded uppercase">
+                        Save ₹{(Number(selectedTour.competitor_price) - selectedTour.price).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-black text-[#FF5F00] uppercase block mt-0.5">Per Person</span>
                   </div>
-                  <span className="text-[9px] font-black text-[#FF5F00] uppercase">Per Person</span>
-                </div>
+                ) : (
+                  <div className="bg-slate-900 text-white px-4 py-3 rounded-2xl shrink-0 text-left sm:text-right">
+                    <span className="text-[8.5px] font-black text-amber-300 uppercase tracking-widest block">TripGod Exclusive Listing</span>
+                    <div className="flex items-baseline gap-1.5 sm:justify-end mt-0.5">
+                      <span className="text-2xl font-black text-white">₹{selectedTour.price.toLocaleString('en-IN')}</span>
+                      {selectedTour.original_price > selectedTour.price && (
+                        <span className="text-xs text-slate-400 line-through font-semibold">₹{selectedTour.original_price.toLocaleString('en-IN')}</span>
+                      )}
+                    </div>
+                    <span className="text-[9px] font-black text-slate-300 uppercase block mt-0.5">Per Person</span>
+                  </div>
+                )}
               </div>
 
               {/* Hero Image */}

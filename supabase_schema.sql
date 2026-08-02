@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS hotels (
     amenities JSONB DEFAULT '{}'::JSONB, -- e.g., {wifi: true, ac: true}
     rules JSONB DEFAULT '{}'::JSONB, -- e.g., {unmarried_couples: true, pets: false}
     landmarks TEXT[] DEFAULT '{}'::TEXT[],
+    competitor_name TEXT DEFAULT 'MakeMyTrip',
+    competitor_price NUMERIC,
+    mmt_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -98,6 +101,9 @@ CREATE TABLE IF NOT EXISTS tours (
     cancellation_policy TEXT NOT NULL,
     contact_number TEXT,
     images TEXT[] DEFAULT '{}'::TEXT[],
+    competitor_name TEXT DEFAULT 'MakeMyTrip',
+    competitor_price NUMERIC,
+    mmt_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
