@@ -320,6 +320,17 @@ export default function Hotels({ currentCity, openBookingModal }) {
     });
   }, [numKids]);
 
+  // Auto-adjust room count when guests exceed max capacity per room
+  useEffect(() => {
+    if (!selectedHotel) return;
+    const maxPerRoom = selectedHotel.rules?.max_guests_per_room || 3;
+    const totalGuests = numAdults + numKids;
+    const minRoomsNeeded = Math.max(1, Math.ceil(totalGuests / maxPerRoom));
+    if (numRooms < minRoomsNeeded) {
+      setNumRooms(minRoomsNeeded);
+    }
+  }, [numAdults, numKids, selectedHotel, numRooms]);
+
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImgIdx, setLightboxImgIdx] = useState(0);
@@ -1342,7 +1353,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                 {/* Counter rows */}
                 {[
-                  { label: 'Rooms', sub: 'Number of rooms needed', val: numRooms, min: 1, max: 10, set: setNumRooms, icon: (
+                  { label: 'Rooms', sub: 'Number of rooms needed', val: numRooms, min: Math.max(1, Math.ceil((numAdults + numKids) / (selectedHotel?.rules?.max_guests_per_room || 3))), max: 10, set: setNumRooms, icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FF5F00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
                     </svg>
