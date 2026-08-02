@@ -1017,28 +1017,32 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   {selectedHotel.name}
                 </h1>
                 
-                {/* Micro info rows - Compact pill container layout */}
-                <div className="flex flex-wrap items-center gap-2 text-slate-700 text-[11px] font-extrabold select-none pt-1">
-                  {selectedHotel.is_verified && (
-                    <span className="text-[#008F5D] bg-emerald-50 border border-emerald-100/80 px-2.5 py-1 rounded-lg font-black flex items-center gap-1 uppercase tracking-wider text-[10px]">
-                      ✓ Verified by TripGod
-                    </span>
-                  )}
-                  
-                  <span className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-800 text-[10.5px]">
-                    <span className="text-[#FF5F00]">⭐</span> {selectedHotel.rating.toFixed(1)} Excellent ({selectedHotel.reviewsCount} Verified Reviews)
-                  </span>
+                {/* Micro info rows - Line 1: Verified + Location side-by-side | Line 2: Rating */}
+                <div className="space-y-1.5 pt-1 text-left">
+                  <div className="flex flex-wrap items-center gap-2 text-slate-700 text-[11px] font-extrabold select-none">
+                    {selectedHotel.is_verified && (
+                      <span className="text-[#008F5D] bg-emerald-50 border border-emerald-100/80 px-2.5 py-1 rounded-lg font-black flex items-center gap-1 uppercase tracking-wider text-[10px]">
+                        ✓ Verified by TripGod
+                      </span>
+                    )}
 
-                  <span className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-700 text-[10.5px]">
-                    📍 {(() => {
-                      if (selectedHotel.landmarks && selectedHotel.landmarks[0] && selectedHotel.landmarks[0].trim() !== '') {
-                        return selectedHotel.landmarks[0].trim();
-                      }
-                      const addLower = (selectedHotel.address || '').toLowerCase();
-                      const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
-                      return isLaxman ? 'Laxman Jhula' : 'Ram Jhula';
-                    })()}
-                  </span>
+                    <span className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-700 text-[10.5px]">
+                      📍 {(() => {
+                        if (selectedHotel.landmarks && selectedHotel.landmarks[0] && selectedHotel.landmarks[0].trim() !== '') {
+                          return selectedHotel.landmarks[0].trim();
+                        }
+                        const addLower = (selectedHotel.address || '').toLowerCase();
+                        const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
+                        return isLaxman ? 'Laxman Jhula' : 'Ram Jhula';
+                      })()}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 select-none">
+                    <span className="flex items-center gap-1 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-lg text-slate-800 text-[10.5px] font-extrabold">
+                      <span className="text-[#FF5F00]">⭐</span> {selectedHotel.rating.toFixed(1)} Excellent ({selectedHotel.reviewsCount} Verified Reviews)
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1191,25 +1195,35 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   )}
                 </div>
 
-                {/* COMPETITOR PRICE COMPARISON / EXCLUSIVE LISTING CARD */}
+                {/* COMPETITOR PRICE COMPARISON / EXCLUSIVE LISTING CARD - Balanced 2-Column Row Layout */}
                 {selectedHotel.competitor_price && Number(selectedHotel.competitor_price) > window._activeRoomPrice ? (
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-orange-50/90 via-amber-50/70 to-emerald-50/90 border border-orange-200/80 text-left space-y-2 shadow-2xs w-full">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2.5 py-1 rounded-md bg-[#FF5F00] text-white text-[9px] font-black uppercase tracking-wider shadow-2xs">
-                          BEST PRICE GUARANTEE
-                        </span>
-                        <span className="text-xs font-black text-slate-900">
-                          {selectedHotel.competitor_name || 'MakeMyTrip'} Today: <span className="line-through text-slate-400 font-extrabold ml-0.5">₹{Number(selectedHotel.competitor_price).toLocaleString('en-IN')}</span>
-                        </span>
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-orange-50/60 to-emerald-50/90 border border-orange-200/80 text-left space-y-3 shadow-2xs w-full">
+                    {/* Row 1: Left = Best Price Guarantee Badge | Right = Green Savings Pill */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2.5 py-1 rounded-md bg-[#FF5F00] text-white text-[9px] font-black uppercase tracking-wider shadow-2xs shrink-0">
+                        BEST PRICE GUARANTEE
+                      </span>
+                      <span className="px-2.5 py-1 rounded-md bg-[#008F5D] text-white text-[10px] font-black tracking-wide shadow-2xs shrink-0">
+                        Save ₹{(Number(selectedHotel.competitor_price) - window._activeRoomPrice).toLocaleString('en-IN')} on TripGod
+                      </span>
+                    </div>
+
+                    {/* Row 2: Left = Competitor Rate | Right = TripGod Rate */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-orange-200/50">
+                      <div className="flex items-center gap-1 text-xs font-black text-slate-800">
+                        <span>{selectedHotel.competitor_name || 'MakeMyTrip'} Today:</span>
+                        <span className="line-through text-slate-400 font-extrabold ml-0.5">₹{Number(selectedHotel.competitor_price).toLocaleString('en-IN')}</span>
                       </div>
-                      <div className="flex items-center gap-1 bg-[#008F5D] text-white px-2.5 py-1 rounded-lg text-[10.5px] font-black shadow-2xs">
-                        <span>Save ₹{(Number(selectedHotel.competitor_price) - window._activeRoomPrice).toLocaleString('en-IN')} on TripGod</span>
+                      <div className="flex items-center gap-1 text-xs font-black text-[#008F5D]">
+                        <span>TripGod Rate:</span>
+                        <span className="text-sm font-black text-slate-900">₹{window._activeRoomPrice.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
-                    <div className="text-[9.5px] text-slate-500 font-semibold border-t border-orange-200/50 pt-1.5 flex items-center justify-between flex-wrap gap-1">
+
+                    {/* Row 3: Left = Footnote | Right = Direct Host Rate Badge */}
+                    <div className="text-[9.5px] text-slate-500 font-semibold border-t border-orange-200/40 pt-2 flex items-center justify-between flex-wrap gap-1">
                       <span>*Live rates compared with public listed price on {selectedHotel.competitor_name || 'MakeMyTrip'} today for same room category.</span>
-                      <span className="text-emerald-700 font-black uppercase tracking-wide">Direct Host Rate</span>
+                      <span className="text-emerald-700 font-black uppercase tracking-wide text-[9px] bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md shrink-0">Direct Host Rate</span>
                     </div>
                   </div>
                 ) : (
