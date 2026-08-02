@@ -218,9 +218,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     ? (fixedAdvanceAmount * guests * rentalDays) 
     : (isHotel ? fixedAdvanceAmount : fixedAdvanceAmount * guests);
 
-  // For hotels: TripGod Online Advance = Fixed Advance + GST, Total = Base Stay + Advance + GST
+  // For hotels: TripGod Online Advance = Fixed Advance + GST
   const hotelAdvanceOnline = isHotel ? (flatAdvanceTotal + taxes) : flatAdvanceTotal;
-  const totalPrice = isHotel ? (rawTotalPrice + flatAdvanceTotal + taxes) : (rawTotalPrice + taxes);
+  const totalPrice = rawTotalPrice + taxes;
 
   const calculatedAdvance = paymentMode === 'fixed_advance'
     ? (isHotel ? Math.min(hotelAdvanceOnline, totalPrice) : Math.min(flatAdvanceTotal, totalPrice))
@@ -232,7 +232,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const effectivePaymentOption = paymentMode === 'full_payment' ? 'full' : paymentOption;
 
   const amountToPayNow = effectivePaymentOption === 'full' ? totalPrice : calculatedAdvance;
-  const remainingPayment = effectivePaymentOption === 'full' ? 0 : (isHotel ? rawTotalPrice : Math.max(0, totalPrice - amountToPayNow));
+  const remainingPayment = effectivePaymentOption === 'full' ? 0 : (isHotel ? Math.max(0, rawTotalPrice - flatAdvanceTotal) : Math.max(0, totalPrice - amountToPayNow));
 
   // Calculate dynamic UPI Discount
   const customUpiDiscount = activity && activity.upi_discount !== undefined && activity.upi_discount !== null && activity.upi_discount !== ''
@@ -1132,10 +1132,6 @@ My payment ID is verified. Please confirm my slots.`;
                     <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
                       <span>Nights</span>
                       <span>{nights} Night{nights > 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
-                      <span>TripGod Service Advance</span>
-                      <span>₹{flatAdvanceTotal.toLocaleString('en-IN')}</span>
                     </div>
                   </>
                 ) : isBikeRent ? (
