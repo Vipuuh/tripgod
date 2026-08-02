@@ -843,16 +843,17 @@ export default function Hotels({ currentCity, openBookingModal }) {
                             <span>{hotel.rating.toFixed(1)} {ratingLabel} ({hotel.reviewsCount} Verified Reviews)</span>
                           </div>
 
-                          {/* Verified tag */}
-                          {hotel.is_verified && (
-                            <div className="text-[10px] font-black text-[#008F5D] flex items-center gap-1 uppercase tracking-wider select-none">
-                              <span>✔</span> Verified by TripGod
-                            </div>
-                          )}
-
-                          {/* Landmark/Location (Omit walk/drive helper) */}
-                          <div className="text-[10.5px] font-extrabold text-slate-600 flex items-center gap-1">
-                            <span>📍</span> {landmarkText}
+                          {/* Verified & Location Row - Combined horizontally */}
+                          <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[10.5px] font-extrabold select-none">
+                            {hotel.is_verified && (
+                              <span className="text-[#008F5D] font-black flex items-center gap-1 uppercase tracking-wider bg-emerald-50 border border-emerald-100/80 px-2 py-0.5 rounded-md">
+                                ✔ VERIFIED BY TRIPGOD
+                              </span>
+                            )}
+                            {hotel.is_verified && <span className="text-slate-300">•</span>}
+                            <span className="text-slate-600 flex items-center gap-1">
+                              📍 {landmarkText}
+                            </span>
                           </div>
 
                           {/* Badges Row */}
@@ -1041,42 +1042,6 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     </span>
                   </div>
                 </div>
-
-                {/* PRICE COMPARISON / EXCLUSIVE LISTING BANNER */}
-                {selectedHotel.competitor_price && Number(selectedHotel.competitor_price) > Number(selectedHotel.price) ? (
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-50 via-amber-50 to-white border border-orange-200 text-left space-y-2 shadow-xs mt-3">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2.5 py-1 rounded-md bg-[#FF5F00] text-white text-[9.5px] font-black uppercase tracking-wider">
-                          Best Price Guarantee
-                        </span>
-                        <span className="text-xs font-black text-slate-800">
-                          {selectedHotel.competitor_name || 'MakeMyTrip'} Today: <span className="line-through text-slate-400 font-extrabold">₹{Number(selectedHotel.competitor_price).toLocaleString('en-IN')}</span>
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 bg-emerald-100 border border-emerald-200 text-emerald-800 px-3 py-1 rounded-xl text-xs font-black">
-                        <span>Save ₹{(Number(selectedHotel.competitor_price) - Number(selectedHotel.price)).toLocaleString('en-IN')} on TripGod</span>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-slate-500 font-medium">
-                      *Live rates compared with public listed price on {selectedHotel.competitor_name || 'MakeMyTrip'} today for same room category.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-2xl bg-slate-900 text-white text-left flex items-center justify-between flex-wrap gap-2 shadow-xs mt-3">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-1 rounded-lg bg-orange-500 text-white text-[9px] font-black uppercase tracking-wider">
-                        TripGod Exclusive Listing
-                      </span>
-                      <span className="text-xs font-black text-slate-200">
-                        Direct Host Rate Guarantee
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-semibold">
-                      Not listed on MakeMyTrip or other OTAs
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* SECTION 1: HERO GALLERY */}
@@ -1164,65 +1129,104 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 )}
               </div>
 
-              {/* SECTION 3: PRICE & SAVINGS BOX */}
-              <div className="p-5 bg-slate-50 border border-slate-200/60 rounded-3xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-3xs select-none">
-                <div className="space-y-1 text-left">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[8.5px] font-black uppercase text-slate-500 tracking-wider">SPECIAL STAY PRICE</span>
-                    {selectedHotel.rooms_left !== null && selectedHotel.rooms_left > 0 && selectedHotel.rooms_left <= 5 && (
-                      <span className="text-[8.5px] font-black uppercase text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded animate-pulse">
-                        Only {selectedHotel.rooms_left} Rooms Left!
+              {/* SECTION 3: PRICE & SAVINGS BOX WITH INTEGRATED COMPETITOR COMPARISON */}
+              <div className="p-4 sm:p-5 bg-white border border-slate-200/80 rounded-3xl space-y-4 shadow-sm select-none text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1 text-left">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[8.5px] font-black uppercase text-slate-500 tracking-wider">SPECIAL STAY PRICE</span>
+                      {selectedHotel.rooms_left !== null && selectedHotel.rooms_left > 0 && selectedHotel.rooms_left <= 5 && (
+                        <span className="text-[8.5px] font-black uppercase text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded animate-pulse">
+                          Only {selectedHotel.rooms_left} Rooms Left!
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-baseline gap-3 pt-1">
+                      <span className="text-3xl font-black text-slate-900 leading-none">
+                        ₹{window._activeRoomPrice.toLocaleString('en-IN')}
+                        <span className="text-xs text-slate-500 font-extrabold ml-1.5 uppercase tracking-wider">/ night</span>
                       </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-baseline gap-3 pt-1">
-                    <span className="text-3xl font-black text-slate-900 leading-none">
-                      ₹{window._activeRoomPrice.toLocaleString('en-IN')}
-                      <span className="text-xs text-slate-500 font-extrabold ml-1.5 uppercase tracking-wider">/ night</span>
-                    </span>
+                      {window._activeRoomOriginalPrice && window._activeRoomOriginalPrice > window._activeRoomPrice && (
+                        <span className="text-[16px] text-slate-400 font-bold line-through">
+                          ₹{window._activeRoomOriginalPrice.toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                      <span className="text-[10px] text-slate-700 font-extrabold bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-md">
+                        + ₹{Math.round(window._activeRoomPrice * 0.12).toLocaleString('en-IN')} GST (12%)
+                      </span>
+                      <span className="text-[10px] text-emerald-800 font-black bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                        Total ₹{(window._activeRoomPrice + Math.round(window._activeRoomPrice * 0.12)).toLocaleString('en-IN')}/night
+                      </span>
+                    </div>
+
                     {window._activeRoomOriginalPrice && window._activeRoomOriginalPrice > window._activeRoomPrice && (
-                      <span className="text-[16px] text-slate-400 font-bold line-through">
-                        ₹{window._activeRoomOriginalPrice.toLocaleString('en-IN')}
-                      </span>
+                      <div className="text-[12px] font-black text-[#008F5D] pt-0.5 uppercase tracking-wide">
+                        You Save ₹{(window._activeRoomOriginalPrice - window._activeRoomPrice).toLocaleString('en-IN')}
+                      </div>
                     )}
+
+                    {/* Social Proof booking helper */}
+                    <div className="text-[9.5px] text-slate-500 font-bold pt-1.5">
+                      🔥 {selectedHotel.bookings_count || 18} bookings in the last 7 days
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 pt-1 flex-wrap">
-                    <span className="text-[10px] text-slate-700 font-extrabold bg-slate-200/70 border border-slate-300/60 px-2 py-0.5 rounded-md">
-                      + ₹{Math.round(window._activeRoomPrice * 0.12).toLocaleString('en-IN')} GST (12%)
-                    </span>
-                    <span className="text-[10px] text-emerald-800 font-black bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                      Total ₹{(window._activeRoomPrice + Math.round(window._activeRoomPrice * 0.12)).toLocaleString('en-IN')}/night
-                    </span>
-                  </div>
-
-                  {window._activeRoomOriginalPrice && window._activeRoomOriginalPrice > window._activeRoomPrice && (
-                    <div className="text-[12px] font-black text-[#008F5D] pt-0.5 uppercase tracking-wide">
-                      You Save ₹{(window._activeRoomOriginalPrice - window._activeRoomPrice).toLocaleString('en-IN')}
+                  {/* Extra Discount Card (UPI) */}
+                  {getUpiDiscountForHotel(selectedHotel) > 0 && (
+                    <div className="bg-[#008F5D]/5 border border-[#008F5D]/10 rounded-2xl p-3.5 flex items-start gap-2.5 shadow-3xs max-w-xs text-left">
+                      <div className="flex flex-col">
+                        <span className="inline-flex items-center bg-[#008F5D]/10 text-[#008F5D] text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-md border border-[#008F5D]/20 w-fit">
+                          UPI OFFER
+                        </span>
+                        <span className="text-[14px] font-black text-slate-950 leading-snug mt-1.5">
+                          ₹{getUpiDiscountForHotel(selectedHotel)} Instant Discount
+                        </span>
+                        <span className="text-[9.5px] text-slate-500 font-bold mt-0.5">
+                          Pay using UPI instantly & save extra
+                        </span>
+                      </div>
                     </div>
                   )}
-
-                  {/* Social Proof booking helper */}
-                  <div className="text-[9.5px] text-slate-500 font-bold pt-1.5">
-                    🔥 {selectedHotel.bookings_count || 18} bookings in the last 7 days
-                  </div>
                 </div>
 
-                {/* Extra Discount Card (UPI) */}
-                {getUpiDiscountForHotel(selectedHotel) > 0 && (
-                  <div className="bg-[#008F5D]/5 border border-[#008F5D]/10 rounded-2xl p-3.5 flex items-start gap-2.5 shadow-3xs max-w-xs text-left">
-                    <div className="flex flex-col">
-                      <span className="inline-flex items-center bg-[#008F5D]/10 text-[#008F5D] text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-md border border-[#008F5D]/20 w-fit">
-                        UPI OFFER
+                {/* COMPETITOR PRICE COMPARISON / EXCLUSIVE LISTING CARD */}
+                {selectedHotel.competitor_price && Number(selectedHotel.competitor_price) > window._activeRoomPrice ? (
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-orange-50/90 via-amber-50/70 to-emerald-50/90 border border-orange-200/80 text-left space-y-2 shadow-2xs w-full">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-1 rounded-md bg-[#FF5F00] text-white text-[9px] font-black uppercase tracking-wider shadow-2xs">
+                          BEST PRICE GUARANTEE
+                        </span>
+                        <span className="text-xs font-black text-slate-900">
+                          {selectedHotel.competitor_name || 'MakeMyTrip'} Today: <span className="line-through text-slate-400 font-extrabold ml-0.5">₹{Number(selectedHotel.competitor_price).toLocaleString('en-IN')}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-[#008F5D] text-white px-2.5 py-1 rounded-lg text-[10.5px] font-black shadow-2xs">
+                        <span>Save ₹{(Number(selectedHotel.competitor_price) - window._activeRoomPrice).toLocaleString('en-IN')} on TripGod</span>
+                      </div>
+                    </div>
+                    <div className="text-[9.5px] text-slate-500 font-semibold border-t border-orange-200/50 pt-1.5 flex items-center justify-between flex-wrap gap-1">
+                      <span>*Live rates compared with public listed price on {selectedHotel.competitor_name || 'MakeMyTrip'} today for same room category.</span>
+                      <span className="text-emerald-700 font-black uppercase tracking-wide">Direct Host Rate</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-900 text-white text-left flex items-center justify-between flex-wrap gap-2 shadow-2xs w-full">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-md bg-amber-400 text-slate-950 text-[9px] font-black uppercase tracking-wider">
+                        TripGod Exclusive
                       </span>
-                      <span className="text-[14px] font-black text-slate-950 leading-snug mt-1.5">
-                        ₹{getUpiDiscountForHotel(selectedHotel)} Instant Discount
-                      </span>
-                      <span className="text-[9.5px] text-slate-500 font-bold mt-0.5">
-                        Pay using UPI instantly & save extra
+                      <span className="text-xs font-black text-slate-200">
+                        Direct Host Rate Guarantee
                       </span>
                     </div>
+                    <span className="text-[9.5px] text-slate-400 font-semibold">
+                      Not listed on MakeMyTrip or other OTAs
+                    </span>
                   </div>
                 )}
               </div>

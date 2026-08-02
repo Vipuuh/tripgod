@@ -37,23 +37,20 @@ const mealTimes = {
  *   - setSelectedMeals: state setter
  */
 export default function DiningAndMealPanel({ selectedHotel, selectedMeals, setSelectedMeals }) {
-  const meals = selectedHotel.rules?.meals;
-  const hasMeals = meals && (
-    meals.breakfast?.status !== 'none' ||
-    meals.lunch?.status !== 'none' ||
-    meals.dinner?.status !== 'none'
-  );
-  if (!hasMeals) return null;
+  const meals = selectedHotel?.rules?.meals;
 
   const freeMealsList = [];
-  if (meals.breakfast?.status === 'free') freeMealsList.push('Breakfast');
-  if (meals.lunch?.status === 'free') freeMealsList.push('Lunch');
-  if (meals.dinner?.status === 'free') freeMealsList.push('Dinner');
+  if (meals?.breakfast?.status === 'free') freeMealsList.push('Breakfast');
+  if (meals?.lunch?.status === 'free') freeMealsList.push('Lunch');
+  if (meals?.dinner?.status === 'free') freeMealsList.push('Dinner');
 
   const paidMealsList = [];
-  if (meals.breakfast?.status === 'paid') paidMealsList.push({ name: 'breakfast', label: 'Breakfast', price: meals.breakfast.price || 150 });
-  if (meals.lunch?.status === 'paid') paidMealsList.push({ name: 'lunch', label: 'Lunch', price: meals.lunch.price || 250 });
-  if (meals.dinner?.status === 'paid') paidMealsList.push({ name: 'dinner', label: 'Dinner', price: meals.dinner.price || 300 });
+  if (meals?.breakfast?.status === 'paid') paidMealsList.push({ name: 'breakfast', label: 'Breakfast', price: meals.breakfast.price || 150 });
+  if (meals?.lunch?.status === 'paid') paidMealsList.push({ name: 'lunch', label: 'Lunch', price: meals.lunch.price || 250 });
+  if (meals?.dinner?.status === 'paid') paidMealsList.push({ name: 'dinner', label: 'Dinner', price: meals.dinner.price || 300 });
+
+  const hasActiveMeals = freeMealsList.length > 0 || paidMealsList.length > 0;
+  if (!hasActiveMeals) return null;
 
   return (
     <div style={{
