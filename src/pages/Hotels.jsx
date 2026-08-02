@@ -1335,12 +1335,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       <path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>
                     </svg>
                   )},
-                  { label: 'Adults', sub: '18+ years', val: numAdults, min: 1, max: 20, set: setNumAdults, icon: (
+                  { label: 'Adults', sub: '12+ years', val: numAdults, min: 1, max: 20, set: setNumAdults, icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/>
                     </svg>
                   )},
-                  { label: 'Children', sub: 'Under 18 years', val: numKids, min: 0, max: 10, set: setNumKids, icon: (
+                  { label: 'Children', sub: '0–11 years (0–5 yrs stay free)', val: numKids, min: 0, max: 10, set: setNumKids, icon: (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="9" r="3"/><path d="M12 12v3"/><path d="M9.5 17.5 12 15l2.5 2.5"/>
                     </svg>
