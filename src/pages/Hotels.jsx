@@ -728,13 +728,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     : `${hotel.name} Rishikesh`;
 
                   const getLandmarkText = () => {
-                    if (hotel.landmarks && hotel.landmarks[0]) {
-                      const l = hotel.landmarks[0].replace(/Near |Near/i, '');
-                      return `Near ${l}`;
+                    if (hotel.landmarks && hotel.landmarks[0] && hotel.landmarks[0].trim() !== '') {
+                      return hotel.landmarks[0].trim();
                     }
-                    const addLower = hotel.address.toLowerCase();
+                    const addLower = (hotel.address || '').toLowerCase();
                     const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
-                    return `Near ${isLaxman ? 'Laxman Jhula' : 'Ram Jhula'}`;
+                    return isLaxman ? 'Laxman Jhula' : 'Ram Jhula';
                   };
 
                   const landmarkText = getLandmarkText();
@@ -920,6 +919,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 window._roomCostPerNight = window._activeRoomPrice * numRooms;
                 window._mealCostPerNight = _mealCostPerNight;
                 window._totalPricePerNight = window._roomCostPerNight + _mealCostPerNight;
+                window._gstAmountPerNight = Math.round(window._totalPricePerNight * 0.12);
+                window._grandTotalWithGstPerNight = window._totalPricePerNight + window._gstAmountPerNight;
                 window._totalGuests = _totalGuests;
                 return null;
               })()}
@@ -1012,13 +1013,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     <span className="text-slate-300">•</span>
                     <span className="flex items-center gap-0.5 text-slate-800">
                       📍 {(() => {
-                        if (selectedHotel.landmarks && selectedHotel.landmarks[0]) {
-                          const l = selectedHotel.landmarks[0].replace(/Near |Near/i, '');
-                          return `Near ${l}`;
+                        if (selectedHotel.landmarks && selectedHotel.landmarks[0] && selectedHotel.landmarks[0].trim() !== '') {
+                          return selectedHotel.landmarks[0].trim();
                         }
-                        const addLower = selectedHotel.address.toLowerCase();
+                        const addLower = (selectedHotel.address || '').toLowerCase();
                         const isLaxman = addLower.includes('laxman') || addLower.includes('lakshman');
-                        return `Near ${isLaxman ? 'Laxman Jhula' : 'Ram Jhula'}`;
+                        return isLaxman ? 'Laxman Jhula' : 'Ram Jhula';
                       })()}
                     </span>
                   </div>
@@ -1134,8 +1134,17 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     )}
                   </div>
 
+                  <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                    <span className="text-[10px] text-slate-700 font-extrabold bg-slate-200/70 border border-slate-300/60 px-2 py-0.5 rounded-md">
+                      + ₹{Math.round(window._activeRoomPrice * 0.12).toLocaleString('en-IN')} GST (12%)
+                    </span>
+                    <span className="text-[10px] text-emerald-800 font-black bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                      Total ₹{(window._activeRoomPrice + Math.round(window._activeRoomPrice * 0.12)).toLocaleString('en-IN')}/night
+                    </span>
+                  </div>
+
                   {window._activeRoomOriginalPrice && window._activeRoomOriginalPrice > window._activeRoomPrice && (
-                    <div className="text-[13px] font-black text-[#008F5D] pt-1 uppercase tracking-wide">
+                    <div className="text-[12px] font-black text-[#008F5D] pt-0.5 uppercase tracking-wide">
                       You Save ₹{(window._activeRoomOriginalPrice - window._activeRoomPrice).toLocaleString('en-IN')}
                     </div>
                   )}
@@ -1918,9 +1927,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 <span className="block text-[9px] text-gray-550 uppercase font-black tracking-wider truncate max-w-[120px] sm:max-w-[220px]">
                   {selectedHotel.name} · {numRooms} room{numRooms > 1 ? 's' : ''} · {numAdults + numKids} guest{numAdults + numKids !== 1 ? 's' : ''}
                 </span>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-base sm:text-lg font-black text-black">
                     ₹{(window._totalPricePerNight || Number(selectedHotel.price)).toLocaleString('en-IN')}
+                  </span>
+                  <span className="text-[9.5px] text-slate-700 font-extrabold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                    + ₹{(window._gstAmountPerNight || Math.round(Number(selectedHotel.price)*0.12)).toLocaleString('en-IN')} GST
                   </span>
                   {window._mealCostPerNight > 0 && (
                     <span className="text-[9px] bg-orange-100 text-orange-700 font-bold px-1.5 py-0.5 rounded">
@@ -1928,7 +1940,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     </span>
                   )}
                 </div>
-                <span className="text-[9px] text-gray-450 font-semibold block -mt-0.5">per night + taxes</span>
+                <span className="text-[9.5px] text-emerald-700 font-black block -mt-0.5">
+                  Total ₹{(window._grandTotalWithGstPerNight || (Number(selectedHotel.price) + Math.round(Number(selectedHotel.price)*0.12))).toLocaleString('en-IN')} / night (incl. 12% GST)
+                </span>
               </div>
               
               <div className="flex items-center gap-2 shrink-0">
