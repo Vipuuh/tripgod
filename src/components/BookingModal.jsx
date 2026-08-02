@@ -208,17 +208,22 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
         ? basePrice * nights
         : pricePerPerson * guests);
   
+  const isHotel = activity && activity.category === 'hotels';
+
   // Calculate 12% tax dynamically for hotel bookings
-  const taxes = activity && activity.category === 'hotels' ? Math.round(rawTotalPrice * 0.12) : 0;
-  const totalPrice = rawTotalPrice + taxes;
+  const taxes = isHotel ? Math.round(rawTotalPrice * 0.12) : 0;
   
   // Calculate dynamic advance amount
   const flatAdvanceTotal = isBikeRent 
     ? (fixedAdvanceAmount * guests * rentalDays) 
-    : (activity && activity.category === 'hotels' ? fixedAdvanceAmount : fixedAdvanceAmount * guests);
+    : (isHotel ? fixedAdvanceAmount : fixedAdvanceAmount * guests);
+
+  // For hotels: TripGod Online Advance = Fixed Advance + GST, Total = Base Stay + Advance + GST
+  const hotelAdvanceOnline = isHotel ? (flatAdvanceTotal + taxes) : flatAdvanceTotal;
+  const totalPrice = isHotel ? (rawTotalPrice + flatAdvanceTotal + taxes) : (rawTotalPrice + taxes);
 
   const calculatedAdvance = paymentMode === 'fixed_advance'
-    ? Math.min(flatAdvanceTotal, totalPrice)
+    ? (isHotel ? Math.min(hotelAdvanceOnline, totalPrice) : Math.min(flatAdvanceTotal, totalPrice))
     : (paymentMode === 'full_payment'
         ? totalPrice
         : Math.round(totalPrice * (commissionPercentage / 100)));
@@ -227,7 +232,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const effectivePaymentOption = paymentMode === 'full_payment' ? 'full' : paymentOption;
 
   const amountToPayNow = effectivePaymentOption === 'full' ? totalPrice : calculatedAdvance;
-  const remainingPayment = totalPrice - amountToPayNow;
+  const remainingPayment = effectivePaymentOption === 'full' ? 0 : (isHotel ? rawTotalPrice : Math.max(0, totalPrice - amountToPayNow));
 
   // Calculate dynamic UPI Discount
   const customUpiDiscount = activity && activity.upi_discount !== undefined && activity.upi_discount !== null && activity.upi_discount !== ''
@@ -1074,9 +1079,11 @@ My payment ID is verified. Please confirm my slots.`;
                       <div>
                         <span className="block text-xs font-black">Pay Advance</span>
                         <span className="block text-[10px] text-[#FF5F00] font-black tracking-wide mt-0.5">
-                          {paymentMode === 'fixed_advance'
-                            ? `₹${fixedAdvanceAmount}/person × ${guests} guest${guests > 1 ? 's' : ''}`
-                            : `Pay ${commissionPercentage}% online`}
+                          {isHotel
+                            ? `₹${fixedAdvanceAmount} Advance + ₹${taxes} GST`
+                            : (paymentMode === 'fixed_advance'
+                                ? `₹${fixedAdvanceAmount}/person × ${guests} guest${guests > 1 ? 's' : ''}`
+                                : `Pay ${commissionPercentage}% online`)}
                         </span>
                       </div>
                       <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{calculatedAdvance.toLocaleString('en-IN')}</span>
@@ -1125,6 +1132,10 @@ My payment ID is verified. Please confirm my slots.`;
                     <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
                       <span>Nights</span>
                       <span>{nights} Night{nights > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                      <span>TripGod Service Advance</span>
+                      <span>₹{flatAdvanceTotal.toLocaleString('en-IN')}</span>
                     </div>
                   </>
                 ) : isBikeRent ? (
