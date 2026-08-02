@@ -3637,14 +3637,41 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
 
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Rooms Left</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Total Rooms (Total Property Inventory)</label>
+              <input
+                type="number"
+                min="0"
+                placeholder="e.g. 10"
+                value={formData.total_rooms === undefined ? 10 : formData.total_rooms}
+                onChange={(e) => setFormData(prev => ({ ...prev, total_rooms: Number(e.target.value) }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none font-medium"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Rooms Available / Left (0 = Sold Out)</label>
               <input
                 type="number"
                 min="0"
                 required
                 value={formData.rooms_left === undefined ? 5 : formData.rooms_left}
                 onChange={(e) => setFormData(prev => ({ ...prev, rooms_left: Number(e.target.value) }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none font-medium"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Max Capacity / Guests Per Room</label>
+              <input
+                type="number"
+                min="1"
+                placeholder="e.g. 3 or 5 for Homestay"
+                value={formData.rules?.max_guests_per_room || 3}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  rules: { ...prev.rules, max_guests_per_room: Number(e.target.value) }
+                }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none font-medium"
               />
             </div>
 
@@ -3656,7 +3683,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 required
                 value={formData.bookings_count === undefined ? 18 : formData.bookings_count}
                 onChange={(e) => setFormData(prev => ({ ...prev, bookings_count: Number(e.target.value) }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none font-medium"
               />
             </div>
           </div>
@@ -4511,27 +4538,67 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
           {/* Room Categories Configuration */}
           <div className="bg-slate-900/40 border border-slate-900 rounded-2xl p-4 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-2">
-              <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Room Categories (Multiple Rooms Setup)</label>
-              <button
-                type="button"
-                onClick={() => {
-                  const currentRooms = formData.rules?.room_categories || [];
-                  setFormData(prev => ({
-                    ...prev,
-                    rules: {
-                      ...prev.rules,
-                      room_categories: [
-                        ...currentRooms,
-                        { name: 'Suite Room', price: 3500, original_price: '', images: [] }
-                      ]
-                    }
-                  }));
-                }}
-                className="text-[10px] font-bold text-accent hover:text-white bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
-              >
-                + Add Room Category
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-2">
+              <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">Room Categories (AC / Non-AC & Variants Setup)</label>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentRooms = formData.rules?.room_categories || [];
+                    setFormData(prev => ({
+                      ...prev,
+                      rules: {
+                        ...prev.rules,
+                        room_categories: [
+                          ...currentRooms,
+                          { name: 'AC Deluxe Room', price: Number(formData.price || 1200) + 300, original_price: Number(formData.original_price || 1800) + 400, images: [] }
+                        ]
+                      }
+                    }));
+                  }}
+                  className="text-[10px] font-bold text-sky-400 hover:text-white bg-sky-500/10 border border-sky-500/20 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  ❄️ + Add AC Room
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentRooms = formData.rules?.room_categories || [];
+                    setFormData(prev => ({
+                      ...prev,
+                      rules: {
+                        ...prev.rules,
+                        room_categories: [
+                          ...currentRooms,
+                          { name: 'Non-AC Standard Room', price: Math.max(500, Number(formData.price || 1000) - 300), original_price: formData.original_price || '', images: [] }
+                        ]
+                      }
+                    }));
+                  }}
+                  className="text-[10px] font-bold text-amber-400 hover:text-white bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  🌿 + Add Non-AC Room
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentRooms = formData.rules?.room_categories || [];
+                    setFormData(prev => ({
+                      ...prev,
+                      rules: {
+                        ...prev.rules,
+                        room_categories: [
+                          ...currentRooms,
+                          { name: 'Suite Room', price: 3500, original_price: '', images: [] }
+                        ]
+                      }
+                    }));
+                  }}
+                  className="text-[10px] font-bold text-accent hover:text-white bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  + Custom Category
+                </button>
+              </div>
             </div>
 
             {(!formData.rules?.room_categories || formData.rules.room_categories.length === 0) ? (

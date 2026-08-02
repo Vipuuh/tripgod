@@ -694,7 +694,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   const displayOriginalPrice = hotel.original_price ? Number(hotel.original_price) : Math.round(displayPrice * 1.4);
                   const isDiscounted = displayOriginalPrice && displayOriginalPrice > displayPrice;
                   const savings = displayOriginalPrice - displayPrice;
-                  const upiDiscount = hotel.upi_discount || 120;
+                  const upiDiscount = getUpiDiscountForHotel(hotel);
 
                   const ratingLabel = hotel.rating >= 4.5 ? 'Excellent' : 
                                       hotel.rating >= 4.0 ? 'Very Good' : 
@@ -1124,19 +1124,21 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 </div>
 
                 {/* Extra Discount Card (UPI) */}
-                <div className="bg-[#008F5D]/5 border border-[#008F5D]/10 rounded-2xl p-3.5 flex items-start gap-2.5 shadow-3xs max-w-xs text-left">
-                  <div className="flex flex-col">
-                    <span className="inline-flex items-center bg-[#008F5D]/10 text-[#008F5D] text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-md border border-[#008F5D]/20 w-fit">
-                      UPI OFFER
-                    </span>
-                    <span className="text-[14px] font-black text-slate-950 leading-snug mt-1.5">
-                      ₹{selectedHotel.upi_discount || 120} Instant Discount
-                    </span>
-                    <span className="text-[9.5px] text-slate-500 font-bold mt-0.5">
-                      Pay using UPI instantly & save extra
-                    </span>
+                {getUpiDiscountForHotel(selectedHotel) > 0 && (
+                  <div className="bg-[#008F5D]/5 border border-[#008F5D]/10 rounded-2xl p-3.5 flex items-start gap-2.5 shadow-3xs max-w-xs text-left">
+                    <div className="flex flex-col">
+                      <span className="inline-flex items-center bg-[#008F5D]/10 text-[#008F5D] text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-md border border-[#008F5D]/20 w-fit">
+                        UPI OFFER
+                      </span>
+                      <span className="text-[14px] font-black text-slate-950 leading-snug mt-1.5">
+                        ₹{getUpiDiscountForHotel(selectedHotel)} Instant Discount
+                      </span>
+                      <span className="text-[9.5px] text-slate-500 font-bold mt-0.5">
+                        Pay using UPI instantly & save extra
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* SECTION: ROOM UPGRADES & CATEGORIES */}
