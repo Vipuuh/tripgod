@@ -40,32 +40,87 @@ export default function VendorPortal({ onNavigateHome }) {
 
     try {
       const cleanedPhone = phoneInput.trim();
+      const inputNum = cleanedPhone.replace(/\D/g, '');
 
-      if (!cleanedPhone || cleanedPhone.length < 10) {
+      if (!cleanedPhone || inputNum.length < 10) {
         throw new Error('Please enter a valid 10-digit mobile number.');
       }
 
-      // Query Supabase for vendor with matching phone
-      const { data: vendors, error } = await supabase
-        .from('vendors')
-        .select('*');
+      let matchedVendor = null;
 
-      if (error) throw error;
-
-      if (!vendors || vendors.length === 0) {
-        throw new Error('No vendors found in the database. Please contact admin.');
+      // 1. Check vendors table
+      const { data: vendors } = await supabase.from('vendors').select('*');
+      if (vendors && vendors.length > 0) {
+        matchedVendor = vendors.find(v => {
+          const vPhone = (v.phone || '').replace(/\D/g, '');
+          const vWa = (v.whatsapp || '').replace(/\D/g, '');
+          return vPhone.includes(inputNum) || vWa.includes(inputNum) || inputNum.includes(vPhone) || inputNum.includes(vWa);
+        });
       }
 
-      // Find matching vendor by phone or whatsapp
-      const matchedVendor = vendors.find(v => {
-        const vPhone = (v.phone || '').replace(/\D/g, '');
-        const vWa = (v.whatsapp || '').replace(/\D/g, '');
-        const inputNum = cleanedPhone.replace(/\D/g, '');
-        return vPhone.includes(inputNum) || vWa.includes(inputNum) || inputNum.includes(vPhone);
-      });
+      // 2. Fallback: Check hotels, bikes, rafting, tours tables for direct whatsapp_number match
+      if (!matchedVendor) {
+        const { data: directHotels } = await supabase.from('hotels').select('*');
+        const matchedHotel = (directHotels || []).find(h => {
+          const hWa = (h.whatsapp_number || '').replace(/\D/g, '');
+          return hWa && (hWa.includes(inputNum) || inputNum.includes(hWa));
+        });
+
+        if (matchedHotel) {
+          matchedVendor = {
+            id: matchedHotel.vendor_id || matchedHotel.id,
+            name: matchedHotel.name,
+            category: 'Hotel',
+            phone: cleanedPhone,
+            whatsapp: cleanedPhone,
+            status: 'Active',
+            is_direct: true
+          };
+        }
+      }
 
       if (!matchedVendor) {
-        throw new Error('Mobile number not registered. Please contact admin to onboard your shop.');
+        const { data: directBikes } = await supabase.from('bikes').select('*');
+        const matchedBike = (directBikes || []).find(b => {
+          const bWa = (b.whatsapp_number || '').replace(/\D/g, '');
+          return bWa && (bWa.includes(inputNum) || inputNum.includes(bWa));
+        });
+
+        if (matchedBike) {
+          matchedVendor = {
+            id: matchedBike.vendor_id || matchedBike.id,
+            name: matchedBike.name,
+            category: 'Bike Rental',
+            phone: cleanedPhone,
+            whatsapp: cleanedPhone,
+            status: 'Active',
+            is_direct: true
+          };
+        }
+      }
+
+      if (!matchedVendor) {
+        const { data: directRafting } = await supabase.from('rafting').select('*');
+        const matchedRafting = (directRafting || []).find(r => {
+          const rWa = (r.whatsapp_number || '').replace(/\D/g, '');
+          return rWa && (rWa.includes(inputNum) || inputNum.includes(rWa));
+        });
+
+        if (matchedRafting) {
+          matchedVendor = {
+            id: matchedRafting.vendor_id || matchedRafting.id,
+            name: matchedRafting.name,
+            category: 'Rafting',
+            phone: cleanedPhone,
+            whatsapp: cleanedPhone,
+            status: 'Active',
+            is_direct: true
+          };
+        }
+      }
+
+      if (!matchedVendor) {
+        throw new Error('Mobile number not registered. Please contact admin to onboard your shop or hotel.');
       }
 
       // Generate a 4-digit OTP
@@ -117,49 +172,46 @@ export default function VendorPortal({ onNavigateHome }) {
 
     try {
       const vId = currentVendor.id;
+      const vPhone = (currentVendor.phone || '').replace(/\D/g, '');
+
+      // Helper matcher for direct WhatsApp items
+      const matchesPhone = (waNum) => {
+        if (!waNum) return false;
+        const cleanedWa = waNum.replace(/\D/g, '');
+        return cleanedWa && (cleanedWa.includes(vPhone) || vPhone.includes(cleanedWa));
+      };
 
       // 1. Fetch bikes
-      const { data: bikes } = await supabase
-        .from('bikes')
-        .select('*')
-        .eq('vendor_id', vId);
+      const { data: bikes } = await supabase.from('bikes').select('*');
+      const filteredBikes = (bikes || []).filter(b => b.vendor_id === vId || matchesPhone(b.whatsapp_number));
 
       // 2. Fetch rafting
-      const { data: rafting } = await supabase
-        .from('rafting')
-        .select('*')
-        .eq('vendor_id', vId);
+      const { data: rafting } = await supabase.from('rafting').select('*');
+      const filteredRafting = (rafting || []).filter(r => r.vendor_id === vId || matchesPhone(r.whatsapp_number));
 
       // 3. Fetch hotels
-      const { data: hotels } = await supabase
-        .from('hotels')
-        .select('*')
-        .eq('vendor_id', vId);
+      const { data: hotels } = await supabase.from('hotels').select('*');
+      const filteredHotels = (hotels || []).filter(h => h.vendor_id === vId || matchesPhone(h.whatsapp_number));
 
       // 4. Fetch tours
-      const { data: tours } = await supabase
-        .from('tours')
-        .select('*')
-        .eq('vendor_id', vId);
+      const { data: tours } = await supabase.from('tours').select('*');
+      const filteredTours = (tours || []).filter(t => t.vendor_id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
 
       // Combine items with category tag
       const allItems = [
-        ...(bikes || []).map(b => ({ ...b, category_type: 'bikes', label: 'Bike/Scooty' })),
-        ...(rafting || []).map(r => ({ ...r, category_type: 'rafting', label: 'Rafting' })),
-        ...(hotels || []).map(h => ({ ...h, category_type: 'hotels', label: 'Hotel' })),
-        ...(tours || []).map(t => ({ ...t, category_type: 'tours', label: 'Tour' }))
+        ...filteredBikes.map(b => ({ ...b, category_type: 'bikes', label: 'Bike/Scooty' })),
+        ...filteredRafting.map(r => ({ ...r, category_type: 'rafting', label: 'Rafting' })),
+        ...filteredHotels.map(h => ({ ...h, category_type: 'hotels', label: 'Hotel' })),
+        ...filteredTours.map(t => ({ ...t, category_type: 'tours', label: 'Tour' }))
       ];
 
       setVendorItems(allItems);
 
       // Fetch bookings for this vendor
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('vendor_id', vId)
-        .order('created_at', { ascending: false });
+      const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      const filteredBookings = (bookings || []).filter(b => b.vendor_id === vId || matchesPhone(b.customer_phone));
 
-      setVendorBookings(bookings || []);
+      setVendorBookings(filteredBookings.length > 0 ? filteredBookings : (bookings || []).filter(b => b.vendor_id === vId));
 
     } catch (err) {
       console.error('Error fetching vendor data:', err);
