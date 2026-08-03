@@ -501,7 +501,19 @@ CREATE POLICY "Allow public delete on whatsapp_messages" ON whatsapp_messages FO
 ALTER PUBLICATION supabase_realtime ADD TABLE whatsapp_chats;
 ALTER PUBLICATION supabase_realtime ADD TABLE whatsapp_messages;
 
+-- =========================================================================
+-- Schema Extensions (Vendor Partner Portal Module — August 2026)
+-- =========================================================================
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS access_pin TEXT DEFAULT '1234';
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS is_online BOOLEAN DEFAULT true;
+
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+
 NOTIFY pgrst, 'reload schema';
+
 
 
 

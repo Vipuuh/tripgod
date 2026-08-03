@@ -29,6 +29,7 @@ import RefundPolicy from './pages/RefundPolicy';
 import BookingModal from './components/BookingModal';
 import CartModal from './components/CartModal';
 import AdminDashboard from './components/AdminDashboard';
+import VendorPortal from './components/VendorPortal';
 import LoginModal from './components/LoginModal';
 import AccountModal from './components/AccountModal';
 
@@ -177,7 +178,7 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'privacy', 'terms', 'refund'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'partner', 'privacy', 'terms', 'refund'];
 
       const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || path.startsWith('kayaking/') || path.startsWith('tours/');
 
@@ -297,7 +298,7 @@ export default function App() {
       />
 
       {/* 2. Sticky Header */}
-      {route !== 'admin' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'partner' && (
       <header className="sticky top-0 z-40 bg-white/80 border-b border-slate-100 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.02)]">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           {/* Left Header Group */}
@@ -413,6 +414,7 @@ export default function App() {
               />
             )}
             {route === 'admin' && <AdminDashboard setRoute={navigateTo} />}
+            {(route === 'vendor' || route === 'partner') && <VendorPortal onNavigateHome={() => navigateTo('home')} />}
             {route === 'privacy' && <Privacy />}
             {route === 'terms' && <Terms />}
             {route === 'refund' && <RefundPolicy />}
@@ -421,7 +423,7 @@ export default function App() {
       </main>
 
       {/* 4. Footer */}
-      {route !== 'admin' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'partner' && (
       <footer className="bg-black text-white font-sans">
 
 
@@ -564,6 +566,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-6 py-6 md:py-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
           <span>&copy; 2026 TripGod.in. All rights reserved.</span>
           <div className="flex flex-wrap gap-4 sm:gap-6 justify-center sm:justify-end">
+            <button onClick={() => navigateTo('vendor')} className="text-orange-400 font-bold hover:text-orange-300 transition-colors cursor-pointer">Vendor Partner Login</button>
             <button onClick={() => navigateTo('privacy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
             <button onClick={() => navigateTo('terms')} className="hover:text-white transition-colors cursor-pointer">Terms &amp; Conditions</button>
             <button onClick={() => navigateTo('refund')} className="hover:text-white transition-colors cursor-pointer">Refund &amp; Cancellation Policy</button>
@@ -574,7 +577,7 @@ export default function App() {
       )}
 
       {/* 5. Floating WhatsApp Pulsing Button */}
-      {route !== 'admin' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'partner' && (
       <a
         href="https://wa.me/919410572857"
         target="_blank"

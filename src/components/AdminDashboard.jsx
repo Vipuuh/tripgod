@@ -1550,6 +1550,7 @@ export default function AdminDashboard({ setRoute }) {
                           <td className="py-3 px-2 font-medium text-slate-400">
                             <span className="block">{v.phone}</span>
                             <span className="block text-[10px] text-slate-500">WA: {v.whatsapp}</span>
+                            <span className="block text-[10px] text-orange-400 font-bold">PIN: {v.access_pin || '1234'}</span>
                           </td>
                           <td className="py-3 px-2 text-center font-bold text-amber-500">
                             ⭐ {v.star_rating !== null && v.star_rating !== undefined ? Number(v.star_rating).toFixed(1) : '4.5'}
