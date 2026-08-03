@@ -583,7 +583,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
             commission_percentage: item.commission_percentage !== null && item.commission_percentage !== undefined ? Number(item.commission_percentage) : 10,
             fixed_advance_amount: item.fixed_advance_amount !== null && item.fixed_advance_amount !== undefined ? Number(item.fixed_advance_amount) : 0,
             upi_discount: item.upi_discount !== null && item.upi_discount !== undefined ? Number(item.upi_discount) : null
-          }));
+          };
+        });
 
           const hasKeyword = (h, keywords) => {
             const textToSearch = `${h.name || ''} ${h.address || ''} ${h.description || ''} ${(h.landmarks || []).join(' ')}`.toLowerCase();
