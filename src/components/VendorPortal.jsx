@@ -424,10 +424,7 @@ export default function VendorPortal({ onNavigateHome }) {
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    OTP Sent via WhatsApp API
-                  </span>
-                  <span className="bg-emerald-500/20 text-emerald-300 font-mono text-[10px] px-2 py-0.5 rounded-full">
-                    Demo Code: {generatedOtp}
+                    OTP Sent via WhatsApp
                   </span>
                 </div>
                 <div>A 4-digit security login OTP has been dispatched to <strong>+91 {phoneInput}</strong> via TripGod WhatsApp API.</div>
