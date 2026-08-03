@@ -83,6 +83,18 @@ export default function App() {
   const [citiesList, setCitiesList] = useState([]);
   const [currentCity, setCurrentCity] = useState(null);
 
+  // Dynamic PWA Manifest configuration for direct mobile app launch
+  useEffect(() => {
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    if (manifestLink) {
+      if (route === 'vendor' || route === 'partner') {
+        manifestLink.setAttribute('href', '/vendor-manifest.json');
+      } else {
+        manifestLink.setAttribute('href', '/manifest.json');
+      }
+    }
+  }, [route]);
+
   useEffect(() => {
     const fetchCities = async () => {
       try {

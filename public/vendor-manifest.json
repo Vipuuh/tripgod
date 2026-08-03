@@ -1,0 +1,16 @@
+{
+  "short_name": "TripGod Partner",
+  "name": "TripGod Partner Portal",
+  "icons": [
+    {
+      "src": "/favicon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/vendor",
+  "background_color": "#020617",
+  "theme_color": "#ff5f00",
+  "display": "standalone",
+  "orientation": "portrait"
+}
