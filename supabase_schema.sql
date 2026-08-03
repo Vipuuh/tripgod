@@ -506,13 +506,31 @@ ALTER PUBLICATION supabase_realtime ADD TABLE whatsapp_messages;
 -- =========================================================================
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS access_pin TEXT DEFAULT '1234';
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS is_online BOOLEAN DEFAULT true;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'percentage';
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS commission_value NUMERIC DEFAULT 10.0;
 
 ALTER TABLE hotels ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'percentage';
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS commission_value NUMERIC DEFAULT 10.0;
+ALTER TABLE hotels ADD COLUMN IF NOT EXISTS net_price NUMERIC;
+
 ALTER TABLE rafting ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'percentage';
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS commission_value NUMERIC DEFAULT 10.0;
+ALTER TABLE rafting ADD COLUMN IF NOT EXISTS net_price NUMERIC;
+
 ALTER TABLE bikes ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'percentage';
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS commission_value NUMERIC DEFAULT 10.0;
+ALTER TABLE bikes ADD COLUMN IF NOT EXISTS net_price NUMERIC;
+
 ALTER TABLE tours ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS commission_type TEXT DEFAULT 'percentage';
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS commission_value NUMERIC DEFAULT 10.0;
+ALTER TABLE tours ADD COLUMN IF NOT EXISTS net_price NUMERIC;
 
 NOTIFY pgrst, 'reload schema';
+
 
 
 

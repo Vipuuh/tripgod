@@ -275,28 +275,40 @@ export default function VendorPortal({ onNavigateHome }) {
     }
   };
 
-  // Update Item Price
+  // Update Item Net Price and Customer Selling Price
   const handleSavePrice = async (item) => {
     if (!newPrice || isNaN(newPrice) || Number(newPrice) <= 0) {
       alert('Please enter a valid price amount.');
       return;
     }
 
-    const priceNum = Number(newPrice);
+    const netPriceNum = Number(newPrice);
+    const commType = item.commission_type || currentVendor.commission_type || 'percentage';
+    const commVal = item.commission_value || currentVendor.commission_value || 10;
+
+    // Calculate commission amount
+    let commAmount = 0;
+    if (commType === 'flat') {
+      commAmount = Number(commVal);
+    } else {
+      commAmount = Math.round((netPriceNum * Number(commVal)) / 100);
+    }
+
+    const customerSellingPrice = netPriceNum + commAmount;
 
     try {
       const { error } = await supabase
         .from(item.category_type)
-        .update({ price: priceNum })
+        .update({ net_price: netPriceNum, price: customerSellingPrice })
         .eq('id', item.id);
 
       if (error) throw error;
 
-      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, price: priceNum } : i));
+      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, net_price: netPriceNum, price: customerSellingPrice } : i));
       setEditingItemId(null);
       setNewPrice('');
-      setStatusMessage(`Price for ${item.name} updated to ₹${priceNum}`);
-      setTimeout(() => setStatusMessage(''), 3000);
+      setStatusMessage(`Net price for ${item.name} set to ₹${netPriceNum}. Website Selling Price: ₹${customerSellingPrice}`);
+      setTimeout(() => setStatusMessage(''), 4000);
     } catch (err) {
       alert('Failed to update price: ' + err.message);
     }

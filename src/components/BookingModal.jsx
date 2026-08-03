@@ -177,15 +177,17 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const isBikeRent = activity && (activity.category === 'bikerent' || activity.category === 'bikes');
 
   // Determine payment configuration
+  // Support dynamic per-item commission types ('flat' vs 'percentage')
+  const commType = (activity && (activity.commission_type || activity.vendors?.commission_type)) || (activity && activity.fixed_advance_amount > 0 ? 'flat' : 'percentage');
+  const commVal = activity && (activity.commission_value !== undefined && activity.commission_value !== null)
+    ? Number(activity.commission_value)
+    : (activity && activity.fixed_advance_amount > 0
+        ? Number(activity.fixed_advance_amount)
+        : (activity && activity.commission_percentage !== undefined && activity.commission_percentage !== null
+            ? Number(activity.commission_percentage)
+            : 10.0));
+
   const paymentMode = (activity && activity.payment_mode) || 'commission_advance';
-  const commissionPercentage = activity && activity.commission_percentage !== undefined && activity.commission_percentage !== null
-    ? Number(activity.commission_percentage)
-    : (activity && activity.vendors?.commission_percentage !== undefined && activity.vendors?.commission_percentage !== null
-        ? Number(activity.vendors.commission_percentage)
-        : 10.0);
-  const fixedAdvanceAmount = activity && activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
-    ? Number(activity.fixed_advance_amount)
-    : 0;
 
   // Calculate nights for hotel bookings
   let nights = 1;
@@ -199,9 +201,6 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   // Calculate pricing
   const basePrice = (activity && activity.price) || 0;
   const pricePerPerson = basePrice;
-  // For bike rent: pricePerPerson (daily rate) × guests (vehicles) × rentalDays
-  // For hotels/camps with room_price: price already = (room_price × rooms/tents + meal costs) per night, so just multiply by nights
-  // For other categories: multiply by guests
   const rawTotalPrice = isBikeRent
     ? pricePerPerson * guests * rentalDays
     : (activity && (activity.category === 'hotels' || (activity.category === 'camping' && activity.room_price))
@@ -212,27 +211,26 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
   // Calculate 12% tax dynamically for hotel bookings
   const taxes = isHotel ? Math.round(rawTotalPrice * 0.12) : 0;
-  
-  // Calculate dynamic advance amount
-  const flatAdvanceTotal = isBikeRent 
-    ? (fixedAdvanceAmount * guests * rentalDays) 
-    : (isHotel ? fixedAdvanceAmount : fixedAdvanceAmount * guests);
-
-  // For hotels: TripGod Online Advance = Fixed Advance + GST
-  const hotelAdvanceOnline = isHotel ? (flatAdvanceTotal + taxes) : flatAdvanceTotal;
   const totalPrice = rawTotalPrice + taxes;
 
-  const calculatedAdvance = paymentMode === 'fixed_advance'
-    ? (isHotel ? Math.min(hotelAdvanceOnline, totalPrice) : Math.min(flatAdvanceTotal, totalPrice))
-    : (paymentMode === 'full_payment'
-        ? totalPrice
-        : Math.round(totalPrice * (commissionPercentage / 100)));
+  // Calculate dynamic advance amount based on Flat ₹ or Percentage %
+  let calculatedAdvance = 0;
+  if (paymentMode === 'full_payment') {
+    calculatedAdvance = totalPrice;
+  } else if (commType === 'flat') {
+    const flatPerUnit = commVal;
+    const units = isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests);
+    calculatedAdvance = Math.min(totalPrice, flatPerUnit * units + taxes);
+  } else {
+    // Percentage %
+    calculatedAdvance = Math.round(totalPrice * (commVal / 100));
+  }
 
   // If payment mode is full_payment, force paymentOption to 'full'
   const effectivePaymentOption = paymentMode === 'full_payment' ? 'full' : paymentOption;
 
   const amountToPayNow = effectivePaymentOption === 'full' ? totalPrice : calculatedAdvance;
-  const remainingPayment = effectivePaymentOption === 'full' ? 0 : (isHotel ? Math.max(0, rawTotalPrice - flatAdvanceTotal) : Math.max(0, totalPrice - amountToPayNow));
+  const remainingPayment = effectivePaymentOption === 'full' ? 0 : Math.max(0, totalPrice - amountToPayNow);
 
   // Calculate dynamic UPI Discount
   const customUpiDiscount = activity && activity.upi_discount !== undefined && activity.upi_discount !== null && activity.upi_discount !== ''
