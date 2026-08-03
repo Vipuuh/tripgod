@@ -509,15 +509,28 @@ export default function Hotels({ currentCity, openBookingModal }) {
             }
           }
 
-          const mapped = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            description: item.description,
-            price: Number(item.price),
-            original_price: item.original_price ? Number(item.original_price) : null,
-            competitor_name: item.competitor_name || 'MakeMyTrip',
-            competitor_price: item.competitor_price ? Number(item.competitor_price) : null,
-            mmt_url: item.mmt_url || null,
+          const mapped = data.map(item => {
+            const vendorBase = item.net_price !== null && item.net_price !== undefined ? Number(item.net_price) : Number(item.price || 0);
+            const isFlat = (item.commission_type || 'flat') === 'flat';
+            const commVal = item.commission_value !== null && item.commission_value !== undefined ? Number(item.commission_value) : (item.commission_percentage || 0);
+            const commAmt = item.commission_amount !== null && item.commission_amount !== undefined
+              ? Number(item.commission_amount)
+              : (isFlat ? commVal : Math.round((vendorBase * commVal) / 100));
+
+            const displayPrice = Math.max(Number(item.price || 0), vendorBase + commAmt);
+
+            return {
+              ...item,
+              id: item.id,
+              name: item.name,
+              description: item.description,
+              price: displayPrice,
+              net_price: vendorBase,
+              commission_amount: commAmt,
+              original_price: item.original_price ? Number(item.original_price) : null,
+              competitor_name: item.competitor_name || 'MakeMyTrip',
+              competitor_price: item.competitor_price ? Number(item.competitor_price) : null,
+              mmt_url: item.mmt_url || null,
             address: item.address,
             maps_link: item.maps_link,
             check_in: item.check_in,

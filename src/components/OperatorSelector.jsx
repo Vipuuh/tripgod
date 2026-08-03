@@ -136,13 +136,19 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
           const rating = op.starRating !== null && op.starRating !== undefined ? Number(op.starRating) : 4.5;
           
           // Vendor Base Price + Platform Commission / Profit = Total Displayed Price
-          const vendorBasePrice = Number(op.price || 0);
-          const commPct = op.commission_percentage !== undefined && op.commission_percentage !== null ? Number(op.commission_percentage) : (op.commissionPercentage !== undefined && op.commissionPercentage !== null ? Number(op.commissionPercentage) : 0);
+          const vendorBasePrice = op.net_price !== null && op.net_price !== undefined
+            ? Number(op.net_price)
+            : Number(op.price || 0);
+          
+          const commPct = op.commission_percentage !== undefined && op.commission_percentage !== null 
+            ? Number(op.commission_percentage) 
+            : (op.commissionPercentage !== undefined && op.commissionPercentage !== null ? Number(op.commissionPercentage) : 0);
+          
           const commAmount = op.commission_amount !== undefined && op.commission_amount !== null && op.commission_amount !== ''
             ? Number(op.commission_amount)
             : (commPct > 0 ? Math.round((vendorBasePrice * commPct) / 100) : 0);
 
-          const displayPrice = vendorBasePrice + commAmount;
+          const displayPrice = Math.max(Number(op.price || 0), vendorBasePrice + commAmount);
           const displayOriginalPrice = op.originalPrice ? Number(op.originalPrice) : Math.round(displayPrice * 1.5);
           const isDiscounted = displayOriginalPrice && displayOriginalPrice > displayPrice;
           const savings = displayOriginalPrice - displayPrice;

@@ -65,18 +65,29 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const mapped = data.map((item, idx) => ({
-            ...item,
-            price: Number(item.price),
-            original_price: item.original_price ? Number(item.original_price) : Math.round(Number(item.price) * 1.4),
-            competitor_name: item.competitor_name || 'MakeMyTrip',
-            competitor_price: item.competitor_price ? Number(item.competitor_price) : null,
-            mmt_url: item.mmt_url || null,
-            rating: item.rating || item.vendors?.star_rating || 4.8,
-            reviewsCount: item.reviews_count || (60 + (idx * 23) % 180),
-            upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
-            images: item.images && item.images.length > 0 ? item.images : ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600']
-          }));
+          const mapped = data.map((item, idx) => {
+            const vendorBase = item.net_price !== null && item.net_price !== undefined ? Number(item.net_price) : Number(item.price || 0);
+            const commAmt = item.commission_amount !== null && item.commission_amount !== undefined
+              ? Number(item.commission_amount)
+              : (item.commission_percentage ? Math.round((vendorBase * Number(item.commission_percentage)) / 100) : 0);
+
+            const displayPrice = Math.max(Number(item.price || 0), vendorBase + commAmt);
+
+            return {
+              ...item,
+              price: displayPrice,
+              net_price: vendorBase,
+              commission_amount: commAmt,
+              original_price: item.original_price ? Number(item.original_price) : Math.round(displayPrice * 1.4),
+              competitor_name: item.competitor_name || 'MakeMyTrip',
+              competitor_price: item.competitor_price ? Number(item.competitor_price) : null,
+              mmt_url: item.mmt_url || null,
+              rating: item.rating || item.vendors?.star_rating || 4.8,
+              reviewsCount: item.reviews_count || (60 + (idx * 23) % 180),
+              upi_discount: item.upi_discount ? Number(item.upi_discount) : null,
+              images: item.images && item.images.length > 0 ? item.images : ['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600']
+            };
+          });
           setToursList(mapped);
 
           // Group by partners

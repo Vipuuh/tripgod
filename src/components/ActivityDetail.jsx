@@ -451,6 +451,7 @@ export default function ActivityDetail({
                     starRating: op.vendors?.star_rating !== undefined ? op.vendors.star_rating : 4.5,
                     landmark: op.vendors?.landmark || op.vendors?.address || 'Rishikesh',
                     price: Number(op.price || price),
+                    net_price: op.net_price !== null && op.net_price !== undefined ? Number(op.net_price) : null,
                     originalPrice: op.original_price ? Number(op.original_price) : null,
                     isLimitedOffer: !!op.is_limited_offer,
                     commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 0,

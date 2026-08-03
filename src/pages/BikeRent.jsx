@@ -78,13 +78,22 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
         if (data && data.length > 0) {
           const mapped = data
-            .filter(item => Number(item.price) > 0 && item.is_active !== false) // hide ₹0 and inactive test listings
+            .filter(item => (Number(item.price) > 0 || Number(item.net_price) > 0) && item.is_active !== false) // hide ₹0 and inactive test listings
             .map((item, idx) => {
               const nLower = item.name.toLowerCase();
               const isScooter = nLower.includes('scooty') || nLower.includes('activa') || nLower.includes('burgman') || nLower.includes('jupiter') || nLower.includes('access') || nLower.includes('dio') || nLower.includes('vespa');
+              
+              const vendorBase = item.net_price !== null && item.net_price !== undefined ? Number(item.net_price) : Number(item.price || 0);
+              const commAmt = item.commission_amount !== null && item.commission_amount !== undefined
+                ? Number(item.commission_amount)
+                : (item.commission_percentage ? Math.round((vendorBase * Number(item.commission_percentage)) / 100) : 0);
+              const displayPrice = Math.max(Number(item.price || 0), vendorBase + commAmt);
+
               return {
                 ...item,
-                price: Number(item.price),
+                price: displayPrice,
+                net_price: vendorBase,
+                commission_amount: commAmt,
                 deposit: Number(item.deposit || 0),
                 rating: item.rating || item.vendors?.star_rating || 4.7,
                 reviewsCount: item.reviews_count || (80 + (idx * 17) % 150),

@@ -218,10 +218,19 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
               };
             }
 
+            const vendorBase = item.net_price !== null && item.net_price !== undefined ? Number(item.net_price) : Number(item.price || 0);
+            const commAmt = item.commission_amount !== null && item.commission_amount !== undefined
+              ? Number(item.commission_amount)
+              : (item.commission_percentage ? Math.round((vendorBase * Number(item.commission_percentage)) / 100) : 0);
+
+            const displayPrice = Math.max(Number(item.price || 0), vendorBase + commAmt);
+
             partnersMap[vendor.id].packages.push({
               ...item,
-              price: Number(item.price),
-              original_price: item.original_price ? Number(item.original_price) : Math.round(Number(item.price) * 1.3),
+              price: displayPrice,
+              net_price: vendorBase,
+              commission_amount: commAmt,
+              original_price: item.original_price ? Number(item.original_price) : Math.round(displayPrice * 1.3),
               duration: item.duration || '2-3 Hours',
               images: item.images && item.images.length > 0 ? item.images : ['/rafting-4.jpg'],
               coming_soon: !!item.coming_soon,

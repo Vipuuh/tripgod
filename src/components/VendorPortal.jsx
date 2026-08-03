@@ -293,14 +293,20 @@ export default function VendorPortal({ onNavigateHome }) {
       ? Number(item.commission_percentage)
       : null;
 
-    // Calculate Admin Commission Amount (Online Advance)
+    // Calculate Admin Commission / Profit Amount
+    const existingCommAmount = item.commission_amount !== undefined && item.commission_amount !== null && item.commission_amount !== ''
+      ? Number(item.commission_amount)
+      : null;
+
     let commAmount = 0;
-    if (paymentMode === 'fixed_advance' || (fixedAdvance !== null && fixedAdvance > 0)) {
-      commAmount = fixedAdvance !== null ? fixedAdvance : 200;
-    } else if (commPct !== null) {
+    if (existingCommAmount !== null) {
+      commAmount = existingCommAmount;
+    } else if (fixedAdvance !== null && fixedAdvance > 0) {
+      commAmount = fixedAdvance;
+    } else if (commPct !== null && commPct > 0) {
       commAmount = Math.round((netPriceNum * commPct) / 100);
     } else {
-      commAmount = Math.round((netPriceNum * 10) / 100);
+      commAmount = 0;
     }
 
     const customerSellingPrice = netPriceNum + commAmount;
@@ -308,15 +314,19 @@ export default function VendorPortal({ onNavigateHome }) {
     try {
       const { error } = await supabase
         .from(item.category_type)
-        .update({ net_price: netPriceNum, price: customerSellingPrice })
+        .update({ 
+          net_price: netPriceNum, 
+          commission_amount: commAmount,
+          price: customerSellingPrice 
+        })
         .eq('id', item.id);
 
       if (error) throw error;
 
-      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, net_price: netPriceNum, price: customerSellingPrice } : i));
+      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, net_price: netPriceNum, commission_amount: commAmount, price: customerSellingPrice } : i));
       setEditingItemId(null);
       setNewPrice('');
-      setStatusMessage(`Net price set to ₹${netPriceNum}. Website Selling Price: ₹${customerSellingPrice} (Online Advance: ₹${commAmount})`);
+      setStatusMessage(`Base price updated to ₹${netPriceNum}. Website Selling Price: ₹${customerSellingPrice} (Vendor: ₹${netPriceNum} + Profit: ₹${commAmount})`);
       setTimeout(() => setStatusMessage(''), 5000);
     } catch (err) {
       alert('Failed to update price: ' + err.message);

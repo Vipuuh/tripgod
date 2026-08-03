@@ -570,24 +570,33 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           setSelectedHotelCity('Rishikesh');
         }
 
+        // Helper to calculate total customer price
+        const calcTotalItemPrice = (item) => {
+          const vendorBase = item.net_price !== null && item.net_price !== undefined ? Number(item.net_price) : Number(item.price || 0);
+          const commAmt = item.commission_amount !== null && item.commission_amount !== undefined
+            ? Number(item.commission_amount)
+            : (item.commission_percentage ? Math.round((vendorBase * Number(item.commission_percentage)) / 100) : 0);
+          return Math.max(Number(item.price || 0), vendorBase + commAmt);
+        };
+
         // Fetch adventure activity dynamic prices
         const { data: adventuresData } = await supabase
           .from('rafting')
-          .select('price, activity_type, coming_soon, is_closed');
+          .select('price, net_price, commission_amount, commission_percentage, activity_type, coming_soon, is_closed');
         
         if (adventuresData && adventuresData.length > 0) {
           setActivitiesList(prev => prev.map(act => {
             const matches = adventuresData.filter(item => (item.activity_type || 'rafting') === act.id);
             const isComingSoon = matches.length > 0 ? matches.some(m => !!m.coming_soon) : !!act.coming_soon;
             const activePrices = matches
-              .filter(m => !m.coming_soon && !m.is_closed && Number(m.price) > 0)
-              .map(m => Number(m.price));
+              .filter(m => !m.coming_soon && !m.is_closed && calcTotalItemPrice(m) > 0)
+              .map(m => calcTotalItemPrice(m));
             
             let minPrice = null;
             if (activePrices.length > 0) {
               minPrice = Math.min(...activePrices);
             } else if (matches.length > 0) {
-              const dbPrices = matches.map(m => Number(m.price)).filter(p => p > 0);
+              const dbPrices = matches.map(m => calcTotalItemPrice(m)).filter(p => p > 0);
               if (dbPrices.length > 0) {
                 minPrice = Math.min(...dbPrices);
               }
@@ -606,7 +615,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         if (bikeIds.length > 0) {
           const { data: allBikes } = await supabase
             .from('bikes')
-            .select('id, name, price, images, description');
+            .select('id, name, price, net_price, commission_amount, commission_percentage, images, description');
           
           if (allBikes && allBikes.length > 0) {
             const featuredNames = bikeIds.map(id => allBikes.find(b => b.id === id)?.name).filter(Boolean);
@@ -614,12 +623,12 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             
             const mappedBikes = [];
             uniqueFeaturedNames.forEach(name => {
-              const matches = allBikes.filter(b => b.name === name && Number(b.price) > 0);
+              const matches = allBikes.filter(b => b.name === name && calcTotalItemPrice(b) > 0);
               const nLower = name.toLowerCase();
               const catType = (nLower.includes('scooty') || nLower.includes('activa') || nLower.includes('burgman') || nLower.includes('jupiter') || nLower.includes('access') || nLower.includes('dio') || nLower.includes('vespa')) ? 'Automatic Scooter' : 'Cruiser Motorcycle';
               if (matches.length > 0) {
-                const minPrice = Math.min(...matches.map(m => Number(m.price)));
-                const bestMatch = matches.find(m => Number(m.price) === minPrice) || matches[0];
+                const minPrice = Math.min(...matches.map(m => calcTotalItemPrice(m)));
+                const bestMatch = matches.find(m => calcTotalItemPrice(m) === minPrice) || matches[0];
                 mappedBikes.push({
                   id: bestMatch.id,
                   name: name,
@@ -634,7 +643,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   mappedBikes.push({
                     id: fallbackMatch.id,
                     name: name,
-                    price: Number(fallbackMatch.price) || 800,
+                    price: calcTotalItemPrice(fallbackMatch) || 800,
                     img: fallbackMatch.images && fallbackMatch.images[0] ? fallbackMatch.images[0] : '/scooty-rent.jpg',
                     type: catType,
                     description: fallbackMatch.description || ''

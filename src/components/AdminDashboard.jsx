@@ -2697,21 +2697,33 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       if (['rafting', 'adventures'].includes(type)) {
         const enabledOps = Object.entries(activitiesOperators)
           .filter(([_, op]) => op.enabled)
-          .map(([vendorId, op]) => ({
-            vendorId,
-            price: Number(op.price),
-            originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
-            commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
-            paymentMode: op.payment_mode || 'commission_advance',
-            fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
-            whatsappNumber: op.whatsapp_number || null,
-            operatorLogo: op.operator_logo || null,
-            yearsOfExperience: op.years_of_experience === '' || op.years_of_experience === null || op.years_of_experience === undefined ? null : Number(op.years_of_experience),
-            isGovtApproved: !!op.is_govt_approved,
-            safetyRating: op.safety_rating === '' || op.safety_rating === null || op.safety_rating === undefined ? 4.5 : Number(op.safety_rating),
-            fullPaymentUpiDiscount: op.full_payment_upi_discount === '' || op.full_payment_upi_discount === null || op.full_payment_upi_discount === undefined ? 0 : Number(op.full_payment_upi_discount),
-            id: op.id
-          }));
+        const enabledOps = Object.entries(activitiesOperators)
+          .filter(([_, op]) => op.enabled)
+          .map(([vendorId, op]) => {
+            const baseVendorPrice = Number(op.price || 0);
+            const commAmt = op.commission_amount !== '' && op.commission_amount !== null && op.commission_amount !== undefined
+              ? Number(op.commission_amount)
+              : (op.commission_percentage ? Math.round((baseVendorPrice * Number(op.commission_percentage)) / 100) : 0);
+            const totalPrice = baseVendorPrice + commAmt;
+
+            return {
+              vendorId,
+              price: totalPrice,
+              netPrice: baseVendorPrice,
+              commissionAmount: commAmt,
+              commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null ? (baseVendorPrice > 0 ? Math.round((commAmt / baseVendorPrice) * 100) : 0) : Number(op.commission_percentage),
+              paymentMode: op.payment_mode || 'fixed_advance',
+              fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
+              whatsappNumber: op.whatsapp_number || null,
+              operatorLogo: op.operator_logo || null,
+              yearsOfExperience: op.years_of_experience === '' || op.years_of_experience === null || op.years_of_experience === undefined ? null : Number(op.years_of_experience),
+              isGovtApproved: !!op.is_govt_approved,
+              safetyRating: op.safety_rating === '' || op.safety_rating === null || op.safety_rating === undefined ? 4.5 : Number(op.safety_rating),
+              fullPaymentUpiDiscount: op.full_payment_upi_discount === '' || op.full_payment_upi_discount === null || op.full_payment_upi_discount === undefined ? 0 : Number(op.full_payment_upi_discount),
+              originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
+              id: op.id
+            };
+          });
 
         const matchingVendors = getVendorsForType(formData.activity_type || 'rafting', vendors);
         if (matchingVendors.length === 0) {
@@ -2728,7 +2740,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           throw new Error('Please enable at least one operator for this adventure package by checking the checkbox next to the operator.');
         }
 
-        if (enabledOps.some(op => !op.price || Number(op.price) <= 0)) {
+        if (enabledOps.some(op => !op.netPrice || Number(op.netPrice) <= 0)) {
           throw new Error('Price must be greater than 0 for all enabled operators.');
         }
 
@@ -2747,7 +2759,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           exclusions: formData.exclusions || [],
           cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
           activity_type: formData.activity_type || 'rafting',
-          payment_mode: formData.payment_mode || 'commission_advance',
+          payment_mode: formData.payment_mode || 'fixed_advance',
           commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount),
@@ -2775,40 +2787,32 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
           enabledOps.forEach(op => {
             const existingId = existingOpsMap[op.vendorId];
+            const opData = {
+              ...commonProps,
+              vendor_id: op.vendorId,
+              price: op.price,
+              net_price: op.netPrice,
+              commission_amount: op.commissionAmount,
+              commission_percentage: op.commissionPercentage,
+              fixed_advance_amount: op.fixedAdvanceAmount,
+              original_price: op.originalPrice,
+              payment_mode: op.paymentMode,
+              whatsapp_number: op.whatsappNumber,
+              operator_logo: op.operatorLogo,
+              years_of_experience: op.yearsOfExperience,
+              is_govt_approved: op.isGovtApproved,
+              safety_rating: op.safetyRating,
+              full_payment_upi_discount: op.fullPaymentUpiDiscount
+            };
+
             if (existingId) {
               opsToUpdate.push({
                 id: existingId,
-                ...commonProps,
-                vendor_id: op.vendorId,
-                price: op.price,
-                original_price: op.originalPrice,
-                payment_mode: op.paymentMode,
-                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
-                whatsapp_number: op.whatsappNumber,
-                operator_logo: op.operatorLogo,
-                years_of_experience: op.yearsOfExperience,
-                is_govt_approved: op.isGovtApproved,
-                safety_rating: op.safetyRating,
-                full_payment_upi_discount: op.fullPaymentUpiDiscount
+                ...opData
               });
               delete existingOpsMap[op.vendorId];
             } else {
-              opsToInsert.push({
-                ...commonProps,
-                vendor_id: op.vendorId,
-                price: op.price,
-                original_price: op.originalPrice,
-                payment_mode: op.paymentMode,
-                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
-                whatsapp_number: op.whatsappNumber,
-                operator_logo: op.operatorLogo,
-                years_of_experience: op.yearsOfExperience,
-                is_govt_approved: op.isGovtApproved,
-                safety_rating: op.safetyRating,
-                full_payment_upi_discount: op.fullPaymentUpiDiscount
-              });
+              opsToInsert.push(opData);
             }
           });
 
@@ -2836,10 +2840,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             ...commonProps,
             vendor_id: op.vendorId,
             price: op.price,
+            net_price: op.netPrice,
+            commission_amount: op.commissionAmount,
+            commission_percentage: op.commissionPercentage,
+            fixed_advance_amount: op.fixedAdvanceAmount,
             original_price: op.originalPrice,
             payment_mode: op.paymentMode,
-            commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-            fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
             whatsapp_number: op.whatsappNumber,
             operator_logo: op.operatorLogo,
             years_of_experience: op.yearsOfExperience,
@@ -2859,22 +2865,32 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       if (type === 'bikes') {
         const enabledOps = Object.entries(bikesOperators)
           .filter(([_, op]) => op.enabled)
-          .map(([vendorId, op]) => ({
-            vendorId,
-            price: Number(op.price),
-            deposit: Number(op.deposit),
-            pickupLocation: op.pickup_location || 'Rishikesh',
-            paymentMode: op.payment_mode || 'commission_advance',
-            commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
-            fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
-            id: op.id
-          }));
+          .map(([vendorId, op]) => {
+            const baseVendorPrice = Number(op.price || 0);
+            const commAmt = op.commission_amount !== '' && op.commission_amount !== null && op.commission_amount !== undefined
+              ? Number(op.commission_amount)
+              : (op.commission_percentage ? Math.round((baseVendorPrice * Number(op.commission_percentage)) / 100) : 0);
+            const totalPrice = baseVendorPrice + commAmt;
+
+            return {
+              vendorId,
+              price: totalPrice,
+              netPrice: baseVendorPrice,
+              commissionAmount: commAmt,
+              deposit: Number(op.deposit || 0),
+              pickupLocation: op.pickup_location || 'Rishikesh',
+              paymentMode: op.payment_mode || 'fixed_advance',
+              commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null ? (baseVendorPrice > 0 ? Math.round((commAmt / baseVendorPrice) * 100) : 0) : Number(op.commission_percentage),
+              fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
+              id: op.id
+            };
+          });
 
         if (enabledOps.length === 0) {
           throw new Error('Please enable at least one vendor for this bike/scoty rent.');
         }
 
-        if (enabledOps.some(op => !op.price || Number(op.price) <= 0)) {
+        if (enabledOps.some(op => !op.netPrice || Number(op.netPrice) <= 0)) {
           throw new Error('Price must be greater than 0 for all enabled operators.');
         }
 
@@ -2884,9 +2900,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           description: formData.description || '',
           documents: formData.documents || ['Driving License', 'Aadhar Card'],
           images: formData.images || [],
-          payment_mode: formData.payment_mode || 'commission_advance',
-          commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
-          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null,
+          payment_mode: formData.payment_mode || 'fixed_advance',
+          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
+          fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           upi_discount: formData.upi_discount === undefined || formData.upi_discount === null || formData.upi_discount === '' ? null : Number(formData.upi_discount)
         };
 
@@ -2906,33 +2922,30 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
           enabledOps.forEach(op => {
             const existingIds = existingOpsMap[op.vendorId];
+            const opData = {
+              ...commonProps,
+              vendor_id: op.vendorId,
+              price: op.price,
+              net_price: op.netPrice,
+              commission_amount: op.commissionAmount,
+              commission_percentage: op.commissionPercentage,
+              fixed_advance_amount: op.fixedAdvanceAmount,
+              deposit: op.deposit,
+              pickup_location: op.pickupLocation,
+              payment_mode: op.paymentMode
+            };
+
             if (existingIds && existingIds.length > 0) {
               const updateId = existingIds.shift();
               opsToUpdate.push({
                 id: updateId,
-                ...commonProps,
-                vendor_id: op.vendorId,
-                price: op.price,
-                deposit: op.deposit,
-                pickup_location: op.pickupLocation,
-                payment_mode: op.paymentMode,
-                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null
+                ...opData
               });
               // Push any extra duplicate IDs to opsToDelete
               existingIds.forEach(extraId => opsToDelete.push(extraId));
               delete existingOpsMap[op.vendorId];
             } else {
-              opsToInsert.push({
-                ...commonProps,
-                vendor_id: op.vendorId,
-                price: op.price,
-                deposit: op.deposit,
-                pickup_location: op.pickupLocation,
-                payment_mode: op.paymentMode,
-                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null
-              });
+              opsToInsert.push(opData);
             }
           });
 
@@ -2960,11 +2973,13 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             ...commonProps,
             vendor_id: op.vendorId,
             price: op.price,
+            net_price: op.netPrice,
+            commission_amount: op.commissionAmount,
+            commission_percentage: op.commissionPercentage,
+            fixed_advance_amount: op.fixedAdvanceAmount,
             deposit: op.deposit,
             pickup_location: op.pickupLocation,
-            payment_mode: op.paymentMode,
-            commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-            fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null
+            payment_mode: op.paymentMode
           }));
 
           const { error: insertError } = await supabase.from('bikes').insert(recordsToInsert);
@@ -2978,16 +2993,26 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       if (type === 'tours') {
         const enabledOps = Object.entries(toursOperators)
           .filter(([_, op]) => op.enabled)
-          .map(([vendorId, op]) => ({
-            vendorId,
-            price: Number(op.price),
-            originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
-            commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null || op.commission_percentage === undefined ? null : Number(op.commission_percentage),
-            whatsappNumber: op.whatsapp_number || null,
-            paymentMode: op.payment_mode || 'commission_advance',
-            fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
-            id: op.id
-          }));
+          .map(([vendorId, op]) => {
+            const baseVendorPrice = Number(op.price || 0);
+            const commAmt = op.commission_amount !== '' && op.commission_amount !== null && op.commission_amount !== undefined
+              ? Number(op.commission_amount)
+              : (op.commission_percentage ? Math.round((baseVendorPrice * Number(op.commission_percentage)) / 100) : 0);
+            const totalPrice = baseVendorPrice + commAmt;
+
+            return {
+              vendorId,
+              price: totalPrice,
+              netPrice: baseVendorPrice,
+              commissionAmount: commAmt,
+              originalPrice: op.original_price === '' || op.original_price === null || op.original_price === undefined ? null : Number(op.original_price),
+              commissionPercentage: op.commission_percentage === '' || op.commission_percentage === null ? (baseVendorPrice > 0 ? Math.round((commAmt / baseVendorPrice) * 100) : 0) : Number(op.commission_percentage),
+              whatsappNumber: op.whatsapp_number || null,
+              paymentMode: op.payment_mode || 'fixed_advance',
+              fixedAdvanceAmount: op.fixed_advance_amount === '' || op.fixed_advance_amount === null || op.fixed_advance_amount === undefined ? null : Number(op.fixed_advance_amount),
+              id: op.id
+            };
+          });
 
         if (enabledOps.length === 0) {
           throw new Error('Please enable at least one operator for this tour package.');
@@ -3016,9 +3041,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           faq_data: formData.faq_data || [],
           cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
           images: formData.images || [],
-          payment_mode: formData.payment_mode || 'commission_advance',
-          commission_percentage: formData.payment_mode === 'commission_advance' ? (formData.commission_percentage !== '' && formData.commission_percentage !== null ? Number(formData.commission_percentage) : 10) : null,
-          fixed_advance_amount: formData.payment_mode === 'fixed_advance' ? (formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null ? Number(formData.fixed_advance_amount) : 0) : null,
+          payment_mode: formData.payment_mode || 'fixed_advance',
+          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
+          fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           is_verified: formData.is_verified !== undefined ? !!formData.is_verified : true,
           is_bestseller: !!formData.is_bestseller,
           is_instant_confirmation: formData.is_instant_confirmation !== undefined ? !!formData.is_instant_confirmation : true,
@@ -3052,30 +3077,27 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
           enabledOps.forEach(op => {
             const existingId = existingOpsMap[op.vendorId];
+            const opData = {
+              ...commonProps,
+              vendor_id: op.vendorId,
+              price: op.price,
+              net_price: op.netPrice,
+              commission_amount: op.commissionAmount,
+              commission_percentage: op.commissionPercentage,
+              fixed_advance_amount: op.fixedAdvanceAmount,
+              original_price: op.originalPrice,
+              payment_mode: op.paymentMode,
+              contact_number: op.whatsappNumber
+            };
+
             if (existingId) {
               opsToUpdate.push({
                 id: existingId,
-                ...commonProps,
-                vendor_id: op.vendorId,
-                price: op.price,
-                original_price: op.originalPrice,
-                payment_mode: op.paymentMode,
-                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
-                contact_number: op.whatsappNumber
+                ...opData
               });
               delete existingOpsMap[op.vendorId];
             } else {
-              opsToInsert.push({
-                ...commonProps,
-                vendor_id: op.vendorId,
-                price: op.price,
-                original_price: op.originalPrice,
-                payment_mode: op.paymentMode,
-                commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-                fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
-                contact_number: op.whatsappNumber
-              });
+              opsToInsert.push(opData);
             }
           });
 
@@ -3102,10 +3124,12 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             ...commonProps,
             vendor_id: op.vendorId,
             price: op.price,
+            net_price: op.netPrice,
+            commission_amount: op.commissionAmount,
+            commission_percentage: op.commissionPercentage,
+            fixed_advance_amount: op.fixedAdvanceAmount,
             original_price: op.originalPrice,
             payment_mode: op.paymentMode,
-            commission_percentage: op.paymentMode === 'commission_advance' ? (op.commissionPercentage !== null ? op.commissionPercentage : 10) : null,
-            fixed_advance_amount: op.paymentMode === 'fixed_advance' ? op.fixedAdvanceAmount : null,
             contact_number: op.whatsappNumber
           }));
 
@@ -3144,6 +3168,15 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       };
 
       if (type === 'hotels') {
+        const basePrice = Number(formData.price || 0);
+        const isFlat = (formData.commission_type || 'flat') === 'flat';
+        const commVal = formData.commission_value !== '' && formData.commission_value !== null && formData.commission_value !== undefined ? Number(formData.commission_value) : (formData.commission_percentage || 0);
+        const commAmt = isFlat ? commVal : Math.round((basePrice * commVal) / 100);
+        const totalPrice = basePrice + commAmt;
+
+        submitData.price = totalPrice;
+        submitData.net_price = basePrice;
+        submitData.commission_amount = commAmt;
         submitData.address = formData.address || '';
         submitData.maps_link = formData.maps_link || '';
         submitData.check_in = formData.check_in || '12:00 PM';
@@ -3169,8 +3202,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.perfect_for = formData.perfect_for || [];
         submitData.benefits = formData.benefits || [];
         submitData.commission_type = formData.commission_type || 'flat';
-        submitData.commission_value = formData.commission_value !== '' && formData.commission_value !== null && formData.commission_value !== undefined ? Number(formData.commission_value) : null;
-        submitData.fixed_advance_amount = formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? Number(formData.fixed_advance_amount) : null;
+        submitData.commission_value = commVal;
+        submitData.fixed_advance_amount = formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? Number(formData.fixed_advance_amount) : 0;
         if (formData.check_in) submitData.check_in = formData.check_in;
         if (formData.check_out) submitData.check_out = formData.check_out;
       } else if (type === 'bikes') {
