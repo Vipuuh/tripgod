@@ -453,7 +453,8 @@ export default function ActivityDetail({
                     price: Number(op.price || price),
                     originalPrice: op.original_price ? Number(op.original_price) : null,
                     isLimitedOffer: !!op.is_limited_offer,
-                    commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 10,
+                    commissionPercentage: op.commission_percentage || op.vendors?.commission_percentage || 0,
+                    commission_amount: op.commission_amount !== undefined && op.commission_amount !== null ? op.commission_amount : null,
                     payment_mode: op.payment_mode || 'commission_advance',
                     fixed_advance_amount: op.fixed_advance_amount || 0,
                     
@@ -475,13 +476,21 @@ export default function ActivityDetail({
                     const raw = op._raw;
                     const isVideo = title?.toLowerCase().includes('with video') || title?.toLowerCase().includes('with dslr video') || raw.name?.toLowerCase().includes('with video') || false;
                     const pMode = raw.payment_mode || 'commission_advance';
-                    const commPct = raw.commission_percentage !== undefined && raw.commission_percentage !== null ? Number(raw.commission_percentage) : 10;
+                    const commPct = raw.commission_percentage !== undefined && raw.commission_percentage !== null ? Number(raw.commission_percentage) : 0;
                     const fixedAmt = raw.fixed_advance_amount !== undefined && raw.fixed_advance_amount !== null ? Number(raw.fixed_advance_amount) : 0;
+
+                    const vPrice = Number(raw.price || price || 0);
+                    const commAmt = raw.commission_amount !== undefined && raw.commission_amount !== null && raw.commission_amount !== ''
+                      ? Number(raw.commission_amount)
+                      : (commPct > 0 ? Math.round((vPrice * commPct) / 100) : 0);
+                    const totalPrice = vPrice + commAmt;
 
                     openBookingModal({
                       id: raw.id || id,
                       name: `${title} - ${op.vendorName}`,
-                      price: op.price,
+                      price: totalPrice,
+                      vendor_price: vPrice,
+                      commission_amount: commAmt,
                       category: category,
                       city_id: raw.city_id,
                       vendor_id: raw.vendor_id,

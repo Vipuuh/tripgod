@@ -218,10 +218,13 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const taxes = isHotel ? Math.round(rawTotalPrice * 0.12) : 0;
   const totalPrice = rawTotalPrice + taxes;
 
-  // Calculate dynamic advance amount based on Flat ₹ or Percentage %
+  // Calculate dynamic advance amount based on Fixed Advance Amount (₹) or percentage
   let calculatedAdvance = 0;
   if (paymentMode === 'full_payment') {
     calculatedAdvance = totalPrice;
+  } else if (fixedAdvanceAmount > 0) {
+    const units = isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests);
+    calculatedAdvance = Math.min(totalPrice, fixedAdvanceAmount * units + taxes);
   } else if (commType === 'flat') {
     const flatPerUnit = commVal;
     const units = isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests);

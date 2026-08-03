@@ -1187,19 +1187,6 @@ export default function AdminDashboard({ setRoute }) {
                         <option value="Camping">Camping</option>
                       </select>
                     </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission (%)</label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        max="100"
-                        value={newVendor.commission_percentage}
-                        onChange={(e) => setNewVendor(prev => ({ ...prev, commission_percentage: Number(e.target.value) }))}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
-                      />
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -3181,6 +3168,9 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.best_for = formData.best_for || [];
         submitData.perfect_for = formData.perfect_for || [];
         submitData.benefits = formData.benefits || [];
+        submitData.commission_type = formData.commission_type || 'flat';
+        submitData.commission_value = formData.commission_value !== '' && formData.commission_value !== null && formData.commission_value !== undefined ? Number(formData.commission_value) : null;
+        submitData.fixed_advance_amount = formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? Number(formData.fixed_advance_amount) : null;
         if (formData.check_in) submitData.check_in = formData.check_in;
         if (formData.check_out) submitData.check_out = formData.check_out;
       } else if (type === 'bikes') {
@@ -5585,49 +5575,58 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                         </div>
 
                         {/* Payment Settings Details Sub-Row */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {(opState.payment_mode === 'commission_advance' || !opState.payment_mode) && (
-                            <div className="space-y-1">
-                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={opState.commission_percentage}
-                                onChange={(e) => {
-                                  setActivitiesOperators(prev => ({
-                                    ...prev,
-                                    [vendor.id]: {
-                                      ...prev[vendor.id],
-                                      commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
-                                    }
-                                  }));
-                                }}
-                                placeholder="e.g. 10"
-                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                              />
-                            </div>
-                          )}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/50 p-2.5 rounded-xl border border-slate-800/80">
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
+                              onChange={(e) => {
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
+                                  }
+                                }));
+                              }}
+                              placeholder="e.g. 50"
+                              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none focus:border-slate-600"
+                            />
+                          </div>
 
-                          {opState.payment_mode === 'fixed_advance' && (
-                            <div className="space-y-1">
-                              <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Fixed Advance Amount (₹)</label>
-                              <input
-                                type="number"
-                                min="0"
-                                value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
-                                onChange={(e) => {
-                                  setActivitiesOperators(prev => ({
-                                    ...prev,
-                                    [vendor.id]: {
-                                      ...prev[vendor.id],
-                                      fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
-                                    }
-                                  }));
-                                }}
-                                placeholder="e.g. 200"
-                                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                              />
+                          <div className="space-y-1">
+                            <label className="block text-[8px] font-black uppercase text-amber-400 tracking-wider">Commission / Our Profit (₹)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage !== '' && opState.commission_percentage !== null && opState.price ? Math.round((Number(opState.price) * Number(opState.commission_percentage)) / 100) : '')}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? '' : Number(e.target.value);
+                                setActivitiesOperators(prev => ({
+                                  ...prev,
+                                  [vendor.id]: {
+                                    ...prev[vendor.id],
+                                    commission_amount: val,
+                                    commission_percentage: val !== '' && opState.price ? Math.round((val / Number(opState.price)) * 100) : prev[vendor.id]?.commission_percentage
+                                  }
+                                }));
+                              }}
+                              placeholder="e.g. 100"
+                              className="w-full bg-slate-950 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-amber-400 font-bold text-[11px] focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+
+                          {Number(opState.price || 0) > 0 && (
+                            <div className="col-span-2 flex items-center justify-between text-[10px] font-bold bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                              <span className="text-slate-400">Total Customer Price:</span>
+                              <span className="text-emerald-400 font-black text-xs">
+                                ₹{Number(opState.price || 0) + Number(opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage ? (opState.price * opState.commission_percentage)/100 : 0))}
+                              </span>
+                              <span className="text-slate-500 text-[9px]">
+                                (Vendor ₹{opState.price} + Profit ₹{opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage ? Math.round((opState.price * opState.commission_percentage)/100) : 0)})
+                              </span>
                             </div>
                           )}
                         </div>
@@ -5939,49 +5938,58 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                           </div>
 
                           {/* Payment Settings Sub-Row */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {(opState.payment_mode === 'commission_advance' || !opState.payment_mode) && (
-                              <div className="space-y-1">
-                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Commission (%)</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  value={opState.commission_percentage !== null && opState.commission_percentage !== undefined ? opState.commission_percentage : ''}
-                                  onChange={(e) => {
-                                    setBikesOperators(prev => ({
-                                      ...prev,
-                                      [vendor.id]: {
-                                        ...prev[vendor.id],
-                                        commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
-                                      }
-                                    }));
-                                  }}
-                                  placeholder="e.g. 10"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                                />
-                              </div>
-                            )}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/50 p-2.5 rounded-xl border border-slate-800/80">
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
+                                onChange={(e) => {
+                                  setBikesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                placeholder="e.g. 50"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none focus:border-slate-600"
+                              />
+                            </div>
 
-                            {opState.payment_mode === 'fixed_advance' && (
-                              <div className="space-y-1">
-                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Fixed Advance Amount (₹)</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
-                                  onChange={(e) => {
-                                    setBikesOperators(prev => ({
-                                      ...prev,
-                                      [vendor.id]: {
-                                        ...prev[vendor.id],
-                                        fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
-                                      }
-                                    }));
-                                  }}
-                                  placeholder="e.g. 200"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none"
-                                />
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-amber-400 tracking-wider">Commission / Our Profit (₹)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage !== '' && opState.commission_percentage !== null && opState.price ? Math.round((Number(opState.price) * Number(opState.commission_percentage)) / 100) : '')}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : Number(e.target.value);
+                                  setBikesOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      commission_amount: val,
+                                      commission_percentage: val !== '' && opState.price ? Math.round((val / Number(opState.price)) * 100) : prev[vendor.id]?.commission_percentage
+                                    }
+                                  }));
+                                }}
+                                placeholder="e.g. 100"
+                                className="w-full bg-slate-950 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-amber-400 font-bold text-[11px] focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+
+                            {Number(opState.price || 0) > 0 && (
+                              <div className="col-span-2 flex items-center justify-between text-[10px] font-bold bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                                <span className="text-slate-400">Total Customer Price:</span>
+                                <span className="text-emerald-400 font-black text-xs">
+                                  ₹{Number(opState.price || 0) + Number(opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage ? (opState.price * opState.commission_percentage)/100 : 0))}
+                                </span>
+                                <span className="text-slate-500 text-[9px]">
+                                  (Vendor ₹{opState.price} + Profit ₹{opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage ? Math.round((opState.price * opState.commission_percentage)/100) : 0)})
+                                </span>
                               </div>
                             )}
                           </div>
@@ -7409,47 +7417,58 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                           </div>
 
                           {/* Payment Settings Sub-Row */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            {(opState.payment_mode === 'commission_advance' || !opState.payment_mode) && (
-                              <div className="space-y-1">
-                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Comm Override (%)</label>
-                                <input
-                                  type="number"
-                                  placeholder={`Default ${vendor.commission_percentage}%`}
-                                  value={opState.commission_percentage}
-                                  onChange={(e) => {
-                                    setToursOperators(prev => ({
-                                      ...prev,
-                                      [vendor.id]: {
-                                        ...prev[vendor.id],
-                                        commission_percentage: e.target.value === '' ? '' : Number(e.target.value)
-                                      }
-                                    }));
-                                  }}
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
-                                />
-                              </div>
-                            )}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/50 p-2.5 rounded-xl border border-slate-800/80">
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
+                                onChange={(e) => {
+                                  setToursOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
+                                    }
+                                  }));
+                                }}
+                                placeholder="e.g. 50"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-[11px] focus:outline-none focus:border-slate-600"
+                              />
+                            </div>
 
-                            {opState.payment_mode === 'fixed_advance' && (
-                              <div className="space-y-1">
-                                <label className="block text-[8px] font-black uppercase text-gray-500 tracking-wider">Fixed Advance Amount (₹)</label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={opState.fixed_advance_amount !== null && opState.fixed_advance_amount !== undefined ? opState.fixed_advance_amount : ''}
-                                  onChange={(e) => {
-                                    setToursOperators(prev => ({
-                                      ...prev,
-                                      [vendor.id]: {
-                                        ...prev[vendor.id],
-                                        fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value)
-                                      }
-                                    }));
-                                  }}
-                                  placeholder="e.g. 200"
-                                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-accent"
-                                />
+                            <div className="space-y-1">
+                              <label className="block text-[8px] font-black uppercase text-amber-400 tracking-wider">Commission / Our Profit (₹)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage !== '' && opState.commission_percentage !== null && opState.price ? Math.round((Number(opState.price) * Number(opState.commission_percentage)) / 100) : '')}
+                                onChange={(e) => {
+                                  const val = e.target.value === '' ? '' : Number(e.target.value);
+                                  setToursOperators(prev => ({
+                                    ...prev,
+                                    [vendor.id]: {
+                                      ...prev[vendor.id],
+                                      commission_amount: val,
+                                      commission_percentage: val !== '' && opState.price ? Math.round((val / Number(opState.price)) * 100) : prev[vendor.id]?.commission_percentage
+                                    }
+                                  }));
+                                }}
+                                placeholder="e.g. 100"
+                                className="w-full bg-slate-950 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-amber-400 font-bold text-[11px] focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+
+                            {Number(opState.price || 0) > 0 && (
+                              <div className="col-span-2 flex items-center justify-between text-[10px] font-bold bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                                <span className="text-slate-400">Total Customer Price:</span>
+                                <span className="text-emerald-400 font-black text-xs">
+                                  ₹{Number(opState.price || 0) + Number(opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage ? (opState.price * opState.commission_percentage)/100 : 0))}
+                                </span>
+                                <span className="text-slate-500 text-[9px]">
+                                  (Vendor ₹{opState.price} + Profit ₹{opState.commission_amount !== null && opState.commission_amount !== undefined ? opState.commission_amount : (opState.commission_percentage ? Math.round((opState.price * opState.commission_percentage)/100) : 0)})
+                                </span>
                               </div>
                             )}
                           </div>
@@ -7612,51 +7631,78 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
 
       {/* 5. Payment Configuration */}
       {type === 'hotels' && (
-        <div className="space-y-4 border-t border-slate-900 pt-4">
-          <h4 className="text-xs font-black uppercase text-accent tracking-wider font-display">Payment Configuration</h4>
+        <div className="space-y-4 border-t border-slate-900 pt-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
+          <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider font-display flex items-center gap-1.5">
+            <span>💰 Hotel Commission & Online Deposit Configuration</span>
+          </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1">
-              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Payment Mode</label>
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Mode</label>
               <select
-                value={formData.payment_mode || 'commission_advance'}
-                onChange={(e) => setFormData(prev => ({ ...prev, payment_mode: e.target.value }))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 focus:outline-none font-bold"
+                value={formData.commission_type || 'flat'}
+                onChange={(e) => setFormData(prev => ({ ...prev, commission_type: e.target.value }))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-xs focus:outline-none font-bold"
               >
-                <option value="commission_advance">Commission-Based Advance</option>
-                <option value="fixed_advance">Fixed Advance Amount</option>
-                <option value="full_payment">Full 100% Payment Online</option>
+                <option value="flat">Flat Rate (₹)</option>
+                <option value="percentage">Percentage (%)</option>
               </select>
             </div>
 
-            {(formData.payment_mode === 'commission_advance' || !formData.payment_mode) && (
-              <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Commission Percentage (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.commission_percentage !== null && formData.commission_percentage !== undefined ? formData.commission_percentage : ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, commission_percentage: e.target.value === '' ? '' : Number(e.target.value) }))}
-                  placeholder="e.g. 20"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                />
-              </div>
-            )}
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-amber-400 tracking-wider">
+                {formData.commission_type === 'percentage' ? 'Commission Percentage (%)' : 'Commission Amount (₹)'}
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.commission_value !== null && formData.commission_value !== undefined ? formData.commission_value : (formData.commission_percentage || '')}
+                onChange={(e) => {
+                  const val = e.target.value === '' ? '' : Number(e.target.value);
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    commission_value: val,
+                    commission_percentage: formData.commission_type === 'percentage' ? val : (formData.price ? Math.round((val / Number(formData.price)) * 100) : val)
+                  }));
+                }}
+                placeholder={formData.commission_type === 'percentage' ? 'e.g. 10' : 'e.g. 500'}
+                className="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-2.5 text-amber-400 font-bold text-xs focus:outline-none focus:border-amber-500"
+              />
+            </div>
 
-            {formData.payment_mode === 'fixed_advance' && (
-              <div className="space-y-1">
-                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? formData.fixed_advance_amount : ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value) }))}
-                  placeholder="e.g. 500"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                />
-              </div>
-            )}
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Fixed Advance Amount (₹)</label>
+              <input
+                type="number"
+                min="0"
+                value={formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? formData.fixed_advance_amount : ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, fixed_advance_amount: e.target.value === '' ? '' : Number(e.target.value) }))}
+                placeholder="e.g. 300"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none"
+              />
+            </div>
           </div>
+
+          {Number(formData.price || 0) > 0 && (
+            <div className="text-[11px] font-bold text-slate-300 bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+              <span>Vendor Room Price: <strong className="text-white">₹{formData.price}</strong></span>
+              <span>
+                + Profit: <strong className="text-amber-400">₹{
+                  formData.commission_type === 'percentage'
+                    ? Math.round((Number(formData.price) * Number(formData.commission_value || formData.commission_percentage || 0)) / 100)
+                    : Number(formData.commission_value || 0)
+                }</strong>
+              </span>
+              <span>
+                = Total Display Price: <strong className="text-emerald-400">₹{
+                  Number(formData.price) + (
+                    formData.commission_type === 'percentage'
+                      ? Math.round((Number(formData.price) * Number(formData.commission_value || formData.commission_percentage || 0)) / 100)
+                      : Number(formData.commission_value || 0)
+                  )
+                }</strong>
+              </span>
+            </div>
+          )}
         </div>
       )}
 

@@ -134,8 +134,16 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
       <div className="space-y-3.5 text-left">
         {operators.map((op, idx) => {
           const rating = op.starRating !== null && op.starRating !== undefined ? Number(op.starRating) : 4.5;
-          const displayPrice = op.price || 0;
-          const displayOriginalPrice = op.originalPrice || Math.round(displayPrice * 1.5);
+          
+          // Vendor Base Price + Platform Commission / Profit = Total Displayed Price
+          const vendorBasePrice = Number(op.price || 0);
+          const commPct = op.commission_percentage !== undefined && op.commission_percentage !== null ? Number(op.commission_percentage) : (op.commissionPercentage !== undefined && op.commissionPercentage !== null ? Number(op.commissionPercentage) : 0);
+          const commAmount = op.commission_amount !== undefined && op.commission_amount !== null && op.commission_amount !== ''
+            ? Number(op.commission_amount)
+            : (commPct > 0 ? Math.round((vendorBasePrice * commPct) / 100) : 0);
+
+          const displayPrice = vendorBasePrice + commAmount;
+          const displayOriginalPrice = op.originalPrice ? Number(op.originalPrice) : Math.round(displayPrice * 1.5);
           const isDiscounted = displayOriginalPrice && displayOriginalPrice > displayPrice;
           const savings = displayOriginalPrice - displayPrice;
           const upiDiscount = op.upi_discount !== undefined && op.upi_discount !== null ? Number(op.upi_discount) : (op.full_payment_upi_discount ? Number(op.full_payment_upi_discount) : 0);
@@ -160,16 +168,17 @@ export default function OperatorSelector({ operators = [], onBookOperator, activ
 
           // Dynamic Payment Terms calculation
           const pMode = op.payment_mode || op.paymentMode || 'commission_advance';
-          const commPct = op.commission_percentage !== undefined && op.commission_percentage !== null ? Number(op.commission_percentage) : (op.commissionPercentage !== undefined && op.commissionPercentage !== null ? Number(op.commissionPercentage) : 10);
-          const fixedAmt = op.fixed_advance_amount !== undefined && op.fixed_advance_amount !== null ? Number(op.fixed_advance_amount) : (op.fixedAdvanceAmount !== undefined && op.fixedAdvanceAmount !== null ? Number(op.fixedAdvanceAmount) : 0);
+          const fixedAmt = op.fixed_advance_amount !== undefined && op.fixed_advance_amount !== null && op.fixed_advance_amount !== ''
+            ? Number(op.fixed_advance_amount)
+            : (op.fixedAdvanceAmount !== undefined && op.fixedAdvanceAmount !== null && op.fixedAdvanceAmount !== '' ? Number(op.fixedAdvanceAmount) : 0);
 
           let advanceAmount = 0;
           if (pMode === 'full_payment') {
             advanceAmount = displayPrice;
-          } else if (pMode === 'fixed_advance') {
+          } else if (fixedAmt > 0) {
             advanceAmount = fixedAmt;
           } else {
-            advanceAmount = Math.round((displayPrice * commPct) / 100);
+            advanceAmount = commAmount > 0 ? commAmount : Math.round((displayPrice * 10) / 100);
           }
           const remainingAmount = Math.max(0, displayPrice - advanceAmount);
 
