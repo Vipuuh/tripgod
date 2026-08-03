@@ -129,6 +129,10 @@ export default function VendorPortal({ onNavigateHome }) {
       setPendingVendor(matchedVendor);
       setOtpSent(true);
 
+      // Trigger WhatsApp OTP message
+      const waUrl = `https://wa.me/91${inputNum}?text=${encodeURIComponent(`Your TripGod Partner Portal Security Login OTP is: ${newOtp}. Do not share this OTP with anyone.`)}`;
+      window.open(waUrl, '_blank');
+
     } catch (err) {
       setAuthError(err.message || 'Failed to send OTP.');
     } finally {
@@ -358,10 +362,17 @@ export default function VendorPortal({ onNavigateHome }) {
           ) : (
             /* Step 2: OTP Verification Input */
             <form onSubmit={handleVerifyOtp} className="space-y-5">
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-300 text-xs font-medium space-y-1">
-                <div className="font-bold text-emerald-400 uppercase tracking-wider">OTP Sent Successfully</div>
-                <div>A 4-digit security code has been sent to +91 {phoneInput}.</div>
-                <div className="text-[11px] text-orange-400 font-bold pt-1">Security OTP Code: {generatedOtp}</div>
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-300 text-xs font-medium space-y-2">
+                <div className="font-bold text-emerald-400 uppercase tracking-wider">OTP Sent to WhatsApp</div>
+                <div>A 4-digit security code has been generated for +91 {phoneInput}.</div>
+                <a
+                  href={`https://wa.me/91${phoneInput.replace(/\D/g, '')}?text=${encodeURIComponent(`Your TripGod Partner Portal Security Login OTP is: ${generatedOtp}. Do not share this OTP with anyone.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-bold uppercase tracking-wider transition-colors mt-1"
+                >
+                  Click Here to Open WhatsApp OTP
+                </a>
               </div>
 
               <div>
