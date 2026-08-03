@@ -187,6 +187,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
             ? Number(activity.commission_percentage)
             : 10.0));
 
+  const fixedAdvanceAmount = activity && activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
+    ? Number(activity.fixed_advance_amount)
+    : (commType === 'flat' ? commVal : 0);
+
+  const commissionPercentage = commType === 'percentage' ? commVal : 10.0;
   const paymentMode = (activity && activity.payment_mode) || 'commission_advance';
 
   // Calculate nights for hotel bookings
