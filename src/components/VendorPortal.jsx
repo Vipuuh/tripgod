@@ -275,7 +275,7 @@ export default function VendorPortal({ onNavigateHome }) {
     }
   };
 
-  // Update Item Net Price and Customer Selling Price
+  // Update Item Net Price and Customer Selling Price based on LOCKED Admin Commission
   const handleSavePrice = async (item) => {
     if (!newPrice || isNaN(newPrice) || Number(newPrice) <= 0) {
       alert('Please enter a valid price amount.');
@@ -284,20 +284,23 @@ export default function VendorPortal({ onNavigateHome }) {
 
     const netPriceNum = Number(newPrice);
     
-    // Check if fixed advance amount or custom commission is set in admin
+    // Check Admin Payment Mode & Commission Settings
+    const paymentMode = item.payment_mode || 'fixed_advance';
     const fixedAdvance = item.fixed_advance_amount !== undefined && item.fixed_advance_amount !== null && item.fixed_advance_amount !== ''
       ? Number(item.fixed_advance_amount)
       : null;
+    const commPct = item.commission_percentage !== undefined && item.commission_percentage !== null && item.commission_percentage !== ''
+      ? Number(item.commission_percentage)
+      : null;
 
-    const commType = fixedAdvance !== null ? 'flat' : (item.commission_type || currentVendor.commission_type || 'percentage');
-    const commVal = fixedAdvance !== null ? fixedAdvance : (item.commission_value || currentVendor.commission_value || 10);
-
-    // Calculate commission amount (Online Advance)
+    // Calculate Admin Commission Amount (Online Advance)
     let commAmount = 0;
-    if (commType === 'flat') {
-      commAmount = Number(commVal);
+    if (paymentMode === 'fixed_advance' || (fixedAdvance !== null && fixedAdvance > 0)) {
+      commAmount = fixedAdvance !== null ? fixedAdvance : 200;
+    } else if (commPct !== null) {
+      commAmount = Math.round((netPriceNum * commPct) / 100);
     } else {
-      commAmount = Math.round((netPriceNum * Number(commVal)) / 100);
+      commAmount = Math.round((netPriceNum * 10) / 100);
     }
 
     const customerSellingPrice = netPriceNum + commAmount;
