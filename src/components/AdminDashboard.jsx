@@ -2697,8 +2697,6 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       if (['rafting', 'adventures'].includes(type)) {
         const enabledOps = Object.entries(activitiesOperators)
           .filter(([_, op]) => op.enabled)
-        const enabledOps = Object.entries(activitiesOperators)
-          .filter(([_, op]) => op.enabled)
           .map(([vendorId, op]) => {
             const baseVendorPrice = Number(op.price || 0);
             const commAmt = op.commission_amount !== '' && op.commission_amount !== null && op.commission_amount !== undefined
