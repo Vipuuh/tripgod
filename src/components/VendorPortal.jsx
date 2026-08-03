@@ -283,10 +283,16 @@ export default function VendorPortal({ onNavigateHome }) {
     }
 
     const netPriceNum = Number(newPrice);
-    const commType = item.commission_type || currentVendor.commission_type || 'percentage';
-    const commVal = item.commission_value || currentVendor.commission_value || 10;
+    
+    // Check if fixed advance amount or custom commission is set in admin
+    const fixedAdvance = item.fixed_advance_amount !== undefined && item.fixed_advance_amount !== null && item.fixed_advance_amount !== ''
+      ? Number(item.fixed_advance_amount)
+      : null;
 
-    // Calculate commission amount
+    const commType = fixedAdvance !== null ? 'flat' : (item.commission_type || currentVendor.commission_type || 'percentage');
+    const commVal = fixedAdvance !== null ? fixedAdvance : (item.commission_value || currentVendor.commission_value || 10);
+
+    // Calculate commission amount (Online Advance)
     let commAmount = 0;
     if (commType === 'flat') {
       commAmount = Number(commVal);
@@ -307,8 +313,8 @@ export default function VendorPortal({ onNavigateHome }) {
       setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, net_price: netPriceNum, price: customerSellingPrice } : i));
       setEditingItemId(null);
       setNewPrice('');
-      setStatusMessage(`Net price for ${item.name} set to ₹${netPriceNum}. Website Selling Price: ₹${customerSellingPrice}`);
-      setTimeout(() => setStatusMessage(''), 4000);
+      setStatusMessage(`Net price set to ₹${netPriceNum}. Website Selling Price: ₹${customerSellingPrice} (Online Advance: ₹${commAmount})`);
+      setTimeout(() => setStatusMessage(''), 5000);
     } catch (err) {
       alert('Failed to update price: ' + err.message);
     }
