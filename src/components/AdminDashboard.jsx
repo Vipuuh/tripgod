@@ -2346,9 +2346,13 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       // If editing, populate from existing operators
       if (data && data.operators) {
         data.operators.forEach(op => {
+          const baseVendorPrice = op.net_price !== null && op.net_price !== undefined ? op.net_price : (op.price || '');
+          const commAmt = op.commission_amount !== null && op.commission_amount !== undefined ? op.commission_amount : '';
+          
           initialOps[op.vendor_id] = {
             enabled: true,
-            price: op.price || '',
+            price: baseVendorPrice,
+            commission_amount: commAmt,
             original_price: op.original_price !== null && op.original_price !== undefined ? op.original_price : '',
             commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
             whatsapp_number: op.whatsapp_number || op.vendors?.whatsapp || '',
@@ -2378,6 +2382,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         initialOps[v.id] = {
           enabled: false,
           price: '',
+          commission_amount: '',
           original_price: '',
           commission_percentage: '',
           whatsapp_number: v.whatsapp || '',
@@ -2390,9 +2395,13 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       // If editing, populate from existing operators
       if (data && data.operators) {
         data.operators.forEach(op => {
+          const baseVendorPrice = op.net_price !== null && op.net_price !== undefined ? op.net_price : (op.price || '');
+          const commAmt = op.commission_amount !== null && op.commission_amount !== undefined ? op.commission_amount : '';
+
           initialOps[op.vendor_id] = {
             enabled: true,
-            price: op.price || '',
+            price: baseVendorPrice,
+            commission_amount: commAmt,
             original_price: op.original_price !== null && op.original_price !== undefined ? op.original_price : '',
             commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
             whatsapp_number: op.whatsapp_number || op.vendors?.whatsapp || '',
@@ -2417,6 +2426,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         initialOps[v.id] = {
           enabled: false,
           price: '',
+          commission_amount: '',
           deposit: 0,
           pickup_location: v.address || 'Rishikesh',
           commission_percentage: '',
@@ -2429,12 +2439,15 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       // If editing, populate from existing operators
       if (data && data.operators) {
         data.operators.forEach(op => {
-          const currentPrice = Number(op.price) || 0;
+          const baseVendorPrice = op.net_price !== null && op.net_price !== undefined ? op.net_price : (op.price || '');
+          const commAmt = op.commission_amount !== null && op.commission_amount !== undefined ? op.commission_amount : '';
           const existingOp = initialOps[op.vendor_id];
-          if (!existingOp || !existingOp.enabled || (currentPrice > 0 && Number(existingOp.price || 0) <= 0)) {
+
+          if (!existingOp || !existingOp.enabled || (Number(baseVendorPrice) > 0 && Number(existingOp.price || 0) <= 0)) {
             initialOps[op.vendor_id] = {
               enabled: true,
-              price: currentPrice > 0 ? op.price : (existingOp?.price || ''),
+              price: baseVendorPrice,
+              commission_amount: commAmt,
               deposit: op.deposit !== undefined ? op.deposit : 0,
               pickup_location: op.pickup_location || op.vendors?.address || 'Rishikesh',
               commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
@@ -2454,6 +2467,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
     if (data) {
       setFormData({ 
         ...data,
+        price: data.net_price !== null && data.net_price !== undefined ? data.net_price : (data.price || ''),
+        commission_value: data.commission_amount !== null && data.commission_amount !== undefined ? data.commission_amount : (data.commission_value !== null && data.commission_value !== undefined ? data.commission_value : ''),
         original_price: data.original_price !== null && data.original_price !== undefined ? data.original_price : '',
         competitor_name: data.competitor_name || 'MakeMyTrip',
         competitor_price: data.competitor_price !== null && data.competitor_price !== undefined ? data.competitor_price : '',
