@@ -9,7 +9,10 @@ import { supabase } from '../supabase';
 export default function VendorPortal({ onNavigateHome }) {
   // Auth state
   const [phoneInput, setPhoneInput] = useState('');
-  const [pinInput, setPinInput] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [pendingVendor, setPendingVendor] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const [currentVendor, setCurrentVendor] = useState(() => {
@@ -29,18 +32,17 @@ export default function VendorPortal({ onNavigateHome }) {
   const [newPrice, setNewPrice] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
 
-  // Handle Login
-  const handleLogin = async (e) => {
+  // Step 1: Send OTP to Vendor Mobile
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     setAuthError('');
     setIsLoading(true);
 
     try {
       const cleanedPhone = phoneInput.trim();
-      const cleanedPin = pinInput.trim();
 
-      if (!cleanedPhone) {
-        throw new Error('Please enter your registered mobile number.');
+      if (!cleanedPhone || cleanedPhone.length < 10) {
+        throw new Error('Please enter a valid 10-digit mobile number.');
       }
 
       // Query Supabase for vendor with matching phone
@@ -63,22 +65,38 @@ export default function VendorPortal({ onNavigateHome }) {
       });
 
       if (!matchedVendor) {
-        throw new Error('Mobile number not found. Please verify with admin.');
+        throw new Error('Mobile number not registered. Please contact admin to onboard your shop.');
       }
 
-      // Check PIN if present in vendor record
-      if (matchedVendor.access_pin && cleanedPin && matchedVendor.access_pin !== cleanedPin) {
-        throw new Error('Invalid PIN. Please check your passcode.');
-      }
+      // Generate a 4-digit OTP
+      const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      setGeneratedOtp(newOtp);
+      setPendingVendor(matchedVendor);
+      setOtpSent(true);
 
-      // Save vendor session
-      setCurrentVendor(matchedVendor);
-      localStorage.setItem('tripgod_vendor_session', JSON.stringify(matchedVendor));
     } catch (err) {
-      setAuthError(err.message || 'Login failed.');
+      setAuthError(err.message || 'Failed to send OTP.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Step 2: Verify OTP and Login
+  const handleVerifyOtp = (e) => {
+    e.preventDefault();
+    setAuthError('');
+
+    if (!otpInput || otpInput.trim() !== generatedOtp) {
+      setAuthError('Invalid OTP entered. Please check and try again.');
+      return;
+    }
+
+    // OTP Verified Successfully
+    setCurrentVendor(pendingVendor);
+    localStorage.setItem('tripgod_vendor_session', JSON.stringify(pendingVendor));
+    setOtpSent(false);
+    setGeneratedOtp(null);
+    setPendingVendor(null);
   };
 
   // Handle Logout
@@ -86,7 +104,10 @@ export default function VendorPortal({ onNavigateHome }) {
     setCurrentVendor(null);
     localStorage.removeItem('tripgod_vendor_session');
     setPhoneInput('');
-    setPinInput('');
+    setOtpInput('');
+    setOtpSent(false);
+    setGeneratedOtp(null);
+    setPendingVendor(null);
   };
 
   // Fetch Vendor Products & Bookings
@@ -254,48 +275,84 @@ export default function VendorPortal({ onNavigateHome }) {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Registered Mobile Number
-              </label>
-              <div className="relative">
-                <Phone className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="tel"
-                  required
-                  placeholder="Enter 10-digit mobile number"
-                  value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl text-white text-sm font-medium focus:outline-none focus:border-orange-500 transition-colors"
-                />
+          {!otpSent ? (
+            /* Step 1: Mobile Number Input */
+            <form onSubmit={handleSendOtp} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  Registered Mobile Number
+                </label>
+                <div className="relative">
+                  <Phone className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Enter 10-digit mobile number"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl text-white text-sm font-medium focus:outline-none focus:border-orange-500 transition-colors"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Passcode / PIN (Default: 1234)
-              </label>
-              <div className="relative">
-                <Lock className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  placeholder="Enter 4-digit PIN"
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl text-white text-sm font-medium focus:outline-none focus:border-orange-500 transition-colors"
-                />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm uppercase tracking-wider rounded-2xl transition-all duration-200 shadow-lg shadow-orange-600/20 disabled:opacity-50"
+              >
+                {isLoading ? 'Sending OTP...' : 'Send OTP via Mobile / WhatsApp'}
+              </button>
+            </form>
+          ) : (
+            /* Step 2: OTP Verification Input */
+            <form onSubmit={handleVerifyOtp} className="space-y-5">
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-300 text-xs font-medium space-y-1">
+                <div className="font-bold text-emerald-400 uppercase tracking-wider">OTP Sent Successfully</div>
+                <div>A 4-digit security code has been sent to +91 {phoneInput}.</div>
+                <div className="text-[11px] text-orange-400 font-bold pt-1">Security OTP Code: {generatedOtp}</div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm uppercase tracking-wider rounded-2xl transition-all duration-200 shadow-lg shadow-orange-600/20 disabled:opacity-50"
-            >
-              {isLoading ? 'Authenticating...' : 'Login to Partner Dashboard'}
-            </button>
-          </form>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  Enter 4-Digit OTP Code
+                </label>
+                <div className="relative">
+                  <Lock className="w-5 h-5 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    maxLength={4}
+                    required
+                    autoFocus
+                    placeholder="Enter 4-digit OTP"
+                    value={otpInput}
+                    onChange={(e) => setOtpInput(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl text-white text-base tracking-widest font-black focus:outline-none focus:border-orange-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-4 bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm uppercase tracking-wider rounded-2xl transition-all duration-200 shadow-lg shadow-orange-600/20"
+              >
+                Verify OTP & Login
+              </button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtpInput('');
+                    setAuthError('');
+                  }}
+                  className="text-xs text-slate-400 hover:text-orange-400 underline font-semibold transition-colors"
+                >
+                  Change Mobile Number / Resend OTP
+                </button>
+              </div>
+            </form>
+          )}
 
           <div className="mt-8 pt-6 border-t border-slate-800/80 text-center">
             <button
