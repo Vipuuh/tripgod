@@ -231,6 +231,8 @@ export default function AdminDashboard({ setRoute }) {
     } catch (err) {
       console.error('Error listing media bucket files:', err);
     }
+  };
+
   const handleUpdateDisplayOrder = async (tableName, itemId, currentOrder, direction) => {
     try {
       const newOrder = direction === 'up' ? Math.max(1, (currentOrder || 1) - 1) : (currentOrder || 0) + 1;
