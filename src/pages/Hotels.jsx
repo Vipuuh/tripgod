@@ -624,15 +624,18 @@ export default function Hotels({ currentCity, openBookingModal }) {
             finalMapped = mapped.filter(h => hasKeyword(h, ['triveni ghat', 'trivenighat', 'triveni', 'main market', 'ghat', 'railway station']));
           } else if (sortBy === 'near-busstand') {
             finalMapped = mapped.filter(h => hasKeyword(h, ['bus stand', 'busstand', 'bus stop', 'isbt', 'shrinagar bypass', 'roadways', 'nataraj']));
-          } else if (sortBy === 'most-booked') {
-            finalMapped.sort((a, b) => (b.bookings_count || 0) - (a.bookings_count || 0));
-          } else if (sortBy === 'top-rated') {
-            finalMapped.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-          } else if (sortBy === 'price-asc') {
-            finalMapped.sort((a, b) => Number(a.price) - Number(b.price));
-          } else if (sortBy === 'price-desc') {
-            finalMapped.sort((a, b) => Number(b.price) - Number(a.price));
-          }
+          // Always apply display_order priority first (1, 2, 3...)
+          finalMapped.sort((a, b) => {
+            const orderA = a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999;
+            const orderB = b.display_order !== undefined && b.display_order !== null && Number(b.display_order) > 0 ? Number(b.display_order) : 99999;
+            if (orderA !== orderB) return orderA - orderB;
+
+            if (sortBy === 'most-booked') return (b.bookings_count || 0) - (a.bookings_count || 0);
+            if (sortBy === 'top-rated') return (b.rating || 0) - (a.rating || 0);
+            if (sortBy === 'price-asc') return Number(a.price) - Number(b.price);
+            if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
+            return (b.rating || 0) - (a.rating || 0);
+          });
 
           setHotels(finalMapped);
         } else {

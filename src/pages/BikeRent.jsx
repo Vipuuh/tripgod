@@ -153,6 +153,7 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 parking_details: mockParking,
                 badges: mockBadges,
                 short_highlight: mockHighlight,
+                display_order: vendor.display_order !== undefined && vendor.display_order !== null ? Number(vendor.display_order) : 0,
                 packages: []
               };
             }
@@ -162,7 +163,14 @@ export default function BikeRent({ currentCity, openBookingModal }) {
               operators: [item]
             });
           });
-          setPartnersData(Object.values(partnersMap));
+
+          const sortedPartners = Object.values(partnersMap).sort((a, b) => {
+            const orderA = a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999;
+            const orderB = b.display_order !== undefined && b.display_order !== null && Number(b.display_order) > 0 ? Number(b.display_order) : 99999;
+            if (orderA !== orderB) return orderA - orderB;
+            return (b.star_rating || 0) - (a.star_rating || 0);
+          });
+          setPartnersData(sortedPartners);
         } else {
           setVehicles([]);
           setPartnersData([]);

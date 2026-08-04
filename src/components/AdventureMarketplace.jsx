@@ -214,6 +214,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                 parking_details: mockParking,
                 badges: mockBadges,
                 short_highlight: mockHighlight,
+                display_order: vendor.display_order !== undefined && vendor.display_order !== null ? Number(vendor.display_order) : 0,
                 packages: []
               };
             }

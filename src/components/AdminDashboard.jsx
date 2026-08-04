@@ -139,7 +139,7 @@ export default function AdminDashboard({ setRoute }) {
     name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
     shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
     since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
-    reporting_time: '', parking_details: '', badges: '', short_highlight: ''
+    reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
   });
 
   // Filter States for Bookings
@@ -433,6 +433,7 @@ export default function AdminDashboard({ setRoute }) {
         shop_image: fallbackShopImage,
         since: newVendor.since ? Number(newVendor.since) : 2020,
         bookings_count: newVendor.bookings_count ? Number(newVendor.bookings_count) : 50,
+        display_order: newVendor.display_order ? Number(newVendor.display_order) : 0,
         badges: typeof newVendor.badges === 'string'
           ? newVendor.badges.split(',').map(s => s.trim()).filter(Boolean)
           : (Array.isArray(newVendor.badges) ? newVendor.badges : [])
@@ -1465,6 +1466,18 @@ export default function AdminDashboard({ setRoute }) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
+                      <label className="block text-[10px] font-black uppercase text-amber-400 tracking-wider">Display Priority / Order (1 = Top Position)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newVendor.display_order === undefined || newVendor.display_order === null ? '' : newVendor.display_order}
+                        onChange={(e) => setNewVendor(prev => ({ ...prev, display_order: e.target.value === '' ? 0 : Number(e.target.value) }))}
+                        placeholder="e.g. 1 (Lower numbers appear first)"
+                        className="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
                       <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Badges (Comma separated)</label>
                       <input
                         type="text"
@@ -1474,17 +1487,17 @@ export default function AdminDashboard({ setRoute }) {
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
                       />
                     </div>
+                  </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Short Highlight</label>
-                      <input
-                        type="text"
-                        value={newVendor.short_highlight}
-                        onChange={(e) => setNewVendor(prev => ({ ...prev, short_highlight: e.target.value }))}
-                        placeholder="e.g. Certified guides, DSLR free"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Short Highlight</label>
+                    <input
+                      type="text"
+                      value={newVendor.short_highlight}
+                      onChange={(e) => setNewVendor(prev => ({ ...prev, short_highlight: e.target.value }))}
+                      placeholder="e.g. Certified guides, DSLR free"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-accent"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1568,6 +1581,7 @@ export default function AdminDashboard({ setRoute }) {
                         <th className="py-3 px-2">Contact</th>
                         <th className="py-3 px-2 text-center">Rating</th>
                         <th className="py-3 px-2 text-center">Comm. %</th>
+                        <th className="py-3 px-2 text-center">Priority</th>
                         <th className="py-3 px-2 text-center">Status</th>
                         <th className="py-3 px-2 text-right">Actions</th>
                       </tr>
@@ -1597,6 +1611,31 @@ export default function AdminDashboard({ setRoute }) {
                           </td>
                           <td className="py-3 px-2 text-center font-bold text-slate-300">{v.commission_percentage}%</td>
                           <td className="py-3 px-2 text-center">
+                            <div className="inline-flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-xl">
+                              <span className="text-[10px] text-amber-400 font-extrabold uppercase">
+                                #{v.display_order || 0}
+                              </span>
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  type="button"
+                                  title="Move Up (Display First)"
+                                  onClick={() => handleUpdateDisplayOrder('vendors', v.id, v.display_order || 1, 'up')}
+                                  className="w-4 h-4 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-[10px] font-black rounded cursor-pointer transition-colors border-none"
+                                >
+                                  ▲
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Move Down (Display Later)"
+                                  onClick={() => handleUpdateDisplayOrder('vendors', v.id, v.display_order || 0, 'down')}
+                                  className="w-4 h-4 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-[10px] font-black rounded cursor-pointer transition-colors border-none"
+                                >
+                                  ▼
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-center">
                             <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-full ${v.status === 'Active' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border border-red-500/20 text-red-400'}`}>
                               {v.status}
                             </span>
@@ -1620,7 +1659,8 @@ export default function AdminDashboard({ setRoute }) {
                                     reporting_time: v.reporting_time || '',
                                     parking_details: v.parking_details || '',
                                     badges: Array.isArray(v.badges) ? v.badges.join(', ') : (v.badges || ''),
-                                    short_highlight: v.short_highlight || ''
+                                    short_highlight: v.short_highlight || '',
+                                    display_order: v.display_order || 0
                                   });
                                 }}
                                 className="p-1 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white rounded"
