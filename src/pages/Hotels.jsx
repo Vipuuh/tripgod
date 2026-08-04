@@ -624,6 +624,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
             finalMapped = mapped.filter(h => hasKeyword(h, ['triveni ghat', 'trivenighat', 'triveni', 'main market', 'ghat', 'railway station']));
           } else if (sortBy === 'near-busstand') {
             finalMapped = mapped.filter(h => hasKeyword(h, ['bus stand', 'busstand', 'bus stop', 'isbt', 'shrinagar bypass', 'roadways', 'nataraj']));
+          }
+
           // Always apply display_order priority first (1, 2, 3...)
           finalMapped.sort((a, b) => {
             const orderA = a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999;
