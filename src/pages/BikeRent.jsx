@@ -102,6 +102,13 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                 type: isScooter ? 'Automatic Scooter' : 'Cruiser Motorcycle'
               };
             });
+
+          mapped.sort((a, b) => {
+            const orderA = a.display_order !== undefined && a.display_order !== null && a.display_order > 0 ? Number(a.display_order) : 999;
+            const orderB = b.display_order !== undefined && b.display_order !== null && b.display_order > 0 ? Number(b.display_order) : 999;
+            return orderA - orderB;
+          });
+
           setVehicles(mapped);
 
           // Group by partners

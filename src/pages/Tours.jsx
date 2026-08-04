@@ -274,14 +274,14 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="relative z-10 space-y-3 px-6">
-                <span className="text-[10px] font-black text-accent tracking-widest uppercase bg-black/40 px-3 py-1 rounded-full border border-accent/20">
-                  Pilgrimages & Yatras
+                <span className="text-[11px] font-black text-white tracking-widest uppercase bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-1.5 rounded-full shadow-md inline-block">
+                  ✨ COMING SOON - UPCOMING TOUR PACKAGES
                 </span>
                 <h1 className="text-3xl sm:text-5xl font-black text-white font-display tracking-tight uppercase">
                   Tours & Yatras
                 </h1>
                 <p className="text-gray-300 max-w-lg mx-auto text-xs sm:text-sm font-medium leading-relaxed">
-                  Book complete tour packages for Kedarnath, Badrinath, Char Dham, Do Dham and local sightseeings with verified guides.
+                  Our Char Dham Yatra and Kedarnath tour packages are being updated for the upcoming season. Coming soon!
                 </p>
               </div>
             </div>

@@ -587,37 +587,43 @@ export default function Hotels({ currentCity, openBookingModal }) {
         });
 
           const hasKeyword = (h, keywords) => {
-            const textToSearch = `${h.name || ''} ${h.address || ''} ${h.description || ''} ${(h.landmarks || []).join(' ')}`.toLowerCase();
+            const textToSearch = `${h.name || ''} ${h.address || ''} ${h.description || ''} ${(h.landmarks || []).join(' ')} ${h.property_type || ''} ${(h.best_for || []).join(' ')} ${(h.perfect_for || []).join(' ')} ${h.vendors?.address || ''} ${h.vendors?.landmark || ''} ${h.vendors?.name || ''}`.toLowerCase();
             return keywords.some(kw => textToSearch.includes(kw.toLowerCase()));
           };
 
+          // Sort by display_order first (1, 2, 3...) if set
+          mapped.sort((a, b) => {
+            const orderA = a.display_order !== undefined && a.display_order !== null && a.display_order > 0 ? Number(a.display_order) : 999;
+            const orderB = b.display_order !== undefined && b.display_order !== null && b.display_order > 0 ? Number(b.display_order) : 999;
+            return orderA - orderB;
+          });
+
           let finalMapped = [...mapped];
 
-          if (sortBy === 'couple-friendly') {
-            const couples = mapped.filter(h => {
+          if (sortBy === 'local-id') {
+            finalMapped = mapped.filter(h => {
+              const ruleLocalId = h.rules?.accepts_local_id !== false;
+              const textMatch = hasKeyword(h, ['local id', 'local_id', 'local id accepted']);
+              return ruleLocalId || textMatch;
+            });
+          } else if (sortBy === 'couple-friendly') {
+            finalMapped = mapped.filter(h => {
               const ruleCouple = h.rules?.unmarried_couples === true;
               const textMatch = hasKeyword(h, ['couple', 'unmarried', 'couples']);
               return ruleCouple || textMatch;
             });
-            finalMapped = couples.length > 0 ? couples : mapped;
           } else if (sortBy === 'near-ramjhula') {
-            const matched = mapped.filter(h => hasKeyword(h, ['ram jhula', 'ramjhula', 'swargashram', 'swarg ashram']));
-            finalMapped = matched.length > 0 ? matched : mapped;
+            finalMapped = mapped.filter(h => hasKeyword(h, ['ram jhula', 'ramjhula', 'swargashram', 'swarg ashram', 'geeta bhawan', 'parmarth']));
           } else if (sortBy === 'near-tapovan') {
-            const matched = mapped.filter(h => hasKeyword(h, ['tapovan', 'balaknath', 'badrinath road', 'shisham bari']));
-            finalMapped = matched.length > 0 ? matched : mapped;
+            finalMapped = mapped.filter(h => hasKeyword(h, ['tapovan', 'balaknath', 'badrinath road', 'shisham bari', 'upper tapovan']));
           } else if (sortBy === 'near-laxmanjhula') {
-            const matched = mapped.filter(h => hasKeyword(h, ['laxman jhula', 'laxmanjhula', 'lakshman jhula']));
-            finalMapped = matched.length > 0 ? matched : mapped;
+            finalMapped = mapped.filter(h => hasKeyword(h, ['laxman jhula', 'laxmanjhula', 'lakshman jhula', 'laxman']));
           } else if (sortBy === 'near-jankisetui') {
-            const matched = mapped.filter(h => hasKeyword(h, ['janki setu', 'jankisetui', 'janki jhula', 'jankijhula', 'pashulok']));
-            finalMapped = matched.length > 0 ? matched : mapped;
+            finalMapped = mapped.filter(h => hasKeyword(h, ['janki setu', 'jankisetui', 'janki jhula', 'jankijhula', 'pashulok', 'sita pul', 'sita jhula', 'janki', 'setu']));
           } else if (sortBy === 'near-trivenighat') {
-            const matched = mapped.filter(h => hasKeyword(h, ['triveni ghat', 'trivenighat', 'triveni', 'main market', 'ghat']));
-            finalMapped = matched.length > 0 ? matched : mapped;
+            finalMapped = mapped.filter(h => hasKeyword(h, ['triveni ghat', 'trivenighat', 'triveni', 'main market', 'ghat', 'railway station']));
           } else if (sortBy === 'near-busstand') {
-            const matched = mapped.filter(h => hasKeyword(h, ['bus stand', 'busstand', 'bus stop', 'isbt', 'shrinagar bypass', 'roadways']));
-            finalMapped = matched.length > 0 ? matched : mapped;
+            finalMapped = mapped.filter(h => hasKeyword(h, ['bus stand', 'busstand', 'bus stop', 'isbt', 'shrinagar bypass', 'roadways', 'nataraj']));
           } else if (sortBy === 'most-booked') {
             finalMapped.sort((a, b) => (b.bookings_count || 0) - (a.bookings_count || 0));
           } else if (sortBy === 'top-rated') {
@@ -702,6 +708,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Horizontal Scrollable Chips UI */}
                 <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
+                    { val: 'local-id', label: '🆔 Local ID Accepted' },
                     { val: 'couple-friendly', label: 'Couple Friendly' },
                     { val: 'near-ramjhula', label: 'Ram Jhula' },
                     { val: 'near-tapovan', label: 'Tapovan' },
@@ -872,6 +879,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                           {/* Badges Row */}
                           <div className="flex flex-wrap gap-1.5 select-none pt-0.5">
+                            {hotel.rules?.accepts_local_id !== false && (
+                              <span className="inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] bg-emerald-50 border-emerald-200 text-emerald-700">
+                                🆔 Local ID Accepted
+                              </span>
+                            )}
                             {listingBadges.map((badge, bIdx) => {
                               const isCouple = badge.toLowerCase().includes('couple');
                               const isLimited = badge.toLowerCase().includes('limited');
@@ -1885,9 +1897,14 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
                     <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">House Rules</h4>
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-655 font-bold">
+                      {selectedHotel.rules?.accepts_local_id !== false && (
+                        <div key="local_id_accepted" className="flex items-center gap-1.5 p-2 bg-emerald-50/80 rounded-xl border border-emerald-200/80 text-emerald-900 font-extrabold">
+                          <Check size={12} className="text-emerald-600 shrink-0 stroke-[2.5]" />
+                          <span className="truncate text-[10px] sm:text-xs leading-none">🆔 Local ID Accepted</span>
+                        </div>
+                      )}
                       {Object.entries(selectedHotel.rules)
                         .filter(([key, val]) => {
-                          // Only show known rule keys that are enabled
                           const knownKeys = ['unmarried_couples', 'pets', 'smoking', 'id_required', 'min_age_18', 'alcohol_allowed', 'visitors_allowed'];
                           return knownKeys.includes(key) && !!val;
                         })

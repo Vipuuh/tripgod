@@ -192,7 +192,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   const [activeSearchTab, setActiveSearchTab] = useState('hotels');
   const [selectedHotelCity, setSelectedHotelCity] = useState('');
   const [citiesList, setCitiesList] = useState([]);
-  const [selectedRaftingStretch, setSelectedRaftingStretch] = useState('16 KM (Shivpuri)');
+  const [selectedRaftingStretch, setSelectedRaftingStretch] = useState('12 KM (Brahmpuri)');
   const [selectedBikePickupLocation, setSelectedBikePickupLocation] = useState('Ram Jhula');
   const [allTours, setAllTours] = useState([]);
   const [selectedTourOption, setSelectedTourOption] = useState('');
@@ -306,7 +306,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     { label: 'Hotels', icon: Hotel, route: 'hotels', color: 'text-indigo-600 bg-indigo-50 border-indigo-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
     { label: 'Scooty Rent', icon: Bike, route: 'bikerent', color: 'text-emerald-600 bg-emerald-50 border-emerald-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
     { label: 'Rafting', icon: Ship, route: 'rafting', color: 'text-cyan-600 bg-cyan-50 border-cyan-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
-    { label: 'Tours', icon: MapPinned, route: 'tours', color: 'text-rose-600 bg-rose-50 border-rose-100 group-hover:bg-[#FF6B00] group-hover:text-white' }
+    { label: 'Bungee', icon: Zap, route: 'bungee', coming_soon: true, color: 'text-amber-600 bg-amber-50 border-amber-100 group-hover:bg-[#FF6B00] group-hover:text-white' }
   ];
 
   const [activitiesList, setActivitiesList] = useState([
@@ -365,22 +365,30 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   const raftingStretches = [
     {
       km: '12 KM',
-      stretch: 'Shivpuri → Laxman Jhula',
-      time: '2-3 hrs',
-      level: 'Moderate',
-      price: 1290,
-      badge: 'MOST POPULAR'
+      stretch: 'Brahmpuri → Laxman Jhula',
+      time: '2 hrs',
+      level: 'Easy',
+      price: 1000,
+      badge: 'POPULAR'
     },
     {
-      km: '16 KM',
+      km: '14 KM',
       stretch: 'Shivpuri → Nim Beach',
-      time: '3.5 hrs',
+      time: '3 hrs',
+      level: 'Moderate',
+      price: 1290,
+      badge: 'MOST BOOKED'
+    },
+    {
+      km: '18 KM',
+      stretch: 'Marine Drive → Nim Beach',
+      time: '4 hrs',
       level: 'Thrilling',
       price: 1590
     },
     {
-      km: '26 KM',
-      stretch: 'Marine Drive → Nim Beach',
+      km: '24 KM',
+      stretch: 'Kaudiyala → Nim Beach',
       time: '5-6 hrs',
       level: 'Advanced',
       price: 2490
@@ -776,13 +784,12 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           </motion.p>
 
           <div className="w-full max-w-4xl mx-auto mt-8 flex flex-col items-stretch md:items-center px-4">
-            {/* Tab selection menu */}
+            {/* Tab selection menu - Hotels, Scooty Rental, Rafting */}
             <div className="w-full md:w-auto flex items-center gap-1.5 md:gap-2 bg-black/75 backdrop-blur-xl px-4 md:px-6 py-2.5 md:py-3.5 rounded-t-2xl md:rounded-t-3xl border-t border-x border-white/15 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center scroll-smooth">
               {[
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
-                { id: 'tours', label: 'Tours', icon: MapPinned },
-                { id: 'rafting', label: 'Rafting', icon: Waves },
-                { id: 'bikerent', label: 'Scooty Rental', icon: Bike }
+                { id: 'bikerent', label: 'Scooty Rental', icon: Bike },
+                { id: 'rafting', label: 'Rafting', icon: Waves }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeSearchTab === tab.id;
@@ -894,10 +901,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                         onChange={(e) => setSelectedRaftingStretch(e.target.value)}
                         className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
                       >
-                        <option value="9 KM (Brahmpuri)">9 KM (Brahmpuri)</option>
-                        <option value="16 KM (Shivpuri)">16 KM (Shivpuri)</option>
-                        <option value="24 KM (Marine Drive)">24 KM (Marine Drive)</option>
-                        <option value="32 KM (Kaudiyala)">32 KM (Kaudiyala)</option>
+                        <option value="12 KM (Brahmpuri)">12 KM (Brahmpuri)</option>
+                        <option value="14 KM (Shivpuri)">14 KM (Shivpuri)</option>
+                        <option value="18 KM (Marine Drive)">18 KM (Marine Drive)</option>
+                        <option value="24 KM (Kaudiyala)">24 KM (Kaudiyala)</option>
                       </select>
                     </div>
                   </div>
@@ -1189,8 +1196,13 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 <button 
                   key={index} 
                   onClick={() => setRoute(item.route)}
-                  className="hover-scale-premium hover-glow flex flex-col items-center justify-center gap-2 p-2 sm:p-5 rounded-3xl bg-white border border-slate-200/50 shadow-[0_4px_25px_rgba(0,0,0,0.03)] transition-all duration-300 group cursor-pointer"
+                  className="hover-scale-premium hover-glow flex flex-col items-center justify-center gap-2 p-2 sm:p-5 rounded-3xl bg-white border border-slate-200/50 shadow-[0_4px_25px_rgba(0,0,0,0.03)] transition-all duration-300 group cursor-pointer relative"
                 >
+                  {item.coming_soon && (
+                    <span className="absolute -top-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs">
+                      Coming Soon
+                    </span>
+                  )}
                   <div className={`flex items-center justify-center h-12 w-12 sm:h-20 sm:w-20 rounded-2xl transition-all duration-500 ${item.color} border`}>
                     <IconComp size={22} className="sm:h-8 sm:w-8 group-hover:scale-110 transition-transform duration-500" />
                   </div>
@@ -1226,7 +1238,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="flex overflow-x-auto gap-6 pt-2 pb-6 no-scrollbar snap-x snap-mandatory"
           >
             {(featuredHotels || [
               {
@@ -1276,7 +1288,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                     window.history.pushState(null, '', `/hotels/${hotel.id}`);
                     window.dispatchEvent(new Event('popstate'));
                   }}
-                  className="group bg-white border border-slate-150 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                  className="flex-shrink-0 w-[85%] sm:w-[50%] md:w-[32%] snap-center group bg-white border border-slate-150 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
                 >
                   <div className="h-52 bg-slate-100 overflow-hidden relative">
                     <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -1489,7 +1501,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            className="flex overflow-x-auto gap-6 pt-2 pb-6 no-scrollbar snap-x snap-mandatory"
           >
             {(featuredTours || [
               {
@@ -1515,10 +1527,13 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 key={idx}
                 variants={fadeInUp}
                 onClick={() => setRoute('tours')}
-                className="group bg-white border border-slate-100 rounded-3xl overflow-hidden flex flex-col justify-between shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                className="flex-shrink-0 w-[85%] sm:w-[60%] md:w-[48%] snap-center group bg-white border border-slate-100 rounded-3xl overflow-hidden flex flex-col justify-between shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer hover:-translate-y-1 relative"
               >
                 <div className="h-56 bg-slate-100 overflow-hidden relative border-b border-slate-100">
                   <img src={tour.img} alt={tour.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute top-3 left-3 bg-amber-500 text-white text-[9px] font-black py-1 px-3 rounded-full uppercase tracking-wider shadow-md">
+                    COMING SOON
+                  </div>
                   <div className="absolute bottom-4 left-4 bg-accent-gradient text-white text-xs font-black py-1.5 px-3.5 rounded-full shadow-[0_4px_12px_rgba(255,95,0,0.25)]">
                     FROM ₹{tour.price}/PERSON
                   </div>
@@ -1542,9 +1557,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   <div className="pt-3 border-t border-slate-100">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setRoute('tours'); }}
-                      className="w-full py-3 bg-accent-gradient text-white font-black text-xs uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] transition-all duration-300 border-none cursor-pointer font-display"
+                      className="w-full py-3 bg-slate-800 text-white font-black text-xs uppercase tracking-wider rounded-xl hover:bg-slate-900 transition-all duration-300 border-none cursor-pointer font-display"
                     >
-                      Explore Tours
+                      COMING SOON
                     </button>
                   </div>
                 </div>

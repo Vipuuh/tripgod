@@ -238,7 +238,19 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
             });
           });
 
-          setPartnersData(Object.values(partnersMap));
+          const sortedPartners = Object.values(partnersMap).sort((a, b) => {
+            const orderA = a.display_order !== undefined && a.display_order !== null && a.display_order > 0 ? Number(a.display_order) : 999;
+            const orderB = b.display_order !== undefined && b.display_order !== null && b.display_order > 0 ? Number(b.display_order) : 999;
+            return orderA - orderB;
+          });
+          sortedPartners.forEach(p => {
+            p.packages.sort((a, b) => {
+              const orderA = a.display_order !== undefined && a.display_order !== null && a.display_order > 0 ? Number(a.display_order) : 999;
+              const orderB = b.display_order !== undefined && b.display_order !== null && b.display_order > 0 ? Number(b.display_order) : 999;
+              return orderA - orderB;
+            });
+          });
+          setPartnersData(sortedPartners);
       } catch (err) {
         console.error(`Failed to fetch ${activityType} marketplace data:`, err);
       } finally {

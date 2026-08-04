@@ -231,6 +231,19 @@ export default function AdminDashboard({ setRoute }) {
     } catch (err) {
       console.error('Error listing media bucket files:', err);
     }
+  const handleUpdateDisplayOrder = async (tableName, itemId, currentOrder, direction) => {
+    try {
+      const newOrder = direction === 'up' ? Math.max(1, (currentOrder || 1) - 1) : (currentOrder || 0) + 1;
+      const { error } = await supabase
+        .from(tableName)
+        .update({ display_order: newOrder })
+        .eq('id', itemId);
+      if (!error) {
+        fetchAllData();
+      }
+    } catch (e) {
+      console.error('Failed to update display order:', e);
+    }
   };
 
   // Login handler
@@ -1024,45 +1037,79 @@ export default function AdminDashboard({ setRoute }) {
                       </div>
 
                       {/* Item Actions */}
-                      <div className="p-4 border-t border-slate-900 flex justify-end gap-2.5">
-                        <button
-                          onClick={() => {
-                            setEditingItem({ type: activeTab, data: item });
-                            setShowFormModal(true);
-                          }}
-                          className="p-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                        >
-                          <Edit size={14} />
-                        </button>
-                        {activeTab === 'adventures' ? (
+                      <div className="p-4 border-t border-slate-900 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2 py-1 rounded-xl">
+                          <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider">
+                            Order: #{item.display_order || 0}
+                          </span>
+                          <div className="flex items-center gap-0.5">
+                            <button
+                              type="button"
+                              title="Move Up (Display First)"
+                              onClick={async () => {
+                                const targetId = item.id || (item.operators && item.operators[0]?.id);
+                                const targetTable = activeTab === 'hotels' ? 'hotels' : activeTab === 'bikes' ? 'bikes' : activeTab === 'adventures' ? 'rafting' : 'tours';
+                                if (targetId) await handleUpdateDisplayOrder(targetTable, targetId, item.display_order || 1, 'up');
+                              }}
+                              className="w-5 h-5 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-xs font-black rounded cursor-pointer transition-colors border-none"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              title="Move Down (Display Later)"
+                              onClick={async () => {
+                                const targetId = item.id || (item.operators && item.operators[0]?.id);
+                                const targetTable = activeTab === 'hotels' ? 'hotels' : activeTab === 'bikes' ? 'bikes' : activeTab === 'adventures' ? 'rafting' : 'tours';
+                                if (targetId) await handleUpdateDisplayOrder(targetTable, targetId, item.display_order || 0, 'down');
+                              }}
+                              className="w-5 h-5 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-xs font-black rounded cursor-pointer transition-colors border-none"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleDeleteActivityModel(item)}
-                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                            onClick={() => {
+                              setEditingItem({ type: activeTab, data: item });
+                              setShowFormModal(true);
+                            }}
+                            className="p-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center justify-center"
                           >
-                            <Trash2 size={14} />
+                            <Edit size={14} />
                           </button>
-                        ) : activeTab === 'bikes' ? (
-                          <button
-                            onClick={() => handleDeleteBikeModel(item)}
-                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        ) : activeTab === 'tours' ? (
-                          <button
-                            onClick={() => handleDeleteTourModel(item)}
-                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleDeleteResource(activeTab, item.id)}
-                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
+                          {activeTab === 'adventures' ? (
+                            <button
+                              onClick={() => handleDeleteActivityModel(item)}
+                              className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          ) : activeTab === 'bikes' ? (
+                            <button
+                              onClick={() => handleDeleteBikeModel(item)}
+                              className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          ) : activeTab === 'tours' ? (
+                            <button
+                              onClick={() => handleDeleteTourModel(item)}
+                              className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleDeleteResource(activeTab, item.id)}
+                              className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -2552,6 +2599,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         payment_mode: data.payment_mode || 'commission_advance',
         fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : '',
         rules: {
+          accepts_local_id: true,
           unmarried_couples: false,
           pets: false,
           smoking: false,
@@ -2587,7 +2635,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         fixed_advance_amount: 0,
         upi_discount: null,
         free_video_type: 'none',
-        coming_soon: false
+        coming_soon: false,
+        display_order: 0
       };
 
       if (type === 'hotels') {
@@ -2596,7 +2645,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         defaults.check_in = '12:00 PM';
         defaults.check_out = '11:00 AM';
         defaults.amenities = { wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false, river_view: false, room_service: false, power_backup: false, geyser: false };
-        defaults.rules = { unmarried_couples: false, pets: false, smoking: false, id_required: false, min_age_18: false, alcohol_allowed: false, visitors_allowed: false, breakfast_included: false, breakfast_price: '', room_categories: [], badge_settings: { home: '', list: '', detail: '' } };
+        defaults.rules = { accepts_local_id: true, unmarried_couples: false, pets: false, smoking: false, id_required: false, min_age_18: false, alcohol_allowed: false, visitors_allowed: false, breakfast_included: false, breakfast_price: '', room_categories: [], badge_settings: { home: '', list: '', detail: '' } };
         defaults.landmarks = [];
         defaults.rating = 4.5;
         defaults.reviews_count = 100;
@@ -3227,15 +3276,26 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         if (formData.check_in) submitData.check_in = formData.check_in;
         if (formData.check_out) submitData.check_out = formData.check_out;
       }
-      if (data) {
-        // Edit Row
-        const { error } = await supabase.from(type).update(submitData).eq('id', data.id);
-        if (error) throw error;
-      } else {
-        // Insert Row
-        const { error } = await supabase.from(type).insert(submitData);
-        if (error) throw error;
-      }
+      const executeSave = async (payload) => {
+        let currentPayload = { ...payload };
+        let res = data
+          ? await supabase.from(type).update(currentPayload).eq('id', data.id)
+          : await supabase.from(type).insert(currentPayload);
+
+        if (res.error && res.error.message) {
+          const match = res.error.message.match(/Could not find the '([^']+)' column/i);
+          if (match && match[1]) {
+            const missingCol = match[1];
+            delete currentPayload[missingCol];
+            res = data
+              ? await supabase.from(type).update(currentPayload).eq('id', data.id)
+              : await supabase.from(type).insert(currentPayload);
+          }
+        }
+        if (res.error) throw res.error;
+      };
+
+      await executeSave(submitData);
       onClose();
     } catch (err) {
       alert(err.message);
@@ -3515,6 +3575,18 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-1">
+          <label className="block text-[10px] font-black uppercase text-amber-400 tracking-wider font-semibold">Display Priority / Order (1 = Top Position)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="e.g. 1 (Lower numbers appear first)"
+            value={formData.display_order === undefined || formData.display_order === null ? '' : formData.display_order}
+            onChange={(e) => setFormData(prev => ({ ...prev, display_order: e.target.value === '' ? 0 : Number(e.target.value) }))}
+            className="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+          />
+        </div>
+
         <div className="space-y-1">
           <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Custom UPI Discount (INR)</label>
           <input
@@ -4199,6 +4271,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">House Rules</label>
             <div className="grid grid-cols-3 gap-4 text-slate-300">
               {[
+                { key: 'accepts_local_id', label: '🆔 Local ID Accepted' },
                 { key: 'unmarried_couples', label: 'Unmarried Couples Allowed' },
                 { key: 'pets', label: 'Pets Allowed' },
                 { key: 'smoking', label: 'Smoking Allowed' },
