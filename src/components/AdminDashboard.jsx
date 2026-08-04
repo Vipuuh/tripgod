@@ -236,13 +236,17 @@ export default function AdminDashboard({ setRoute }) {
   const handleUpdateDisplayOrder = async (tableName, itemId, currentOrder, direction) => {
     try {
       const newOrder = direction === 'up' ? Math.max(1, (currentOrder || 1) - 1) : (currentOrder || 0) + 1;
-      const { error } = await supabase
-        .from(tableName)
-        .update({ display_order: newOrder })
-        .eq('id', itemId);
-      if (!error) {
-        fetchAllData();
+      let payload = { display_order: newOrder };
+      if (tableName === 'hotels') {
+        const { data: currentHotel } = await supabase.from('hotels').select('rules').eq('id', itemId).single();
+        payload.rules = { ...(currentHotel?.rules || {}), display_order: newOrder };
       }
+      let res = await supabase.from(tableName).update(payload).eq('id', itemId);
+      if (res.error && tableName === 'hotels') {
+        const { data: currentHotel } = await supabase.from('hotels').select('rules').eq('id', itemId).single();
+        await supabase.from('hotels').update({ rules: { ...(currentHotel?.rules || {}), display_order: newOrder } }).eq('id', itemId);
+      }
+      fetchAllData();
     } catch (e) {
       console.error('Failed to update display order:', e);
     }
@@ -3246,8 +3250,8 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.check_in = formData.check_in || '12:00 PM';
         submitData.check_out = formData.check_out || '11:00 AM';
         submitData.cancellation_policy = formData.cancellation_policy || 'Free Cancellation up to 24 Hours';
-        submitData.amenities = formData.amenities || {};
-        submitData.rules = formData.rules || {};
+        submitData.display_order = formData.display_order ? Number(formData.display_order) : 0;
+        submitData.rules = { ...(formData.rules || {}), display_order: formData.display_order ? Number(formData.display_order) : 0 };
         submitData.landmarks = formData.landmarks || [];
         submitData.attractions = formData.attractions || [];  // ✅ nearby attractions fix
         submitData.rating = formData.rating === undefined ? 4.5 : Number(formData.rating);

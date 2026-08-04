@@ -708,7 +708,6 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Horizontal Scrollable Chips UI */}
                 <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
-                    { val: 'local-id', label: '🆔 Local ID Accepted' },
                     { val: 'couple-friendly', label: 'Couple Friendly' },
                     { val: 'near-ramjhula', label: 'Ram Jhula' },
                     { val: 'near-tapovan', label: 'Tapovan' },
@@ -879,17 +878,10 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                           {/* Badges Row */}
                           <div className="flex flex-wrap gap-1.5 select-none pt-0.5">
-                            {hotel.rules?.accepts_local_id !== false && (
-                              <span className="inline-flex items-center gap-1 text-[8.5px] font-black uppercase tracking-wider px-2 py-1 rounded border leading-none h-[22px] bg-emerald-50 border-emerald-200 text-emerald-700">
-                                🆔 Local ID Accepted
-                              </span>
-                            )}
                             {listingBadges.map((badge, bIdx) => {
                               const isCouple = badge.toLowerCase().includes('couple');
                               const isLimited = badge.toLowerCase().includes('limited');
-                              const isBestseller = badge.toLowerCase().includes('best');
-                              const isTop = badge.toLowerCase().includes('top');
-                              const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
+                              const cleanText = badge.replace(/[\p{Emoji}\u200d]+/gu, '').trim() || badge;
                               return (
                                 <span 
                                   key={bIdx} 
@@ -899,7 +891,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                                       : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
                                   }`}
                                 >
-                                  {badge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {badge}
+                                  {isCouple ? '💕 ' : ''}{cleanText}
                                 </span>
                               );
                             })}

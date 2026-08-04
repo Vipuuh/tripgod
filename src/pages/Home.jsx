@@ -1351,9 +1351,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                             return activeBadges.map((badge, idx) => {
                               const isCouple = badge.toLowerCase().includes('couple');
                               const isLimited = badge.toLowerCase().includes('limited');
-                              const isBestseller = badge.toLowerCase().includes('best');
-                              const isTop = badge.toLowerCase().includes('top');
-                              const emoji = isCouple ? '💕' : (isLimited ? '🔥' : (isBestseller ? '🏆' : (isTop ? '⭐' : '🏷️')));
+                              const cleanText = badge.replace(/[\p{Emoji}\u200d]+/gu, '').trim() || badge;
                               return (
                                 <span 
                                   key={idx}
@@ -1363,7 +1361,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                                       : (isLimited ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border border-slate-200 text-slate-800')
                                   }`}
                                 >
-                                  {badge.match(/[\p{Emoji}\u200d]+/gu) ? '' : emoji} {badge}
+                                  {isCouple ? '💕 ' : ''}{cleanText}
                                 </span>
                               );
                             });
@@ -1374,6 +1372,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                             : ['Best Value', 'Couple Friendly'];
                           return badges.map((badge, bIdx) => {
                             const isCouple = badge.toLowerCase().includes('couple');
+                            const cleanText = badge.replace(/[\p{Emoji}\u200d]+/gu, '').trim() || badge;
                             return (
                               <span 
                                 key={bIdx} 
@@ -1383,7 +1382,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                                     : 'bg-slate-50 border border-slate-200 text-slate-800'
                                 }`}
                               >
-                                {isCouple ? '💕' : '🏆'} {badge}
+                                {isCouple ? '💕 ' : ''}{cleanText}
                               </span>
                             );
                           });
