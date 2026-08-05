@@ -2184,11 +2184,24 @@ function HomepageManager({ hotels = [], toursList = [], bikesList = [], vendors 
         if (insertError) throw insertError;
       }
 
-      // Sync display_order column in hotels table
+      // Sync display_order column and rules in hotels table
       if (sections.hotels_listing && sections.hotels_listing.length > 0) {
         for (let idx = 0; idx < sections.hotels_listing.length; idx++) {
           const hId = sections.hotels_listing[idx];
-          await supabase.from('hotels').update({ display_order: idx + 1 }).eq('id', hId);
+          try {
+            await supabase.from('hotels').update({ display_order: idx + 1 }).eq('id', hId);
+          } catch (e) {
+            console.warn('Direct display_order update warning:', e);
+          }
+          try {
+            const { data: currentHotel } = await supabase.from('hotels').select('rules').eq('id', hId).single();
+            if (currentHotel) {
+              const updatedRules = { ...(currentHotel.rules || {}), display_order: idx + 1 };
+              await supabase.from('hotels').update({ rules: updatedRules }).eq('id', hId);
+            }
+          } catch (e) {
+            console.warn('Rules display_order update warning:', e);
+          }
         }
       }
 
@@ -2199,7 +2212,11 @@ function HomepageManager({ hotels = [], toursList = [], bikesList = [], vendors 
       if (vendorIdsToUpdate.length > 0) {
         for (let idx = 0; idx < vendorIdsToUpdate.length; idx++) {
           const vId = vendorIdsToUpdate[idx];
-          await supabase.from('vendors').update({ display_order: idx + 1 }).eq('id', vId);
+          try {
+            await supabase.from('vendors').update({ display_order: idx + 1 }).eq('id', vId);
+          } catch (e) {
+            console.warn('Vendor display_order update warning:', e);
+          }
         }
       }
 
