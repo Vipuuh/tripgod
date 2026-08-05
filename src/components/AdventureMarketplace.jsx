@@ -240,15 +240,17 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
           });
 
           const sortedPartners = Object.values(partnersMap).sort((a, b) => {
-            const orderA = a.display_order !== undefined && a.display_order !== null && a.display_order > 0 ? Number(a.display_order) : 999;
-            const orderB = b.display_order !== undefined && b.display_order !== null && b.display_order > 0 ? Number(b.display_order) : 999;
-            return orderA - orderB;
+            const orderA = a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999;
+            const orderB = b.display_order !== undefined && b.display_order !== null && Number(b.display_order) > 0 ? Number(b.display_order) : 99999;
+            if (orderA !== orderB) return orderA - orderB;
+            return (b.star_rating || 0) - (a.star_rating || 0);
           });
           sortedPartners.forEach(p => {
             p.packages.sort((a, b) => {
-              const orderA = a.display_order !== undefined && a.display_order !== null && a.display_order > 0 ? Number(a.display_order) : 999;
-              const orderB = b.display_order !== undefined && b.display_order !== null && b.display_order > 0 ? Number(b.display_order) : 999;
-              return orderA - orderB;
+              const orderA = a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999;
+              const orderB = b.display_order !== undefined && b.display_order !== null && Number(b.display_order) > 0 ? Number(b.display_order) : 99999;
+              if (orderA !== orderB) return orderA - orderB;
+              return Number(a.price || 0) - Number(b.price || 0);
             });
           });
           setPartnersData(sortedPartners);
@@ -517,12 +519,13 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   return (
                     <motion.div
                       key={partner.id || idx}
-                      initial={{ opacity: 0, y: 15 }}
+                      initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: Math.min(idx * 0.05, 0.3) }}
+                      transition={{ duration: 0.35, delay: Math.min(idx * 0.05, 0.35) }}
+                      whileHover={{ y: -4, scale: 1.005 }}
                       onClick={() => navigateToPartner(partner)}
-                      className="flex flex-col sm:flex-row bg-white border border-slate-200/80 rounded-3xl overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all group w-full cursor-pointer text-left"
+                      className="flex flex-col sm:flex-row bg-white border border-slate-200/80 rounded-3xl overflow-hidden hover:shadow-[0_16px_40px_rgba(255,95,0,0.12)] hover:border-[#FF5F00]/30 transition-all duration-300 group w-full cursor-pointer text-left"
                     >
                       {/* Left Side: Cover Image */}
                       <div className="w-full sm:w-[220px] h-44 sm:h-auto shrink-0 relative overflow-hidden bg-slate-100">
@@ -710,9 +713,13 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   const closed = checkIfClosed(pkg).closed;
                   
                   return (
-                    <div 
+                    <motion.div 
                       key={pkg.id || idx}
-                      className="flex flex-col md:flex-row bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-slate-350 transition-all w-full relative"
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: Math.min(idx * 0.05, 0.3) }}
+                      whileHover={{ y: -3, scale: 1.003 }}
+                      className="flex flex-col md:flex-row bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-[#FF5F00]/30 hover:shadow-[0_12px_30px_rgba(255,95,0,0.08)] transition-all duration-300 w-full relative"
                     >
                       {closed && (
                         <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex items-center justify-center z-10">
@@ -798,7 +805,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         </div>
 
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>

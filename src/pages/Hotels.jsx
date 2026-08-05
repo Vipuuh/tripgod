@@ -337,7 +337,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
   const [wishlistedHotels, setWishlistedHotels] = useState({});
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [shareFeedback, setShareFeedback] = useState(false);
-  const [sortBy, setSortBy] = useState('rating-desc');
+  const [sortBy, setSortBy] = useState('all');
 
   // Swipe gesture support for gallery
   const [touchStart, setTouchStart] = useState(null);
@@ -579,6 +579,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
             phone_number: item.phone_number || (vendorsMap[item.vendor_id]?.phone) || '+919410572857',
             whatsapp_number: item.whatsapp_number || (vendorsMap[item.vendor_id]?.whatsapp) || '+919410572857',
             featured_image: item.featured_image || '',
+            display_order: item.display_order !== null && item.display_order !== undefined ? Number(item.display_order) : (item.rules?.display_order !== null && item.rules?.display_order !== undefined ? Number(item.rules.display_order) : 0),
             payment_mode: item.payment_mode || 'commission_advance',
             commission_percentage: item.commission_percentage !== null && item.commission_percentage !== undefined ? Number(item.commission_percentage) : 10,
             fixed_advance_amount: item.fixed_advance_amount !== null && item.fixed_advance_amount !== undefined ? Number(item.fixed_advance_amount) : 0,
@@ -593,14 +594,16 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
           // Sort by display_order first (1, 2, 3...) if set
           mapped.sort((a, b) => {
-            const orderA = a.display_order !== undefined && a.display_order !== null && a.display_order > 0 ? Number(a.display_order) : 999;
-            const orderB = b.display_order !== undefined && b.display_order !== null && b.display_order > 0 ? Number(b.display_order) : 999;
+            const orderA = a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999;
+            const orderB = b.display_order !== undefined && b.display_order !== null && Number(b.display_order) > 0 ? Number(b.display_order) : 99999;
             return orderA - orderB;
           });
 
           let finalMapped = [...mapped];
 
-          if (sortBy === 'local-id') {
+          if (sortBy === 'all') {
+            finalMapped = [...mapped];
+          } else if (sortBy === 'local-id') {
             finalMapped = mapped.filter(h => {
               const ruleLocalId = h.rules?.accepts_local_id !== false;
               const textMatch = hasKeyword(h, ['local id', 'local_id', 'local id accepted']);
@@ -713,6 +716,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Horizontal Scrollable Chips UI */}
                 <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
+                    { val: 'all', label: '✨ All Stays' },
                     { val: 'couple-friendly', label: 'Couple Friendly' },
                     { val: 'near-ramjhula', label: 'Ram Jhula' },
                     { val: 'near-tapovan', label: 'Tapovan' },
@@ -743,7 +747,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
               {/* Listings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {hotels.map(hotel => {
+                {hotels.map((hotel, idx) => {
                   const displayPrice = Number(hotel.price);
                   const displayOriginalPrice = hotel.original_price ? Number(hotel.original_price) : Math.round(displayPrice * 1.4);
                   const isDiscounted = displayOriginalPrice && displayOriginalPrice > displayPrice;
@@ -797,9 +801,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   return (
                     <motion.div
                       key={hotel.id}
-                      whileHover={{ y: -2 }}
+                      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.35, delay: Math.min(idx * 0.05, 0.4) }}
+                      whileHover={{ y: -5, scale: 1.01 }}
                       onClick={() => handleSelectHotel(hotel)}
-                      className="w-full max-w-full border border-slate-150 bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-300 group cursor-pointer flex flex-col justify-between"
+                      className="w-full max-w-full border border-slate-150 bg-white rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_40px_rgba(255,95,0,0.1)] transition-all duration-300 group cursor-pointer flex flex-col justify-between"
                     >
                       <div>
                         {/* Airbnb-style Image Carousel with overlay chips */}
