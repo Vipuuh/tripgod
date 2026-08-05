@@ -2205,17 +2205,26 @@ function HomepageManager({ hotels = [], toursList = [], bikesList = [], vendors 
         }
       }
 
-      // Sync display_order column in vendors table
-      const vendorIdsToUpdate = sections.bike_vendors && sections.bike_vendors.length > 0 
-        ? sections.bike_vendors 
-        : (sections.rafting_vendors || []);
-      if (vendorIdsToUpdate.length > 0) {
-        for (let idx = 0; idx < vendorIdsToUpdate.length; idx++) {
-          const vId = vendorIdsToUpdate[idx];
+      // Sync display_order column in vendors table for bike_vendors
+      if (sections.bike_vendors && sections.bike_vendors.length > 0) {
+        for (let idx = 0; idx < sections.bike_vendors.length; idx++) {
+          const vId = sections.bike_vendors[idx];
           try {
             await supabase.from('vendors').update({ display_order: idx + 1 }).eq('id', vId);
           } catch (e) {
-            console.warn('Vendor display_order update warning:', e);
+            console.warn('Bike Vendor display_order update warning:', e);
+          }
+        }
+      }
+
+      // Sync display_order column in vendors table for rafting_vendors
+      if (sections.rafting_vendors && sections.rafting_vendors.length > 0) {
+        for (let idx = 0; idx < sections.rafting_vendors.length; idx++) {
+          const vId = sections.rafting_vendors[idx];
+          try {
+            await supabase.from('vendors').update({ display_order: idx + 1 }).eq('id', vId);
+          } catch (e) {
+            console.warn('Rafting Vendor display_order update warning:', e);
           }
         }
       }

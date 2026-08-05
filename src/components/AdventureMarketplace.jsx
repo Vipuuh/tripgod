@@ -239,10 +239,28 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
             });
           });
 
+          // Fetch curated order from homepage_sections for 'rafting_vendors'
+          let sectionOrderMap = {};
+          try {
+            const { data: sectionRows } = await supabase
+              .from('homepage_sections')
+              .select('item_id, display_order')
+              .eq('section', 'rafting_vendors')
+              .order('display_order', { ascending: true });
+
+            if (sectionRows && sectionRows.length > 0) {
+              sectionRows.forEach((row, idx) => {
+                sectionOrderMap[row.item_id] = idx + 1;
+              });
+            }
+          } catch (secErr) {
+            console.warn('Could not fetch homepage_sections for rafting_vendors:', secErr);
+          }
+
           const sortedPartners = Object.values(partnersMap).sort((a, b) => {
-            const orderA = a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999;
-            const orderB = b.display_order !== undefined && b.display_order !== null && Number(b.display_order) > 0 ? Number(b.display_order) : 99999;
-            if (orderA !== orderB) return orderA - orderB;
+            const rankA = sectionOrderMap[a.id] !== undefined ? sectionOrderMap[a.id] : (a.display_order !== undefined && a.display_order !== null && Number(a.display_order) > 0 ? Number(a.display_order) : 99999);
+            const rankB = sectionOrderMap[b.id] !== undefined ? sectionOrderMap[b.id] : (b.display_order !== undefined && b.display_order !== null && Number(b.display_order) > 0 ? Number(b.display_order) : 99999);
+            if (rankA !== rankB) return rankA - rankB;
             return (b.star_rating || 0) - (a.star_rating || 0);
           });
           sortedPartners.forEach(p => {
