@@ -1672,7 +1672,7 @@ export default function AdminDashboard({ setRoute }) {
 
           {/* MANAGE HOMEPAGE TAB */}
           {activeTab === 'homepage' && (
-            <HomepageManager hotels={hotels} toursList={toursList} bikesList={bikesList} />
+            <HomepageManager hotels={hotels} toursList={toursList} bikesList={bikesList} vendors={vendors} fetchAllData={fetchAllData} />
           )}
 
           {/* CUSTOMER REELS TAB */}
@@ -2055,7 +2055,7 @@ function ReelsManager() {
 // =============================================================================
 // SUB-COMPONENT: HOMEPAGE MANAGER
 // =============================================================================
-function HomepageManager({ hotels, toursList, bikesList }) {
+function HomepageManager({ hotels = [], toursList = [], bikesList = [], vendors = [], fetchAllData }) {
 
   const [sections, setSections] = useState({
     hotels: [],
@@ -2203,7 +2203,7 @@ function HomepageManager({ hotels, toursList, bikesList }) {
         }
       }
 
-      fetchAllData();
+      if (typeof fetchAllData === 'function') fetchAllData();
       setSaved(true);
     } catch (err) {
       alert('Save failed: ' + err.message);
