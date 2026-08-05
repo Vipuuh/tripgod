@@ -1044,39 +1044,7 @@ export default function AdminDashboard({ setRoute }) {
                       </div>
 
                       {/* Item Actions */}
-                      <div className="p-4 border-t border-slate-900 flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2 py-1 rounded-xl">
-                          <span className="text-[10px] text-amber-400 font-extrabold uppercase tracking-wider">
-                            Order: #{item.display_order || 0}
-                          </span>
-                          <div className="flex items-center gap-0.5">
-                            <button
-                              type="button"
-                              title="Move Up (Display First)"
-                              onClick={async () => {
-                                const targetId = item.id || (item.operators && item.operators[0]?.id);
-                                const targetTable = activeTab === 'hotels' ? 'hotels' : activeTab === 'bikes' ? 'bikes' : activeTab === 'adventures' ? 'rafting' : 'tours';
-                                if (targetId) await handleUpdateDisplayOrder(targetTable, targetId, item.display_order || 1, 'up');
-                              }}
-                              className="w-5 h-5 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-xs font-black rounded cursor-pointer transition-colors border-none"
-                            >
-                              ▲
-                            </button>
-                            <button
-                              type="button"
-                              title="Move Down (Display Later)"
-                              onClick={async () => {
-                                const targetId = item.id || (item.operators && item.operators[0]?.id);
-                                const targetTable = activeTab === 'hotels' ? 'hotels' : activeTab === 'bikes' ? 'bikes' : activeTab === 'adventures' ? 'rafting' : 'tours';
-                                if (targetId) await handleUpdateDisplayOrder(targetTable, targetId, item.display_order || 0, 'down');
-                              }}
-                              className="w-5 h-5 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-xs font-black rounded cursor-pointer transition-colors border-none"
-                            >
-                              ▼
-                            </button>
-                          </div>
-                        </div>
-
+                      <div className="p-4 border-t border-slate-900 flex items-center justify-end gap-2">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
@@ -1464,21 +1432,8 @@ export default function AdminDashboard({ setRoute }) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-black uppercase text-amber-400 tracking-wider">Display Priority / Order (1 = Top Position)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={newVendor.display_order === undefined || newVendor.display_order === null ? '' : newVendor.display_order}
-                        onChange={(e) => setNewVendor(prev => ({ ...prev, display_order: e.target.value === '' ? 0 : Number(e.target.value) }))}
-                        placeholder="e.g. 1 (Lower numbers appear first)"
-                        className="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-amber-400"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Badges (Comma separated)</label>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Badges (Comma separated)</label>
                       <input
                         type="text"
                         value={newVendor.badges}
@@ -1581,14 +1536,13 @@ export default function AdminDashboard({ setRoute }) {
                         <th className="py-3 px-2">Contact</th>
                         <th className="py-3 px-2 text-center">Rating</th>
                         <th className="py-3 px-2 text-center">Comm. %</th>
-                        <th className="py-3 px-2 text-center">Priority</th>
                         <th className="py-3 px-2 text-center">Status</th>
                         <th className="py-3 px-2 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {vendors.map(v => (
-                        <tr key={v.id} className="border-b border-slate-900 hover:bg-slate-900/30">
+                    <tbody className="divide-y divide-slate-850">
+                      {vendors.map((v) => (
+                        <tr key={v.id} className="hover:bg-slate-900/50 transition-colors">
                           <td className="py-3 px-2">
                             {v.shop_image ? (
                               <img src={v.shop_image} alt={v.name} className="w-8 h-8 rounded-lg object-cover border border-slate-800" />
@@ -1610,31 +1564,6 @@ export default function AdminDashboard({ setRoute }) {
                             ⭐ {v.star_rating !== null && v.star_rating !== undefined ? Number(v.star_rating).toFixed(1) : '4.5'}
                           </td>
                           <td className="py-3 px-2 text-center font-bold text-slate-300">{v.commission_percentage}%</td>
-                          <td className="py-3 px-2 text-center">
-                            <div className="inline-flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-xl">
-                              <span className="text-[10px] text-amber-400 font-extrabold uppercase">
-                                #{v.display_order || 0}
-                              </span>
-                              <div className="flex items-center gap-0.5">
-                                <button
-                                  type="button"
-                                  title="Move Up (Display First)"
-                                  onClick={() => handleUpdateDisplayOrder('vendors', v.id, v.display_order || 1, 'up')}
-                                  className="w-4 h-4 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-[10px] font-black rounded cursor-pointer transition-colors border-none"
-                                >
-                                  ▲
-                                </button>
-                                <button
-                                  type="button"
-                                  title="Move Down (Display Later)"
-                                  onClick={() => handleUpdateDisplayOrder('vendors', v.id, v.display_order || 0, 'down')}
-                                  className="w-4 h-4 flex items-center justify-center bg-slate-800 hover:bg-amber-500 hover:text-black text-slate-200 text-[10px] font-black rounded cursor-pointer transition-colors border-none"
-                                >
-                                  ▼
-                                </button>
-                              </div>
-                            </div>
-                          </td>
                           <td className="py-3 px-2 text-center">
                             <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded-full ${v.status === 'Active' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border border-red-500/20 text-red-400'}`}>
                               {v.status}
@@ -2132,12 +2061,22 @@ function HomepageManager({ hotels, toursList, bikesList }) {
   const [sections, setSections] = useState({
     hotels: [],
     tours: [],
-    bikes: []
+    bikes: [],
+    hotels_listing: [],
+    bike_vendors: [],
+    rafting_vendors: []
   });
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [searchTerms, setSearchTerms] = useState({ hotels: '', tours: '', bikes: '' });
+  const [searchTerms, setSearchTerms] = useState({
+    hotels: '',
+    tours: '',
+    bikes: '',
+    hotels_listing: '',
+    bike_vendors: '',
+    rafting_vendors: ''
+  });
 
   // Fetch existing homepage_sections from Supabase on mount
   useEffect(() => {
@@ -2150,12 +2089,41 @@ function HomepageManager({ hotels, toursList, bikesList }) {
           .order('display_order', { ascending: true });
         if (error) throw error;
 
-        const grouped = { hotels: [], tours: [], bikes: [] };
+        const grouped = { hotels: [], tours: [], bikes: [], hotels_listing: [], bike_vendors: [], rafting_vendors: [] };
         (rows || []).forEach(row => {
           if (grouped[row.section]) {
             grouped[row.section].push(row.item_id);
           }
         });
+
+        // Default initial order from tables if empty
+        if (grouped.hotels_listing.length === 0 && hotels && hotels.length > 0) {
+          const sortedHotels = [...hotels].sort((a, b) => {
+            const oA = a.display_order > 0 ? Number(a.display_order) : 999;
+            const oB = b.display_order > 0 ? Number(b.display_order) : 999;
+            return oA - oB;
+          });
+          grouped.hotels_listing = sortedHotels.map(h => h.id);
+        }
+
+        if (grouped.bike_vendors.length === 0 && vendors && vendors.length > 0) {
+          const sortedVendors = [...vendors].sort((a, b) => {
+            const oA = a.display_order > 0 ? Number(a.display_order) : 999;
+            const oB = b.display_order > 0 ? Number(b.display_order) : 999;
+            return oA - oB;
+          });
+          grouped.bike_vendors = sortedVendors.map(v => v.id);
+        }
+
+        if (grouped.rafting_vendors.length === 0 && vendors && vendors.length > 0) {
+          const sortedVendors = [...vendors].sort((a, b) => {
+            const oA = a.display_order > 0 ? Number(a.display_order) : 999;
+            const oB = b.display_order > 0 ? Number(b.display_order) : 999;
+            return oA - oB;
+          });
+          grouped.rafting_vendors = sortedVendors.map(v => v.id);
+        }
+
         setSections(grouped);
       } catch (err) {
         console.error('Failed to fetch homepage sections:', err);
@@ -2164,11 +2132,11 @@ function HomepageManager({ hotels, toursList, bikesList }) {
       }
     };
     fetchSections();
-  }, []);
+  }, [hotels, vendors]);
 
   const toggleItem = (sectionKey, itemId) => {
     setSections(prev => {
-      const current = prev[sectionKey];
+      const current = prev[sectionKey] || [];
       const exists = current.includes(itemId);
       return {
         ...prev,
@@ -2180,7 +2148,7 @@ function HomepageManager({ hotels, toursList, bikesList }) {
 
   const moveItem = (sectionKey, fromIdx, toIdx) => {
     setSections(prev => {
-      const arr = [...prev[sectionKey]];
+      const arr = [...(prev[sectionKey] || [])];
       const [moved] = arr.splice(fromIdx, 1);
       arr.splice(toIdx, 0, moved);
       return { ...prev, [sectionKey]: arr };
@@ -2195,7 +2163,7 @@ function HomepageManager({ hotels, toursList, bikesList }) {
       const { error: deleteError } = await supabase
         .from('homepage_sections')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
+        .neq('id', '00000000-0000-0000-0000-000000000000');
       if (deleteError) throw deleteError;
 
       const toInsert = [];
@@ -2217,6 +2185,26 @@ function HomepageManager({ hotels, toursList, bikesList }) {
         if (insertError) throw insertError;
       }
 
+      // Sync display_order column in hotels table
+      if (sections.hotels_listing && sections.hotels_listing.length > 0) {
+        for (let idx = 0; idx < sections.hotels_listing.length; idx++) {
+          const hId = sections.hotels_listing[idx];
+          await supabase.from('hotels').update({ display_order: idx + 1 }).eq('id', hId);
+        }
+      }
+
+      // Sync display_order column in vendors table
+      const vendorIdsToUpdate = sections.bike_vendors && sections.bike_vendors.length > 0 
+        ? sections.bike_vendors 
+        : (sections.rafting_vendors || []);
+      if (vendorIdsToUpdate.length > 0) {
+        for (let idx = 0; idx < vendorIdsToUpdate.length; idx++) {
+          const vId = vendorIdsToUpdate[idx];
+          await supabase.from('vendors').update({ display_order: idx + 1 }).eq('id', vId);
+        }
+      }
+
+      fetchAllData();
       setSaved(true);
     } catch (err) {
       alert('Save failed: ' + err.message);
@@ -2227,8 +2215,35 @@ function HomepageManager({ hotels, toursList, bikesList }) {
 
   const sectionConfig = [
     {
+      key: 'hotels_listing',
+      label: 'Hotels Search Page Listing Order (/hotels)',
+      icon: Building2,
+      items: hotels || [],
+      getLabel: (item) => item.name,
+      getPrice: (item) => `₹${item.price || 0}/night`,
+      getImg: (item) => item.images?.[0] || null
+    },
+    {
+      key: 'bike_vendors',
+      label: 'Scooty & Bike Vendors Listing Order (/bike-rent)',
+      icon: Bike,
+      items: vendors || [],
+      getLabel: (item) => item.name,
+      getPrice: (item) => item.landmark || item.address || 'Rishikesh',
+      getImg: (item) => item.shop_image || item.shop_images?.[0] || null
+    },
+    {
+      key: 'rafting_vendors',
+      label: 'Rafting & Adventure Vendors Order (/rafting)',
+      icon: Waves,
+      items: vendors || [],
+      getLabel: (item) => item.name,
+      getPrice: (item) => item.landmark || item.address || 'Rishikesh',
+      getImg: (item) => item.shop_image || item.shop_images?.[0] || null
+    },
+    {
       key: 'hotels',
-      label: 'Featured Hotels',
+      label: 'Featured Hotels (Homepage)',
       icon: Building2,
       items: hotels || [],
       getLabel: (item) => item.name,
@@ -2237,7 +2252,7 @@ function HomepageManager({ hotels, toursList, bikesList }) {
     },
     {
       key: 'tours',
-      label: 'Featured Tours',
+      label: 'Featured Tours (Homepage)',
       icon: MapPinned,
       items: (() => {
         const seen = new Set();
@@ -2253,7 +2268,7 @@ function HomepageManager({ hotels, toursList, bikesList }) {
     },
     {
       key: 'bikes',
-      label: 'Featured Bikes',
+      label: 'Featured Bikes (Homepage)',
       icon: Bike,
       items: (() => {
         const seen = new Set();
@@ -2293,8 +2308,8 @@ function HomepageManager({ hotels, toursList, bikesList }) {
       </div>
 
       {sectionConfig.map(({ key, label, icon: Icon, items, getLabel, getPrice, getImg }) => {
-        const selectedIds = sections[key];
-        const searchTerm = searchTerms[key].toLowerCase();
+        const selectedIds = sections[key] || [];
+        const searchTerm = (searchTerms[key] || '').toLowerCase();
         const filteredItems = items.filter(item => getLabel(item).toLowerCase().includes(searchTerm));
 
         return (
@@ -3620,18 +3635,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-1">
-          <label className="block text-[10px] font-black uppercase text-amber-400 tracking-wider font-semibold">Display Priority / Order (1 = Top Position)</label>
-          <input
-            type="number"
-            min="0"
-            placeholder="e.g. 1 (Lower numbers appear first)"
-            value={formData.display_order === undefined || formData.display_order === null ? '' : formData.display_order}
-            onChange={(e) => setFormData(prev => ({ ...prev, display_order: e.target.value === '' ? 0 : Number(e.target.value) }))}
-            className="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <div className="space-y-1">
           <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider font-semibold">Custom UPI Discount (INR)</label>
