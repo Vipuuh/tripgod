@@ -2444,6 +2444,54 @@ function HomepageManager({ hotels = [], toursList = [], bikesList = [], vendors 
 // =============================================================================
 // SUB-COMPONENT: LISTINGFORM (Dynamic listing generator CRUD)
 // =============================================================================
+const parseAmenities = (rawAmenities, stayDetails) => {
+  let input = rawAmenities;
+  if ((!input || (typeof input === 'object' && Object.keys(input).length === 0)) && stayDetails && stayDetails.amenities) {
+    input = stayDetails.amenities;
+  }
+
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        input = JSON.parse(trimmed);
+      } catch (e) {
+        input = trimmed;
+      }
+    }
+  }
+
+  const result = {};
+
+  if (Array.isArray(input)) {
+    input.forEach(item => {
+      if (typeof item === 'string') {
+        const key = item.trim().toLowerCase().replace(/[\s-]+/g, '_');
+        if (key) result[key] = true;
+      } else if (typeof item === 'object' && item !== null) {
+        const val = item.name || item.key || item.label;
+        if (val) {
+          const key = String(val).trim().toLowerCase().replace(/[\s-]+/g, '_');
+          if (key) result[key] = true;
+        }
+      }
+    });
+  } else if (typeof input === 'string' && input.length > 0) {
+    input.split(',').forEach(item => {
+      const key = item.trim().toLowerCase().replace(/[\s-]+/g, '_');
+      if (key) result[key] = true;
+    });
+  } else if (typeof input === 'object' && input !== null) {
+    Object.entries(input).forEach(([k, v]) => {
+      const isTrue = v === true || v === 'true' || v === 1 || v === '1' || v === 'yes';
+      const key = k.trim().toLowerCase().replace(/[\s-]+/g, '_');
+      if (isTrue && key) result[key] = true;
+    });
+  }
+
+  return result;
+};
+
 function ListingForm({ type, data, cities, vendors, onClose }) {
   const [formLoading, setFormLoading] = useState(false);
   const [formData, setFormData] = useState({});
@@ -2684,6 +2732,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         featured_image: data.featured_image || '',
         payment_mode: data.payment_mode || 'commission_advance',
         fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : '',
+        amenities: {
+          wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false, river_view: false, room_service: false, power_backup: false, geyser: false,
+          ...parseAmenities(data.amenities, data.stay_details)
+        },
         rules: {
           accepts_local_id: true,
           unmarried_couples: false,
@@ -3349,6 +3401,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.best_for = formData.best_for || [];
         submitData.perfect_for = formData.perfect_for || [];
         submitData.benefits = formData.benefits || [];
+        submitData.amenities = formData.amenities || {};
         submitData.commission_type = formData.commission_type || 'flat';
         submitData.commission_value = commVal;
         submitData.fixed_advance_amount = formData.fixed_advance_amount !== '' && formData.fixed_advance_amount !== null && formData.fixed_advance_amount !== undefined ? Number(formData.fixed_advance_amount) : 0;
@@ -4346,7 +4399,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">House Rules</label>
             <div className="grid grid-cols-3 gap-4 text-slate-300">
               {[
-                { key: 'accepts_local_id', label: '🆔 Local ID Accepted' },
+                { key: 'accepts_local_id', label: 'Local ID Accepted' },
                 { key: 'unmarried_couples', label: 'Unmarried Couples Allowed' },
                 { key: 'pets', label: 'Pets Allowed' },
                 { key: 'smoking', label: 'Smoking Allowed' },

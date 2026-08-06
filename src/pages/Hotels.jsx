@@ -25,6 +25,80 @@ const AMENITY_ICONS = {
   geyser: Flame
 };
 
+const parseAmenities = (rawAmenities, stayDetails) => {
+  let input = rawAmenities;
+  if ((!input || (typeof input === 'object' && Object.keys(input).length === 0)) && stayDetails && stayDetails.amenities) {
+    input = stayDetails.amenities;
+  }
+
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        input = JSON.parse(trimmed);
+      } catch (e) {
+        input = trimmed;
+      }
+    }
+  }
+
+  const result = {};
+
+  if (Array.isArray(input)) {
+    input.forEach(item => {
+      if (typeof item === 'string') {
+        const key = item.trim().toLowerCase().replace(/[\s-]+/g, '_');
+        if (key) result[key] = true;
+      } else if (typeof item === 'object' && item !== null) {
+        const val = item.name || item.key || item.label;
+        if (val) {
+          const key = String(val).trim().toLowerCase().replace(/[\s-]+/g, '_');
+          if (key) result[key] = true;
+        }
+      }
+    });
+  } else if (typeof input === 'string' && input.length > 0) {
+    input.split(',').forEach(item => {
+      const key = item.trim().toLowerCase().replace(/[\s-]+/g, '_');
+      if (key) result[key] = true;
+    });
+  } else if (typeof input === 'object' && input !== null) {
+    Object.entries(input).forEach(([k, v]) => {
+      const isTrue = v === true || v === 'true' || v === 1 || v === '1' || v === 'yes';
+      const key = k.trim().toLowerCase().replace(/[\s-]+/g, '_');
+      if (isTrue && key) result[key] = true;
+    });
+  }
+
+  return result;
+};
+
+const getAmenityIcon = (key) => {
+  const k = key.toLowerCase();
+  if (AMENITY_ICONS[k]) return AMENITY_ICONS[k];
+  if (k.includes('wifi') || k.includes('internet')) return Wifi;
+  if (k.includes('ac') || k.includes('air')) return Wind;
+  if (k.includes('parking') || k.includes('car')) return Car;
+  if (k.includes('restaurant') || k.includes('food') || k.includes('dining')) return Utensils;
+  if (k.includes('tv') || k.includes('television')) return Tv;
+  if (k.includes('mountain')) return Mountain;
+  if (k.includes('river') || k.includes('lake') || k.includes('water')) return Waves;
+  if (k.includes('service') || k.includes('room')) return Bell;
+  if (k.includes('power') || k.includes('backup') || k.includes('generator')) return Zap;
+  if (k.includes('geyser') || k.includes('hot_water') || k.includes('heater')) return Flame;
+  if (k.includes('pool')) return Waves;
+  if (k.includes('breakfast') || k.includes('coffee')) return Coffee;
+  return Building2;
+};
+
+const formatAmenityLabel = (key) => {
+  const k = key.toLowerCase();
+  if (k === 'wifi' || k === 'free_wifi') return 'WiFi';
+  if (k === 'ac') return 'AC';
+  if (k === 'tv') return 'TV';
+  return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
 const HIGHLIGHT_ICONS = {
   Waves, Wifi, Car, Utensils, Tv, Mountain, Bell, Zap, Flame, ShieldCheck, Check, Heart, MapPin, Compass, Coffee, Sparkles, Smile, ThumbsUp, CalendarCheck, Lock, RefreshCw, HelpCircle, Star
 };
@@ -409,7 +483,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200', // Restaurant
                 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'  // Exterior
               ],
-              amenities: typeof data.amenities === 'string' ? JSON.parse(data.amenities) : (data.amenities || {}),
+              amenities: parseAmenities(data.amenities, data.stay_details),
               rules: typeof data.rules === 'string' ? JSON.parse(data.rules) : (data.rules || {}),
               landmarks: data.landmarks || [],
               city_id: data.city_id,
@@ -543,7 +617,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200',
               'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'
             ],
-            amenities: typeof item.amenities === 'string' ? JSON.parse(item.amenities) : (item.amenities || {}),
+            amenities: parseAmenities(item.amenities, item.stay_details),
             rules: typeof item.rules === 'string' ? JSON.parse(item.rules) : (item.rules || {}),
             landmarks: item.landmarks || [],
             city_id: item.city_id,
@@ -1740,7 +1814,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     {Object.entries(selectedHotel.amenities)
                       .filter(([_, val]) => !!val)
                       .map(([key]) => {
-                        const IconComponent = AMENITY_ICONS[key] || Building2;
+                        const IconComponent = getAmenityIcon(key);
+                        const label = formatAmenityLabel(key);
                         return (
                           <div
                             key={key}
@@ -1750,7 +1825,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                               <IconComponent size={18} />
                             </div>
                             <span className="text-[11px] font-bold text-gray-700 capitalize tracking-tight leading-none group-hover:text-black truncate w-full">
-                              {key.replace('_', ' ')}
+                              {label}
                             </span>
                           </div>
                         );
@@ -1922,7 +1997,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                       {selectedHotel.rules?.accepts_local_id !== false && (
                         <div key="local_id_accepted" className="flex items-center gap-1.5 p-2 bg-emerald-50/80 rounded-xl border border-emerald-200/80 text-emerald-900 font-extrabold">
                           <Check size={12} className="text-emerald-600 shrink-0 stroke-[2.5]" />
-                          <span className="truncate text-[10px] sm:text-xs leading-none">🆔 Local ID Accepted</span>
+                          <span className="truncate text-[10px] sm:text-xs leading-none">Local ID Accepted</span>
                         </div>
                       )}
                       {Object.entries(selectedHotel.rules)
