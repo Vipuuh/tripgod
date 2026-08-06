@@ -1839,7 +1839,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               {/* SECTION 10: PERFECT FOR TARGET TRAVELERS */}
               <div className="space-y-3 bg-white p-5 border border-slate-100 rounded-3xl shadow-3xs">
                 <h4 className="text-xs font-black uppercase text-[#0d1b2a] tracking-wider font-display">Perfect For</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
                   {(selectedHotel.perfect_for && selectedHotel.perfect_for.length > 0
                     ? selectedHotel.perfect_for
                     : ['Couples', 'Families', 'Backpackers', 'Adventure Travelers']
@@ -1853,11 +1853,11 @@ export default function Hotels({ currentCity, openBookingModal }) {
                     };
                     const Icon = iconsMap[pf] || Sparkles;
                     return (
-                      <div key={pf} className="flex items-center gap-2.5 p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-[#FF5F00]/20 transition-all shadow-3xs">
+                      <div key={pf} className="flex items-center gap-2 p-2.5 sm:p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:border-[#FF5F00]/20 transition-all shadow-3xs">
                         <div className="w-7 h-7 rounded-lg bg-orange-500/5 text-[#FF5F00] flex items-center justify-center border border-[#FF5F00]/10 shrink-0">
                           <Icon size={16} />
                         </div>
-                        <span className="text-xs font-bold text-slate-800 truncate">{pf}</span>
+                        <span className="text-[11px] sm:text-xs font-extrabold text-slate-800 leading-tight whitespace-normal line-clamp-2 w-full">{pf}</span>
                       </div>
                     );
                   })}
