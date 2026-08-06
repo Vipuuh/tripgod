@@ -3429,21 +3429,25 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       }
       const executeSave = async (payload) => {
         let currentPayload = { ...payload };
-        let res = data
-          ? await supabase.from(type).update(currentPayload).eq('id', data.id)
-          : await supabase.from(type).insert(currentPayload);
+        let attempts = 0;
+        while (attempts < 10) {
+          attempts++;
+          let res = data
+            ? await supabase.from(type).update(currentPayload).eq('id', data.id)
+            : await supabase.from(type).insert(currentPayload);
 
-        if (res.error && res.error.message) {
-          const match = res.error.message.match(/Could not find the '([^']+)' column/i);
-          if (match && match[1]) {
-            const missingCol = match[1];
-            delete currentPayload[missingCol];
-            res = data
-              ? await supabase.from(type).update(currentPayload).eq('id', data.id)
-              : await supabase.from(type).insert(currentPayload);
+          if (res.error && res.error.message) {
+            const match = res.error.message.match(/Could not find the '([^']+)' column/i);
+            if (match && match[1]) {
+              const missingCol = match[1];
+              delete currentPayload[missingCol];
+              continue;
+            }
+            throw res.error;
           }
+          if (res.error) throw res.error;
+          break;
         }
-        if (res.error) throw res.error;
       };
 
       await executeSave(submitData);
