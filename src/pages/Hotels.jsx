@@ -1321,19 +1321,19 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
                 {/* COMPETITOR PRICE COMPARISON / EXCLUSIVE LISTING CARD - Balanced 2-Column Row Layout */}
                 {selectedHotel.competitor_price && Number(selectedHotel.competitor_price) > window._activeRoomPrice ? (
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-orange-50/60 to-emerald-50/90 border border-orange-200/80 text-left space-y-3 shadow-2xs w-full">
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-orange-50/60 to-emerald-50/90 border border-orange-200/80 text-left space-y-3 shadow-2xs w-full overflow-hidden">
                     {/* Row 1: Left = Best Price Guarantee Badge | Right = Green Savings Pill */}
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2 w-full">
                       <span className="px-2.5 py-1 rounded-md bg-[#FF5F00] text-white text-[9px] font-black uppercase tracking-wider shadow-2xs shrink-0">
                         BEST PRICE GUARANTEE
                       </span>
-                      <span className="px-2.5 py-1 rounded-md bg-[#008F5D] text-white text-[10px] font-black tracking-wide shadow-2xs shrink-0">
+                      <span className="px-2 py-1 rounded-md bg-[#008F5D] text-white text-[9.5px] font-black tracking-wide shadow-2xs shrink-0 max-w-full truncate">
                         Save ₹{(Number(selectedHotel.competitor_price) - window._activeRoomPrice).toLocaleString('en-IN')} on TripGod
                       </span>
                     </div>
 
                     {/* Row 2: Left = Competitor Rate | Right = TripGod Rate */}
-                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-orange-200/50">
+                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-orange-200/50">
                       <div className="flex items-center gap-1 text-xs font-black text-slate-800">
                         <span>{selectedHotel.competitor_name || 'MakeMyTrip'} Today:</span>
                         <span className="line-through text-slate-400 font-extrabold ml-0.5">₹{Number(selectedHotel.competitor_price).toLocaleString('en-IN')}</span>
@@ -1821,12 +1821,12 @@ export default function Hotels({ currentCity, openBookingModal }) {
                         return (
                           <div
                             key={key}
-                            className="flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-100 rounded-2xl text-center hover:bg-white hover:border-[#FF5F00]/25 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-all duration-300 group min-w-[100px] max-w-[100px] shrink-0 cursor-pointer select-none"
+                            className="flex flex-col items-center justify-center p-3 sm:p-4 bg-slate-50 border border-slate-100 rounded-2xl text-center hover:bg-white hover:border-[#FF5F00]/25 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 transition-all duration-300 group min-w-[115px] max-w-[125px] shrink-0 cursor-pointer select-none"
                           >
                             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-black/5 text-gray-500 group-hover:text-[#FF5F00] group-hover:bg-[#FF5F00]/5 transition-colors mb-2 shadow-sm">
                               <IconComponent size={18} />
                             </div>
-                            <span className="text-[11px] font-bold text-gray-700 capitalize tracking-tight leading-none group-hover:text-black truncate w-full">
+                            <span className="text-[11px] font-extrabold text-gray-700 capitalize tracking-tight leading-tight group-hover:text-black text-center whitespace-normal line-clamp-2 h-[28px] flex items-center justify-center w-full">
                               {label}
                             </span>
                           </div>
