@@ -2444,10 +2444,14 @@ function HomepageManager({ hotels = [], toursList = [], bikesList = [], vendors 
 // =============================================================================
 // SUB-COMPONENT: LISTINGFORM (Dynamic listing generator CRUD)
 // =============================================================================
-const parseAmenities = (rawAmenities, stayDetails) => {
+const parseAmenities = (rawAmenities, stayDetails, rules) => {
   let input = rawAmenities;
-  if ((!input || (typeof input === 'object' && Object.keys(input).length === 0)) && stayDetails && stayDetails.amenities) {
-    input = stayDetails.amenities;
+  if (!input || (typeof input === 'object' && Object.keys(input).length === 0)) {
+    if (rules && rules.amenities) {
+      input = rules.amenities;
+    } else if (stayDetails && stayDetails.amenities) {
+      input = stayDetails.amenities;
+    }
   }
 
   if (typeof input === 'string') {
@@ -2734,7 +2738,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         fixed_advance_amount: data.fixed_advance_amount !== null && data.fixed_advance_amount !== undefined ? data.fixed_advance_amount : '',
         amenities: {
           wifi: false, ac: false, parking: false, restaurant: false, tv: false, mountain_view: false, river_view: false, room_service: false, power_backup: false, geyser: false,
-          ...parseAmenities(data.amenities, data.stay_details)
+          ...parseAmenities(data.amenities, data.stay_details, data.rules)
         },
         rules: {
           accepts_local_id: true,
@@ -3383,7 +3387,15 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         submitData.check_out = formData.check_out || '11:00 AM';
         submitData.cancellation_policy = formData.cancellation_policy || 'Free Cancellation up to 24 Hours';
         submitData.display_order = formData.display_order ? Number(formData.display_order) : 0;
-        submitData.rules = { ...(formData.rules || {}), display_order: formData.display_order ? Number(formData.display_order) : 0 };
+        submitData.rules = { 
+          ...(formData.rules || {}), 
+          amenities: formData.amenities || {},
+          display_order: formData.display_order ? Number(formData.display_order) : 0 
+        };
+        submitData.stay_details = {
+          ...(formData.stay_details || {}),
+          amenities: formData.amenities || {}
+        };
         submitData.landmarks = formData.landmarks || [];
         submitData.attractions = formData.attractions || [];  // ✅ nearby attractions fix
         submitData.rating = formData.rating === undefined ? 4.5 : Number(formData.rating);

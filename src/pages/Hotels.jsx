@@ -25,10 +25,14 @@ const AMENITY_ICONS = {
   geyser: Flame
 };
 
-const parseAmenities = (rawAmenities, stayDetails) => {
+const parseAmenities = (rawAmenities, stayDetails, rules) => {
   let input = rawAmenities;
-  if ((!input || (typeof input === 'object' && Object.keys(input).length === 0)) && stayDetails && stayDetails.amenities) {
-    input = stayDetails.amenities;
+  if (!input || (typeof input === 'object' && Object.keys(input).length === 0)) {
+    if (rules && rules.amenities) {
+      input = rules.amenities;
+    } else if (stayDetails && stayDetails.amenities) {
+      input = stayDetails.amenities;
+    }
   }
 
   if (typeof input === 'string') {
@@ -483,7 +487,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200', // Restaurant
                 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'  // Exterior
               ],
-              amenities: parseAmenities(data.amenities, data.stay_details),
+              amenities: parseAmenities(data.amenities, data.stay_details, data.rules),
               rules: typeof data.rules === 'string' ? JSON.parse(data.rules) : (data.rules || {}),
               landmarks: data.landmarks || [],
               city_id: data.city_id,
@@ -617,7 +621,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
               'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200',
               'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200'
             ],
-            amenities: parseAmenities(item.amenities, item.stay_details),
+            amenities: parseAmenities(item.amenities, item.stay_details, item.rules),
             rules: typeof item.rules === 'string' ? JSON.parse(item.rules) : (item.rules || {}),
             landmarks: item.landmarks || [],
             city_id: item.city_id,
@@ -850,9 +854,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                                       hotel.rating >= 4.0 ? 'Very Good' : 
                                       hotel.rating >= 3.5 ? 'Good' : 'Recommended';
 
-                  const displayHotelName = hotel.name.toLowerCase().includes('rishikesh') 
-                    ? hotel.name 
-                    : `${hotel.name} Rishikesh`;
+                  const displayHotelName = hotel.name;
 
                   const getLandmarkText = () => {
                     if (hotel.landmarks && hotel.landmarks[0] && hotel.landmarks[0].trim() !== '') {
