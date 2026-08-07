@@ -607,28 +607,44 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                         </div>
 
                         {/* Media Display if Present */}
-                        {msg.media_url && (
-                          <div className="my-1 rounded-2xl overflow-hidden border border-black/20 max-w-sm">
-                            {msg.message_type === 'image' || msg.media_mime_type?.startsWith('image/') ? (
-                              <img src={msg.media_url} alt="Attachment" className="w-full max-h-60 object-cover" />
-                            ) : msg.message_type === 'video' || msg.media_mime_type?.startsWith('video/') ? (
-                              <video src={msg.media_url} controls className="w-full max-h-60 rounded-xl" />
-                            ) : msg.message_type === 'audio' || msg.message_type === 'voice' || msg.media_mime_type?.startsWith('audio/') ? (
-                              <audio src={msg.media_url} controls className="w-full p-1" />
-                            ) : (
-                              <a
-                                href={msg.media_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-2 p-3 bg-black/30 text-white hover:bg-black/50 transition-all font-bold"
-                              >
-                                <FileText className="w-5 h-5 text-orange-400" />
-                                <span>Download Attachment Document</span>
-                                <ArrowUpRight className="w-4 h-4 ml-auto" />
-                              </a>
-                            )}
-                          </div>
-                        )}
+                        {msg.media_url && (() => {
+                          const displayMediaUrl = (msg.media_url.includes('facebook.com') || msg.media_url.includes('fbsbx.com'))
+                            ? `/api/whatsapp-media-proxy?url=${encodeURIComponent(msg.media_url)}`
+                            : msg.media_url;
+
+                          return (
+                            <div className="my-1 rounded-2xl overflow-hidden border border-black/20 max-w-sm">
+                              {msg.message_type === 'image' || msg.media_mime_type?.startsWith('image/') ? (
+                                <img
+                                  src={displayMediaUrl}
+                                  alt="Attachment"
+                                  className="w-full max-h-60 object-cover rounded-xl"
+                                  onError={(e) => {
+                                    // Fallback if direct load fails
+                                    if (!e.target.src.includes('/api/whatsapp-media-proxy')) {
+                                      e.target.src = `/api/whatsapp-media-proxy?url=${encodeURIComponent(msg.media_url)}`;
+                                    }
+                                  }}
+                                />
+                              ) : msg.message_type === 'video' || msg.media_mime_type?.startsWith('video/') ? (
+                                <video src={displayMediaUrl} controls className="w-full max-h-60 rounded-xl" />
+                              ) : msg.message_type === 'audio' || msg.message_type === 'voice' || msg.media_mime_type?.startsWith('audio/') ? (
+                                <audio src={displayMediaUrl} controls className="w-full p-1" />
+                              ) : (
+                                <a
+                                  href={displayMediaUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2 p-3 bg-black/30 text-white hover:bg-black/50 transition-all font-bold"
+                                >
+                                  <FileText className="w-5 h-5 text-orange-400" />
+                                  <span>Download Attachment Document</span>
+                                  <ArrowUpRight className="w-4 h-4 ml-auto" />
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })()}
 
                         {/* Text Message Content */}
                         {isUnsupported ? (

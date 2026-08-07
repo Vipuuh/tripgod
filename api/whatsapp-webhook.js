@@ -79,35 +79,35 @@ export default async function handler(req, res) {
           mediaMimeType = message.image?.mime_type || 'image/jpeg';
           const mediaId = message.image?.id;
           if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId);
+            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
           }
         } else if (msgType === 'document') {
           messageContent = message.document?.caption || message.document?.filename || '📄 Document PDF';
           mediaMimeType = message.document?.mime_type || 'application/pdf';
           const mediaId = message.document?.id;
           if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId);
+            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
           }
         } else if (msgType === 'audio' || msgType === 'voice') {
           messageContent = '🎤 Voice / Audio Note';
           mediaMimeType = message.audio?.mime_type || message.voice?.mime_type || 'audio/ogg';
           const mediaId = message.audio?.id || message.voice?.id;
           if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId);
+            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
           }
         } else if (msgType === 'video') {
           messageContent = message.video?.caption || '🎥 Video Clip';
           mediaMimeType = message.video?.mime_type || 'video/mp4';
           const mediaId = message.video?.id;
           if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId);
+            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
           }
         } else if (msgType === 'sticker') {
           messageContent = '🎨 Sticker';
           mediaMimeType = message.sticker?.mime_type || 'image/webp';
           const mediaId = message.sticker?.id;
           if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId);
+            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
           }
         } else if (msgType === 'location') {
           const loc = message.location;
@@ -208,19 +208,13 @@ export default async function handler(req, res) {
   return res.status(405).json({ error: 'Method not allowed' });
 }
 
-// Helper function to fetch media download URL from Meta Graph API
-async function fetchMetaMediaUrl(mediaId) {
+// Helper function to fetch media proxy URL without consuming Supabase storage space
+async function fetchMetaMediaUrl(mediaId, mimeType) {
   try {
-    const response = await fetch(`https://graph.facebook.com/v19.0/${mediaId}`, {
-      headers: {
-        'Authorization': `Bearer ${META_ACCESS_TOKEN}`
-      }
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data.url || null; // Direct Meta download URL
+    // Pass media_id or fetched Meta URL directly to Proxy API (0 Supabase Storage used)
+    return `/api/whatsapp-media-proxy?media_id=${mediaId}`;
   } catch (err) {
-    console.error("Failed to fetch Meta media URL:", err);
+    console.error("Failed to format Meta media proxy URL:", err);
     return null;
   }
 }
