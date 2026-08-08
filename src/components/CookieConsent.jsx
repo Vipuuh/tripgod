@@ -43,23 +43,13 @@ export default function CookieConsent({ onNavigatePrivacy }) {
             <div className="absolute -top-10 -right-10 w-28 h-28 bg-[#FF6B00]/20 rounded-full blur-2xl pointer-events-none" />
 
             {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/20 border border-[#FF6B00]/30 text-[#FF6B00] flex items-center justify-center shrink-0">
-                  <ShieldCheck size={18} />
-                </div>
-                <h4 className="text-sm font-black font-display tracking-tight text-white uppercase">
-                  We Value Your Privacy
-                </h4>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-[#FF6B00]/20 border border-[#FF6B00]/30 text-[#FF6B00] flex items-center justify-center shrink-0">
+                <ShieldCheck size={18} />
               </div>
-              <button
-                type="button"
-                onClick={handleRejectNonEssential}
-                className="text-gray-400 hover:text-white transition-colors cursor-pointer p-1"
-                aria-label="Close privacy notice"
-              >
-                <X size={16} />
-              </button>
+              <h4 className="text-sm font-black font-display tracking-tight text-white uppercase">
+                We Value Your Privacy
+              </h4>
             </div>
 
             {/* Body */}

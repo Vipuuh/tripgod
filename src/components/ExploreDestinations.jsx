@@ -128,24 +128,26 @@ export default function ExploreDestinations() {
               transition={{ duration: 0.25 }}
               className="bg-white rounded-3xl max-w-md w-full p-6 text-slate-900 shadow-2xl relative border border-slate-100 font-sans"
             >
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedDestination(null)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors cursor-pointer border-none"
-              >
-                <X size={16} />
-              </button>
-
               {/* Destination Cover Preview */}
-              <div className="h-36 rounded-2xl overflow-hidden relative mb-4 bg-slate-900">
+              <div className="h-40 rounded-2xl overflow-hidden relative mb-4 bg-slate-900 shadow-md">
                 <div
                   className="absolute inset-0 bg-cover bg-center"
                   style={{ backgroundImage: `url(${selectedDestination.image})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+
+                {/* Prominent & Easy to Tap Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedDestination(null)}
+                  className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center transition-all cursor-pointer border border-white/25 shadow-lg active:scale-95"
+                  aria-label="Close modal"
+                >
+                  <X size={18} />
+                </button>
+
                 <div className="absolute bottom-3 left-4 right-4 text-white">
-                  <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-[#FF6B00] text-white">
+                  <span className="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase bg-[#FF6B00] text-white tracking-wider">
                     {selectedDestination.status}
                   </span>
                   <h4 className="text-xl font-black font-display tracking-tight uppercase mt-1">
