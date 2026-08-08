@@ -1,156 +1,212 @@
-import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, X, BellCheck, Compass, CheckCircle2 } from 'lucide-react';
 
 const destinationsData = [
   {
     id: 'haridwar',
     name: 'HARIDWAR',
     tagline: 'Spiritual Gateway & Ganga Ghats',
-    image: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?q=80&w=800&auto=format&fit=crop',
-    status: 'Verified Operators',
-    route: 'tours'
-  },
-  {
-    id: 'rishikesh',
-    name: 'RISHIKESH',
-    tagline: 'Adventure & Yoga Capital',
-    image: '/rafting-hero.jpg',
-    status: 'Top Choice',
-    route: 'tours'
+    image: '/destinations/haridwar.jpg',
+    status: 'Coming Soon',
+    infoText: 'We are currently onboarding 100% verified local operators and Ganga Ghat tour partners in Haridwar.'
   },
   {
     id: 'mussoorie',
     name: 'MUSSOORIE',
-    tagline: 'Queen of Hills',
-    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=800&auto=format&fit=crop',
-    status: 'Verified Stays',
-    route: 'hotels'
+    tagline: 'Queen of Hills & Valleys',
+    image: '/destinations/mussoorie.jpg',
+    status: 'Coming Soon',
+    infoText: 'Luxury resort partnerships & scenic hill stays in Mussoorie are currently under verification.'
   },
   {
     id: 'nainital',
     name: 'NAINITAL',
-    tagline: 'City of Lakes',
-    image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=800&auto=format&fit=crop',
-    status: 'Booking Open',
-    route: 'tours'
+    tagline: 'City of Lakes & Serenity',
+    image: '/destinations/nainital.jpg',
+    status: 'Coming Soon',
+    infoText: 'Naini Lake boating, eco-caves & boutique lake stays launching soon on TripGod.'
   },
   {
     id: 'auli',
     name: 'AULI',
-    tagline: 'Snow Ski Slopes',
-    image: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=800&auto=format&fit=crop',
-    status: 'Winter Special',
-    route: 'tours'
+    tagline: 'Himalayan Ski & Snow Resort',
+    image: '/destinations/auli.jpg',
+    status: 'Coming Soon',
+    infoText: 'Snow skiing equipment, cable car packages & wooden chalet stays onboarding for Auli.'
   },
   {
     id: 'tehri',
     name: 'TEHRI',
-    tagline: 'Water Sports & Lake',
-    image: '/paragliding-hero.jpg',
-    status: 'Water Sports',
-    route: 'tours'
+    tagline: 'Water Sports & Dam Lake',
+    image: '/destinations/tehri.jpg',
+    status: 'Coming Soon',
+    infoText: 'Jet ski rentals, banana rides & floating huts in Tehri Lake opening soon.'
   }
 ];
 
-export default function ExploreDestinations({ setRoute }) {
-  const scrollContainerRef = useRef(null);
-
-  const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = direction === 'left' ? -220 : 220;
-      scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
+export default function ExploreDestinations() {
+  const [selectedDestination, setSelectedDestination] = useState(null);
+  const [isNotified, setIsNotified] = useState(false);
 
   return (
-    <section className="py-8 sm:py-12 bg-white text-slate-900 font-sans border-b border-slate-100">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-5">
+    <section className="py-8 sm:py-12 bg-white text-slate-900 font-sans border-b border-slate-100 relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
         
-        {/* Section Header with Left Red/Orange Accent Line */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-6 sm:h-7 bg-[#FF5F00] rounded-full shrink-0" />
-            <h2 className="text-lg sm:text-2xl font-black font-display tracking-tight uppercase text-slate-900">
-              Explore Top Destinations
+        {/* Ultra-Premium Section Header (No Arrow Buttons, Pure Elegance) */}
+        <div className="flex flex-col items-start gap-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest shadow-xs">
+            <Sparkles size={11} className="text-[#FF6B00]" />
+            <span>Expanding Across Uttarakhand</span>
+          </div>
+
+          <div className="flex items-center gap-3 mt-1.5">
+            <div className="w-1.5 h-7 sm:h-8 bg-gradient-to-b from-[#FF7A00] to-[#FF3E00] rounded-full shrink-0" />
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-black font-display tracking-tight uppercase bg-gradient-to-r from-slate-900 via-neutral-800 to-slate-700 bg-clip-text text-transparent">
+              EXPLORE TOP DESTINATIONS
             </h2>
           </div>
-
-          {/* Compact Carousel Navigation Arrows */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => scroll('left')}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer border-none"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => scroll('right')}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-all cursor-pointer border-none"
-              aria-label="Scroll right"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
+          <p className="text-slate-500 text-xs sm:text-sm font-medium pl-4 max-w-lg">
+            Discover upcoming adventure hubs, verified stays, and local tour partners expanding soon.
+          </p>
         </div>
 
-        {/* Horizontal Scrolling Destination Cards - Compact & Responsive */}
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-3 sm:gap-4 overflow-x-auto pb-3 pt-1 no-scrollbar snap-x snap-mandatory scroll-smooth"
-        >
+        {/* Horizontal Scrolling Destination Cards (Swipeable, No Side Arrow Buttons) */}
+        <div className="flex gap-3.5 sm:gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar snap-x snap-mandatory scroll-smooth">
           {destinationsData.map((dest, idx) => (
             <motion.div
               key={dest.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: idx * 0.05 }}
+              transition={{ duration: 0.35, delay: idx * 0.06 }}
               onClick={() => {
-                if (setRoute) setRoute(dest.route);
+                setSelectedDestination(dest);
+                setIsNotified(false);
               }}
-              className="snap-start flex-shrink-0 w-[160px] sm:w-[210px] h-[210px] sm:h-[250px] rounded-3xl relative overflow-hidden group cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-slate-100 bg-slate-900 transition-all duration-300 hover:shadow-xl"
+              className="snap-start flex-shrink-0 w-[165px] sm:w-[215px] h-[220px] sm:h-[260px] rounded-3xl relative overflow-hidden group cursor-pointer shadow-[0_6px_25px_rgba(0,0,0,0.08)] border border-slate-100 bg-slate-900 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
             >
-              {/* Background Cover Image */}
+              {/* Background Cover Image (Using User Uploaded Authentic Photos) */}
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
                 style={{ backgroundImage: `url(${dest.image})` }}
               />
 
               {/* Gradient Overlay for Text Readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10 group-hover:from-black/90 transition-colors" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10 group-hover:from-black/95 transition-colors" />
 
-              {/* Top Badge */}
+              {/* Top "Coming Soon" Badge */}
               <div className="absolute top-3 left-3 z-10">
-                <span className="px-2.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-black/50 backdrop-blur-md text-white border border-white/20">
+                <span className="px-2.5 py-1 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-md text-[#FF6B00] border border-[#FF6B00]/40 shadow-sm">
                   {dest.status}
                 </span>
               </div>
 
-              {/* Bottom Card Title Overlay (Matching Reference Image) */}
+              {/* Bottom Destination Title & Tagline */}
               <div className="absolute bottom-0 left-0 right-0 p-3.5 sm:p-4 z-10 flex flex-col justify-end">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <h3 className="text-base sm:text-xl font-black font-display tracking-tight text-white uppercase drop-shadow-md leading-none">
-                      {dest.name}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs text-gray-200 font-medium mt-1 line-clamp-1">
-                      {dest.tagline}
-                    </p>
-                  </div>
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 group-hover:bg-[#FF5F00] text-white flex items-center justify-center transition-all duration-300 shrink-0 ml-1">
-                    <ArrowUpRight size={14} />
-                  </div>
-                </div>
+                <h3 className="text-base sm:text-xl font-black font-display tracking-tight text-white uppercase drop-shadow-md leading-none">
+                  {dest.name}
+                </h3>
+                <p className="text-[10px] sm:text-xs text-gray-200 font-medium mt-1 line-clamp-1">
+                  {dest.tagline}
+                </p>
               </div>
             </motion.div>
           ))}
         </div>
 
       </div>
+
+      {/* Coming Soon Interactive Pop-up Modal */}
+      <AnimatePresence>
+        {selectedDestination && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.25 }}
+              className="bg-white rounded-3xl max-w-md w-full p-6 text-slate-900 shadow-2xl relative border border-slate-100 font-sans"
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedDestination(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors cursor-pointer border-none"
+              >
+                <X size={16} />
+              </button>
+
+              {/* Destination Cover Preview */}
+              <div className="h-36 rounded-2xl overflow-hidden relative mb-4 bg-slate-900">
+                <div
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${selectedDestination.image})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-3 left-4 right-4 text-white">
+                  <span className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase bg-[#FF6B00] text-white">
+                    {selectedDestination.status}
+                  </span>
+                  <h4 className="text-xl font-black font-display tracking-tight uppercase mt-1">
+                    {selectedDestination.name}
+                  </h4>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-[#FF5F00] font-black text-xs uppercase tracking-wider">
+                  <Compass size={16} />
+                  <span>Launching Soon on TripGod</span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
+                  {selectedDestination.infoText}
+                </p>
+
+                {/* Status Callout */}
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-2.5">
+                  <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-amber-900 font-bold leading-tight">
+                    Rishikesh bookings are currently 100% active. {selectedDestination.name} packages will open very soon!
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsNotified(true);
+                      setTimeout(() => {
+                        setSelectedDestination(null);
+                      }, 1200);
+                    }}
+                    className={`flex-1 py-3 px-4 rounded-full font-black text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer border-none flex items-center justify-center gap-2 ${
+                      isNotified
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:scale-102 text-white shadow-md'
+                    }`}
+                  >
+                    {isNotified ? (
+                      <>
+                        <CheckCircle2 size={16} />
+                        <span>Notified!</span>
+                      </>
+                    ) : (
+                      <>
+                        <BellCheck size={16} />
+                        <span>Notify Me On Launch</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
