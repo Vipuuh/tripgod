@@ -439,33 +439,64 @@ export default function AdminDashboard({ setRoute }) {
           : (Array.isArray(newVendor.badges) ? newVendor.badges : [])
       };
 
-      if (editingItem && editingItem.type === 'vendor') {
-        let { error } = await supabase.from('vendors').update(vendorData).eq('id', editingItem.data.id);
-        // Fallback if 'shop_images' column is missing in Supabase schema cache
-        if (error && (error.message?.includes('shop_images') || error.code === 'PGRST204')) {
-          const { shop_images, ...fallbackData } = vendorData;
-          const { error: retryErr } = await supabase.from('vendors').update(fallbackData).eq('id', editingItem.data.id);
-          if (retryErr) throw retryErr;
-        } else if (error) {
-          throw error;
+      // Strip internal non-column fields if present
+      delete vendorData.bikes;
+      delete vendorData.vehicles;
+      delete vendorData.rafting_slots;
+      delete vendorData.tours;
+      delete vendorData.hotels;
+
+      const isEditing = Boolean(editingItem && editingItem.type === 'vendor');
+      const vendorId = isEditing ? editingItem.data.id : null;
+
+      let payload = { ...vendorData };
+      if (isEditing) {
+        delete payload.id;
+        delete payload.created_at;
+      }
+
+      let saveSuccess = false;
+      let lastError = null;
+
+      // Smart loop to handle missing database columns gracefully in Supabase schema cache
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const res = isEditing
+          ? await supabase.from('vendors').update(payload).eq('id', vendorId)
+          : await supabase.from('vendors').insert(payload);
+
+        if (!res.error) {
+          saveSuccess = true;
+          break;
         }
-      } else {
-        let { error } = await supabase.from('vendors').insert(vendorData);
-        // Fallback if 'shop_images' column is missing in Supabase schema cache
-        if (error && (error.message?.includes('shop_images') || error.code === 'PGRST204')) {
-          const { shop_images, ...fallbackData } = vendorData;
-          const { error: retryErr } = await supabase.from('vendors').insert(fallbackData);
-          if (retryErr) throw retryErr;
-        } else if (error) {
-          throw error;
+
+        lastError = res.error;
+        const errMsg = res.error.message || '';
+
+        // Extract missing column name from PostgREST / Supabase error messages
+        const match = errMsg.match(/Could not find the '([^']+)' column/i) ||
+                      errMsg.match(/column "([^"]+)"/i) ||
+                      errMsg.match(/'([^']+)' column of 'vendors'/i);
+
+        if (match && match[1] && Object.prototype.hasOwnProperty.call(payload, match[1])) {
+          delete payload[match[1]];
+        } else if (Object.prototype.hasOwnProperty.call(payload, 'display_order') && errMsg.includes('display_order')) {
+          delete payload.display_order;
+        } else if (Object.prototype.hasOwnProperty.call(payload, 'shop_images') && (errMsg.includes('shop_images') || res.error.code === 'PGRST204')) {
+          delete payload.shop_images;
+        } else {
+          break;
         }
+      }
+
+      if (!saveSuccess && lastError) {
+        throw lastError;
       }
 
       setNewVendor({
         name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
         shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
         since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
-        reporting_time: '', parking_details: '', badges: '', short_highlight: ''
+        reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
       });
       setEditingItem(null);
       fetchAllData();
