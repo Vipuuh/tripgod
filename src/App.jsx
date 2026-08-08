@@ -32,6 +32,8 @@ import AdminDashboard from './components/AdminDashboard';
 import VendorPortal from './components/VendorPortal';
 import LoginModal from './components/LoginModal';
 import AccountModal from './components/AccountModal';
+import MaintenanceMode from './components/MaintenanceMode';
+import AdminPreviewBanner from './components/AdminPreviewBanner';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -79,6 +81,79 @@ export default function App() {
   const [route, setRoute] = useState('home');
   const [selectedTour, setSelectedTour] = useState(null);
   
+  // Maintenance Mode & Store Lock State
+  const [maintenanceConfig, setMaintenanceConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tripgod_maintenance_config');
+      return saved ? JSON.parse(saved) : {
+        enabled: false,
+        headline: "We're Upgrading TripGod! 🚀",
+        message: "We are currently making exciting upgrades & adding new adventure packages. We'll be back online shortly!",
+        estimated_time: "Back online within 2 hours",
+        support_phone: "+91 98765 43210",
+        support_whatsapp: "+919876543210",
+        passcode: "tripgod2026"
+      };
+    } catch (e) {
+      return { enabled: false };
+    }
+  });
+
+  const [isAdminBypass, setIsAdminBypass] = useState(() => {
+    return localStorage.getItem('tripgod_admin_bypass') === 'true';
+  });
+
+  // Fetch maintenance mode settings & auth session on mount
+  useEffect(() => {
+    const fetchMaintenanceSetting = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('value')
+          .eq('key', 'maintenance_config')
+          .maybeSingle();
+
+        if (data?.value) {
+          setMaintenanceConfig(data.value);
+          localStorage.setItem('tripgod_maintenance_config', JSON.stringify(data.value));
+        }
+      } catch (err) {
+        console.warn('Maintenance config fetch warning:', err);
+      }
+    };
+
+    const checkAdminAuthSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setIsAdminBypass(true);
+          localStorage.setItem('tripgod_admin_bypass', 'true');
+        }
+      } catch (e) {}
+    };
+
+    fetchMaintenanceSetting();
+    checkAdminAuthSession();
+  }, []);
+
+  const handleTurnOffMaintenance = async () => {
+    const updatedConfig = { ...maintenanceConfig, enabled: false };
+    setMaintenanceConfig(updatedConfig);
+    localStorage.setItem('tripgod_maintenance_config', JSON.stringify(updatedConfig));
+    try {
+      await supabase
+        .from('site_settings')
+        .upsert({ key: 'maintenance_config', value: updatedConfig });
+    } catch (err) {
+      console.error('Error disabling maintenance mode:', err);
+    }
+  };
+
+  const handleExitPreview = () => {
+    localStorage.removeItem('tripgod_admin_bypass');
+    setIsAdminBypass(false);
+  };
+
   // City states (Supabase dynamic multi-city support)
   const [citiesList, setCitiesList] = useState([]);
   const [currentCity, setCurrentCity] = useState(null);
@@ -301,8 +376,27 @@ export default function App() {
     ? searchableAdventures.filter(adv => adv.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : [];
 
+  // Check if website is locked in Maintenance Mode (and user is not an Admin previewing)
+  if (maintenanceConfig?.enabled && !isAdminBypass && route !== 'admin') {
+    return (
+      <MaintenanceMode 
+        config={maintenanceConfig} 
+        onAdminBypassSuccess={() => setIsAdminBypass(true)} 
+      />
+    );
+  }
+
   return (
-    <div className="relative min-h-[75vh] bg-gradient-to-b from-[#FAF8F5] via-[#F3F5F6] to-[#FAF8F5] text-black font-sans selection:bg-accent selection:text-black">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col justify-between selection:bg-[#FF5F00] selection:text-white">
+      
+      {/* 0. Admin Live Preview Top Banner (Shown when maintenance mode is active & admin is previewing) */}
+      {maintenanceConfig?.enabled && isAdminBypass && (
+        <AdminPreviewBanner 
+          setRoute={navigateTo} 
+          onTurnOffMaintenance={() => setMaintenanceConfig(prev => ({ ...prev, enabled: false }))} 
+          onExitPreview={() => setIsAdminBypass(false)} 
+        />
+      )}
       {/* 1. Scroll Progress Bar */}
       <div 
         className="fixed top-0 left-0 right-0 h-1 bg-accent z-50 transform origin-left transition-transform duration-100"
@@ -425,7 +519,15 @@ export default function App() {
                 navigateTo={navigateTo}
               />
             )}
-            {route === 'admin' && <AdminDashboard setRoute={navigateTo} />}
+            {route === 'admin' && (
+              <AdminDashboard 
+                setRoute={navigateTo} 
+                maintenanceConfig={maintenanceConfig} 
+                setMaintenanceConfig={setMaintenanceConfig} 
+                isMaintenanceActive={maintenanceConfig?.enabled} 
+                setIsMaintenanceActive={(val) => setMaintenanceConfig(prev => ({ ...prev, enabled: val }))} 
+              />
+            )}
             {(route === 'vendor' || route === 'partner') && <VendorPortal onNavigateHome={() => navigateTo('home')} />}
             {route === 'privacy' && <Privacy />}
             {route === 'terms' && <Terms />}

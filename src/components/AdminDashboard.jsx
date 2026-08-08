@@ -4,13 +4,14 @@ import {
   Activity, ShoppingBag, Building2, Waves, Bike, MapPin, Users, Image, 
   Trash2, Edit, Plus, LogOut, Search, Filter, ShieldCheck, ChevronRight,
   TrendingUp, CircleDollarSign, Check, X, PlusCircle, Sparkles, MapPinned,
-  LayoutDashboard, GripVertical, Star, MessageSquare
+  LayoutDashboard, GripVertical, Star, MessageSquare, Lock
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import RetargetingTab from './RetargetingTab';
 import ReviewsSection from './ReviewsSection';
 import WhatsAppSupportInbox from './WhatsAppSupportInbox';
 import VendorImageCarousel from './VendorImageCarousel';
+import MaintenanceManager from './MaintenanceManager';
 
 const getSimpleBookingId = (id) => {
   if (!id) return 'TG-000000';
@@ -98,7 +99,7 @@ const STANDARD_ADVENTURE_NAMES = {
   ]
 };
 
-export default function AdminDashboard({ setRoute }) {
+export default function AdminDashboard({ setRoute, maintenanceConfig, setMaintenanceConfig, isMaintenanceActive, setIsMaintenanceActive }) {
   // Authentication States
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
@@ -658,7 +659,8 @@ export default function AdminDashboard({ setRoute }) {
               { id: 'reviews', label: 'Customer Reviews DB', icon: Star },
               { id: 'media', label: 'Media Library', icon: Image },
               { id: 'reels', label: 'Customer Reels', icon: Star },
-              { id: 'homepage', label: 'Manage Homepage', icon: LayoutDashboard }
+              { id: 'homepage', label: 'Manage Homepage', icon: LayoutDashboard },
+              { id: 'maintenance', label: '🔒 Store Lock (Maintenance)', icon: Lock }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -1730,6 +1732,16 @@ export default function AdminDashboard({ setRoute }) {
           {/* WHATSAPP LIVE SUPPORT INBOX TAB */}
           {activeTab === 'whatsapp' && (
             <WhatsAppSupportInbox currentUser={{ name: adminEmail || 'Vipu (Admin)' }} />
+          )}
+
+          {/* STORE LOCK & MAINTENANCE MODE TAB */}
+          {activeTab === 'maintenance' && (
+            <MaintenanceManager 
+              maintenanceConfig={maintenanceConfig} 
+              setMaintenanceConfig={setMaintenanceConfig} 
+              isMaintenanceActive={isMaintenanceActive} 
+              setIsMaintenanceActive={setIsMaintenanceActive} 
+            />
           )}
 
         </div>
