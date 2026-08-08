@@ -146,10 +146,10 @@ export default function MaintenanceMode({ config, onAdminBypassSuccess }) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="glass-card bg-slate-900/60 border border-slate-800/80 rounded-2xl px-6 py-4 mb-10 inline-flex items-center gap-3 backdrop-blur-md shadow-xl"
+            className="bg-slate-900/90 border border-slate-700/80 rounded-full px-6 py-3.5 mb-10 inline-flex items-center gap-3 shadow-2xl backdrop-blur-md"
           >
             <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-            <span className="text-sm font-semibold text-slate-200">{estimatedTime}</span>
+            <span className="text-sm md:text-base font-bold text-white tracking-wide">{estimatedTime}</span>
           </motion.div>
         )}
 
