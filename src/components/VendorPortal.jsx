@@ -54,21 +54,26 @@ export default function VendorPortal({ onNavigateHome }) {
         matchedVendor = vendors.find(v => {
           const vPhone = (v.phone || '').replace(/\D/g, '');
           const vWa = (v.whatsapp || '').replace(/\D/g, '');
-          return vPhone.includes(inputNum) || vWa.includes(inputNum) || inputNum.includes(vPhone) || inputNum.includes(vWa);
+          return (vPhone && vPhone.length >= 7 && inputNum.includes(vPhone)) || 
+                 (vWa && vWa.length >= 7 && inputNum.includes(vWa));
         });
       }
 
-      // 2. Fallback: Check hotels, bikes, rafting, tours tables for direct whatsapp_number match
+      // 2. Fallback: Check hotels, bikes, rafting, tours tables for direct phone match
       if (!matchedVendor) {
         const { data: directHotels } = await supabase.from('hotels').select('*');
         const matchedHotel = (directHotels || []).find(h => {
           const hWa = (h.whatsapp_number || '').replace(/\D/g, '');
-          return hWa && (hWa.includes(inputNum) || inputNum.includes(hWa));
+          const hPh = (h.phone_number || '').replace(/\D/g, '');
+          return (hWa && hWa.length >= 7 && inputNum.includes(hWa)) || 
+                 (hPh && hPh.length >= 7 && inputNum.includes(hPh));
         });
 
         if (matchedHotel) {
           matchedVendor = {
-            id: matchedHotel.vendor_id || matchedHotel.id,
+            id: matchedHotel.id,
+            direct_item_id: matchedHotel.id,
+            vendor_id: matchedHotel.vendor_id,
             name: matchedHotel.name,
             category: 'Hotel',
             phone: cleanedPhone,
@@ -83,12 +88,14 @@ export default function VendorPortal({ onNavigateHome }) {
         const { data: directBikes } = await supabase.from('bikes').select('*');
         const matchedBike = (directBikes || []).find(b => {
           const bWa = (b.whatsapp_number || '').replace(/\D/g, '');
-          return bWa && (bWa.includes(inputNum) || inputNum.includes(bWa));
+          return bWa && bWa.length >= 7 && inputNum.includes(bWa);
         });
 
         if (matchedBike) {
           matchedVendor = {
-            id: matchedBike.vendor_id || matchedBike.id,
+            id: matchedBike.id,
+            direct_item_id: matchedBike.id,
+            vendor_id: matchedBike.vendor_id,
             name: matchedBike.name,
             category: 'Bike Rental',
             phone: cleanedPhone,
@@ -103,14 +110,38 @@ export default function VendorPortal({ onNavigateHome }) {
         const { data: directRafting } = await supabase.from('rafting').select('*');
         const matchedRafting = (directRafting || []).find(r => {
           const rWa = (r.whatsapp_number || '').replace(/\D/g, '');
-          return rWa && (rWa.includes(inputNum) || inputNum.includes(rWa));
+          return rWa && rWa.length >= 7 && inputNum.includes(rWa);
         });
 
         if (matchedRafting) {
           matchedVendor = {
-            id: matchedRafting.vendor_id || matchedRafting.id,
+            id: matchedRafting.id,
+            direct_item_id: matchedRafting.id,
+            vendor_id: matchedRafting.vendor_id,
             name: matchedRafting.name,
             category: 'Rafting',
+            phone: cleanedPhone,
+            whatsapp: cleanedPhone,
+            status: 'Active',
+            is_direct: true
+          };
+        }
+      }
+
+      if (!matchedVendor) {
+        const { data: directTours } = await supabase.from('tours').select('*');
+        const matchedTour = (directTours || []).find(t => {
+          const tWa = (t.whatsapp_number || t.contact_number || '').replace(/\D/g, '');
+          return tWa && tWa.length >= 7 && inputNum.includes(tWa);
+        });
+
+        if (matchedTour) {
+          matchedVendor = {
+            id: matchedTour.id,
+            direct_item_id: matchedTour.id,
+            vendor_id: matchedTour.vendor_id,
+            name: matchedTour.title || matchedTour.name,
+            category: 'Tour',
             phone: cleanedPhone,
             whatsapp: cleanedPhone,
             status: 'Active',
@@ -203,30 +234,52 @@ export default function VendorPortal({ onNavigateHome }) {
 
     try {
       const vId = currentVendor.id;
+      const rawVendorId = currentVendor.vendor_id;
       const vPhone = (currentVendor.phone || '').replace(/\D/g, '');
+      const isDirect = currentVendor.is_direct;
 
-      // Helper matcher for direct WhatsApp items
+      // Helper matcher for direct WhatsApp numbers
       const matchesPhone = (waNum) => {
         if (!waNum) return false;
         const cleanedWa = waNum.replace(/\D/g, '');
-        return cleanedWa && (cleanedWa.includes(vPhone) || vPhone.includes(cleanedWa));
+        return cleanedWa && vPhone && (cleanedWa.includes(vPhone) || vPhone.includes(cleanedWa));
       };
 
       // 1. Fetch bikes
       const { data: bikes } = await supabase.from('bikes').select('*');
-      const filteredBikes = (bikes || []).filter(b => b.vendor_id === vId || matchesPhone(b.whatsapp_number));
+      const filteredBikes = (bikes || []).filter(b => {
+        if (isDirect) {
+          return b.id === vId || matchesPhone(b.whatsapp_number);
+        }
+        return b.vendor_id === vId || matchesPhone(b.whatsapp_number);
+      });
 
       // 2. Fetch rafting
       const { data: rafting } = await supabase.from('rafting').select('*');
-      const filteredRafting = (rafting || []).filter(r => r.vendor_id === vId || matchesPhone(r.whatsapp_number));
+      const filteredRafting = (rafting || []).filter(r => {
+        if (isDirect) {
+          return r.id === vId || matchesPhone(r.whatsapp_number);
+        }
+        return r.vendor_id === vId || matchesPhone(r.whatsapp_number);
+      });
 
       // 3. Fetch hotels
       const { data: hotels } = await supabase.from('hotels').select('*');
-      const filteredHotels = (hotels || []).filter(h => h.vendor_id === vId || matchesPhone(h.whatsapp_number));
+      const filteredHotels = (hotels || []).filter(h => {
+        if (isDirect) {
+          return h.id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+        }
+        return h.vendor_id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+      });
 
       // 4. Fetch tours
       const { data: tours } = await supabase.from('tours').select('*');
-      const filteredTours = (tours || []).filter(t => t.vendor_id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
+      const filteredTours = (tours || []).filter(t => {
+        if (isDirect) {
+          return t.id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
+        }
+        return t.vendor_id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
+      });
 
       // Combine items with category tag
       const allItems = [
@@ -238,11 +291,28 @@ export default function VendorPortal({ onNavigateHome }) {
 
       setVendorItems(allItems);
 
-      // Fetch bookings for this vendor
-      const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
-      const filteredBookings = (bookings || []).filter(b => b.vendor_id === vId || matchesPhone(b.customer_phone));
+      // Collect item IDs and Item Names owned by this vendor
+      const itemIds = new Set(allItems.map(i => i.id));
+      const itemNames = new Set(allItems.map(i => (i.name || i.title || '').toLowerCase().trim()));
 
-      setVendorBookings(filteredBookings.length > 0 ? filteredBookings : (bookings || []).filter(b => b.vendor_id === vId));
+      // Fetch bookings strictly for this vendor's items
+      const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+      
+      const filteredBookings = (bookings || []).filter(b => {
+        // 1. Service ID matches any item owned by this vendor
+        if (b.service_id && itemIds.has(b.service_id)) return true;
+
+        // 2. Vendor ID matches main vendor account (if not direct listing session)
+        if (!isDirect && b.vendor_id && (b.vendor_id === vId || (rawVendorId && b.vendor_id === rawVendorId))) return true;
+
+        // 3. Item Name in metadata matches owned item names
+        const metaName = (b.metadata?.item_name || b.item_name || '').toLowerCase().trim();
+        if (metaName && itemNames.has(metaName)) return true;
+
+        return false;
+      });
+
+      setVendorBookings(filteredBookings);
 
     } catch (err) {
       console.error('Error fetching vendor data:', err);
