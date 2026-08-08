@@ -216,8 +216,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
 
   const checkIfClosed = (item) => {
     if (!item) return { closed: false };
-    if (item.is_closed) {
-      return { closed: true, reason: item.closed_reason || 'Monsoon closures / route safety advisory', reopenDate: item.closed_until };
+    if (item.is_closed || item.is_available === false) {
+      return { closed: true, reason: item.closed_reason || 'Tour currently offline / Not taking bookings', reopenDate: item.closed_until };
     }
     return { closed: false };
   };

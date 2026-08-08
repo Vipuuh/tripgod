@@ -266,8 +266,8 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
   const checkIfClosed = (item) => {
     if (!item) return { closed: false };
-    if (item.is_closed) {
-      return { closed: true, reason: item.closed_reason || 'Monsoon constraints / maintenance', reopenDate: item.closed_until };
+    if (item.is_closed || item.is_available === false) {
+      return { closed: true, reason: item.closed_reason || 'Shop currently offline / Not taking bookings', reopenDate: item.closed_until };
     }
     return { closed: false };
   };

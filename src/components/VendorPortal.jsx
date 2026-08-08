@@ -332,19 +332,32 @@ export default function VendorPortal({ onNavigateHome }) {
     if (!currentVendor) return;
     const newStatus = currentVendor.status === 'Active' ? 'Inactive' : 'Active';
     const isOnline = newStatus === 'Active';
+    const isClosed = !isOnline;
 
     try {
-      const { error } = await supabase
-        .from('vendors')
-        .update({ status: newStatus, is_online: isOnline })
-        .eq('id', currentVendor.id);
+      if (!currentVendor.is_direct) {
+        await supabase
+          .from('vendors')
+          .update({ status: newStatus, is_online: isOnline })
+          .eq('id', currentVendor.id);
+      }
 
-      if (error) throw error;
+      // Update all items owned by this vendor in DB tables so website turns them ON / OFF
+      for (const item of vendorItems) {
+        await supabase
+          .from(item.category_type)
+          .update({ is_available: isOnline, is_closed: isClosed })
+          .eq('id', item.id);
+      }
 
       const updated = { ...currentVendor, status: newStatus, is_online: isOnline };
       setCurrentVendor(updated);
       localStorage.setItem('tripgod_vendor_session', JSON.stringify(updated));
-      setStatusMessage(`Shop status updated to ${newStatus}`);
+
+      // Update local vendorItems state so green/red badges on items reflect immediately
+      setVendorItems(prev => prev.map(i => ({ ...i, is_available: isOnline, is_closed: isClosed })));
+
+      setStatusMessage(`Shop status updated to ${newStatus} (${isOnline ? 'ONLINE' : 'OFFLINE'}). Website listings updated.`);
       setTimeout(() => setStatusMessage(''), 3000);
     } catch (err) {
       alert('Failed to update shop status: ' + err.message);
@@ -353,19 +366,20 @@ export default function VendorPortal({ onNavigateHome }) {
 
   // Toggle Item Availability (Online / Offline)
   const toggleItemAvailability = async (item) => {
-    const currentAvailability = item.is_available !== false;
+    const currentAvailability = item.is_available !== false && !item.is_closed;
     const newAvailability = !currentAvailability;
+    const isClosed = !newAvailability;
 
     try {
       const { error } = await supabase
         .from(item.category_type)
-        .update({ is_available: newAvailability })
+        .update({ is_available: newAvailability, is_closed: isClosed })
         .eq('id', item.id);
 
       if (error) throw error;
 
-      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, is_available: newAvailability } : i));
-      setStatusMessage(`${item.name} status updated to ${newAvailability ? 'Online' : 'Offline'}`);
+      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, is_available: newAvailability, is_closed: isClosed } : i));
+      setStatusMessage(`${item.name || item.title} status updated to ${newAvailability ? 'Online' : 'Offline'}`);
       setTimeout(() => setStatusMessage(''), 3000);
     } catch (err) {
       alert('Failed to update item availability: ' + err.message);
@@ -676,7 +690,7 @@ export default function VendorPortal({ onNavigateHome }) {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredItems.map(item => {
-                  const isAvailable = item.is_available !== false;
+                  const isAvailable = item.is_available !== false && !item.is_closed;
                   const isEditing = editingItemId === item.id;
 
                   return (

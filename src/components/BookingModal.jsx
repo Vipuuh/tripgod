@@ -82,10 +82,10 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     if (!activity) return { closed: false };
     
     // Explicit toggle
-    if (activity.is_closed) {
+    if (activity.is_closed || activity.is_available === false) {
       return { 
         closed: true, 
-        reason: activity.closed_reason || 'Monsoon season / government safety advisory',
+        reason: activity.closed_reason || 'Shop currently offline / Not taking bookings',
         reopenDate: activity.closed_until 
       };
     }

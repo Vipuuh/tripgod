@@ -350,8 +350,8 @@ export default function Hotels({ currentCity, openBookingModal }) {
 
   const checkIfClosed = (item) => {
     if (!item) return { closed: false };
-    if (item.is_closed) {
-      return { closed: true, reason: item.closed_reason || 'Monsoon season / government advisory', reopenDate: item.closed_until };
+    if (item.is_closed || item.is_available === false) {
+      return { closed: true, reason: item.closed_reason || 'Property currently offline / Not taking bookings', reopenDate: item.closed_until };
     }
     if (item.closed_from && item.closed_until) {
       try {

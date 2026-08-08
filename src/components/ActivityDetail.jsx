@@ -27,6 +27,7 @@ export default function ActivityDetail({
   openBookingModal,
   operators = [],
   is_closed = false,
+  is_available = true,
   closed_reason = '',
   closed_from = '',
   closed_until = '',
@@ -36,8 +37,8 @@ export default function ActivityDetail({
   const [activeReviewIdx, setActiveReviewIdx] = useState(0);
 
   const checkIfClosed = () => {
-    if (is_closed) {
-      return { closed: true, reason: closed_reason || 'Monsoon season / government advisory', reopenDate: closed_until };
+    if (is_closed || is_available === false) {
+      return { closed: true, reason: closed_reason || 'Shop currently offline / Not taking bookings', reopenDate: closed_until };
     }
     if (closed_from && closed_until) {
       try {
