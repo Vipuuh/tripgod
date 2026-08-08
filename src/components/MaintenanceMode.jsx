@@ -338,8 +338,9 @@ export default function MaintenanceMode({ config, onAdminBypassSuccess }) {
                 </form>
               )}
 
-              <p className="mt-4 text-[11px] text-slate-500 text-center">
-                Default bypass passcode: <code className="text-orange-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded">tripgod2026</code> (Can be changed in Admin Dashboard)
+              <p className="mt-4 text-[11px] text-slate-400 text-center flex items-center justify-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Authorized Admin & Store Owner Access Only</span>
               </p>
             </motion.div>
           </div>
