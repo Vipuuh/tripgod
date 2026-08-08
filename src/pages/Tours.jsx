@@ -237,8 +237,6 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
           const bMin = b.packages.length > 0 ? Math.min(...b.packages.map(p => p.price)) : 999999;
           return aMin - bMin;
         });
-      case 'nearest':
-        return list.filter(p => p.landmark.toLowerCase().includes('tapovan') || p.landmark.toLowerCase().includes('sation'));
       case 'choice':
         return list.filter(p => p.badges.some(b => b.toLowerCase().includes('seller') || b.toLowerCase().includes('choice')));
       case 'family':

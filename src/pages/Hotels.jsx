@@ -797,7 +797,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
                   Hotels in Rishikesh
                 </h1>
                 <p className="text-slate-400 max-w-lg mx-auto text-[11px] font-extrabold tracking-wide uppercase">
-                  Verified stays near Ram Jhula, Laxman Jhula & Tapovan
+                  Verified stays in Rishikesh with instant booking
                 </p>
               </div>
 
@@ -812,14 +812,9 @@ export default function Hotels({ currentCity, openBookingModal }) {
                 {/* Horizontal Scrollable Chips UI */}
                 <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
-                    { val: 'all', label: '✨ All Stays' },
+                    { val: 'all', label: 'All Stays' },
                     { val: 'couple-friendly', label: 'Couple Friendly' },
-                    { val: 'near-ramjhula', label: 'Ram Jhula' },
-                    { val: 'near-tapovan', label: 'Tapovan' },
-                    { val: 'near-laxmanjhula', label: 'Laxman Jhula' },
-                    { val: 'near-jankisetui', label: 'Janki Setu' },
-                    { val: 'near-trivenighat', label: 'Triveni Ghat' },
-                    { val: 'near-busstand', label: 'Bus Stand' },
+                    { val: 'local-id', label: 'Local ID Accepted' },
                     { val: 'most-booked', label: 'Most Booked' },
                     { val: 'top-rated', label: 'Top Rated' },
                     { val: 'price-asc', label: 'Lowest Price' },

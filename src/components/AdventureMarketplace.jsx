@@ -376,30 +376,29 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
     return { closed: false };
   };
 
-  // Filter application connected to vendor backend landmark fields
+  // Filter application connected to vendor backend feature & sorting criteria
   const getFilteredPartners = () => {
     let list = [...partnersData];
-    if (!activeFilter) return list;
+    if (!activeFilter || activeFilter === 'all') return list;
 
-    const LOCATION_MAP = {
-      'ramjhula': ['ram jhula', 'ramjhula', 'shivanand'],
-      'laxmanjhula': ['laxman jhula', 'lakshman jhula', 'laxmanjhula'],
-      'jankisetu': ['janki setu', 'jankisetu'],
-      'tapovan': ['tapovan'],
-      'busstand': ['bus stand', 'isbt', 'busstand', 'main bus'],
-      'yognagri': ['yog nagri', 'yognagri', 'yog nagari'],
-      'oldrailway': ['old railway', 'railway station', 'station']
-    };
-
-    const terms = LOCATION_MAP[activeFilter];
-    if (terms && terms.length > 0) {
-      const matched = list.filter(p => {
-        const landmarkText = (p.landmark || '').toLowerCase();
-        const addressText = (p.address || '').toLowerCase();
-        const nameText = (p.name || '').toLowerCase();
-        return terms.some(t => landmarkText.includes(t) || addressText.includes(t) || nameText.includes(t));
+    if (activeFilter === 'most_booked') {
+      return list.sort((a, b) => (b.bookings_count || 0) - (a.bookings_count || 0));
+    }
+    if (activeFilter === 'top_rated') {
+      return list.sort((a, b) => (b.star_rating || 0) - (a.star_rating || 0));
+    }
+    if (activeFilter === 'lowest_price') {
+      return list.sort((a, b) => {
+        const aMin = a.packages && a.packages.length > 0 ? Math.min(...a.packages.map(p => p.price)) : 999999;
+        const bMin = b.packages && b.packages.length > 0 ? Math.min(...b.packages.map(p => p.price)) : 999999;
+        return aMin - bMin;
       });
-      return matched;
+    }
+    if (activeFilter === 'choice') {
+      return list.filter(p => (p.badges || []).some(b => b.toLowerCase().includes('choice') || b.toLowerCase().includes('verified')));
+    }
+    if (activeFilter === 'family') {
+      return list.filter(p => (p.badges || []).some(b => b.toLowerCase().includes('family') || b.toLowerCase().includes('couple')) || (p.star_rating || 0) >= 4.5);
     }
     return list;
   };
@@ -494,24 +493,22 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   Showing {filteredPartners.length} Available Partners
                 </div>
                 
-                {/* Horizontal Scrollable Location Chips UI (No Emojis, Connected to Backend Landmark) */}
+                {/* Horizontal Scrollable Feature Chips UI */}
                 <div className="w-full flex overflow-x-auto whitespace-nowrap hide-scrollbar items-center gap-2 pb-1 sm:pb-0 snap-x select-none max-w-full">
                   {[
-                    { id: null, label: 'All Partners' },
-                    { id: 'ramjhula', label: 'Ram Jhula' },
-                    { id: 'laxmanjhula', label: 'Laxman Jhula' },
-                    { id: 'jankisetu', label: 'Janki Setu' },
-                    { id: 'tapovan', label: 'Tapovan' },
-                    { id: 'busstand', label: 'Rishikesh Bus Stand' },
-                    { id: 'yognagri', label: 'Yog Nagri Rishikesh' },
-                    { id: 'oldrailway', label: 'Old Railway Station' }
+                    { id: 'all', label: 'All Partners' },
+                    { id: 'most_booked', label: 'Most Booked' },
+                    { id: 'top_rated', label: 'Top Rated' },
+                    { id: 'lowest_price', label: 'Lowest Price' },
+                    { id: 'choice', label: 'TripGod Choice' },
+                    { id: 'family', label: 'Couple & Family Friendly' }
                   ].map(chip => {
-                    const isActive = activeFilter === chip.id;
+                    const isActive = activeFilter === chip.id || (!activeFilter && chip.id === 'all');
                     return (
                       <button
-                        key={chip.id || 'all'}
+                        key={chip.id}
                         type="button"
-                        onClick={() => setActiveFilter(chip.id)}
+                        onClick={() => setActiveFilter(chip.id === 'all' ? null : chip.id)}
                         className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-full shrink-0 transition-all border cursor-pointer ${
                           isActive
                             ? 'bg-[#FF5F00] text-white border-[#FF5F00] shadow-[0_4px_12px_rgba(255,95,0,0.4)] scale-105'

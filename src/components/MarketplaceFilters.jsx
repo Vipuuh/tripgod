@@ -5,7 +5,6 @@ const FILTER_OPTIONS = [
   { id: 'most_booked', label: 'Most Booked', icon: TrendingUp },
   { id: 'best_rated', label: 'Best Rated', icon: Award },
   { id: 'lowest_price', label: 'Lowest Price', icon: DollarSign },
-  { id: 'nearest', label: 'Nearest Office', icon: Compass },
   { id: 'choice', label: 'TripGod Choice', icon: Sparkles },
   { id: 'family', label: 'Family Friendly', icon: Users }
 ];
