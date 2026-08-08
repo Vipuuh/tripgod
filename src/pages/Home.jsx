@@ -10,6 +10,7 @@ import {
 import CountUp from '../components/CountUp';
 import { supabase } from '../supabase';
 import CustomerReelSection from '../components/CustomerReelSection';
+import ExploreDestinations from '../components/ExploreDestinations';
 
 function ExpandableText({ text, maxLength = 90, className = "" }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -761,7 +762,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             transition={{ duration: 0.5 }}
             className="inline-block px-4 py-1.5 bg-white/10 backdrop-blur-md text-[#FF6B00] text-[10px] font-black uppercase tracking-widest rounded-full border border-[#FF6B00]/30 shadow-[0_0_15px_rgba(255,107,0,0.15)] animate-pulse"
           >
-            3+ Years of Trusted Service in Rishikesh
+            100% Verified Local Operators & Zero Hidden Charges
           </motion.span>
 
           <motion.h1 
@@ -1215,6 +1216,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
           </div>
         </div>
       </motion.div>
+
+      {/* 2.2. Explore Top Destinations Section */}
+      <ExploreDestinations setRoute={setRoute} />
 
       {/* 2.5. Recommended Hotels Section */}
       <div className="py-20 border-b border-black/5 bg-white">
