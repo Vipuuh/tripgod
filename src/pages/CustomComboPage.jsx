@@ -24,6 +24,29 @@ const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
   return `📍 ${clean || fallback}`;
 };
 
+// Robust image URL parser (handles JSON string arrays like '["https://..."]', plain strings, or arrays)
+const parseImageUrl = (imgVal) => {
+  if (!imgVal) return null;
+  if (Array.isArray(imgVal) && imgVal.length > 0) {
+    return parseImageUrl(imgVal[0]);
+  }
+  if (typeof imgVal === 'string') {
+    const trimmed = imgVal.trim();
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return parseImageUrl(parsed);
+      } catch (e) {
+        // Fallthrough if parse fails
+      }
+    }
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+      return trimmed;
+    }
+  }
+  return null;
+};
+
 // Fallback Preset Stretches & Vehicles for Vendors
 const DEFAULT_RAFTING_STRETCHES = [
   { id: '12km', name: '12 KM Brahmpuri Rafting', price: 599 },
@@ -153,15 +176,15 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // Helper to extract REAL uploaded shop image from vendor object (set during onboarding)
   const getRealVendorImage = (v, defaultImg) => {
     if (!v) return defaultImg;
-    if (v.shop_image && typeof v.shop_image === 'string' && v.shop_image.length > 5) return v.shop_image;
-    if (v.shop_images && Array.isArray(v.shop_images) && v.shop_images.length > 0 && String(v.shop_images[0]).length > 5) return v.shop_images[0];
-    if (v.photos && Array.isArray(v.photos) && v.photos.length > 0 && String(v.photos[0]).length > 5) return v.photos[0];
-    if (v.images && Array.isArray(v.images) && v.images.length > 0 && String(v.images[0]).length > 5) return v.images[0];
-    if (typeof v.photos === 'string' && v.photos.length > 5) return v.photos;
-    if (typeof v.images === 'string' && v.images.length > 5) return v.images;
-    if (v.shop_photo && typeof v.shop_photo === 'string') return v.shop_photo;
-    if (v.logo && typeof v.logo === 'string') return v.logo;
-    return defaultImg;
+    const url = parseImageUrl(v.shop_image) ||
+                parseImageUrl(v.shop_images) ||
+                parseImageUrl(v.photos) ||
+                parseImageUrl(v.images) ||
+                parseImageUrl(v.shop_photo) ||
+                parseImageUrl(v.logo) ||
+                parseImageUrl(v.banner);
+
+    return url || defaultImg;
   };
 
   // Helper to extract REAL rating from vendor object (set during onboarding)
@@ -252,7 +275,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       price: Number(h.price),
       landmarkLocation: toShortLandmark(h.address, 'Tapovan'),
       fullAddress: h.address || 'Tapovan, Rishikesh',
-      image: (h.images && h.images[0]) || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600',
+      image: parseImageUrl(h.images) || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600',
       rating: h.rating || 4.5,
       isOffline,
       description: h.description || 'Deluxe AC room stay with mountain view, hot water & Wi-Fi.'
@@ -479,11 +502,19 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                   onClick={() => setActiveDetailItem(item)}
                   className="cursor-pointer flex-1"
                 >
-                  {/* Card Image: REAL Vendor Uploaded Shop Photo */}
+                  {/* Card Image: Robust JSON-safe image with automatic fallback */}
                   <div className="relative h-32 sm:h-40 w-full bg-slate-100 overflow-hidden">
                     <img 
                       src={item.image} 
                       alt={item.vendorName || item.name}
+                      onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = item.category === 'Hotel' 
+                          ? 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600'
+                          : item.category === 'Rafting'
+                          ? 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
+                          : '/classic-rent.png';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
                     <span className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900/90 text-white backdrop-blur-xs">
@@ -508,7 +539,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                       {item.vendorName || item.name}
                     </h3>
                     
-                    {/* Clean Short Landmark Address (Matching Onboarding DB: 📍 Janki Setu, 📍 Tapovan, etc.) */}
+                    {/* Clean Short Landmark Address */}
                     <div className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                       <span>{item.landmarkLocation}</span>
                     </div>
@@ -633,6 +664,14 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
               <img 
                 src={activeDetailItem.image} 
                 alt={activeDetailItem.vendorName || activeDetailItem.name}
+                onError={(e) => {
+                  e.target.onerror = null; 
+                  e.target.src = activeDetailItem.category === 'Hotel' 
+                    ? 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600'
+                    : activeDetailItem.category === 'Rafting'
+                    ? 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
+                    : '/classic-rent.png';
+                }}
                 className="w-full h-full object-cover"
               />
               <span className="absolute top-3 left-3 text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 rounded-lg">
