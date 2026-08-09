@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, CheckCircle2, ArrowRight, Calendar, Users, 
-  Percent, Plus, Check, X, Star, MapPin, ChevronLeft, Building2, Waves, Bike, Tent
+  Percent, Plus, Check, X, Star, MapPin, ChevronLeft, Building2, Waves, Bike, Tent, AlertCircle
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -19,71 +19,75 @@ const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
   if (lower.includes('brahmpuri')) return '📍 Brahmpuri';
   if (lower.includes('gangakshetra')) return '📍 Gangakshetra';
 
-  // Fallback: extract first word before comma or space without numbers/pincode
   const clean = fullAddress.replace(/\d+/g, '').replace(/pincode|uttarakhand|india/gi, '').split(',')[0].trim();
   return `📍 ${clean || fallback}`;
 };
 
-// Real Rafting Vendor Operators List
+// Real Verified Rafting Vendor Operators List
 const RAFTING_VENDORS = [
+  {
+    id: 'rafting-vendor-[#FF5F00]',
+    category: 'Rafting',
+    vendorName: 'HB Evergreen Adventure',
+    location: '📍 Tapovan / Shivpuri',
+    fullAddress: 'HB Evergreen Office, Tapovan Main Market, Rishikesh',
+    rating: 4.9,
+    image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+    description: 'HB Evergreen Adventure offers certified river guides, cliff jumping, imported safety rafts & waterproof bag support.',
+    isActive: true,
+    stretches: [
+      { id: '12km', name: '12 KM Brahmpuri Rafting', price: 599 },
+      { id: '16km', name: '16 KM Shivpuri Rafting (Popular)', price: 899 },
+      { id: '24km', name: '24 KM Marine Drive Rafting', price: 1499 },
+      { id: '32km', name: '32 KM Kaudiyala Extreme Rafting', price: 2499 }
+    ]
+  },
   {
     id: 'rafting-vendor-redchilli',
     category: 'Rafting',
     vendorName: 'Red Chilli Adventure Rafting',
-    location: '📍 Shivpuri',
-    fullAddress: 'Shivpuri Office & Rafting Point, Rishikesh',
+    location: '📍 Shivpuri Point',
+    fullAddress: 'Shivpuri Rafting Launch Office, Rishikesh',
     rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+    image: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=600',
     description: 'Certified river guides, imported high-grade rafts, cliff jumping & safety kayak support included.',
+    isActive: true,
     stretches: [
-      { id: '12km', name: '12 KM Brahmpuri', price: 599 },
-      { id: '16km', name: '16 KM Shivpuri (Popular)', price: 899 },
-      { id: '24km', name: '24 KM Marine Drive', price: 1499 }
+      { id: '12km', name: '12 KM Brahmpuri Rafting', price: 599 },
+      { id: '16km', name: '16 KM Shivpuri Rafting', price: 899 },
+      { id: '24km', name: '24 KM Marine Drive Rafting', price: 1499 }
     ]
   },
   {
     id: 'rafting-vendor-gangawaves',
     category: 'Rafting',
-    vendorName: 'Ganga Waves River Expedition',
-    location: '📍 Brahmpuri',
+    vendorName: 'Ganga Waves Expedition',
+    location: '📍 Brahmpuri Point',
     fullAddress: 'Brahmpuri Office, Tapovan Bypass, Rishikesh',
     rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=600',
-    description: 'Specializes in family-friendly rafting with helmet, life jacket & complimentary cliff jump.',
-    stretches: [
-      { id: '12km', name: '12 KM Brahmpuri', price: 550 },
-      { id: '16km', name: '16 KM Shivpuri', price: 850 },
-      { id: '24km', name: '24 KM Marine Drive', price: 1399 }
-    ]
-  },
-  {
-    id: 'rafting-vendor-thrillfactory',
-    category: 'Rafting',
-    vendorName: 'ThrillFactory Extreme Rafting',
-    location: '📍 Marine Drive',
-    fullAddress: 'Marine Drive Rafting Launch Spot, Rishikesh',
-    rating: 4.9,
     image: 'https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?q=80&w=600',
-    description: 'Extreme rapids rafting for adrenaline lovers with GOPRO video option available.',
+    description: 'Specializes in family-friendly rafting with helmet, life jacket & complimentary cliff jump.',
+    isActive: true,
     stretches: [
-      { id: '16km', name: '16 KM Shivpuri', price: 899 },
-      { id: '24km', name: '24 KM Marine Drive', price: 1499 },
-      { id: '32km', name: '32 KM Kaudiyala Extreme', price: 2499 }
+      { id: '12km', name: '12 KM Brahmpuri Rafting', price: 550 },
+      { id: '16km', name: '16 KM Shivpuri Rafting', price: 850 },
+      { id: '24km', name: '24 KM Marine Drive Rafting', price: 1399 }
     ]
   }
 ];
 
-// Real Scooty & Bike Rental Vendors List
+// Real Verified Scooty & Bike Rental Vendors List
 const BIKE_VENDORS = [
   {
-    id: 'bike-vendor-tapovan',
+    id: 'bike-vendor-hbevergreen',
     category: 'Scooty',
-    vendorName: 'Tapovan Scooty & Bike Point',
+    vendorName: 'HB Bike Rental & Scooty Stand',
     location: '📍 Tapovan',
-    fullAddress: 'Tapovan Main Market (Near Laxman Jhula Chowk), Rishikesh',
-    rating: 4.8,
+    fullAddress: 'HB Bike Stand, Laxman Jhula Road, Tapovan, Rishikesh',
+    rating: 4.9,
     image: '/classic-rent.png',
-    description: 'Well-maintained automatic scooters with 1 Helmet, unlimited KM riding in Rishikesh & quick documentation.',
+    description: 'Automatic scooters & Royal Enfield bikes with 1 Helmet, unlimited KM riding in Rishikesh & clean documentation.',
+    isActive: true,
     vehicles: [
       { id: 'activa6g', name: 'Honda Activa 6G', price: 500 },
       { id: 'access125', name: 'Suzuki Access 125', price: 550 },
@@ -94,12 +98,13 @@ const BIKE_VENDORS = [
   {
     id: 'bike-vendor-ramjhula',
     category: 'Scooty',
-    vendorName: 'Ram Jhula Scooter Rentals',
+    vendorName: 'Ram Jhula Scooter Stand',
     location: '📍 Ram Jhula',
     fullAddress: 'Ram Jhula Parking Stand, Muni Ki Reti, Rishikesh',
-    rating: 4.9,
+    rating: 4.8,
     image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=600',
     description: 'Prime location pickup near Ram Jhula bridge. Clean helmet & 24/7 roadside assistance.',
+    isActive: true,
     vehicles: [
       { id: 'activa125', name: 'Honda Activa 125', price: 550 },
       { id: 'access125', name: 'Suzuki Access 125', price: 550 },
@@ -111,6 +116,8 @@ const BIKE_VENDORS = [
 export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // Database State Lists
   const [hotels, setHotels] = useState([]);
+  const [dbRafting, setDbRafting] = useState([]);
+  const [dbBikes, setDbBikes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Active Category Filter
@@ -118,13 +125,13 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
   // Vendor Selections Map (vendorId -> selectedStretchId / selectedVehicleId)
   const [raftingStretchMap, setRaftingStretchMap] = useState({
+    'rafting-vendor-hbevergreen': '16km',
     'rafting-vendor-redchilli': '16km',
-    'rafting-vendor-gangawaves': '16km',
-    'rafting-vendor-thrillfactory': '16km'
+    'rafting-vendor-gangawaves': '16km'
   });
 
   const [bikeVehicleMap, setBikeVehicleMap] = useState({
-    'bike-vendor-tapovan': 'activa6g',
+    'bike-vendor-hbevergreen': 'activa6g',
     'bike-vendor-ramjhula': 'activa125'
   });
 
@@ -153,21 +160,29 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   const [persons, setPersons] = useState(2);
 
   useEffect(() => {
-    fetchHotels();
+    fetchSupabaseData();
   }, []);
 
-  const fetchHotels = async () => {
+  const fetchSupabaseData = async () => {
     setLoading(true);
     try {
       if (!supabase) return;
-      const { data, error } = await supabase
-        .from('hotels')
-        .select('id, name, price, address, images, rating, landmarks, description')
-        .order('name');
 
-      if (data && !error) setHotels(data);
+      const [
+        { data: hData },
+        { data: rData },
+        { data: bData }
+      ] = await Promise.all([
+        supabase.from('hotels').select('*').order('name'),
+        supabase.from('rafting').select('*').order('price'),
+        supabase.from('bikes').select('*').order('price')
+      ]);
+
+      if (hData) setHotels(hData);
+      if (rData) setDbRafting(rData);
+      if (bData) setDbBikes(bData);
     } catch (err) {
-      console.error('Error loading hotels for combo builder:', err);
+      console.error('Error loading Supabase items for combo builder:', err);
     } finally {
       setLoading(false);
     }
@@ -175,6 +190,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
   // Toggle Item in Cart
   const toggleCartItem = (itemPayload) => {
+    if (itemPayload.isOffline) return; // Cannot add offline vendor
     setCartItems(prev => {
       const exists = prev.some(i => i.cartKey === itemPayload.cartKey);
       if (exists) {
@@ -233,16 +249,16 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   const handleWhatsAppBooking = () => {
     let msg = `Hi TripGod! I built a Custom Bundle on your website:\n\n`;
     cartItems.forEach((item, i) => {
-      msg += `${i + 1}. [${item.category}] ${item.name} (${item.vendorName || ''}) — ₹${item.price}\n`;
+      msg += `${i + 1}. [${item.category}] Vendor: ${item.vendorName} (${item.name}) — ₹${item.price}\n`;
     });
     msg += `\n📅 Travel Date: ${travelDate}\n👥 Guests: ${persons} Persons\n🔥 Combo Discount: ${discountPercent}% OFF (Saved ₹${totalSaved})\n💰 Total Amount: ₹${grandTotal.toLocaleString('en-IN')}`;
 
     window.open(`https://wa.me/919876543210?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // Build Services Card Items List
+  // Build Hotel Display List
   const hotelsCardList = hotels.map(h => {
-    const landmark = toShortLandmark(h.address, 'Tapovan');
+    const isOffline = h.is_active === false || h.is_closed === true;
     return {
       cartKey: `hotel-${h.id}`,
       id: h.id,
@@ -250,14 +266,16 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       name: h.name,
       vendorName: h.name,
       price: Number(h.price),
-      landmarkLocation: landmark,
+      landmarkLocation: toShortLandmark(h.address, 'Tapovan'),
       fullAddress: h.address || 'Tapovan, Rishikesh',
       image: (h.images && h.images[0]) || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600',
       rating: h.rating || 4.5,
+      isOffline,
       description: h.description || 'Deluxe AC room stay with mountain view, hot water & Wi-Fi.'
     };
   });
 
+  // Build Rafting Vendor Display List
   const raftingCardList = RAFTING_VENDORS.map(rv => {
     const selectedStretchId = raftingStretchMap[rv.id] || '16km';
     const stretchObj = rv.stretches.find(s => s.id === selectedStretchId) || rv.stretches[0];
@@ -274,12 +292,33 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       image: rv.image,
       rating: rv.rating,
       description: rv.description,
+      isOffline: !rv.isActive,
       isRaftingVendor: true,
       stretches: rv.stretches,
       currentStretchId: stretchObj.id
     };
   });
 
+  // Also include any Supabase DB Rafting Items
+  const dbRaftingCardList = dbRafting.map(r => {
+    const isOffline = r.is_active === false || r.is_closed === true;
+    return {
+      cartKey: `db-rafting-${r.id}`,
+      id: r.id,
+      category: 'Rafting',
+      name: r.name,
+      vendorName: r.operator_name || r.name,
+      price: Number(r.price),
+      landmarkLocation: toShortLandmark(r.location, 'Shivpuri'),
+      fullAddress: r.route || 'Shivpuri, Rishikesh',
+      image: (r.images && r.images[0]) || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      rating: 4.8,
+      isOffline,
+      description: r.description || 'Includes certified river guide, life jackets & cliff jumping.'
+    };
+  });
+
+  // Build Scooty Vendor Display List
   const bikeCardList = BIKE_VENDORS.map(bv => {
     const selectedVehId = bikeVehicleMap[bv.id] || 'activa6g';
     const vehicleObj = bv.vehicles.find(v => v.id === selectedVehId) || bv.vehicles[0];
@@ -296,6 +335,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       image: bv.image,
       rating: bv.rating,
       description: bv.description,
+      isOffline: !bv.isActive,
       isBikeVendor: true,
       vehicles: bv.vehicles,
       currentVehicleId: vehicleObj.id
@@ -313,12 +353,14 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     fullAddress: 'Shivpuri Riverside Campsite, Rishikesh',
     image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600',
     rating: 4.9,
+    isOffline: false,
     description: 'Includes Campfire, Evening Snacks, Live Music, Buffet Dinner, Breakfast & Swimming Pool Access.'
   };
 
   const allDisplayItems = [
     ...hotelsCardList,
     ...raftingCardList,
+    ...dbRaftingCardList,
     ...bikeCardList,
     campingCardItem
   ];
@@ -403,7 +445,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
           </div>
         </div>
 
-        {/* Premium Hotel-Style Quick Filter Pills (No Emojis) */}
+        {/* Premium Quick Filter Pills (No Emojis) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-3 no-scrollbar mb-4">
           {[
             { id: 'all', label: 'All Services' },
@@ -426,7 +468,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
           ))}
         </div>
 
-        {/* 2-COLUMN CARDS GRID (Bombay Shaving Co Style: 2 Cards Side-by-Side on Mobile) */}
+        {/* 2-COLUMN CARDS GRID (Vendor First Layout: Card Title = Vendor Shop Name) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {filteredDisplayItems.map(item => {
             const inCart = isItemInCart(item.cartKey);
@@ -435,7 +477,11 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
               <div 
                 key={item.cartKey}
                 className={`group bg-white rounded-2xl border transition-all duration-300 overflow-hidden flex flex-col justify-between shadow-[0_2px_15px_rgba(0,0,0,0.03)] ${
-                  inCart ? 'border-[#FF5F00] ring-2 ring-[#FF5F00]/20 scale-[1.01]' : 'border-slate-200/80 hover:border-slate-300'
+                  inCart 
+                    ? 'border-[#FF5F00] ring-2 ring-[#FF5F00]/20 scale-[1.01]' 
+                    : item.isOffline
+                    ? 'border-slate-200 opacity-75 grayscale-30'
+                    : 'border-slate-200/80 hover:border-slate-300'
                 }`}
               >
                 {/* Card Top Details (Click Opens Detail Drawer) */}
@@ -447,22 +493,29 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                   <div className="relative h-32 sm:h-40 w-full bg-slate-100 overflow-hidden">
                     <img 
                       src={item.image} 
-                      alt={item.name}
+                      alt={item.vendorName || item.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
                     <span className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900/90 text-white backdrop-blur-xs">
                       {item.category}
                     </span>
 
-                    <span className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[10px] font-extrabold text-slate-900 flex items-center gap-0.5 shadow-xs">
-                      ⭐ {item.rating}
-                    </span>
+                    {/* Offline Badge */}
+                    {item.isOffline ? (
+                      <span className="absolute top-2 right-2 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs">
+                        🔴 OFFLINE
+                      </span>
+                    ) : (
+                      <span className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[10px] font-extrabold text-slate-900 flex items-center gap-0.5 shadow-xs">
+                        ⭐ {item.rating}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Card Text Content */}
+                  {/* Card Text Content: Vendor Shop Name First! */}
                   <div className="p-2.5 sm:p-3 space-y-1">
                     <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-[#FF5F00] transition line-clamp-1 leading-tight">
-                      {item.name}
+                      {item.vendorName || item.name}
                     </h3>
                     
                     {/* Clean Short Landmark Address (Matching Screenshot 4: 📍 Tapovan, 📍 Triveni Ghat) */}
@@ -471,7 +524,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                     </div>
 
                     {/* Rafting Vendor Stretch Selector Dropdown */}
-                    {item.isRaftingVendor && (
+                    {item.isRaftingVendor && item.stretches && (
                       <div 
                         onClick={(e) => e.stopPropagation()}
                         className="pt-1"
@@ -494,7 +547,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                     )}
 
                     {/* Bike Vendor Vehicle Model Selector Dropdown */}
-                    {item.isBikeVendor && (
+                    {item.isBikeVendor && item.vehicles && (
                       <div 
                         onClick={(e) => e.stopPropagation()}
                         className="pt-1"
@@ -517,7 +570,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                     )}
 
                     <div className="pt-1 flex items-baseline gap-1">
-                      <span className="text-[10px] text-slate-400 font-medium">From:</span>
+                      <span className="text-[10px] text-slate-400 font-medium">Rate:</span>
                       <span className="text-sm sm:text-base font-black text-slate-900 font-display">₹{item.price}</span>
                       <span className="text-[9px] text-slate-400 font-medium">
                         {item.category === 'Hotel' ? '/night' : item.category === 'Scooty' ? '/day' : '/person'}
@@ -526,21 +579,26 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                   </div>
                 </div>
 
-                {/* ADD TO COMBO CART Button */}
+                {/* ADD TO COMBO CART Button (Disabled if Offline in Backend) */}
                 <div className="p-2 sm:p-2.5 border-t border-slate-100 bg-slate-50/50">
                   <button
                     type="button"
+                    disabled={item.isOffline}
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleCartItem(item);
                     }}
                     className={`w-full py-2 sm:py-2.5 rounded-xl font-extrabold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1 ${
-                      inCart 
+                      item.isOffline
+                        ? 'bg-slate-200 text-slate-500 border border-slate-300 cursor-not-allowed'
+                        : inCart 
                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' 
                         : 'bg-[#FF5F00] hover:bg-[#FF3E00] text-white shadow-md shadow-orange-500/20'
                     }`}
                   >
-                    {inCart ? (
+                    {item.isOffline ? (
+                      <span className="truncate">UNAVAILABLE</span>
+                    ) : inCart ? (
                       <>
                         <Check className="w-3.5 h-3.5 stroke-[3]" /> <span className="truncate">ADDED</span>
                       </>
@@ -584,19 +642,28 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
             <div className="relative h-48 w-full rounded-2xl overflow-hidden bg-slate-100">
               <img 
                 src={activeDetailItem.image} 
-                alt={activeDetailItem.name}
+                alt={activeDetailItem.vendorName || activeDetailItem.name}
                 className="w-full h-full object-cover"
               />
               <span className="absolute top-3 left-3 text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 rounded-lg">
                 {activeDetailItem.category}
               </span>
+
+              {activeDetailItem.isOffline && (
+                <span className="absolute top-3 right-3 bg-rose-600 text-white text-xs font-black px-3 py-1 rounded-lg">
+                  🔴 OFFLINE IN BACKEND
+                </span>
+              )}
             </div>
 
             {/* Title & Short Landmark Address */}
             <div>
               <h3 className="text-lg font-black text-slate-900 font-display">
-                {activeDetailItem.name}
+                {activeDetailItem.vendorName || activeDetailItem.name}
               </h3>
+              <p className="text-xs text-[#FF5F00] font-bold mt-0.5">
+                {activeDetailItem.name}
+              </p>
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-1">
                 <MapPin className="w-3.5 h-3.5 text-[#FF5F00]" />
                 {activeDetailItem.fullAddress}
@@ -605,7 +672,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
             {/* Description & Overview */}
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
-              <h4 className="font-bold text-slate-900 uppercase text-[10px] tracking-wider text-[#FF5F00]">Service Overview</h4>
+              <h4 className="font-bold text-slate-900 uppercase text-[10px] tracking-wider text-[#FF5F00]">Service & Operator Overview</h4>
               <p className="text-slate-600 leading-relaxed font-medium">
                 {activeDetailItem.description}
               </p>
@@ -614,23 +681,28 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
             {/* Price & Add to Cart Action */}
             <div className="pt-2 flex items-center justify-between border-t border-slate-100">
               <div>
-                <span className="text-[10px] text-slate-400 block font-bold uppercase">Rate</span>
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">Selected Rate</span>
                 <span className="text-xl font-black text-slate-900 font-display">₹{activeDetailItem.price}</span>
               </div>
 
               <button
                 type="button"
+                disabled={activeDetailItem.isOffline}
                 onClick={() => {
-                  toggleCartItem(activeDetailItem);
-                  setActiveDetailItem(null);
+                  if (!activeDetailItem.isOffline) {
+                    toggleCartItem(activeDetailItem);
+                    setActiveDetailItem(null);
+                  }
                 }}
                 className={`px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 ${
-                  isItemInCart(activeDetailItem.cartKey)
+                  activeDetailItem.isOffline
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                    : isItemInCart(activeDetailItem.cartKey)
                     ? 'bg-emerald-600 text-white'
                     : 'bg-[#FF5F00] text-white shadow-md shadow-orange-500/20'
                 }`}
               >
-                {isItemInCart(activeDetailItem.cartKey) ? '✓ In Cart' : '+ Add to Cart'}
+                {activeDetailItem.isOffline ? 'Unavailable' : isItemInCart(activeDetailItem.cartKey) ? '✓ In Cart' : '+ Add to Cart'}
               </button>
             </div>
 
