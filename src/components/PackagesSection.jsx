@@ -1,10 +1,25 @@
-import React from 'react';
-import CustomPackageBuilder from './CustomPackageBuilder';
+import React, { useState } from 'react';
+import TripGodSpecialBanner from './TripGodSpecialBanner';
+import CustomComboPage from '../pages/CustomComboPage';
 
 export default function PackagesSection({ onBookPackage }) {
+  const [showComboPage, setShowComboPage] = useState(false);
+
   return (
-    <div className="bg-gradient-to-b from-white via-slate-50/50 to-white border-y border-slate-100">
-      <CustomPackageBuilder onBookCustomCombo={onBookPackage} />
-    </div>
+    <>
+      <TripGodSpecialBanner onOpenComboBuilder={() => setShowComboPage(true)} />
+
+      {showComboPage && (
+        <CustomComboPage 
+          onClose={() => setShowComboPage(false)}
+          onBookCustomCombo={(bookingPayload) => {
+            setShowComboPage(false);
+            if (onBookPackage) {
+              onBookPackage(bookingPayload);
+            }
+          }}
+        />
+      )}
+    </>
   );
 }

@@ -144,7 +144,22 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
     reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
   });
 
-  // Package Management States
+  // Package Management & Dynamic Combo Discount States
+  const [comboDiscountRules, setComboDiscountRules] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tripgod_combo_discount_rules');
+      return saved ? JSON.parse(saved) : { tier2: 5, tier3: 10, tier4: 15, tier5: 20 };
+    } catch {
+      return { tier2: 5, tier3: 10, tier4: 15, tier5: 20 };
+    }
+  });
+
+  const handleSaveDiscountRules = (e) => {
+    e.preventDefault();
+    localStorage.setItem('tripgod_combo_discount_rules', JSON.stringify(comboDiscountRules));
+    alert('✅ Combo Discount Rules saved successfully! Website builder will now use these exact percentage rates.');
+  };
+
   const [packageModalOpen, setPackageModalOpen] = useState(false);
   const [editingPackageId, setEditingPackageId] = useState(null);
   const [packageFormData, setPackageFormData] = useState({
@@ -1133,26 +1148,91 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                 </button>
               </div>
 
-              {/* Live Discount Tiers Info Box */}
-              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider block">Tier 1 (2 Items)</span>
-                  <span className="text-lg font-black text-white">5% OFF Total</span>
-                  <p className="text-[11px] text-slate-400">Applied when customer selects 2 services (e.g. Hotel + Rafting)</p>
+              {/* Editable Dynamic Discount Percentage Controls */}
+              <form onSubmit={handleSaveDiscountRules} className="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <div>
+                    <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                      <Percent className="w-4 h-4 text-accent" /> Configure Live Percentage Discount Rules
+                    </h4>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Set custom discount percentages for customers adding multi-services to their cart on the website builder.
+                    </p>
+                  </div>
+                  <button
+                    type="submit"
+                    className="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer border-none shadow-md"
+                  >
+                    Save Rules
+                  </button>
                 </div>
 
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider block">Tier 2 (3 Items)</span>
-                  <span className="text-lg font-black text-white">10% OFF Total</span>
-                  <p className="text-[11px] text-slate-400">Applied when customer selects 3 services (e.g. Hotel + Rafting + Scooty)</p>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">2 Services Cart</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="50"
+                        value={comboDiscountRules.tier2}
+                        onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier2: Number(e.target.value) }))}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
+                      />
+                      <span className="text-white font-bold text-sm">% OFF</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">e.g., 2% or 5% OFF</span>
+                  </div>
 
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">Tier 3 (4+ Items)</span>
-                  <span className="text-lg font-black text-white">15% OFF Total</span>
-                  <p className="text-[11px] text-slate-400">Max Discount applied when 4 items selected (Hotel + Rafting + Scooty + Camping)</p>
+                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="text-[10px] font-black text-amber-400 uppercase tracking-wider block">3 Services Cart</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="50"
+                        value={comboDiscountRules.tier3}
+                        onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier3: Number(e.target.value) }))}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
+                      />
+                      <span className="text-white font-bold text-sm">% OFF</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">e.g., 8% or 10% OFF</span>
+                  </div>
+
+                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">4 Services Cart</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="50"
+                        value={comboDiscountRules.tier4}
+                        onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier4: Number(e.target.value) }))}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
+                      />
+                      <span className="text-white font-bold text-sm">% OFF</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">e.g., 12% or 15% OFF</span>
+                  </div>
+
+                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <label className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">5+ Services Cart</label>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="50"
+                        value={comboDiscountRules.tier5}
+                        onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier5: Number(e.target.value) }))}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
+                      />
+                      <span className="text-white font-bold text-sm">% OFF</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">e.g., 18% or 20% OFF</span>
+                  </div>
                 </div>
-              </div>
+              </form>
 
               {/* Packages List */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
