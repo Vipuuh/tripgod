@@ -5,16 +5,17 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
-// Helper to convert raw address text into clean short landmark badges like "📍 Tapovan", "📍 Triveni Ghat" (Matching Hotels Page Screenshot 4)
+// Helper to convert raw address text into clean short landmark badges like "📍 Tapovan", "📍 Janki Setu", "📍 Triveni Ghat"
 const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
   if (!fullAddress) return `📍 ${fallback}`;
   const lower = fullAddress.toLowerCase();
 
+  if (lower.includes('janki setu')) return '📍 Janki Setu';
   if (lower.includes('tapovan')) return '📍 Tapovan';
+  if (lower.includes('ramjhula') || lower.includes('ram jhula')) return '📍 Ram Jhula';
+  if (lower.includes('laxman') || lower.includes('lakshman')) return '📍 Laxman Jhula';
   if (lower.includes('triveni')) return '📍 Triveni Ghat';
   if (lower.includes('swarg') || lower.includes('geeta')) return '📍 Swarg Ashram';
-  if (lower.includes('laxman') || lower.includes('lakshman')) return '📍 Laxman Jhula';
-  if (lower.includes('ram jhula') || lower.includes('muni ki reti')) return '📍 Ram Jhula';
   if (lower.includes('shivpuri')) return '📍 Shivpuri';
   if (lower.includes('brahmpuri')) return '📍 Brahmpuri';
   if (lower.includes('gangakshetra')) return '📍 Gangakshetra';
@@ -23,99 +24,25 @@ const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
   return `📍 ${clean || fallback}`;
 };
 
-// Real Verified Rafting Vendor Operators List
-const RAFTING_VENDORS = [
-  {
-    id: 'rafting-vendor-[#FF5F00]',
-    category: 'Rafting',
-    vendorName: 'HB Evergreen Adventure',
-    location: '📍 Tapovan / Shivpuri',
-    fullAddress: 'HB Evergreen Office, Tapovan Main Market, Rishikesh',
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
-    description: 'HB Evergreen Adventure offers certified river guides, cliff jumping, imported safety rafts & waterproof bag support.',
-    isActive: true,
-    stretches: [
-      { id: '12km', name: '12 KM Brahmpuri Rafting', price: 599 },
-      { id: '16km', name: '16 KM Shivpuri Rafting (Popular)', price: 899 },
-      { id: '24km', name: '24 KM Marine Drive Rafting', price: 1499 },
-      { id: '32km', name: '32 KM Kaudiyala Extreme Rafting', price: 2499 }
-    ]
-  },
-  {
-    id: 'rafting-vendor-redchilli',
-    category: 'Rafting',
-    vendorName: 'Red Chilli Adventure Rafting',
-    location: '📍 Shivpuri Point',
-    fullAddress: 'Shivpuri Rafting Launch Office, Rishikesh',
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=600',
-    description: 'Certified river guides, imported high-grade rafts, cliff jumping & safety kayak support included.',
-    isActive: true,
-    stretches: [
-      { id: '12km', name: '12 KM Brahmpuri Rafting', price: 599 },
-      { id: '16km', name: '16 KM Shivpuri Rafting', price: 899 },
-      { id: '24km', name: '24 KM Marine Drive Rafting', price: 1499 }
-    ]
-  },
-  {
-    id: 'rafting-vendor-gangawaves',
-    category: 'Rafting',
-    vendorName: 'Ganga Waves Expedition',
-    location: '📍 Brahmpuri Point',
-    fullAddress: 'Brahmpuri Office, Tapovan Bypass, Rishikesh',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1533587851505-d119e13fa0d7?q=80&w=600',
-    description: 'Specializes in family-friendly rafting with helmet, life jacket & complimentary cliff jump.',
-    isActive: true,
-    stretches: [
-      { id: '12km', name: '12 KM Brahmpuri Rafting', price: 550 },
-      { id: '16km', name: '16 KM Shivpuri Rafting', price: 850 },
-      { id: '24km', name: '24 KM Marine Drive Rafting', price: 1399 }
-    ]
-  }
+// Fallback Preset Stretches & Vehicles for Vendors
+const DEFAULT_RAFTING_STRETCHES = [
+  { id: '12km', name: '12 KM Brahmpuri Rafting', price: 599 },
+  { id: '16km', name: '16 KM Shivpuri Rafting', price: 899 },
+  { id: '24km', name: '24 KM Marine Drive Rafting', price: 1499 },
+  { id: '36km', name: '36 KM Kaudiyala Extreme', price: 2499 }
 ];
 
-// Real Verified Scooty & Bike Rental Vendors List
-const BIKE_VENDORS = [
-  {
-    id: 'bike-vendor-hbevergreen',
-    category: 'Scooty',
-    vendorName: 'HB Bike Rental & Scooty Stand',
-    location: '📍 Tapovan',
-    fullAddress: 'HB Bike Stand, Laxman Jhula Road, Tapovan, Rishikesh',
-    rating: 4.9,
-    image: '/classic-rent.png',
-    description: 'Automatic scooters & Royal Enfield bikes with 1 Helmet, unlimited KM riding in Rishikesh & clean documentation.',
-    isActive: true,
-    vehicles: [
-      { id: 'activa6g', name: 'Honda Activa 6G', price: 500 },
-      { id: 'access125', name: 'Suzuki Access 125', price: 550 },
-      { id: 'jupiter125', name: 'TVS Jupiter 125', price: 500 },
-      { id: 'bullet350', name: 'Royal Enfield Classic 350', price: 1200 }
-    ]
-  },
-  {
-    id: 'bike-vendor-ramjhula',
-    category: 'Scooty',
-    vendorName: 'Ram Jhula Scooter Stand',
-    location: '📍 Ram Jhula',
-    fullAddress: 'Ram Jhula Parking Stand, Muni Ki Reti, Rishikesh',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=600',
-    description: 'Prime location pickup near Ram Jhula bridge. Clean helmet & 24/7 roadside assistance.',
-    isActive: true,
-    vehicles: [
-      { id: 'activa125', name: 'Honda Activa 125', price: 550 },
-      { id: 'access125', name: 'Suzuki Access 125', price: 550 },
-      { id: 'nmax155', name: 'Yamaha Aerox / NMax', price: 900 }
-    ]
-  }
+const DEFAULT_BIKE_VEHICLES = [
+  { id: 'activa6g', name: 'Honda Activa 6G', price: 500 },
+  { id: 'access125', name: 'Suzuki Access 125', price: 550 },
+  { id: 'jupiter125', name: 'TVS Jupiter 125', price: 500 },
+  { id: 'bullet350', name: 'Royal Enfield Classic 350', price: 1200 }
 ];
 
 export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // Database State Lists
   const [hotels, setHotels] = useState([]);
+  const [dbVendors, setDbVendors] = useState([]);
   const [dbRafting, setDbRafting] = useState([]);
   const [dbBikes, setDbBikes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -124,16 +51,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   const [activeCategory, setActiveCategory] = useState('all');
 
   // Vendor Selections Map (vendorId -> selectedStretchId / selectedVehicleId)
-  const [raftingStretchMap, setRaftingStretchMap] = useState({
-    'rafting-vendor-hbevergreen': '16km',
-    'rafting-vendor-redchilli': '16km',
-    'rafting-vendor-gangawaves': '16km'
-  });
-
-  const [bikeVehicleMap, setBikeVehicleMap] = useState({
-    'bike-vendor-hbevergreen': 'activa6g',
-    'bike-vendor-ramjhula': 'activa125'
-  });
+  const [raftingStretchMap, setRaftingStretchMap] = useState({});
+  const [bikeVehicleMap, setBikeVehicleMap] = useState({});
 
   // Active Service Details Drawer State
   const [activeDetailItem, setActiveDetailItem] = useState(null);
@@ -170,15 +89,18 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
       const [
         { data: hData },
+        { data: vData },
         { data: rData },
         { data: bData }
       ] = await Promise.all([
         supabase.from('hotels').select('*').order('name'),
+        supabase.from('vendors').select('*').order('name'),
         supabase.from('rafting').select('*').order('price'),
         supabase.from('bikes').select('*').order('price')
       ]);
 
       if (hData) setHotels(hData);
+      if (vData) setDbVendors(vData);
       if (rData) setDbRafting(rData);
       if (bData) setDbBikes(bData);
     } catch (err) {
@@ -256,7 +178,18 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     window.open(`https://wa.me/919876543210?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // Build Hotel Display List
+  // Helper to extract image URL from vendor object
+  const getVendorImage = (v, defaultImg) => {
+    if (v.photos && Array.isArray(v.photos) && v.photos.length > 0) return v.photos[0];
+    if (v.images && Array.isArray(v.images) && v.images.length > 0) return v.images[0];
+    if (typeof v.photos === 'string' && v.photos.startsWith('http')) return v.photos;
+    if (typeof v.images === 'string' && v.images.startsWith('http')) return v.images;
+    if (v.shop_photo) return v.shop_photo;
+    if (v.logo) return v.logo;
+    return defaultImg;
+  };
+
+  // 1. Build Hotel Display List
   const hotelsCardList = hotels.map(h => {
     const isOffline = h.is_active === false || h.is_closed === true;
     return {
@@ -275,72 +208,73 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     };
   });
 
-  // Build Rafting Vendor Display List
-  const raftingCardList = RAFTING_VENDORS.map(rv => {
-    const selectedStretchId = raftingStretchMap[rv.id] || '16km';
-    const stretchObj = rv.stretches.find(s => s.id === selectedStretchId) || rv.stretches[0];
+  // 2. Build Vendor Rafting Cards from Database + Fallbacks
+  const dbVendorRaftingCards = dbVendors
+    .filter(v => {
+      const cat = (v.service_category || v.category || '').toLowerCase();
+      return cat.includes('rafting') || cat.includes('multi-service') || cat.includes('all services');
+    })
+    .map(v => {
+      const isOffline = v.status === 'INACTIVE' || v.is_active === false;
+      const vName = v.company_name || v.name || 'Rishikesh Rafting Crew';
+      const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Tapovan');
+      const img = getVendorImage(v, 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600');
 
-    return {
-      cartKey: `rafting-${rv.id}-${stretchObj.id}`,
-      id: rv.id,
-      category: 'Rafting',
-      name: `${stretchObj.name}`,
-      vendorName: rv.vendorName,
-      price: stretchObj.price,
-      landmarkLocation: rv.location,
-      fullAddress: rv.fullAddress,
-      image: rv.image,
-      rating: rv.rating,
-      description: rv.description,
-      isOffline: !rv.isActive,
-      isRaftingVendor: true,
-      stretches: rv.stretches,
-      currentStretchId: stretchObj.id
-    };
-  });
+      const selectedStretchId = raftingStretchMap[v.id] || '16km';
+      const stretchObj = DEFAULT_RAFTING_STRETCHES.find(s => s.id === selectedStretchId) || DEFAULT_RAFTING_STRETCHES[1];
 
-  // Also include any Supabase DB Rafting Items
-  const dbRaftingCardList = dbRafting.map(r => {
-    const isOffline = r.is_active === false || r.is_closed === true;
-    return {
-      cartKey: `db-rafting-${r.id}`,
-      id: r.id,
-      category: 'Rafting',
-      name: r.name,
-      vendorName: r.operator_name || r.name,
-      price: Number(r.price),
-      landmarkLocation: toShortLandmark(r.location, 'Shivpuri'),
-      fullAddress: r.route || 'Shivpuri, Rishikesh',
-      image: (r.images && r.images[0]) || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
-      rating: 4.8,
-      isOffline,
-      description: r.description || 'Includes certified river guide, life jackets & cliff jumping.'
-    };
-  });
+      return {
+        cartKey: `v-rafting-${v.id}-${stretchObj.id}`,
+        id: v.id,
+        category: 'Rafting',
+        name: stretchObj.name,
+        vendorName: vName,
+        price: stretchObj.price,
+        landmarkLocation: landmark,
+        fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
+        image: img,
+        rating: v.rating || 4.8,
+        description: `${vName} offers certified river rafting guides, safety life jackets, helmet & cliff jumping in Rishikesh.`,
+        isOffline,
+        isRaftingVendor: true,
+        stretches: DEFAULT_RAFTING_STRETCHES,
+        currentStretchId: stretchObj.id
+      };
+    });
 
-  // Build Scooty Vendor Display List
-  const bikeCardList = BIKE_VENDORS.map(bv => {
-    const selectedVehId = bikeVehicleMap[bv.id] || 'activa6g';
-    const vehicleObj = bv.vehicles.find(v => v.id === selectedVehId) || bv.vehicles[0];
+  // 3. Build Vendor Scooty / Bike Rental Cards from Database + Fallbacks
+  const dbVendorBikeCards = dbVendors
+    .filter(v => {
+      const cat = (v.service_category || v.category || '').toLowerCase();
+      return cat.includes('bike') || cat.includes('scooty') || cat.includes('multi-service') || cat.includes('all services');
+    })
+    .map(v => {
+      const isOffline = v.status === 'INACTIVE' || v.is_active === false;
+      const vName = v.company_name || v.name || 'Rishikesh Bike Rental';
+      const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
+      const img = getVendorImage(v, '/classic-rent.png');
 
-    return {
-      cartKey: `bike-${bv.id}-${vehicleObj.id}`,
-      id: bv.id,
-      category: 'Scooty',
-      name: `${vehicleObj.name}`,
-      vendorName: bv.vendorName,
-      price: vehicleObj.price,
-      landmarkLocation: bv.location,
-      fullAddress: bv.fullAddress,
-      image: bv.image,
-      rating: bv.rating,
-      description: bv.description,
-      isOffline: !bv.isActive,
-      isBikeVendor: true,
-      vehicles: bv.vehicles,
-      currentVehicleId: vehicleObj.id
-    };
-  });
+      const selectedVehId = bikeVehicleMap[v.id] || 'activa6g';
+      const vehicleObj = DEFAULT_BIKE_VEHICLES.find(veh => veh.id === selectedVehId) || DEFAULT_BIKE_VEHICLES[0];
+
+      return {
+        cartKey: `v-bike-${v.id}-${vehicleObj.id}`,
+        id: v.id,
+        category: 'Scooty',
+        name: vehicleObj.name,
+        vendorName: vName,
+        price: vehicleObj.price,
+        landmarkLocation: landmark,
+        fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
+        image: img,
+        rating: v.rating || 4.7,
+        description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
+        isOffline,
+        isBikeVendor: true,
+        vehicles: DEFAULT_BIKE_VEHICLES,
+        currentVehicleId: vehicleObj.id
+      };
+    });
 
   const campingCardItem = {
     cartKey: 'camping-upgrade-item',
@@ -359,9 +293,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
   const allDisplayItems = [
     ...hotelsCardList,
-    ...raftingCardList,
-    ...dbRaftingCardList,
-    ...bikeCardList,
+    ...dbVendorRaftingCards,
+    ...dbVendorBikeCards,
     campingCardItem
   ];
 
@@ -398,7 +331,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
         <div className="bg-[#FFF8F5] text-slate-900 rounded-2xl p-4 sm:p-5 mb-5 border border-[#FF5F00]/25 shadow-xs relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF5F00]/10 rounded-full blur-2xl pointer-events-none" />
           
-          <div className="relative z-10 space-y-1.5">
+          <div className="relative z-10 space-y-1">
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] text-[10px] font-black uppercase tracking-wider">
               <Sparkles className="w-3 h-3 text-[#FF5F00]" />
               BUY MORE, SAVE MORE
@@ -411,7 +344,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
             </p>
           </div>
 
-          {/* Compact Unlock Progress Tracker */}
+          {/* Compact Unlock Progress Tracker (Clean Text, No Broken Emojis) */}
           <div className="mt-3 pt-3 border-t border-[#FF5F00]/15 space-y-2">
             <div className="flex justify-between items-center text-xs">
               <span className="font-extrabold text-slate-900 flex items-center gap-1 text-[11px]">
@@ -419,12 +352,13 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                 Cart Tier: <strong className="text-[#FF5F00]">{discountPercent}% OFF APPLIED</strong>
               </span>
 
-              <span className="text-[10px] font-extrabold text-[#FF5F00] bg-[#FF5F00]/10 border border-[#FF5F00]/20 px-2.5 py-0.5 rounded-full">
-                {cartCount === 0 && "💡 Add 2 items for 5% OFF!"}
-                {cartCount === 1 && "💡 Add 1 more item for 5% OFF!"}
-                {cartCount === 2 && "🔥 Add 1 more item for 10% OFF!"}
-                {cartCount === 3 && "👑 Add 1 more item for 15% OFF!"}
-                {cartCount >= 4 && "🎉 MAX DISCOUNT UNLOCKED!"}
+              <span className="text-[10px] font-extrabold text-[#FF5F00] bg-[#FF5F00]/10 border border-[#FF5F00]/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-[#FF5F00]" />
+                {cartCount === 0 && "Add 2 items to unlock 5% OFF!"}
+                {cartCount === 1 && "Add 1 more item for 5% OFF!"}
+                {cartCount === 2 && "Add 1 more item for 10% OFF!"}
+                {cartCount === 3 && "Add 1 more item for 15% OFF!"}
+                {cartCount >= 4 && "MAX DISCOUNT TIER UNLOCKED!"}
               </span>
             </div>
 
@@ -518,7 +452,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                       {item.vendorName || item.name}
                     </h3>
                     
-                    {/* Clean Short Landmark Address (Matching Screenshot 4: 📍 Tapovan, 📍 Triveni Ghat) */}
+                    {/* Clean Short Landmark Address */}
                     <div className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                       <span>{item.landmarkLocation}</span>
                     </div>
