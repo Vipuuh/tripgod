@@ -204,13 +204,16 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   }
 
   // Calculate pricing
-  const basePrice = (activity && activity.price) || 0;
+  const isCombo = activity && (activity.category === 'combo' || activity.type === 'custom_combo' || activity.totalPrice !== undefined);
+  const basePrice = (activity && (activity.price || activity.final_price)) || 0;
   const pricePerPerson = basePrice;
-  const rawTotalPrice = isBikeRent
-    ? pricePerPerson * guests * rentalDays
-    : (activity && (activity.category === 'hotels' || (activity.category === 'camping' && activity.room_price))
-        ? basePrice * nights
-        : pricePerPerson * guests);
+  const rawTotalPrice = isCombo
+    ? Number(activity.totalPrice || (basePrice * guests))
+    : (isBikeRent
+        ? pricePerPerson * guests * rentalDays
+        : (activity && (activity.category === 'hotels' || (activity.category === 'camping' && activity.room_price))
+            ? basePrice * nights
+            : pricePerPerson * guests));
   
   const isHotel = activity && activity.category === 'hotels';
 
@@ -220,7 +223,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
   // Calculate dynamic advance amount based on Fixed Advance Amount (₹) or percentage
   let calculatedAdvance = 0;
-  if (paymentMode === 'full_payment') {
+  if (isCombo && activity.advance_amount) {
+    calculatedAdvance = Number(activity.advance_amount);
+  } else if (paymentMode === 'full_payment') {
     calculatedAdvance = totalPrice;
   } else if (fixedAdvanceAmount > 0) {
     const units = isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests);
@@ -230,8 +235,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     const units = isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests);
     calculatedAdvance = Math.min(totalPrice, flatPerUnit * units + taxes);
   } else {
-    // Percentage %
-    calculatedAdvance = Math.round(totalPrice * (commVal / 100));
+    // Percentage % (Default 10% advance)
+    const commRate = commVal || 10;
+    calculatedAdvance = Math.max(1, Math.round(totalPrice * (commRate / 100)));
   }
 
   // If payment mode is full_payment, force paymentOption to 'full'
