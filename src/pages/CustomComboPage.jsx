@@ -39,6 +39,46 @@ const DEFAULT_BIKE_VEHICLES = [
   { id: 'bullet350', name: 'Royal Enfield Classic 350', price: 1200 }
 ];
 
+// Initial Fallback Vendors if Database is empty
+const FALLBACK_VENDORS = [
+  {
+    id: 'v-fallback-hbevergreen',
+    company_name: 'HB Evergreen Adventure',
+    category: 'Multi-Service / All Services',
+    landmark: 'Janki Setu',
+    star_rating: 4.5,
+    status: 'ACTIVE',
+    shop_images: ['https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600']
+  },
+  {
+    id: 'v-fallback-brothers',
+    company_name: 'Brothers Adventure tour & travels',
+    category: 'Bike Rental',
+    landmark: 'Rishikesh Bus Stand',
+    star_rating: 4.4,
+    status: 'ACTIVE',
+    shop_images: ['/classic-rent.png']
+  },
+  {
+    id: 'v-fallback-hikenride',
+    company_name: 'Hike N Ride',
+    category: 'Bike Rental',
+    landmark: 'Janki Setu',
+    star_rating: 4.6,
+    status: 'ACTIVE',
+    shop_images: ['/classic-rent.png']
+  },
+  {
+    id: 'v-fallback-hillbrook',
+    company_name: 'Hill Brook Adventure',
+    category: 'Multi-Service / All Services',
+    landmark: 'Laxman Jhula',
+    star_rating: 4.7,
+    status: 'ACTIVE',
+    shop_images: ['https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=600']
+  }
+];
+
 export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // Database State Lists
   const [hotels, setHotels] = useState([]);
@@ -100,7 +140,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       ]);
 
       if (hData) setHotels(hData);
-      if (vData) setDbVendors(vData);
+      if (vData && vData.length > 0) setDbVendors(vData);
       if (rData) setDbRafting(rData);
       if (bData) setDbBikes(bData);
     } catch (err) {
@@ -108,6 +148,28 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to extract REAL uploaded shop image from vendor object (set during onboarding)
+  const getRealVendorImage = (v, defaultImg) => {
+    if (!v) return defaultImg;
+    if (v.shop_image && typeof v.shop_image === 'string' && v.shop_image.length > 5) return v.shop_image;
+    if (v.shop_images && Array.isArray(v.shop_images) && v.shop_images.length > 0 && String(v.shop_images[0]).length > 5) return v.shop_images[0];
+    if (v.photos && Array.isArray(v.photos) && v.photos.length > 0 && String(v.photos[0]).length > 5) return v.photos[0];
+    if (v.images && Array.isArray(v.images) && v.images.length > 0 && String(v.images[0]).length > 5) return v.images[0];
+    if (typeof v.photos === 'string' && v.photos.length > 5) return v.photos;
+    if (typeof v.images === 'string' && v.images.length > 5) return v.images;
+    if (v.shop_photo && typeof v.shop_photo === 'string') return v.shop_photo;
+    if (v.logo && typeof v.logo === 'string') return v.logo;
+    return defaultImg;
+  };
+
+  // Helper to extract REAL rating from vendor object (set during onboarding)
+  const getRealVendorRating = (v) => {
+    if (!v) return '4.5';
+    const r = v.star_rating || v.rating || v.vendor_rating;
+    if (r && !isNaN(r)) return Number(r).toFixed(1);
+    return '4.5';
   };
 
   // Toggle Item in Cart
@@ -178,17 +240,6 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     window.open(`https://wa.me/919876543210?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // Helper to extract image URL from vendor object
-  const getVendorImage = (v, defaultImg) => {
-    if (v.photos && Array.isArray(v.photos) && v.photos.length > 0) return v.photos[0];
-    if (v.images && Array.isArray(v.images) && v.images.length > 0) return v.images[0];
-    if (typeof v.photos === 'string' && v.photos.startsWith('http')) return v.photos;
-    if (typeof v.images === 'string' && v.images.startsWith('http')) return v.images;
-    if (v.shop_photo) return v.shop_photo;
-    if (v.logo) return v.logo;
-    return defaultImg;
-  };
-
   // 1. Build Hotel Display List
   const hotelsCardList = hotels.map(h => {
     const isOffline = h.is_active === false || h.is_closed === true;
@@ -208,17 +259,21 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     };
   });
 
-  // 2. Build Vendor Rafting Cards from Database + Fallbacks
-  const dbVendorRaftingCards = dbVendors
+  // Effective Vendor List (Uses Real Database Vendors)
+  const effectiveVendors = dbVendors.length > 0 ? dbVendors : FALLBACK_VENDORS;
+
+  // 2. Build Vendor Rafting Cards from Real Database Vendors
+  const dbVendorRaftingCards = effectiveVendors
     .filter(v => {
       const cat = (v.service_category || v.category || '').toLowerCase();
-      return cat.includes('rafting') || cat.includes('multi-service') || cat.includes('all services');
+      return cat.includes('rafting') || cat.includes('multi-service') || cat.includes('all services') || cat.includes('adventure');
     })
     .map(v => {
       const isOffline = v.status === 'INACTIVE' || v.is_active === false;
       const vName = v.company_name || v.name || 'Rishikesh Rafting Crew';
       const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Tapovan');
-      const img = getVendorImage(v, 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600');
+      const img = getRealVendorImage(v, 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600');
+      const rating = getRealVendorRating(v);
 
       const selectedStretchId = raftingStretchMap[v.id] || '16km';
       const stretchObj = DEFAULT_RAFTING_STRETCHES.find(s => s.id === selectedStretchId) || DEFAULT_RAFTING_STRETCHES[1];
@@ -233,7 +288,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
         landmarkLocation: landmark,
         fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
         image: img,
-        rating: v.rating || 4.8,
+        rating,
         description: `${vName} offers certified river rafting guides, safety life jackets, helmet & cliff jumping in Rishikesh.`,
         isOffline,
         isRaftingVendor: true,
@@ -242,8 +297,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       };
     });
 
-  // 3. Build Vendor Scooty / Bike Rental Cards from Database + Fallbacks
-  const dbVendorBikeCards = dbVendors
+  // 3. Build Vendor Scooty / Bike Rental Cards from Real Database Vendors
+  const dbVendorBikeCards = effectiveVendors
     .filter(v => {
       const cat = (v.service_category || v.category || '').toLowerCase();
       return cat.includes('bike') || cat.includes('scooty') || cat.includes('multi-service') || cat.includes('all services');
@@ -252,7 +307,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       const isOffline = v.status === 'INACTIVE' || v.is_active === false;
       const vName = v.company_name || v.name || 'Rishikesh Bike Rental';
       const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
-      const img = getVendorImage(v, '/classic-rent.png');
+      const img = getRealVendorImage(v, '/classic-rent.png');
+      const rating = getRealVendorRating(v);
 
       const selectedVehId = bikeVehicleMap[v.id] || 'activa6g';
       const vehicleObj = DEFAULT_BIKE_VEHICLES.find(veh => veh.id === selectedVehId) || DEFAULT_BIKE_VEHICLES[0];
@@ -267,7 +323,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
         landmarkLocation: landmark,
         fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
         image: img,
-        rating: v.rating || 4.7,
+        rating,
         description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
         isOffline,
         isBikeVendor: true,
@@ -286,7 +342,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     landmarkLocation: '📍 Shivpuri',
     fullAddress: 'Shivpuri Riverside Campsite, Rishikesh',
     image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600',
-    rating: 4.9,
+    rating: '4.9',
     isOffline: false,
     description: 'Includes Campfire, Evening Snacks, Live Music, Buffet Dinner, Breakfast & Swimming Pool Access.'
   };
@@ -331,7 +387,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
         <div className="bg-[#FFF8F5] text-slate-900 rounded-2xl p-4 sm:p-5 mb-5 border border-[#FF5F00]/25 shadow-xs relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF5F00]/10 rounded-full blur-2xl pointer-events-none" />
           
-          <div className="relative z-10 space-y-1">
+          <div className="relative z-10 space-y-1.5">
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] text-[10px] font-black uppercase tracking-wider">
               <Sparkles className="w-3 h-3 text-[#FF5F00]" />
               BUY MORE, SAVE MORE
@@ -423,7 +479,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                   onClick={() => setActiveDetailItem(item)}
                   className="cursor-pointer flex-1"
                 >
-                  {/* Card Image */}
+                  {/* Card Image: REAL Vendor Uploaded Shop Photo */}
                   <div className="relative h-32 sm:h-40 w-full bg-slate-100 overflow-hidden">
                     <img 
                       src={item.image} 
@@ -434,7 +490,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                       {item.category}
                     </span>
 
-                    {/* Offline Badge */}
+                    {/* Offline Badge vs Real Rating Badge */}
                     {item.isOffline ? (
                       <span className="absolute top-2 right-2 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs">
                         🔴 OFFLINE
@@ -452,7 +508,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                       {item.vendorName || item.name}
                     </h3>
                     
-                    {/* Clean Short Landmark Address */}
+                    {/* Clean Short Landmark Address (Matching Onboarding DB: 📍 Janki Setu, 📍 Tapovan, etc.) */}
                     <div className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                       <span>{item.landmarkLocation}</span>
                     </div>
