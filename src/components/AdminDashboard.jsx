@@ -1841,7 +1841,30 @@ function ReelsManager() {
 
     const dbIds = new Set(supabaseReels.map(r => String(r.id)));
     const uniqueLocal = localReels.filter(r => !dbIds.has(String(r.id)));
-    const combined = [...supabaseReels, ...uniqueLocal].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+
+    // Attempt auto-sync of local-only reels to Supabase database if RLS permits
+    if (uniqueLocal.length > 0) {
+      for (const reel of uniqueLocal) {
+        try {
+          const { created_at, ...payload } = reel;
+          const { data, error } = await supabase.from('customer_reels').insert([payload]).select();
+          if (!error && data && data.length > 0) {
+            console.log('Auto-synced local reel to Supabase database:', reel.id);
+            supabaseReels.push(data[0]);
+            dbIds.add(String(data[0].id));
+            // Remove from local storage once in DB
+            const freshLocal = JSON.parse(localStorage.getItem('tripgod_customer_reels') || '[]');
+            const updated = freshLocal.filter(r => String(r.id) !== String(reel.id));
+            localStorage.setItem('tripgod_customer_reels', JSON.stringify(updated));
+          }
+        } catch (e) {
+          // Silent catch
+        }
+      }
+    }
+
+    const remainingLocal = localReels.filter(r => !dbIds.has(String(r.id)));
+    const combined = [...supabaseReels, ...remainingLocal].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
 
     setReels(combined);
     setLoading(false);
@@ -1885,7 +1908,7 @@ function ReelsManager() {
         
         if (error) {
           console.error('Supabase update error:', error);
-          alert('Supabase Notice: ' + error.message + '\n\nReel will be saved locally as fallback.');
+          alert('⚠️ Supabase Security Policy Notice:\n\n' + error.message + '\n\nReel will be saved locally on this browser as fallback, but won\'t show on mobile/other devices until Supabase RLS policy is updated in SQL Editor.');
         } else {
           dbSuccess = true;
           savedItem = data && data[0] ? data[0] : { ...form, id: editingReel.id };
@@ -1903,7 +1926,7 @@ function ReelsManager() {
 
         if (error) {
           console.error('Supabase insert error:', error);
-          alert('Supabase Notice: ' + error.message + '\n\nReel will be saved locally as fallback.');
+          alert('⚠️ Supabase Security Policy Notice:\n\n' + error.message + '\n\nReel will be saved locally on this browser as fallback, but won\'t show on mobile/other devices until Supabase RLS policy is updated in SQL Editor.');
           savedItem = newItem;
         } else {
           dbSuccess = true;

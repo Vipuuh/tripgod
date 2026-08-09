@@ -63,14 +63,10 @@ DROP POLICY IF EXISTS "Allow public delete on rafting" ON rafting;
 
 CREATE POLICY "Public read rafting" ON rafting FOR SELECT USING (true);
 
--- Customer Reels
-DROP POLICY IF EXISTS "Public read customer_reels" ON customer_reels;
-DROP POLICY IF EXISTS "Allow public read on customer_reels" ON customer_reels;
-DROP POLICY IF EXISTS "Allow public insert on customer_reels" ON customer_reels;
-DROP POLICY IF EXISTS "Allow public update on customer_reels" ON customer_reels;
-DROP POLICY IF EXISTS "Allow public delete on customer_reels" ON customer_reels;
-
 CREATE POLICY "Public read customer_reels" ON customer_reels FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on customer_reels" ON customer_reels FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on customer_reels" ON customer_reels FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete on customer_reels" ON customer_reels FOR DELETE USING (true);
 
 -- =========================================================================
 -- 3. SENSITIVE TRANSACTIONAL TABLES (Bookings & Abandoned Carts)
