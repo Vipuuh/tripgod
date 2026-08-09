@@ -115,13 +115,13 @@ export default function PackagesSection({ onBookPackage }) {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF5F00]/10 border border-[#FF5F00]/20 text-[#FF5F00] text-[10px] sm:text-xs font-black uppercase tracking-wider mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#FF5F00]" />
-            EXCLUSIVE COMBO DEALS
+            INSTANT COMBO PASSES
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-neutral-900 font-display tracking-tight leading-tight">
-            Hot Pre-Built Packages <span className="text-[#FF5F00]">(Save Up To 30%)</span>
+            Rishikesh Self-Service Combos <span className="text-[#FF5F00]">(Save Up To 30%)</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl font-medium">
-            Book complete Rishikesh adventure bundles — Hotel Stay, River Rafting & Scooty Rental packed together at discounted partner rates.
+            Book Stay, Rafting & Scooty together. Get instant digital passes with direct vendor addresses, Google Maps links & slot timings delivered on WhatsApp!
           </p>
         </div>
 

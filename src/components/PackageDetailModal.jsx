@@ -178,6 +178,27 @@ export default function PackageDetailModal({ packageData, onClose, onBookNow }) 
             )}
           </div>
 
+          {/* How Self-Service Pass Works Info Banner */}
+          <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-500/30 rounded-2xl p-4 space-y-2">
+            <h4 className="text-xs font-black uppercase text-orange-400 tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4" /> How Self-Service Combo Passes Work
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-300 font-medium">
+              <div className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 font-bold flex items-center justify-center text-[10px] shrink-0">1</span>
+                <span><strong>Book Online:</strong> Get up to 30% combo discount instantly online.</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 font-bold flex items-center justify-center text-[10px] shrink-0">2</span>
+                <span><strong>Get Instant Passes:</strong> Receive WhatsApp vouchers with direct Google Map links & reporting times.</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 font-bold flex items-center justify-center text-[10px] shrink-0">3</span>
+                <span><strong>Self-Paced Visit:</strong> Show your pass at Hotel / Rafting / Scooty counters & enjoy!</span>
+              </div>
+            </div>
+          </div>
+
           {/* Included Activities Breakdown */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
