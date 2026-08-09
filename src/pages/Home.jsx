@@ -11,6 +11,7 @@ import CountUp from '../components/CountUp';
 import { supabase } from '../supabase';
 import CustomerReelSection from '../components/CustomerReelSection';
 import ExploreDestinations from '../components/ExploreDestinations';
+import PackagesSection from '../components/PackagesSection';
 
 function ExpandableText({ text, maxLength = 90, className = "" }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1223,6 +1224,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
       {/* 2.2. Explore Top Destinations Section */}
       <ExploreDestinations setRoute={setRoute} />
+
+      {/* 2.3. Hot Combo Packages Section */}
+      <PackagesSection onBookPackage={openBookingModal} />
 
       {/* 2.5. Recommended Hotels Section */}
       <div className="py-20 border-b border-black/5 bg-white">
