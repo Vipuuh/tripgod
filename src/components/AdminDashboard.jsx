@@ -1105,8 +1105,8 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-950 border border-slate-800 p-6 rounded-2xl gap-4">
                 <div>
-                  <h3 className="text-lg font-black text-white font-display">🔥 COMBOS & PACKAGES CONTROL PANEL</h3>
-                  <p className="text-xs text-slate-400 mt-1">Create, edit, toggle status & set Flat/Percentage discounts for Rishikesh packages</p>
+                  <h3 className="text-lg font-black text-white font-display">🔥 DYNAMIC COMBO DISCOUNT RULES & BUILDER CONTROL</h3>
+                  <p className="text-xs text-slate-400 mt-1">Customers build their custom bundles on the frontend (Hotel + Rafting + Scooty + Camping) with live percentage tier discounts</p>
                 </div>
                 <button
                   onClick={() => {
@@ -1129,8 +1129,29 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                   }}
                   className="py-3 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:scale-102 transition-all border-none cursor-pointer flex items-center gap-1.5"
                 >
-                  <Plus size={16} /> <span>Create New Combo Package</span>
+                  <Plus size={16} /> <span>Create Preset Combo</span>
                 </button>
+              </div>
+
+              {/* Live Discount Tiers Info Box */}
+              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider block">Tier 1 (2 Items)</span>
+                  <span className="text-lg font-black text-white">5% OFF Total</span>
+                  <p className="text-[11px] text-slate-400">Applied when customer selects 2 services (e.g. Hotel + Rafting)</p>
+                </div>
+
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider block">Tier 2 (3 Items)</span>
+                  <span className="text-lg font-black text-white">10% OFF Total</span>
+                  <p className="text-[11px] text-slate-400">Applied when customer selects 3 services (e.g. Hotel + Rafting + Scooty)</p>
+                </div>
+
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">Tier 3 (4+ Items)</span>
+                  <span className="text-lg font-black text-white">15% OFF Total</span>
+                  <p className="text-[11px] text-slate-400">Max Discount applied when 4 items selected (Hotel + Rafting + Scooty + Camping)</p>
+                </div>
               </div>
 
               {/* Packages List */}
