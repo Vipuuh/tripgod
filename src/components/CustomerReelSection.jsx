@@ -27,9 +27,11 @@ const getInstagramId = (url) => {
   return match ? match[1] : null;
 };
 
-// Single Reel Card with clean video view & sound control
+// Single Reel Card with original size, tap to play/pause, and sound control
 function ReelCard({ reel }) {
   const [muted, setMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [showIndicator, setShowIndicator] = useState(null);
   const videoRef = useRef(null);
   const iframeRef = useRef(null);
   const cardRef = useRef(null);
@@ -42,9 +44,23 @@ function ReelCard({ reel }) {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            setIsPlaying(true);
             if (videoRef.current) videoRef.current.play().catch(() => {});
+            if (iframeRef.current && youtubeId) {
+              iframeRef.current.contentWindow?.postMessage(
+                JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+                '*'
+              );
+            }
           } else {
+            setIsPlaying(false);
             if (videoRef.current) videoRef.current.pause();
+            if (iframeRef.current && youtubeId) {
+              iframeRef.current.contentWindow?.postMessage(
+                JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }),
+                '*'
+              );
+            }
           }
         });
       },
@@ -73,26 +89,50 @@ function ReelCard({ reel }) {
     }
   };
 
+  const togglePlayPause = (e) => {
+    if (e) e.stopPropagation();
+    const nextPlaying = !isPlaying;
+    setIsPlaying(nextPlaying);
+
+    setShowIndicator(nextPlaying ? 'play' : 'pause');
+    setTimeout(() => setShowIndicator(null), 800);
+
+    if (youtubeId && iframeRef.current) {
+      iframeRef.current.contentWindow?.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: nextPlaying ? 'playVideo' : 'pauseVideo',
+          args: []
+        }),
+        '*'
+      );
+    } else if (videoRef.current) {
+      if (nextPlaying) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  };
+
   return (
     <div
       ref={cardRef}
-      onClick={toggleMute}
+      onClick={togglePlayPause}
       className="relative flex-shrink-0 w-[220px] sm:w-[250px] rounded-2xl overflow-hidden shadow-lg bg-black cursor-pointer group select-none"
       style={{ aspectRatio: '9/16', maxHeight: '420px' }}
     >
-      {/* Video or YouTube / Instagram iframe with CSS crop scaling to remove YouTube title & controls */}
+      {/* Video or YouTube / Instagram iframe (Original natural size, no zoom distortion) */}
       {youtubeId ? (
-        <div className="w-full h-full overflow-hidden relative">
-          <iframe
-            ref={iframeRef}
-            src={`https://www.youtube.com/embed/${youtubeId}?enablejsapi=1&autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${youtubeId}&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1`}
-            className="w-full h-full object-cover scale-[1.38] origin-center pointer-events-none"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            title={reel.customer_name}
-            style={{ border: 'none' }}
-          />
-        </div>
+        <iframe
+          ref={iframeRef}
+          src={`https://www.youtube-nocookie.com/embed/${youtubeId}?enablejsapi=1&autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${youtubeId}&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1`}
+          className="w-full h-full object-cover pointer-events-none"
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+          title={reel.customer_name}
+          style={{ border: 'none' }}
+        />
       ) : instaId ? (
         <iframe
           src={`https://www.instagram.com/reel/${instaId}/embed`}
@@ -125,6 +165,27 @@ function ReelCard({ reel }) {
       >
         {muted ? <VolumeX size={16} /> : <Volume2 size={16} className="text-[#FF6B00]" />}
       </button>
+
+      {/* SINGLE 1-Button Play/Pause Overlay Indicator on Touch/Click */}
+      <AnimatePresence>
+        {(showIndicator || !isPlaying) && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.7 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+          >
+            <div className="w-13 h-13 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 text-white shadow-2xl">
+              {!isPlaying ? (
+                <Play size={24} className="fill-white translate-x-0.5" />
+              ) : (
+                <Pause size={24} className="fill-white" />
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Bottom customer info */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-10 pointer-events-none">
