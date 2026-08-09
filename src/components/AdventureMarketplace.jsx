@@ -649,8 +649,21 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                 })}
 
                 {filteredPartners.length === 0 && (
-                  <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500 font-medium">
-                    No active operators found matching the criteria in {currentCity?.name || 'Rishikesh'}.
+                  <div className="bg-white/90 backdrop-blur-md border border-amber-200/80 rounded-3xl p-10 text-center space-y-4 shadow-sm">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-50 text-[#FF5F00] border border-amber-100">
+                      <Sparkles size={28} />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-100/80 px-3 py-1 rounded-full inline-block mb-1">
+                        Up & Coming Activity
+                      </span>
+                      <h3 className="text-xl font-black font-display tracking-tight text-slate-800 uppercase">
+                        🚀 Coming Soon
+                      </h3>
+                    </div>
+                    <p className="text-slate-500 font-medium text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+                      We are currently onboarding verified operator partners & safety-certified packages for <span className="font-bold text-slate-700 capitalize">{activityType || 'this activity'}</span> in {currentCity?.name || 'Rishikesh'}. Stay tuned!
+                    </p>
                   </div>
                 )}
               </div>

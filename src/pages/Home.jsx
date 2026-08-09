@@ -325,7 +325,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       desc: 'Leap from 83m above the Ganges – the highest bungee in India.',
       price: '3,500',
       img: '/bungee-hero.jpg',
-      route: 'bungee'
+      route: 'bungee',
+      coming_soon: true
     },
     {
       id: 'camping',
@@ -333,7 +334,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       desc: 'Swiss tents, bonfire, snacks and buffet meals near Shivpuri.',
       price: '1,800',
       img: '/camping-hero.jpg',
-      route: 'camping'
+      route: 'camping',
+      coming_soon: true
     },
     {
       id: 'paragliding',
@@ -341,7 +343,8 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       desc: 'Soar high above Rishikesh hills with experienced tandem pilots.',
       price: '4,550',
       img: '/paragliding-hero.jpg',
-      route: 'paragliding'
+      route: 'paragliding',
+      coming_soon: true
     },
     {
       id: 'zipline',
@@ -596,19 +599,20 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
         if (adventuresData && adventuresData.length > 0) {
           setActivitiesList(prev => prev.map(act => {
             const matches = adventuresData.filter(item => (item.activity_type || 'rafting') === act.id);
-            const isComingSoon = matches.length > 0 ? matches.some(m => !!m.coming_soon) : !!act.coming_soon;
             const activePrices = matches
               .filter(m => !m.coming_soon && !m.is_closed && calcTotalItemPrice(m) > 0)
               .map(m => calcTotalItemPrice(m));
             
             let minPrice = null;
+            let isComingSoon = true;
+
             if (activePrices.length > 0) {
               minPrice = Math.min(...activePrices);
+              isComingSoon = false;
             } else if (matches.length > 0) {
-              const dbPrices = matches.map(m => calcTotalItemPrice(m)).filter(p => p > 0);
-              if (dbPrices.length > 0) {
-                minPrice = Math.min(...dbPrices);
-              }
+              isComingSoon = matches.every(m => m.coming_soon || m.is_closed);
+            } else {
+              isComingSoon = act.coming_soon !== undefined ? act.coming_soon : true;
             }
             
             return {
