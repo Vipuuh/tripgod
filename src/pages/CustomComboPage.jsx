@@ -498,6 +498,29 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     }
   });
 
+  // Helper to calculate total customer price (vendor base rate + commission/profit) for bikes & scooters
+  const getBikeCustomerPrice = (b, v) => {
+    if (!b) return 700;
+    const p = Number(b.price || 0);
+    const net = Number(b.net_price || 0);
+    
+    // Profit / Commission amount check
+    let comm = 0;
+    if (b.commission_amount !== null && b.commission_amount !== undefined) {
+      comm = Number(b.commission_amount);
+    } else if (b.commission_percentage && net > 0) {
+      comm = Math.round((net * Number(b.commission_percentage)) / 100);
+    } else if (v && (v.commission_amount !== null && v.commission_amount !== undefined)) {
+      comm = Number(v.commission_amount);
+    } else {
+      comm = 200; // standard default profit per scooty
+    }
+
+    const calculatedTotal = net > 0 ? (net + comm) : (p > 0 && p !== net ? p : p + comm);
+    const finalPrice = Math.max(p, calculatedTotal);
+    return finalPrice > 0 ? finalPrice : 700;
+  };
+
   const dbVendorBikeCards = Array.from(bikeVendorsMap.values()).map(v => {
     const vName = v.company_name || v.name || 'Rishikesh Bike Rental';
     const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
@@ -507,6 +530,32 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       (b.vendor_name && b.vendor_name.toLowerCase() === vName.toLowerCase()) ||
       (b.operator_name && b.operator_name.toLowerCase() === vName.toLowerCase())
     );
+
+    // Build real vehicles list for this vendor from DB (calculating vendor rate + profit commission)
+    let vendorVehicles = vendorBikeItems.map(b => {
+      const realPrice = getBikeCustomerPrice(b, v);
+      return {
+        id: String(b.id),
+        name: b.name,
+        price: realPrice,
+        is_active: b.is_active !== false && b.is_closed !== true && b.status !== 'INACTIVE'
+      };
+    });
+
+    if (vendorVehicles.length === 0) {
+      const comm = v.commission_amount !== null && v.commission_amount !== undefined 
+        ? Number(v.commission_amount) 
+        : 200;
+      const activaPrice = 500 + comm; // e.g. 500 vendor rate + 200 profit = 700
+
+      vendorVehicles = [
+        { id: 'activa6g', name: 'Honda Activa 6G', price: activaPrice, is_active: true },
+        { id: 'jupiter125', name: 'TVS Jupiter 125', price: activaPrice + 50, is_active: true },
+        { id: 'burgman125', name: 'Suzuki Burgman 125', price: activaPrice + 150, is_active: true },
+        { id: 'classic350', name: 'Royal Enfield Classic 350', price: 1200, is_active: true },
+        { id: 'himalayan', name: 'Royal Enfield Himalayan 450', price: 1600, is_active: true }
+      ];
+    }
 
     const isVendorInactive = v.status === 'INACTIVE' || 
                              v.status === 'Inactive' || 
@@ -533,8 +582,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const primaryImg = vendorImages[0] || '/classic-rent.png';
     const rating = getRealVendorRating(v);
 
-    const selectedVehId = bikeVehicleMap[v.id] || 'activa6g';
-    const vehicleObj = DEFAULT_BIKE_VEHICLES.find(veh => veh.id === selectedVehId) || DEFAULT_BIKE_VEHICLES[0];
+    const selectedVehId = bikeVehicleMap[v.id] || vendorVehicles[0].id;
+    const vehicleObj = vendorVehicles.find(veh => String(veh.id) === String(selectedVehId)) || vendorVehicles[0];
 
     return {
       cartKey: `v-bike-${v.id}-${vehicleObj.id}`,
@@ -552,7 +601,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       isOffline,
       offlineReason,
       isBikeVendor: true,
-      vehicles: DEFAULT_BIKE_VEHICLES,
+      vehicles: vendorVehicles,
       currentVehicleId: vehicleObj.id
     };
   });
