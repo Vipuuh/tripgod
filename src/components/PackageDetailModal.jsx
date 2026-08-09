@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   X, Star, CheckCircle, ShieldCheck, Sparkles, Calendar, Users, 
-  Hotel, Waves, Bike, Tent, Flame, Heart, Share2, Plus, Check, ChevronRight, MessageSquarePhone, ArrowRight
+  Hotel, Waves, Bike, Tent, Flame, Heart, Share2, Plus, Check, ChevronRight, MessageSquare, ArrowRight
 } from 'lucide-react';
 
 export default function PackageDetailModal({ packageData, onClose, onBookNow }) {
@@ -348,7 +348,7 @@ export default function PackageDetailModal({ packageData, onClose, onBookNow }) 
                 className="p-3.5 rounded-2xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 transition"
                 title="Inquire on WhatsApp"
               >
-                <MessageSquarePhone className="w-5 h-5" />
+                <MessageSquare className="w-5 h-5" />
               </button>
 
               <button
