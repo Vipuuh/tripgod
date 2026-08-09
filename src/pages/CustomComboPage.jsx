@@ -4,6 +4,7 @@ import {
   Percent, Plus, Check, X, Star, MapPin, ChevronLeft, Building2, Waves, Bike, Tent, AlertCircle
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import VendorImageCarousel from '../components/VendorImageCarousel';
 
 // Helper to convert raw address text into clean short landmark badges like "📍 Tapovan", "📍 Janki Setu", "📍 Triveni Ghat"
 const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
@@ -24,27 +25,103 @@ const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
   return `📍 ${clean || fallback}`;
 };
 
-// Robust image URL parser (handles JSON string arrays like '["https://..."]', plain strings, or arrays)
+// Robust image URL parser (handles JSON string arrays like '["https://..."]', plain strings, delimiter strings, or arrays)
 const parseImageUrl = (imgVal) => {
   if (!imgVal) return null;
-  if (Array.isArray(imgVal) && imgVal.length > 0) {
-    return parseImageUrl(imgVal[0]);
+  if (Array.isArray(imgVal)) {
+    for (const item of imgVal) {
+      const parsed = parseImageUrl(item);
+      if (parsed) return parsed;
+    }
+    return null;
   }
   if (typeof imgVal === 'string') {
-    const trimmed = imgVal.trim();
-    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    let trimmed = imgVal.trim();
+    if (!trimmed) return null;
+
+    // Handle stringified JSON arrays/objects
+    if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
       try {
         const parsed = JSON.parse(trimmed);
         return parseImageUrl(parsed);
       } catch (e) {
-        // Fallthrough if parse fails
+        // ignore parse error
       }
     }
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+
+    // Handle delimiter separated strings (e.g. url1|||url2)
+    if (trimmed.includes('|||')) {
+      const parts = trimmed.split('|||').map(s => s.trim()).filter(Boolean);
+      return parseImageUrl(parts);
+    }
+
+    if (trimmed.length < 2) return null;
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('/')) {
       return trimmed;
     }
+    return `/${trimmed}`;
   }
   return null;
+};
+
+// Robust helper to extract ALL real uploaded shop photos from vendor record and associated database packages
+const getRealVendorImages = (v, dbItemsForVendor = [], defaultFallback = '') => {
+  const images = [];
+
+  const addValid = (val) => {
+    if (!val) return;
+    if (Array.isArray(val)) {
+      val.forEach(item => addValid(item));
+      return;
+    }
+    if (typeof val === 'string') {
+      let trimmed = val.trim();
+      if (!trimmed) return;
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          addValid(parsed);
+          return;
+        } catch (e) {}
+      }
+      if (trimmed.includes('|||')) {
+        trimmed.split('|||').forEach(p => addValid(p));
+        return;
+      }
+      const parsed = parseImageUrl(trimmed);
+      if (parsed && !images.includes(parsed)) {
+        images.push(parsed);
+      }
+    }
+  };
+
+  if (v) {
+    addValid(v.shop_images);
+    addValid(v.shop_image);
+    addValid(v.shop_photo);
+    addValid(v.photos);
+    addValid(v.images);
+    addValid(v.vendor_image);
+    addValid(v.logo);
+    addValid(v.banner);
+  }
+
+  // Also check items from dbRafting / dbBikes matching vendor
+  if (dbItemsForVendor && dbItemsForVendor.length > 0) {
+    dbItemsForVendor.forEach(item => {
+      addValid(item.images);
+      addValid(item.image);
+      addValid(item.shop_image);
+      addValid(item.vendor_image);
+    });
+  }
+
+  if (images.length === 0 && defaultFallback) {
+    images.push(defaultFallback);
+  }
+
+  return images;
 };
 
 // Fallback Preset Stretches & Vehicles for Vendors
@@ -71,7 +148,7 @@ const FALLBACK_VENDORS = [
     landmark: 'Janki Setu',
     star_rating: 4.5,
     status: 'ACTIVE',
-    shop_images: ['https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600']
+    shop_images: ['https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=600', 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600']
   },
   {
     id: 'v-fallback-brothers',
@@ -80,7 +157,7 @@ const FALLBACK_VENDORS = [
     landmark: 'Rishikesh Bus Stand',
     star_rating: 4.4,
     status: 'ACTIVE',
-    shop_images: ['/classic-rent.png']
+    shop_images: ['https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600', '/classic-rent.png']
   },
   {
     id: 'v-fallback-hikenride',
@@ -89,7 +166,7 @@ const FALLBACK_VENDORS = [
     landmark: 'Janki Setu',
     star_rating: 4.6,
     status: 'ACTIVE',
-    shop_images: ['/classic-rent.png']
+    shop_images: ['https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600', '/scooty-rent.jpg']
   },
   {
     id: 'v-fallback-hillbrook',
@@ -98,7 +175,7 @@ const FALLBACK_VENDORS = [
     landmark: 'Laxman Jhula',
     star_rating: 4.7,
     status: 'ACTIVE',
-    shop_images: ['https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=600']
+    shop_images: ['https://images.unsplash.com/photo-1596178065887-1198b6148b2b?q=80&w=600', 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600']
   }
 ];
 
@@ -266,6 +343,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // 1. Build Hotel Display List
   const hotelsCardList = hotels.map(h => {
     const isOffline = h.is_active === false || h.is_closed === true;
+    const hotelImages = getRealVendorImages(h, [], 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600');
     return {
       cartKey: `hotel-${h.id}`,
       id: h.id,
@@ -275,7 +353,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       price: Number(h.price),
       landmarkLocation: toShortLandmark(h.address, 'Tapovan'),
       fullAddress: h.address || 'Tapovan, Rishikesh',
-      image: parseImageUrl(h.images) || 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600',
+      image: hotelImages[0],
+      images: hotelImages,
       rating: h.rating || 4.5,
       isOffline,
       description: h.description || 'Deluxe AC room stay with mountain view, hot water & Wi-Fi.'
@@ -285,75 +364,149 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // Effective Vendor List (Uses Real Database Vendors)
   const effectiveVendors = dbVendors.length > 0 ? dbVendors : FALLBACK_VENDORS;
 
-  // 2. Build Vendor Rafting Cards from Real Database Vendors
-  const dbVendorRaftingCards = effectiveVendors
-    .filter(v => {
-      const cat = (v.service_category || v.category || '').toLowerCase();
-      return cat.includes('rafting') || cat.includes('multi-service') || cat.includes('all services') || cat.includes('adventure');
-    })
-    .map(v => {
-      const isOffline = v.status === 'INACTIVE' || v.is_active === false;
-      const vName = v.company_name || v.name || 'Rishikesh Rafting Crew';
-      const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Tapovan');
-      const img = getRealVendorImage(v, 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600');
-      const rating = getRealVendorRating(v);
+  // 2. Build Vendor Rafting Cards from Real Database Vendors & Rafting Items
+  const raftingVendorsMap = new Map();
 
-      const selectedStretchId = raftingStretchMap[v.id] || '16km';
-      const stretchObj = DEFAULT_RAFTING_STRETCHES.find(s => s.id === selectedStretchId) || DEFAULT_RAFTING_STRETCHES[1];
+  effectiveVendors.forEach(v => {
+    const cat = (v.service_category || v.category || '').toLowerCase();
+    if (cat.includes('rafting') || cat.includes('multi-service') || cat.includes('all services') || cat.includes('adventure') || !cat) {
+      raftingVendorsMap.set(String(v.id), v);
+    }
+  });
 
-      return {
-        cartKey: `v-rafting-${v.id}-${stretchObj.id}`,
-        id: v.id,
-        category: 'Rafting',
-        name: stretchObj.name,
-        vendorName: vName,
-        price: stretchObj.price,
-        landmarkLocation: landmark,
-        fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
-        image: img,
-        rating,
-        description: `${vName} offers certified river rafting guides, safety life jackets, helmet & cliff jumping in Rishikesh.`,
-        isOffline,
-        isRaftingVendor: true,
-        stretches: DEFAULT_RAFTING_STRETCHES,
-        currentStretchId: stretchObj.id
-      };
-    });
+  dbRafting.forEach(rItem => {
+    if (rItem.vendor_id && !raftingVendorsMap.has(String(rItem.vendor_id))) {
+      const foundV = dbVendors.find(v => String(v.id) === String(rItem.vendor_id));
+      if (foundV) {
+        raftingVendorsMap.set(String(foundV.id), foundV);
+      } else {
+        const vName = rItem.vendor_name || rItem.operator_name || `Rafting Crew ${rItem.vendor_id}`;
+        raftingVendorsMap.set(String(rItem.vendor_id), {
+          id: rItem.vendor_id,
+          name: vName,
+          company_name: vName,
+          landmark: rItem.landmark || rItem.address || 'Tapovan',
+          star_rating: rItem.rating || 4.5,
+          status: 'ACTIVE',
+          shop_image: rItem.images ? parseImageUrl(rItem.images) : null
+        });
+      }
+    }
+  });
 
-  // 3. Build Vendor Scooty / Bike Rental Cards from Real Database Vendors
-  const dbVendorBikeCards = effectiveVendors
-    .filter(v => {
-      const cat = (v.service_category || v.category || '').toLowerCase();
-      return cat.includes('bike') || cat.includes('scooty') || cat.includes('multi-service') || cat.includes('all services');
-    })
-    .map(v => {
-      const isOffline = v.status === 'INACTIVE' || v.is_active === false;
-      const vName = v.company_name || v.name || 'Rishikesh Bike Rental';
-      const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
-      const img = getRealVendorImage(v, '/classic-rent.png');
-      const rating = getRealVendorRating(v);
+  const dbVendorRaftingCards = Array.from(raftingVendorsMap.values()).map(v => {
+    const isOffline = v.status === 'INACTIVE' || v.is_active === false;
+    const vName = v.company_name || v.name || 'Rishikesh Rafting Crew';
+    const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Tapovan');
 
-      const selectedVehId = bikeVehicleMap[v.id] || 'activa6g';
-      const vehicleObj = DEFAULT_BIKE_VEHICLES.find(veh => veh.id === selectedVehId) || DEFAULT_BIKE_VEHICLES[0];
+    const vendorRaftingItems = dbRafting.filter(r => 
+      String(r.vendor_id) === String(v.id) || 
+      (r.vendor_name && r.vendor_name.toLowerCase() === vName.toLowerCase()) ||
+      (r.operator_name && r.operator_name.toLowerCase() === vName.toLowerCase())
+    );
 
-      return {
-        cartKey: `v-bike-${v.id}-${vehicleObj.id}`,
-        id: v.id,
-        category: 'Scooty',
-        name: vehicleObj.name,
-        vendorName: vName,
-        price: vehicleObj.price,
-        landmarkLocation: landmark,
-        fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
-        image: img,
-        rating,
-        description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
-        isOffline,
-        isBikeVendor: true,
-        vehicles: DEFAULT_BIKE_VEHICLES,
-        currentVehicleId: vehicleObj.id
-      };
-    });
+    const vendorImages = getRealVendorImages(
+      v, 
+      vendorRaftingItems, 
+      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
+    );
+    const primaryImg = vendorImages[0] || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600';
+    const rating = getRealVendorRating(v);
+
+    const selectedStretchId = raftingStretchMap[v.id] || '16km';
+    const stretchObj = DEFAULT_RAFTING_STRETCHES.find(s => s.id === selectedStretchId) || DEFAULT_RAFTING_STRETCHES[1];
+
+    return {
+      cartKey: `v-rafting-${v.id}-${stretchObj.id}`,
+      id: v.id,
+      category: 'Rafting',
+      name: stretchObj.name,
+      vendorName: vName,
+      price: stretchObj.price,
+      landmarkLocation: landmark,
+      fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
+      image: primaryImg,
+      images: vendorImages,
+      rating,
+      description: `${vName} offers certified river rafting guides, safety life jackets, helmet & cliff jumping in Rishikesh.`,
+      isOffline,
+      isRaftingVendor: true,
+      stretches: DEFAULT_RAFTING_STRETCHES,
+      currentStretchId: stretchObj.id
+    };
+  });
+
+  // 3. Build Vendor Scooty / Bike Rental Cards from Real Database Vendors & Bike Items
+  const bikeVendorsMap = new Map();
+
+  effectiveVendors.forEach(v => {
+    const cat = (v.service_category || v.category || '').toLowerCase();
+    if (cat.includes('bike') || cat.includes('scooty') || cat.includes('multi-service') || cat.includes('all services') || !cat) {
+      bikeVendorsMap.set(String(v.id), v);
+    }
+  });
+
+  dbBikes.forEach(bItem => {
+    if (bItem.vendor_id && !bikeVendorsMap.has(String(bItem.vendor_id))) {
+      const foundV = dbVendors.find(v => String(v.id) === String(bItem.vendor_id));
+      if (foundV) {
+        bikeVendorsMap.set(String(foundV.id), foundV);
+      } else {
+        const vName = bItem.vendor_name || bItem.operator_name || `Bike Rental ${bItem.vendor_id}`;
+        bikeVendorsMap.set(String(bItem.vendor_id), {
+          id: bItem.vendor_id,
+          name: vName,
+          company_name: vName,
+          landmark: bItem.landmark || bItem.address || 'Janki Setu',
+          star_rating: bItem.rating || 4.5,
+          status: 'ACTIVE',
+          shop_image: bItem.images ? parseImageUrl(bItem.images) : null
+        });
+      }
+    }
+  });
+
+  const dbVendorBikeCards = Array.from(bikeVendorsMap.values()).map(v => {
+    const isOffline = v.status === 'INACTIVE' || v.is_active === false;
+    const vName = v.company_name || v.name || 'Rishikesh Bike Rental';
+    const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
+
+    const vendorBikeItems = dbBikes.filter(b => 
+      String(b.vendor_id) === String(v.id) || 
+      (b.vendor_name && b.vendor_name.toLowerCase() === vName.toLowerCase()) ||
+      (b.operator_name && b.operator_name.toLowerCase() === vName.toLowerCase())
+    );
+
+    const vendorImages = getRealVendorImages(
+      v, 
+      vendorBikeItems, 
+      '/classic-rent.png'
+    );
+    const primaryImg = vendorImages[0] || '/classic-rent.png';
+    const rating = getRealVendorRating(v);
+
+    const selectedVehId = bikeVehicleMap[v.id] || 'activa6g';
+    const vehicleObj = DEFAULT_BIKE_VEHICLES.find(veh => veh.id === selectedVehId) || DEFAULT_BIKE_VEHICLES[0];
+
+    return {
+      cartKey: `v-bike-${v.id}-${vehicleObj.id}`,
+      id: v.id,
+      category: 'Scooty',
+      name: vehicleObj.name,
+      vendorName: vName,
+      price: vehicleObj.price,
+      landmarkLocation: landmark,
+      fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
+      image: primaryImg,
+      images: vendorImages,
+      rating,
+      description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
+      isOffline,
+      isBikeVendor: true,
+      vehicles: DEFAULT_BIKE_VEHICLES,
+      currentVehicleId: vehicleObj.id
+    };
+  });
 
   const campingCardItem = {
     cartKey: 'camping-upgrade-item',
@@ -365,6 +518,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     landmarkLocation: '📍 Shivpuri',
     fullAddress: 'Shivpuri Riverside Campsite, Rishikesh',
     image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600',
+    images: ['https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600'],
     rating: '4.9',
     isOffline: false,
     description: 'Includes Campfire, Evening Snacks, Live Music, Buffet Dinner, Breakfast & Swimming Pool Access.'
@@ -502,35 +656,32 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                   onClick={() => setActiveDetailItem(item)}
                   className="cursor-pointer flex-1"
                 >
-                  {/* Card Image: Robust JSON-safe image with automatic fallback */}
-                  <div className="relative h-32 sm:h-40 w-full bg-slate-100 overflow-hidden">
-                    <img 
-                      src={item.image} 
+                  {/* Card Image: Vendor Shop Image Carousel with Badges */}
+                  <div className="relative h-32 sm:h-40 w-full bg-slate-900 overflow-hidden group">
+                    <VendorImageCarousel
+                      images={item.images && item.images.length > 0 ? item.images : [item.image]}
                       alt={item.vendorName || item.name}
-                      onError={(e) => {
-                        e.target.onerror = null; 
-                        e.target.src = item.category === 'Hotel' 
-                          ? 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600'
-                          : item.category === 'Rafting'
-                          ? 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
-                          : '/classic-rent.png';
-                      }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                    <span className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900/90 text-white backdrop-blur-xs">
-                      {item.category}
-                    </span>
+                      className="w-full h-full relative overflow-hidden bg-slate-900 group"
+                      imageClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      showBadgeCount={true}
+                      showControls={true}
+                      showDots={false}
+                    >
+                      <span className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900/90 text-white backdrop-blur-xs z-10 pointer-events-none">
+                        {item.category}
+                      </span>
 
-                    {/* Offline Badge vs Real Rating Badge */}
-                    {item.isOffline ? (
-                      <span className="absolute top-2 right-2 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs">
-                        🔴 OFFLINE
-                      </span>
-                    ) : (
-                      <span className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[10px] font-extrabold text-slate-900 flex items-center gap-0.5 shadow-xs">
-                        ⭐ {item.rating}
-                      </span>
-                    )}
+                      {/* Offline Badge vs Real Rating Badge */}
+                      {item.isOffline ? (
+                        <span className="absolute top-2 right-2 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs z-10 pointer-events-none">
+                          🔴 OFFLINE
+                        </span>
+                      ) : (
+                        <span className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[10px] font-extrabold text-slate-900 flex items-center gap-0.5 shadow-xs z-10 pointer-events-none">
+                          ⭐ {item.rating}
+                        </span>
+                      )}
+                    </VendorImageCarousel>
                   </div>
 
                   {/* Card Text Content: Vendor Shop Name First! */}
@@ -659,30 +810,27 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
               </button>
             </div>
 
-            {/* Photo & Category Badge */}
-            <div className="relative h-48 w-full rounded-2xl overflow-hidden bg-slate-100">
-              <img 
-                src={activeDetailItem.image} 
+            {/* Photo & Category Badge Carousel */}
+            <div className="relative h-48 w-full rounded-2xl overflow-hidden bg-slate-900">
+              <VendorImageCarousel
+                images={activeDetailItem.images && activeDetailItem.images.length > 0 ? activeDetailItem.images : [activeDetailItem.image]}
                 alt={activeDetailItem.vendorName || activeDetailItem.name}
-                onError={(e) => {
-                  e.target.onerror = null; 
-                  e.target.src = activeDetailItem.category === 'Hotel' 
-                    ? 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600'
-                    : activeDetailItem.category === 'Rafting'
-                    ? 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
-                    : '/classic-rent.png';
-                }}
-                className="w-full h-full object-cover"
-              />
-              <span className="absolute top-3 left-3 text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 rounded-lg">
-                {activeDetailItem.category}
-              </span>
-
-              {activeDetailItem.isOffline && (
-                <span className="absolute top-3 right-3 bg-rose-600 text-white text-xs font-black px-3 py-1 rounded-lg">
-                  🔴 OFFLINE IN BACKEND
+                className="w-full h-full relative overflow-hidden bg-slate-900 group"
+                imageClassName="w-full h-full object-cover"
+                showBadgeCount={true}
+                showControls={true}
+                showDots={true}
+              >
+                <span className="absolute top-3 left-3 text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 rounded-lg z-10 pointer-events-none">
+                  {activeDetailItem.category}
                 </span>
-              )}
+
+                {activeDetailItem.isOffline && (
+                  <span className="absolute top-3 right-3 bg-rose-600 text-white text-xs font-black px-3 py-1 rounded-lg z-10 pointer-events-none">
+                    🔴 OFFLINE IN BACKEND
+                  </span>
+                )}
+              </VendorImageCarousel>
             </div>
 
             {/* Title & Short Landmark Address */}
