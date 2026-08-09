@@ -873,6 +873,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                   </button>
                 </div>
               </div>
+            );
           })}
         </div>
         )}
