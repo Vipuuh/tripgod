@@ -508,27 +508,51 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     };
   });
 
-  const campingCardItem = {
-    cartKey: 'camping-upgrade-item',
-    id: 'camping-upgrade',
-    category: 'Camping',
-    name: 'Riverside Camping Night Upgrade',
-    vendorName: 'Shivpuri River Campsite',
-    price: 999,
-    landmarkLocation: '📍 Shivpuri',
-    fullAddress: 'Shivpuri Riverside Campsite, Rishikesh',
-    image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600',
-    images: ['https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600'],
-    rating: '4.9',
-    isOffline: false,
-    description: 'Includes Campfire, Evening Snacks, Live Music, Buffet Dinner, Breakfast & Swimming Pool Access.'
-  };
+  // 4. Build Vendor Camping Cards from Real Database Vendors (Dynamic, no fake hardcoded items)
+  const campingVendorsMap = new Map();
+
+  effectiveVendors.forEach(v => {
+    const cat = (v.service_category || v.category || '').toLowerCase();
+    if (cat.includes('camping')) {
+      campingVendorsMap.set(String(v.id), v);
+    }
+  });
+
+  const dbVendorCampingCards = Array.from(campingVendorsMap.values()).map(v => {
+    const isOffline = v.status === 'INACTIVE' || v.is_active === false;
+    const vName = v.company_name || v.name || 'Shivpuri Campsite';
+    const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Shivpuri');
+
+    const vendorImages = getRealVendorImages(
+      v, 
+      [], 
+      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600'
+    );
+    const primaryImg = vendorImages[0] || 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600';
+    const rating = getRealVendorRating(v);
+
+    return {
+      cartKey: `v-camping-${v.id}`,
+      id: v.id,
+      category: 'Camping',
+      name: 'Riverside Camping Stay',
+      vendorName: vName,
+      price: v.price ? Number(v.price) : 999,
+      landmarkLocation: landmark,
+      fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
+      image: primaryImg,
+      images: vendorImages,
+      rating,
+      description: `${vName} offers riverside Swiss tent stays with bonfire, evening snacks, live music & buffet dinner.`,
+      isOffline
+    };
+  });
 
   const allDisplayItems = [
     ...hotelsCardList,
     ...dbVendorRaftingCards,
     ...dbVendorBikeCards,
-    campingCardItem
+    ...dbVendorCampingCards
   ];
 
   const filteredDisplayItems = activeCategory === 'all' 
@@ -635,10 +659,20 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
           ))}
         </div>
 
-        {/* 2-COLUMN CARDS GRID (Vendor First Layout: Card Title = Vendor Shop Name) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-          {filteredDisplayItems.map(item => {
-            const inCart = isItemInCart(item.cartKey);
+        {/* Empty State Banner if no vendors for selected category */}
+        {filteredDisplayItems.length === 0 ? (
+          <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-6 space-y-2 shadow-xs">
+            <AlertCircle className="w-8 h-8 text-[#FF5F00] mx-auto opacity-80" />
+            <h3 className="text-base font-extrabold text-slate-900">No Listings Available Yet</h3>
+            <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
+              New vendors for {activeCategory === 'camping' ? 'Camping & Extras' : activeCategory} will appear here dynamically as soon as they onboard.
+            </p>
+          </div>
+        ) : (
+          /* 2-COLUMN CARDS GRID (Vendor First Layout: Card Title = Vendor Shop Name) */
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            {filteredDisplayItems.map(item => {
+              const inCart = isItemInCart(item.cartKey);
 
             return (
               <div 
@@ -782,9 +816,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                   </button>
                 </div>
               </div>
-            );
           })}
         </div>
+        )}
 
       </div>
 
