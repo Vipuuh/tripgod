@@ -120,6 +120,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
   const [raftingList, setRaftingList] = useState([]);
   const [bikesList, setBikesList] = useState([]);
   const [toursList, setToursList] = useState([]);
+  const [packagesList, setPackagesList] = useState([]);
   const [mediaList, setMediaList] = useState([]);
 
   // Data Fetching State
@@ -142,6 +143,112 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
     since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
     reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
   });
+
+  // Package Management States
+  const [packageModalOpen, setPackageModalOpen] = useState(false);
+  const [editingPackageId, setEditingPackageId] = useState(null);
+  const [packageFormData, setPackageFormData] = useState({
+    title: '',
+    tagline: '',
+    duration: '2 Days / 1 Night',
+    badge: '👑 Bestseller',
+    original_price: 5200,
+    discount_type: 'percentage',
+    discount_value: 25,
+    final_price: 3900,
+    included_items_text: 'Deluxe AC Hotel Stay, 16KM River Rafting, Honda Activa 6G Rental',
+    inclusions_text: '1 Night Hotel Accommodation, 16 KM Shivpuri Rafting, 24 Hours Scooty Rental, Buffet Breakfast',
+    images_text: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
+    is_active: true
+  });
+
+  const handleSavePackage = async (e) => {
+    e.preventDefault();
+    try {
+      setFormLoading(true);
+      const slug = packageFormData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      
+      const orig = Number(packageFormData.original_price);
+      const discVal = Number(packageFormData.discount_value);
+      let calcFinal = orig;
+      if (packageFormData.discount_type === 'flat') {
+        calcFinal = Math.max(0, orig - discVal);
+      } else {
+        calcFinal = Math.max(0, Math.round(orig * (1 - discVal / 100)));
+      }
+
+      const itemsArr = packageFormData.included_items_text
+        .split(',')
+        .map(i => i.trim())
+        .filter(Boolean)
+        .map(item => ({ category: 'Activity', name: item, icon: 'Sparkles', details: item }));
+
+      const inclusionsArr = packageFormData.inclusions_text
+        .split(',')
+        .map(i => i.trim())
+        .filter(Boolean);
+
+      const imagesArr = packageFormData.images_text
+        .split(',')
+        .map(i => i.trim())
+        .filter(Boolean);
+
+      const payload = {
+        title: packageFormData.title,
+        slug: slug,
+        tagline: packageFormData.tagline,
+        duration: packageFormData.duration,
+        badge: packageFormData.badge,
+        original_price: orig,
+        discount_type: packageFormData.discount_type,
+        discount_value: discVal,
+        final_price: calcFinal,
+        included_items: itemsArr,
+        inclusions: inclusionsArr,
+        images: imagesArr.length > 0 ? imagesArr : ['https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80'],
+        is_active: packageFormData.is_active
+      };
+
+      if (editingPackageId) {
+        const { error } = await supabase.from('packages').update(payload).eq('id', editingPackageId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('packages').insert([payload]);
+        if (error) throw error;
+      }
+
+      // Refresh list
+      const { data: updatedPkgs } = await supabase.from('packages').select('*').order('created_at', { ascending: false });
+      if (updatedPkgs) setPackagesList(updatedPkgs);
+      setPackageModalOpen(false);
+    } catch (err) {
+      alert('Error saving package: ' + err.message);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDeletePackage = async (pkgId) => {
+    if (!window.confirm('Are you sure you want to delete this package?')) return;
+    try {
+      const { error } = await supabase.from('packages').delete().eq('id', pkgId);
+      if (error) throw error;
+      setPackagesList(prev => prev.filter(p => p.id !== pkgId));
+    } catch (err) {
+      alert('Error deleting package: ' + err.message);
+    }
+  };
+
+  const handleTogglePackageActive = async (pkg) => {
+    try {
+      const updatedStatus = !pkg.is_active;
+      const { error } = await supabase.from('packages').update({ is_active: updatedStatus }).eq('id', pkg.id);
+      if (error) throw error;
+      setPackagesList(prev => prev.map(p => p.id === pkg.id ? { ...p, is_active: updatedStatus } : p));
+    } catch (err) {
+      alert('Error updating status: ' + err.message);
+    }
+  };
 
   // Filter States for Bookings
   const [bookingSearch, setBookingSearch] = useState('');
@@ -175,7 +282,8 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
         { data: hotelsData },
         { data: raftingData },
         { data: bikesData },
-        { data: toursData }
+        { data: toursData },
+        { data: packagesData }
       ] = await Promise.all([
         supabase.from('cities').select('*').order('name'),
         supabase.from('vendors').select('*').order('name'),
@@ -183,7 +291,8 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
         supabase.from('hotels').select('*').order('name'),
         supabase.from('rafting').select('*').order('name'),
         supabase.from('bikes').select('*').order('name'),
-        supabase.from('tours').select('*').order('name')
+        supabase.from('tours').select('*').order('name'),
+        supabase.from('packages').select('*').order('created_at', { ascending: false })
       ]);
 
       if (citiesData) setCities(citiesData);
@@ -191,6 +300,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
       if (bookingsData) setBookings(bookingsData);
       if (hotelsData) setHotels(hotelsData);
       if (raftingData) setRaftingList(raftingData);
+      if (packagesData) setPackagesList(packagesData);
       if (bikesData) {
         const validBikes = bikesData.filter(b => {
           if (Number(b.price) <= 0) {
@@ -649,6 +759,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
               { id: 'analytics', label: 'Analytics', icon: Activity },
               { id: 'whatsapp', label: '💬 WhatsApp Support', icon: MessageSquare },
               { id: 'bookings', label: 'Bookings', icon: ShoppingBag },
+              { id: 'packages', label: '🔥 Combos & Packages', icon: Sparkles },
               { id: 'hotels', label: 'Hotels', icon: Building2 },
               { id: 'adventures', label: 'Adventure Packages', icon: Waves },
               { id: 'bikes', label: 'Bike Rentals', icon: Bike },
@@ -985,6 +1096,145 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
 
           {activeTab === 'retargeting' && (
             <RetargetingTab />
+          )}
+
+          {/* =================================================================
+              TAB CONTENT: COMBOS & PACKAGES MANAGEMENT
+              ================================================================= */}
+          {activeTab === 'packages' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-950 border border-slate-800 p-6 rounded-2xl gap-4">
+                <div>
+                  <h3 className="text-lg font-black text-white font-display">🔥 COMBOS & PACKAGES CONTROL PANEL</h3>
+                  <p className="text-xs text-slate-400 mt-1">Create, edit, toggle status & set Flat/Percentage discounts for Rishikesh packages</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingPackageId(null);
+                    setPackageFormData({
+                      title: '',
+                      tagline: '',
+                      duration: '2 Days / 1 Night',
+                      badge: '👑 Bestseller',
+                      original_price: 5200,
+                      discount_type: 'percentage',
+                      discount_value: 25,
+                      final_price: 3900,
+                      included_items_text: 'Deluxe AC Room Stay, 16KM River Rafting, Honda Activa 6G Rental',
+                      inclusions_text: '1 Night Hotel Accommodation, 16 KM Shivpuri Rafting, 24 Hours Scooty Rental, Buffet Breakfast',
+                      images_text: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
+                      is_active: true
+                    });
+                    setPackageModalOpen(true);
+                  }}
+                  className="py-3 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:scale-102 transition-all border-none cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus size={16} /> <span>Create New Combo Package</span>
+                </button>
+              </div>
+
+              {/* Packages List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {packagesList.length === 0 ? (
+                  <div className="col-span-full bg-slate-950 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
+                    No custom packages found in DB. Click "Create New Combo Package" to add one!
+                  </div>
+                ) : (
+                  packagesList.map((pkg) => (
+                    <div key={pkg.id} className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
+                      <div>
+                        {/* Package Image */}
+                        <div className="h-40 bg-slate-900 relative">
+                          <img 
+                            src={(pkg.images && pkg.images[0]) || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80'} 
+                            alt={pkg.title} 
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute top-3 left-3 bg-orange-600 text-white text-[10px] font-black py-0.5 px-2 rounded">
+                            {pkg.badge || '👑 Bestseller'}
+                          </div>
+                          <div className={`absolute top-3 right-3 text-[10px] font-black py-0.5 px-2 rounded ${pkg.is_active ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+                            {pkg.is_active ? 'ACTIVE' : 'HIDDEN'}
+                          </div>
+                        </div>
+
+                        {/* Package Info */}
+                        <div className="p-4 space-y-3">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 block">{pkg.duration || '2 Days / 1 Night'}</span>
+                            <h4 className="font-bold text-base text-white font-display mt-0.5">{pkg.title}</h4>
+                            <p className="text-xs text-slate-400 line-clamp-1">{pkg.tagline}</p>
+                          </div>
+
+                          <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-slate-400">Original Price:</span>
+                              <span className="text-slate-400 line-through">₹{pkg.original_price}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-slate-400">Discount:</span>
+                              <span className="text-orange-400 font-bold">
+                                {pkg.discount_type === 'flat' ? `FLAT ₹${pkg.discount_value} OFF` : `${pkg.discount_value}% OFF`}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-800">
+                              <span className="text-white">Final Price:</span>
+                              <span className="text-emerald-400 text-sm">₹{pkg.final_price} / person</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Package Actions */}
+                      <div className="p-4 bg-slate-900/40 border-t border-slate-900 flex items-center justify-between">
+                        <button
+                          onClick={() => handleTogglePackageActive(pkg)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                            pkg.is_active ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          }`}
+                        >
+                          {pkg.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingPackageId(pkg.id);
+                              setPackageFormData({
+                                title: pkg.title || '',
+                                tagline: pkg.tagline || '',
+                                duration: pkg.duration || '2 Days / 1 Night',
+                                badge: pkg.badge || '👑 Bestseller',
+                                original_price: pkg.original_price || 5000,
+                                discount_type: pkg.discount_type || 'percentage',
+                                discount_value: pkg.discount_value || 20,
+                                final_price: pkg.final_price || 4000,
+                                included_items_text: (pkg.included_items || []).map(i => i.name).join(', '),
+                                inclusions_text: (pkg.inclusions || []).join(', '),
+                                images_text: (pkg.images || []).join(', '),
+                                is_active: pkg.is_active !== undefined ? pkg.is_active : true
+                              });
+                              setPackageModalOpen(true);
+                            }}
+                            className="p-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                            title="Edit Package"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePackage(pkg.id)}
+                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                            title="Delete Package"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           )}
 
           {['hotels', 'adventures', 'bikes', 'tours'].includes(activeTab) && (
@@ -1791,6 +2041,174 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
           </div>
         )}
       </AnimatePresence>
+
+      {/* PACKAGE MODAL FORM OVERLAY */}
+      {packageModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full text-white space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+              <div>
+                <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest">Combo Package Builder</span>
+                <h3 className="text-xl font-bold text-white font-display">
+                  {editingPackageId ? 'Edit Package Combo' : 'Create New Combo Package'}
+                </h3>
+              </div>
+              <button onClick={() => setPackageModalOpen(false)} className="text-slate-400 hover:text-white p-2 cursor-pointer">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePackage} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Package Title</label>
+                <input 
+                  type="text" 
+                  required
+                  value={packageFormData.title}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g. Rishikesh Weekend Thrill Combo"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white font-bold outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Tagline</label>
+                  <input 
+                    type="text" 
+                    value={packageFormData.tagline}
+                    onChange={(e) => setPackageFormData(prev => ({ ...prev, tagline: e.target.value }))}
+                    placeholder="e.g. Hotel Stay + 16KM Rafting + Scooty"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Duration</label>
+                  <input 
+                    type="text" 
+                    value={packageFormData.duration}
+                    onChange={(e) => setPackageFormData(prev => ({ ...prev, duration: e.target.value }))}
+                    placeholder="e.g. 2 Days / 1 Night"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Original Price (₹)</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={packageFormData.original_price}
+                    onChange={(e) => setPackageFormData(prev => ({ ...prev, original_price: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white font-bold outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Discount Type</label>
+                  <select 
+                    value={packageFormData.discount_type}
+                    onChange={(e) => setPackageFormData(prev => ({ ...prev, discount_type: e.target.value }))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white font-bold cursor-pointer outline-none focus:border-orange-500"
+                  >
+                    <option value="percentage">Percentage (%) OFF</option>
+                    <option value="flat">Flat Amount (₹) OFF</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Discount Value</label>
+                  <input 
+                    type="number" 
+                    required
+                    value={packageFormData.discount_value}
+                    onChange={(e) => setPackageFormData(prev => ({ ...prev, discount_value: e.target.value }))}
+                    placeholder={packageFormData.discount_type === 'flat' ? 'e.g. 1500' : 'e.g. 25'}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white font-bold outline-none focus:border-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Badge Tag</label>
+                <input 
+                  type="text" 
+                  value={packageFormData.badge}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, badge: e.target.value }))}
+                  placeholder="e.g. 👑 Bestseller, 🔥 Fast Filling, 🟢 Verified"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Included Services (Comma Separated)</label>
+                <input 
+                  type="text" 
+                  value={packageFormData.included_items_text}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, included_items_text: e.target.value }))}
+                  placeholder="Deluxe AC Hotel Stay, 16KM River Rafting, Honda Activa 6G Rental"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Inclusions Highlights (Comma Separated)</label>
+                <textarea 
+                  rows="2"
+                  value={packageFormData.inclusions_text}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, inclusions_text: e.target.value }))}
+                  placeholder="1 Night Deluxe Room, 16 KM Rafting, 24 Hours Scooty Rental, Free Breakfast"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white resize-none outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-bold mb-1">Image URLs (Comma Separated)</label>
+                <input 
+                  type="text" 
+                  value={packageFormData.images_text}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, images_text: e.target.value }))}
+                  placeholder="https://images.unsplash.com/..., https://..."
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <input 
+                  type="checkbox"
+                  id="pkg-active-checkbox"
+                  checked={packageFormData.is_active}
+                  onChange={(e) => setPackageFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                  className="w-4 h-4 accent-orange-500 cursor-pointer"
+                />
+                <label htmlFor="pkg-active-checkbox" className="text-white font-bold cursor-pointer">
+                  Active & Live on Website
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button 
+                  type="button" 
+                  onClick={() => setPackageModalOpen(false)}
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={formLoading}
+                  className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 text-white font-bold rounded-xl shadow-lg cursor-pointer"
+                >
+                  {formLoading ? 'Saving...' : 'Save Package'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
