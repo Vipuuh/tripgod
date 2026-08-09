@@ -342,7 +342,11 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
   // 1. Build Hotel Display List
   const hotelsCardList = hotels.map(h => {
-    const isOffline = h.is_active === false || h.is_closed === true;
+    const isOffline = h.is_active === false || 
+                      h.is_closed === true || 
+                      h.coming_soon === true || 
+                      (h.status && h.status.toLowerCase() !== 'active');
+    const offlineReason = h.status_reason || h.offline_reason || (h.coming_soon ? 'COMING SOON' : 'CLOSED / OFFLINE');
     const hotelImages = getRealVendorImages(h, [], 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600');
     return {
       cartKey: `hotel-${h.id}`,
@@ -357,6 +361,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       images: hotelImages,
       rating: h.rating || 4.5,
       isOffline,
+      offlineReason,
       description: h.description || 'Deluxe AC room stay with mountain view, hot water & Wi-Fi.'
     };
   });
@@ -387,7 +392,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
           company_name: vName,
           landmark: rItem.landmark || rItem.address || 'Tapovan',
           star_rating: rItem.rating || 4.5,
-          status: 'ACTIVE',
+          status: rItem.is_active === false ? 'INACTIVE' : (rItem.status || 'ACTIVE'),
           shop_image: rItem.images ? parseImageUrl(rItem.images) : null
         });
       }
@@ -395,7 +400,6 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   });
 
   const dbVendorRaftingCards = Array.from(raftingVendorsMap.values()).map(v => {
-    const isOffline = v.status === 'INACTIVE' || v.is_active === false;
     const vName = v.company_name || v.name || 'Rishikesh Rafting Crew';
     const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Tapovan');
 
@@ -404,6 +408,33 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       (r.vendor_name && r.vendor_name.toLowerCase() === vName.toLowerCase()) ||
       (r.operator_name && r.operator_name.toLowerCase() === vName.toLowerCase())
     );
+
+    const isVendorInactive = v.status === 'INACTIVE' || 
+                             v.status === 'Inactive' || 
+                             v.status === 'OFF' || 
+                             v.status === 'Disabled' || 
+                             v.status === 'MONSOON_OFF' || 
+                             v.is_active === false || 
+                             v.is_closed === true;
+
+    // Check if there are rafting packages in DB, and whether ANY of them is active
+    const hasActiveRaftingItems = vendorRaftingItems.length === 0 || vendorRaftingItems.some(r => 
+      r.is_active !== false && 
+      r.is_closed !== true && 
+      r.coming_soon !== true && 
+      (!r.status || r.status.toLowerCase() === 'active')
+    );
+
+    const isOffline = isVendorInactive || !hasActiveRaftingItems;
+
+    let offlineReason = 'UNAVAILABLE';
+    if (v.offline_reason || v.status_reason) {
+      offlineReason = v.offline_reason || v.status_reason;
+    } else if (v.status === 'MONSOON_OFF' || (v.status && v.status.toLowerCase().includes('monsoon'))) {
+      offlineReason = 'MONSOON PAUSE';
+    } else if (isOffline) {
+      offlineReason = 'MONSOON / BACKEND PAUSE';
+    }
 
     const vendorImages = getRealVendorImages(
       v, 
@@ -430,6 +461,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       rating,
       description: `${vName} offers certified river rafting guides, safety life jackets, helmet & cliff jumping in Rishikesh.`,
       isOffline,
+      offlineReason,
       isRaftingVendor: true,
       stretches: DEFAULT_RAFTING_STRETCHES,
       currentStretchId: stretchObj.id
@@ -459,7 +491,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
           company_name: vName,
           landmark: bItem.landmark || bItem.address || 'Janki Setu',
           star_rating: bItem.rating || 4.5,
-          status: 'ACTIVE',
+          status: bItem.is_active === false ? 'INACTIVE' : (bItem.status || 'ACTIVE'),
           shop_image: bItem.images ? parseImageUrl(bItem.images) : null
         });
       }
@@ -467,7 +499,6 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   });
 
   const dbVendorBikeCards = Array.from(bikeVendorsMap.values()).map(v => {
-    const isOffline = v.status === 'INACTIVE' || v.is_active === false;
     const vName = v.company_name || v.name || 'Rishikesh Bike Rental';
     const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
 
@@ -476,6 +507,23 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       (b.vendor_name && b.vendor_name.toLowerCase() === vName.toLowerCase()) ||
       (b.operator_name && b.operator_name.toLowerCase() === vName.toLowerCase())
     );
+
+    const isVendorInactive = v.status === 'INACTIVE' || 
+                             v.status === 'Inactive' || 
+                             v.status === 'OFF' || 
+                             v.status === 'Disabled' || 
+                             v.is_active === false || 
+                             v.is_closed === true;
+
+    const hasActiveBikeItems = vendorBikeItems.length === 0 || vendorBikeItems.some(b => 
+      b.is_active !== false && 
+      b.is_closed !== true && 
+      b.coming_soon !== true && 
+      (!b.status || b.status.toLowerCase() === 'active')
+    );
+
+    const isOffline = isVendorInactive || !hasActiveBikeItems;
+    const offlineReason = v.offline_reason || v.status_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
 
     const vendorImages = getRealVendorImages(
       v, 
@@ -502,13 +550,14 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       rating,
       description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
       isOffline,
+      offlineReason,
       isBikeVendor: true,
       vehicles: DEFAULT_BIKE_VEHICLES,
       currentVehicleId: vehicleObj.id
     };
   });
 
-  // 4. Build Vendor Camping Cards from Real Database Vendors (Dynamic, no fake hardcoded items)
+  // 4. Build Vendor Camping Cards from Real Database Vendors
   const campingVendorsMap = new Map();
 
   effectiveVendors.forEach(v => {
@@ -519,7 +568,13 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   });
 
   const dbVendorCampingCards = Array.from(campingVendorsMap.values()).map(v => {
-    const isOffline = v.status === 'INACTIVE' || v.is_active === false;
+    const isOffline = v.status === 'INACTIVE' || 
+                      v.status === 'Inactive' || 
+                      v.status === 'OFF' || 
+                      v.status === 'Disabled' || 
+                      v.is_active === false || 
+                      v.is_closed === true;
+    const offlineReason = v.offline_reason || v.status_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
     const vName = v.company_name || v.name || 'Shivpuri Campsite';
     const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Shivpuri');
 
@@ -544,7 +599,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       images: vendorImages,
       rating,
       description: `${vName} offers riverside Swiss tent stays with bonfire, evening snacks, live music & buffet dinner.`,
-      isOffline
+      isOffline,
+      offlineReason
     };
   });
 
@@ -707,8 +763,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
                       {/* Offline Badge vs Real Rating Badge */}
                       {item.isOffline ? (
-                        <span className="absolute top-2 right-2 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs z-10 pointer-events-none">
-                          🔴 OFFLINE
+                        <span className="absolute top-2 right-2 bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs z-10 pointer-events-none uppercase tracking-wider">
+                          🔴 {item.offlineReason || 'PAUSED IN BACKEND'}
                         </span>
                       ) : (
                         <span className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-md text-[10px] font-extrabold text-slate-900 flex items-center gap-0.5 shadow-xs z-10 pointer-events-none">
@@ -792,6 +848,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                     disabled={item.isOffline}
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (item.isOffline) return;
                       toggleCartItem(item);
                     }}
                     className={`w-full py-2 sm:py-2.5 rounded-xl font-extrabold text-[10px] sm:text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1 ${
@@ -803,7 +860,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                     }`}
                   >
                     {item.isOffline ? (
-                      <span className="truncate">UNAVAILABLE</span>
+                      <span className="truncate">🚫 {item.offlineReason || 'UNAVAILABLE'}</span>
                     ) : inCart ? (
                       <>
                         <Check className="w-3.5 h-3.5 stroke-[3]" /> <span className="truncate">ADDED</span>
@@ -860,8 +917,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                 </span>
 
                 {activeDetailItem.isOffline && (
-                  <span className="absolute top-3 right-3 bg-rose-600 text-white text-xs font-black px-3 py-1 rounded-lg z-10 pointer-events-none">
-                    🔴 OFFLINE IN BACKEND
+                  <span className="absolute top-3 right-3 bg-rose-600 text-white text-xs font-black px-3 py-1 rounded-lg z-10 pointer-events-none uppercase tracking-wider">
+                    🔴 {activeDetailItem.offlineReason || 'PAUSED IN BACKEND'}
                   </span>
                 )}
               </VendorImageCarousel>
@@ -913,7 +970,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                     : 'bg-[#FF5F00] text-white shadow-md shadow-orange-500/20'
                 }`}
               >
-                {activeDetailItem.isOffline ? 'Unavailable' : isItemInCart(activeDetailItem.cartKey) ? '✓ In Cart' : '+ Add to Cart'}
+                {activeDetailItem.isOffline ? `🚫 ${activeDetailItem.offlineReason || 'UNAVAILABLE'}` : isItemInCart(activeDetailItem.cartKey) ? '✓ In Cart' : '+ Add to Cart'}
               </button>
             </div>
 
