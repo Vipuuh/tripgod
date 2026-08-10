@@ -394,16 +394,17 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const offlineReason = h.status_reason || h.offline_reason || (h.coming_soon ? 'COMING SOON' : 'CLOSED / OFFLINE');
     const hotelImages = getRealVendorImages(h, [], 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600');
     
-    const roomPrice = Number(h.price || 0);
+    // h.price in database is ALREADY the final customer display price (e.g. 999)
+    const displayPrice = Number(h.price || 0);
     let comm = 0;
     if (h.commission_value !== null && h.commission_value !== undefined && h.commission_value !== '') {
       comm = h.commission_type === 'percentage' 
-        ? Math.round((roomPrice * Number(h.commission_value)) / 100)
+        ? Math.round((displayPrice * Number(h.commission_value)) / 100)
         : Number(h.commission_value);
     } else if (h.commission_amount !== null && h.commission_amount !== undefined && h.commission_amount !== '') {
       comm = Number(h.commission_amount);
     } else if (h.commission_percentage) {
-      comm = Math.round((roomPrice * Number(h.commission_percentage)) / 100);
+      comm = Math.round((displayPrice * Number(h.commission_percentage)) / 100);
     } else {
       comm = 199;
     }
@@ -415,7 +416,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       fixAdv = comm > 0 ? comm : 199;
     }
 
-    const displayPrice = h.final_price ? Number(h.final_price) : (roomPrice + comm > roomPrice ? roomPrice + comm : roomPrice);
+    const roomVendorRate = Math.max(0, displayPrice - comm);
     const advanceVal = fixAdv > 0 ? fixAdv : (comm > 0 ? comm : Math.round(displayPrice * 0.1));
     const gstVal = Math.round(displayPrice * 0.12);
     const addressStr = h.address || 'Tapovan, Rishikesh';
@@ -427,8 +428,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       name: h.name,
       vendorName: h.name,
       price: displayPrice,
-      vendorRate: roomPrice,
-      roomPrice: roomPrice,
+      vendorRate: roomVendorRate,
+      roomPrice: roomVendorRate,
       fixedAdvance: advanceVal,
       commission_amount: comm,
       gstAmount: gstVal,
