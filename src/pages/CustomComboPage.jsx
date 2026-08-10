@@ -702,24 +702,6 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       currentVehicleId: vehicleObj.id
     };
   });
-      category: 'Scooty',
-      name: vehicleObj.name,
-      vendorName: vName,
-      price: vehicleObj.price,
-      fixedAdvance: vehicleObj.fixedAdvance || 200,
-      landmarkLocation: landmark,
-      fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
-      image: primaryImg,
-      images: vendorImages,
-      rating,
-      description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
-      isOffline,
-      offlineReason,
-      isBikeVendor: true,
-      vehicles: vendorVehicles,
-      currentVehicleId: vehicleObj.id
-    };
-  });
 
   // 4. Build Vendor Camping Cards from Real Database Vendors
   const campingVendorsMap = new Map();
