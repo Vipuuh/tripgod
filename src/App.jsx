@@ -522,13 +522,15 @@ export default function App() {
               />
             )}
             {route === 'admin' && (
-              <AdminDashboard 
-                setRoute={navigateTo} 
-                maintenanceConfig={maintenanceConfig} 
-                setMaintenanceConfig={setMaintenanceConfig} 
-                isMaintenanceActive={maintenanceConfig?.enabled} 
-                setIsMaintenanceActive={(val) => setMaintenanceConfig(prev => ({ ...prev, enabled: val }))} 
-              />
+              <ErrorBoundary>
+                <AdminDashboard 
+                  setRoute={navigateTo} 
+                  maintenanceConfig={maintenanceConfig} 
+                  setMaintenanceConfig={setMaintenanceConfig} 
+                  isMaintenanceActive={maintenanceConfig?.enabled} 
+                  setIsMaintenanceActive={(val) => setMaintenanceConfig(prev => ({ ...prev, enabled: val }))} 
+                />
+              </ErrorBoundary>
             )}
             {(route === 'vendor' || route === 'partner') && <VendorPortal onNavigateHome={() => navigateTo('home')} />}
             {route === 'privacy' && <Privacy />}

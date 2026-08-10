@@ -4,7 +4,7 @@ import {
   Activity, ShoppingBag, Building2, Waves, Bike, MapPin, Users, Image, 
   Trash2, Edit, Plus, LogOut, Search, Filter, ShieldCheck, ChevronRight,
   TrendingUp, CircleDollarSign, Check, X, PlusCircle, Sparkles, MapPinned,
-  LayoutDashboard, GripVertical, Star, MessageSquare, Lock
+  LayoutDashboard, GripVertical, Star, MessageSquare, Lock, Percent
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import RetargetingTab from './RetargetingTab';
@@ -1175,7 +1175,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                         type="number"
                         min="0"
                         max="50"
-                        value={comboDiscountRules.tier2}
+                        value={comboDiscountRules?.tier2 ?? 5}
                         onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier2: Number(e.target.value) }))}
                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
                       />
@@ -1191,7 +1191,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                         type="number"
                         min="0"
                         max="50"
-                        value={comboDiscountRules.tier3}
+                        value={comboDiscountRules?.tier3 ?? 10}
                         onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier3: Number(e.target.value) }))}
                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
                       />
@@ -1207,7 +1207,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                         type="number"
                         min="0"
                         max="50"
-                        value={comboDiscountRules.tier4}
+                        value={comboDiscountRules?.tier4 ?? 15}
                         onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier4: Number(e.target.value) }))}
                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
                       />
@@ -1223,7 +1223,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                         type="number"
                         min="0"
                         max="50"
-                        value={comboDiscountRules.tier5}
+                        value={comboDiscountRules?.tier5 ?? 20}
                         onChange={(e) => setComboDiscountRules(prev => ({ ...prev, tier5: Number(e.target.value) }))}
                         className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-bold text-sm outline-none focus:border-accent"
                       />
