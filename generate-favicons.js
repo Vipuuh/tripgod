@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
 
-const svgPath = './public/favicon.svg';
+const srcPath = './public/tripgod-logo-padded.jpg';
 const outputDir = './public';
 
 // Google Search Favicon Guidelines: must be a multiple of 48px square
