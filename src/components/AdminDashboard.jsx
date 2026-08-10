@@ -1118,34 +1118,9 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
               ================================================================= */}
           {activeTab === 'packages' && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-950 border border-slate-800 p-6 rounded-2xl gap-4">
-                <div>
-                  <h3 className="text-lg font-black text-white font-display">🔥 DYNAMIC COMBO DISCOUNT RULES & BUILDER CONTROL</h3>
-                  <p className="text-xs text-slate-400 mt-1">Customers build their custom bundles on the frontend (Hotel + Rafting + Scooty + Camping) with live percentage tier discounts</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setEditingPackageId(null);
-                    setPackageFormData({
-                      title: '',
-                      tagline: '',
-                      duration: '2 Days / 1 Night',
-                      badge: '👑 Bestseller',
-                      original_price: 5200,
-                      discount_type: 'percentage',
-                      discount_value: 25,
-                      final_price: 3900,
-                      included_items_text: 'Deluxe AC Room Stay, 16KM River Rafting, Honda Activa 6G Rental',
-                      inclusions_text: '1 Night Hotel Accommodation, 16 KM Shivpuri Rafting, 24 Hours Scooty Rental, Buffet Breakfast',
-                      images_text: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
-                      is_active: true
-                    });
-                    setPackageModalOpen(true);
-                  }}
-                  className="py-3 px-5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg hover:scale-102 transition-all border-none cursor-pointer flex items-center gap-1.5"
-                >
-                  <Plus size={16} /> <span>Create Preset Combo</span>
-                </button>
+              <div className="bg-slate-950 border border-slate-800 p-6 rounded-2xl">
+                <h3 className="text-lg font-black text-white font-display">🔥 DYNAMIC COMBO DISCOUNT RULES & BUILDER CONTROL</h3>
+                <p className="text-xs text-slate-400 mt-1">Customers build their custom bundles on the frontend (Hotel + Rafting + Scooty + Camping) with live percentage tier discounts</p>
               </div>
 
               {/* Editable Dynamic Discount Percentage Controls */}
@@ -1233,108 +1208,6 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                   </div>
                 </div>
               </form>
-
-              {/* Packages List */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {packagesList.length === 0 ? (
-                  <div className="col-span-full bg-slate-950 border border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
-                    No custom packages found in DB. Click "Create New Combo Package" to add one!
-                  </div>
-                ) : (
-                  packagesList.map((pkg) => (
-                    <div key={pkg.id} className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
-                      <div>
-                        {/* Package Image */}
-                        <div className="h-40 bg-slate-900 relative">
-                          <img 
-                            src={(pkg.images && pkg.images[0]) || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80'} 
-                            alt={pkg.title} 
-                            className="w-full h-full object-cover" 
-                          />
-                          <div className="absolute top-3 left-3 bg-orange-600 text-white text-[10px] font-black py-0.5 px-2 rounded">
-                            {pkg.badge || '👑 Bestseller'}
-                          </div>
-                          <div className={`absolute top-3 right-3 text-[10px] font-black py-0.5 px-2 rounded ${pkg.is_active ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
-                            {pkg.is_active ? 'ACTIVE' : 'HIDDEN'}
-                          </div>
-                        </div>
-
-                        {/* Package Info */}
-                        <div className="p-4 space-y-3">
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 block">{pkg.duration || '2 Days / 1 Night'}</span>
-                            <h4 className="font-bold text-base text-white font-display mt-0.5">{pkg.title}</h4>
-                            <p className="text-xs text-slate-400 line-clamp-1">{pkg.tagline}</p>
-                          </div>
-
-                          <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1.5">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-slate-400">Original Price:</span>
-                              <span className="text-slate-400 line-through">₹{pkg.original_price}</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-slate-400">Discount:</span>
-                              <span className="text-orange-400 font-bold">
-                                {pkg.discount_type === 'flat' ? `FLAT ₹${pkg.discount_value} OFF` : `${pkg.discount_value}% OFF`}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-800">
-                              <span className="text-white">Final Price:</span>
-                              <span className="text-emerald-400 text-sm">₹{pkg.final_price} / person</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Package Actions */}
-                      <div className="p-4 bg-slate-900/40 border-t border-slate-900 flex items-center justify-between">
-                        <button
-                          onClick={() => handleTogglePackageActive(pkg)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                            pkg.is_active ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}
-                        >
-                          {pkg.is_active ? 'Deactivate' : 'Activate'}
-                        </button>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingPackageId(pkg.id);
-                              setPackageFormData({
-                                title: pkg.title || '',
-                                tagline: pkg.tagline || '',
-                                duration: pkg.duration || '2 Days / 1 Night',
-                                badge: pkg.badge || '👑 Bestseller',
-                                original_price: pkg.original_price || 5000,
-                                discount_type: pkg.discount_type || 'percentage',
-                                discount_value: pkg.discount_value || 20,
-                                final_price: pkg.final_price || 4000,
-                                included_items_text: (pkg.included_items || []).map(i => i.name).join(', '),
-                                inclusions_text: (pkg.inclusions || []).join(', '),
-                                images_text: (pkg.images || []).join(', '),
-                                is_active: pkg.is_active !== undefined ? pkg.is_active : true
-                              });
-                              setPackageModalOpen(true);
-                            }}
-                            className="p-2 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                            title="Edit Package"
-                          >
-                            <Edit size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeletePackage(pkg.id)}
-                            className="p-2 bg-red-950/20 border border-red-900/30 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
-                            title="Delete Package"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
             </div>
           )}
 

@@ -504,7 +504,11 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
           landmark: bItem.landmark || bItem.address || 'Janki Setu',
           star_rating: bItem.rating || 4.5,
           status: bItem.is_active === false ? 'INACTIVE' : (bItem.status || 'ACTIVE'),
-          shop_image: bItem.images ? parseI  // Helper to calculate total customer price & fixed advance for bikes & scooters
+          shop_image: bItem.images ? parseImageUrl(bItem.images) : null
+        });
+      }
+    }
+  });
   const getBikeCustomerDetails = (b, v) => {
     if (!b) return { finalPrice: 700, fixedAdvance: 200 };
     const p = Number(b.price || 0);
