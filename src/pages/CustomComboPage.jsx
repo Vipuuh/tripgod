@@ -303,10 +303,22 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
   const grandTotal = finalPricePerPerson * persons;
   const totalSaved = discountAmountPerPerson * persons;
-  const advance10Percent = Math.round(grandTotal * 0.1);
-
   const handleProceedBooking = () => {
     if (cartItems.length === 0) return;
+
+    // Calculate sum of backend advances for all selected items
+    const rawTotalAdvancePerPerson = cartItems.reduce((sum, item) => {
+      const itemAdv = item.fixedAdvance !== undefined && item.fixedAdvance !== null && Number(item.fixedAdvance) >= 0
+        ? Number(item.fixedAdvance)
+        : Math.round(Number(item.price || 0) * 0.1);
+      return sum + itemAdv;
+    }, 0);
+
+    // Scale advance proportionally if a combo discount is applied
+    const discountMultiplier = (100 - discountPercent) / 100;
+    const finalAdvancePerPerson = Math.round(rawTotalAdvancePerPerson * discountMultiplier);
+    const totalAdvance = finalAdvancePerPerson * persons;
+
     const payload = {
       id: `custom-combo-${Date.now()}`,
       title: `Custom Rishikesh Combo (${cartCount} Services)`,
@@ -315,7 +327,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       category: 'combo',
       price: finalPricePerPerson,
       totalPrice: grandTotal,
-      advance_amount: advance10Percent,
+      advance_amount: totalAdvance,
       persons,
       guests: persons,
       travelDate,
@@ -492,33 +504,37 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
           landmark: bItem.landmark || bItem.address || 'Janki Setu',
           star_rating: bItem.rating || 4.5,
           status: bItem.is_active === false ? 'INACTIVE' : (bItem.status || 'ACTIVE'),
-          shop_image: bItem.images ? parseImageUrl(bItem.images) : null
-        });
-      }
-    }
-  });
-
-  // Helper to calculate total customer price (vendor base rate + commission/profit) for bikes & scooters
-  const getBikeCustomerPrice = (b, v) => {
-    if (!b) return 700;
+          shop_image: bItem.images ? parseI  // Helper to calculate total customer price & fixed advance for bikes & scooters
+  const getBikeCustomerDetails = (b, v) => {
+    if (!b) return { finalPrice: 700, fixedAdvance: 200 };
     const p = Number(b.price || 0);
     const net = Number(b.net_price || 0);
     
+    // Fixed advance explicit check
+    let fixAdv = 0;
+    if (b.fixed_advance_amount !== null && b.fixed_advance_amount !== undefined && b.fixed_advance_amount !== '') {
+      fixAdv = Number(b.fixed_advance_amount);
+    } else if (v && (v.fixed_advance_amount !== null && v.fixed_advance_amount !== undefined && v.fixed_advance_amount !== '')) {
+      fixAdv = Number(v.fixed_advance_amount);
+    }
+
     // Profit / Commission amount check
     let comm = 0;
-    if (b.commission_amount !== null && b.commission_amount !== undefined) {
+    if (b.commission_amount !== null && b.commission_amount !== undefined && b.commission_amount !== '') {
       comm = Number(b.commission_amount);
     } else if (b.commission_percentage && net > 0) {
       comm = Math.round((net * Number(b.commission_percentage)) / 100);
-    } else if (v && (v.commission_amount !== null && v.commission_amount !== undefined)) {
+    } else if (v && (v.commission_amount !== null && v.commission_amount !== undefined && v.commission_amount !== '')) {
       comm = Number(v.commission_amount);
     } else {
       comm = 200; // standard default profit per scooty
     }
 
     const calculatedTotal = net > 0 ? (net + comm) : (p > 0 && p !== net ? p : p + comm);
-    const finalPrice = Math.max(p, calculatedTotal);
-    return finalPrice > 0 ? finalPrice : 700;
+    const finalPrice = Math.max(p, calculatedTotal, 700);
+    const advanceVal = fixAdv > 0 ? fixAdv : (comm > 0 ? comm : Math.round(finalPrice * 0.1));
+
+    return { finalPrice, fixedAdvance: advanceVal };
   };
 
   const dbVendorBikeCards = Array.from(bikeVendorsMap.values()).map(v => {
@@ -533,11 +549,12 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
     // Build real vehicles list for this vendor from DB (calculating vendor rate + profit commission)
     let vendorVehicles = vendorBikeItems.map(b => {
-      const realPrice = getBikeCustomerPrice(b, v);
+      const details = getBikeCustomerDetails(b, v);
       return {
         id: String(b.id),
         name: b.name,
-        price: realPrice,
+        price: details.finalPrice,
+        fixedAdvance: details.fixedAdvance,
         is_active: b.is_active !== false && b.is_closed !== true && b.status !== 'INACTIVE'
       };
     });
@@ -546,14 +563,17 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       const comm = v.commission_amount !== null && v.commission_amount !== undefined 
         ? Number(v.commission_amount) 
         : 200;
+      const fixAdv = v.fixed_advance_amount !== null && v.fixed_advance_amount !== undefined && v.fixed_advance_amount !== ''
+        ? Number(v.fixed_advance_amount)
+        : comm;
       const activaPrice = 500 + comm; // e.g. 500 vendor rate + 200 profit = 700
 
       vendorVehicles = [
-        { id: 'activa6g', name: 'Honda Activa 6G', price: activaPrice, is_active: true },
-        { id: 'jupiter125', name: 'TVS Jupiter 125', price: activaPrice + 50, is_active: true },
-        { id: 'burgman125', name: 'Suzuki Burgman 125', price: activaPrice + 150, is_active: true },
-        { id: 'classic350', name: 'Royal Enfield Classic 350', price: 1200, is_active: true },
-        { id: 'himalayan', name: 'Royal Enfield Himalayan 450', price: 1600, is_active: true }
+        { id: 'activa6g', name: 'Honda Activa 6G', price: activaPrice, fixedAdvance: fixAdv, is_active: true },
+        { id: 'jupiter125', name: 'TVS Jupiter 125', price: activaPrice + 50, fixedAdvance: fixAdv, is_active: true },
+        { id: 'burgman125', name: 'Suzuki Burgman 125', price: activaPrice + 150, fixedAdvance: fixAdv, is_active: true },
+        { id: 'classic350', name: 'Royal Enfield Classic 350', price: 1200, fixedAdvance: 300, is_active: true },
+        { id: 'himalayan', name: 'Royal Enfield Himalayan 450', price: 1600, fixedAdvance: 400, is_active: true }
       ];
     }
 
@@ -592,6 +612,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       name: vehicleObj.name,
       vendorName: vName,
       price: vehicleObj.price,
+      fixedAdvance: vehicleObj.fixedAdvance || 200,
       landmarkLocation: landmark,
       fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
       image: primaryImg,
@@ -602,6 +623,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       offlineReason,
       isBikeVendor: true,
       vehicles: vendorVehicles,
+      currentVehicleId: vehicleObj.id
+    };
+  });ndorVehicles,
       currentVehicleId: vehicleObj.id
     };
   });

@@ -1056,11 +1056,13 @@ My payment ID is verified. Please confirm my slots.`;
                 <div className="flex items-center gap-2 p-2.5 bg-black/5 text-black rounded-xl text-[10px] font-bold border border-black/10">
                   <CreditCard size={14} className="flex-shrink-0 text-gray-400" />
                   <span>
-                    {paymentMode === 'fixed_advance'
+                    {isCombo && activity?.advance_amount
                       ? `PAY ONLY ₹${calculatedAdvance.toLocaleString('en-IN')} ADVANCE`
-                      : (paymentMode === 'full_payment'
-                          ? '100% SECURE FULL PAYMENT'
-                          : `PAY ONLY ${commissionPercentage}% ADVANCE`)}
+                      : (paymentMode === 'fixed_advance'
+                          ? `PAY ONLY ₹${calculatedAdvance.toLocaleString('en-IN')} ADVANCE`
+                          : (paymentMode === 'full_payment'
+                              ? '100% SECURE FULL PAYMENT'
+                              : `PAY ONLY ${commissionPercentage}% ADVANCE`))}
                   </span>
                 </div>
               </div>
@@ -1091,11 +1093,13 @@ My payment ID is verified. Please confirm my slots.`;
                       <div>
                         <span className="block text-xs font-black">Pay Advance</span>
                         <span className="block text-[10px] text-[#FF5F00] font-black tracking-wide mt-0.5">
-                          {isHotel
-                            ? `₹${fixedAdvanceAmount} Advance + ₹${taxes} GST`
-                            : (paymentMode === 'fixed_advance'
-                                ? `₹${fixedAdvanceAmount}/person × ${guests} guest${guests > 1 ? 's' : ''}`
-                                : `Pay ${commissionPercentage}% online`)}
+                          {isCombo && activity?.advance_amount
+                            ? `Pay ₹${calculatedAdvance.toLocaleString('en-IN')} advance online`
+                            : (isHotel
+                                ? `₹${fixedAdvanceAmount} Advance + ₹${taxes} GST`
+                                : (paymentMode === 'fixed_advance'
+                                    ? `₹${fixedAdvanceAmount}/person × ${guests} guest${guests > 1 ? 's' : ''}`
+                                    : `Pay ${commissionPercentage}% online`))}
                         </span>
                       </div>
                       <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{calculatedAdvance.toLocaleString('en-IN')}</span>
@@ -1245,9 +1249,11 @@ My payment ID is verified. Please confirm my slots.`;
                   <span>
                     {effectivePaymentOption === 'full'
                       ? 'Pay Full & Book'
-                      : (paymentMode === 'fixed_advance'
-                          ? 'Pay Advance & Book'
-                          : `Pay ${commissionPercentage}% & Book`)}
+                      : (isCombo && activity?.advance_amount
+                          ? `Pay ₹${finalAmountToPay.toLocaleString('en-IN')} Advance & Book`
+                          : (paymentMode === 'fixed_advance'
+                              ? 'Pay Advance & Book'
+                              : `Pay ${commissionPercentage}% & Book`))}
                   </span>
                 </button>
               )}
