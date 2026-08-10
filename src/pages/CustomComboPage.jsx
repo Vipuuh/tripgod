@@ -629,9 +629,6 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       vehicles: vendorVehicles,
       currentVehicleId: vehicleObj.id
     };
-  });ndorVehicles,
-      currentVehicleId: vehicleObj.id
-    };
   });
 
   // 4. Build Vendor Camping Cards from Real Database Vendors
