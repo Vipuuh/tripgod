@@ -366,6 +366,19 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
         const simpleBookingCode = getSimpleBookingId(dbBookingId);
 
+        let comboVendorsSection = '';
+        if (isCombo && activity.items && activity.items.length > 0) {
+          comboVendorsSection += `\n*SERVICES & VENDOR VENUE PAYMENTS:*\n`;
+          activity.items.forEach((item, idx) => {
+            const vRate = (item.vendorRate !== undefined ? Number(item.vendorRate) : Math.max(0, Number(item.price || 0) - Number(item.fixedAdvance || 0))) * guests;
+            const mapsUrl = item.mapLink || `https://maps.google.com/?q=${encodeURIComponent((item.fullAddress || item.vendorName || item.name) + ' Rishikesh')}`;
+            comboVendorsSection += `${idx + 1}. *${item.vendorName || item.name}* (${item.name})\n`;
+            comboVendorsSection += `   • Address: ${item.fullAddress || 'Rishikesh, Uttarakhand'}\n`;
+            comboVendorsSection += `   • 📍 Maps Link: ${mapsUrl}\n`;
+            comboVendorsSection += `   • 💵 Pay Vendor at Venue: ₹${vRate.toLocaleString('en-IN')}\n\n`;
+          });
+        }
+
         const message = `*BOOKING SUCCESSFUL & PAID - TRIPGOD*
 ----------------------------------
 *Booking ID:* ${simpleBookingCode}
@@ -379,7 +392,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 *Activity:* ${activity.name} ${activity.stretch ? `(${activity.stretch})` : ''}
 *Date:* ${dateRangeStr}
 ${isBikeRent ? `*Pickup Time:* ${slot}\n*Rental Duration:* ${rentalDays} Day(s)\n*No. of Vehicles:* ${guests} Vehicle(s)` : `*${activity.category === 'hotels' ? 'Room Type' : 'Slot'}:* ${slot}\n*Guests:* ${guests} ${unitLabel}`}
-${hasVideoOption ? `*Add-ons:* ${((activity.free_video_type || (activity.category === 'rafting' ? 'dslr' : 'none')) === 'gopro') ? 'GoPro Video Included' : 'DSLR Video Included'}\n` : ''}
+${hasVideoOption ? `*Add-ons:* ${((activity.free_video_type || (activity.category === 'rafting' ? 'dslr' : 'none')) === 'gopro') ? 'GoPro Video Included' : 'DSLR Video Included'}\n` : ''}${comboVendorsSection}
 *Price Summary:*
 - Total Price: ₹${totalPrice.toLocaleString('en-IN')}
 - *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${finalAmountToPay.toLocaleString('en-IN')}${upiDiscountVal > 0 ? ` (UPI Discount of ₹${upiDiscountVal} applied)` : ''}
@@ -1164,6 +1177,40 @@ My payment ID is verified. Please confirm my slots.`;
                       <span>Base price ({guests} vehicle{guests > 1 ? 's' : ''} × {rentalDays} day{rentalDays > 1 ? 's' : ''})</span>
                       <span>₹{rawTotalPrice.toLocaleString('en-IN')}</span>
                     </div>
+                  </>
+                ) : isCombo ? (
+                  <>
+                    {activity.items && activity.items.map((item, idx) => {
+                      const vRate = (item.vendorRate !== undefined ? Number(item.vendorRate) : Math.max(0, Number(item.price || 0) - Number(item.fixedAdvance || 0))) * guests;
+                      return (
+                        <div key={idx} className="space-y-0.5 border-b border-emerald-500/10 pb-1.5 last:border-b-0">
+                          <div className="flex justify-between items-center text-xs text-emerald-900/90 font-bold">
+                            <span className="truncate max-w-[220px]" title={`${item.category}: ${item.name}`}>
+                              {item.category === 'Hotel' ? '🏨' : item.category === 'Scooty' ? '🛵' : item.category === 'Rafting' ? '🚣' : '🏕️'} {item.vendorName || item.name} ({item.name})
+                            </span>
+                            <span>₹{(Number(item.price || 0) * guests).toLocaleString('en-IN')}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-emerald-850 font-medium">
+                            <span className="text-gray-500">📍 Pay Vendor at Venue:</span>
+                            <span className="font-bold text-slate-800">₹{vRate.toLocaleString('en-IN')}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {activity.discountPercent > 0 && (
+                      <div className="flex justify-between items-center text-xs text-emerald-700 font-bold pt-1">
+                        <span className="flex items-center gap-1">
+                          <span>🔥</span> Combo Discount ({activity.discountPercent}% OFF)
+                        </span>
+                        <span>- ₹{Number(activity.totalSaved || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                    {(activity.totalHotelGst || 0) > 0 && (
+                      <div className="flex justify-between items-center text-xs text-emerald-900/70 font-semibold">
+                        <span>📄 Hotel GST &amp; Service Taxes (12%)</span>
+                        <span>+ ₹{Number(activity.totalHotelGst).toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>

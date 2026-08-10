@@ -306,7 +306,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   const handleProceedBooking = () => {
     if (cartItems.length === 0) return;
 
-    // Calculate sum of backend advances for all selected items
+    // 1. Raw Sum of required backend fixed advances (e.g. ₹199 + ₹200 = ₹399)
     const rawTotalAdvancePerPerson = cartItems.reduce((sum, item) => {
       const itemAdv = item.fixedAdvance !== undefined && item.fixedAdvance !== null && Number(item.fixedAdvance) >= 0
         ? Number(item.fixedAdvance)
@@ -314,10 +314,35 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       return sum + itemAdv;
     }, 0);
 
-    // Scale advance proportionally if a combo discount is applied
-    const discountMultiplier = (100 - discountPercent) / 100;
-    const finalAdvancePerPerson = Math.round(rawTotalAdvancePerPerson * discountMultiplier);
+    // 2. Combo Discount amount (e.g. 5% of raw subtotal ₹1699 = ₹85)
+    const discountAmountPerPerson = Math.round((rawSubtotalPerPerson * discountPercent) / 100);
+
+    // 3. Hotel GST (12% of hotel price = ₹120)
+    const hotelGstPerPerson = cartItems.reduce((sum, item) => {
+      if (item.category === 'Hotel' || item.category === 'hotel') {
+        const gst = item.gstAmount !== undefined ? item.gstAmount : Math.round(Number(item.price || 0) * 0.12);
+        return sum + gst;
+      }
+      return sum;
+    }, 0);
+
+    // 4. Exact User Formula: Online Advance = (Sum of Advances ₹399) - (Discount Amount ₹85) + (Hotel GST ₹120) = ₹434
+    const finalAdvancePerPerson = Math.max(1, rawTotalAdvancePerPerson - discountAmountPerPerson + hotelGstPerPerson);
     const totalAdvance = finalAdvancePerPerson * persons;
+
+    // 5. Total Vendor Base Payout at Venue (e.g. Hotel ₹800 + Scooty ₹500 = ₹1,300)
+    const totalVendorPayoutPerPerson = cartItems.reduce((sum, item) => {
+      const vRate = item.vendorRate !== undefined && item.vendorRate !== null 
+        ? Number(item.vendorRate) 
+        : Math.max(0, Number(item.price || 0) - Number(item.fixedAdvance || 0));
+      return sum + vRate;
+    }, 0);
+    const totalVendorPayout = totalVendorPayoutPerPerson * persons;
+
+    // 6. Grand Total Price (incl. GST & Combo Discount)
+    const finalPriceWithGstPerPerson = rawSubtotalPerPerson - discountAmountPerPerson + hotelGstPerPerson;
+    const grandTotalWithGst = finalPriceWithGstPerPerson * persons;
+    const totalHotelGst = hotelGstPerPerson * persons;
 
     const payload = {
       id: `custom-combo-${Date.now()}`,
@@ -325,16 +350,24 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       name: `Custom Rishikesh Combo (${cartCount} Services)`,
       type: 'custom_combo',
       category: 'combo',
-      price: finalPricePerPerson,
-      totalPrice: grandTotal,
+      price: finalPriceWithGstPerPerson,
+      totalPrice: grandTotalWithGst,
       advance_amount: totalAdvance,
       persons,
       guests: persons,
       travelDate,
-      items: cartItems,
+      items: cartItems.map(item => ({
+        ...item,
+        vendorRate: item.vendorRate !== undefined ? item.vendorRate : Math.max(0, Number(item.price || 0) - Number(item.fixedAdvance || 0)),
+        mapLink: item.mapLink || `https://maps.google.com/?q=${encodeURIComponent((item.fullAddress || item.vendorName || item.name) + ' Rishikesh')}`
+      })),
       discountPercent,
       rawTotal: rawSubtotalPerPerson * persons,
-      totalSaved
+      totalSaved,
+      totalHotelGst,
+      rawTotalAdvancePerPerson: rawTotalAdvancePerPerson * persons,
+      finalAdvancePerPerson: totalAdvance,
+      totalVendorPayout
     };
 
     if (onBookCustomCombo) {
@@ -360,15 +393,48 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                       (h.status && h.status.toLowerCase() !== 'active');
     const offlineReason = h.status_reason || h.offline_reason || (h.coming_soon ? 'COMING SOON' : 'CLOSED / OFFLINE');
     const hotelImages = getRealVendorImages(h, [], 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=600');
+    
+    const roomPrice = Number(h.price || 0);
+    let comm = 0;
+    if (h.commission_value !== null && h.commission_value !== undefined && h.commission_value !== '') {
+      comm = h.commission_type === 'percentage' 
+        ? Math.round((roomPrice * Number(h.commission_value)) / 100)
+        : Number(h.commission_value);
+    } else if (h.commission_amount !== null && h.commission_amount !== undefined && h.commission_amount !== '') {
+      comm = Number(h.commission_amount);
+    } else if (h.commission_percentage) {
+      comm = Math.round((roomPrice * Number(h.commission_percentage)) / 100);
+    } else {
+      comm = 199;
+    }
+
+    let fixAdv = 0;
+    if (h.fixed_advance_amount !== null && h.fixed_advance_amount !== undefined && h.fixed_advance_amount !== '') {
+      fixAdv = Number(h.fixed_advance_amount);
+    } else {
+      fixAdv = comm > 0 ? comm : 199;
+    }
+
+    const displayPrice = h.final_price ? Number(h.final_price) : (roomPrice + comm > roomPrice ? roomPrice + comm : roomPrice);
+    const advanceVal = fixAdv > 0 ? fixAdv : (comm > 0 ? comm : Math.round(displayPrice * 0.1));
+    const gstVal = Math.round(displayPrice * 0.12);
+    const addressStr = h.address || 'Tapovan, Rishikesh';
+
     return {
       cartKey: `hotel-${h.id}`,
       id: h.id,
       category: 'Hotel',
       name: h.name,
       vendorName: h.name,
-      price: Number(h.price),
-      landmarkLocation: toShortLandmark(h.address, 'Tapovan'),
-      fullAddress: h.address || 'Tapovan, Rishikesh',
+      price: displayPrice,
+      vendorRate: roomPrice,
+      roomPrice: roomPrice,
+      fixedAdvance: advanceVal,
+      commission_amount: comm,
+      gstAmount: gstVal,
+      landmarkLocation: toShortLandmark(addressStr, 'Tapovan'),
+      fullAddress: addressStr,
+      mapLink: `https://maps.google.com/?q=${encodeURIComponent(addressStr)}`,
       image: hotelImages[0],
       images: hotelImages,
       rating: h.rating || 4.5,
@@ -510,7 +576,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     }
   });
   const getBikeCustomerDetails = (b, v) => {
-    if (!b) return { finalPrice: 700, fixedAdvance: 200 };
+    if (!b) return { finalPrice: 700, fixedAdvance: 200, vendorRate: 500 };
     const p = Number(b.price || 0);
     const net = Number(b.net_price || 0);
     
@@ -537,8 +603,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const calculatedTotal = net > 0 ? (net + comm) : (p > 0 && p !== net ? p : p + comm);
     const finalPrice = Math.max(p, calculatedTotal, 700);
     const advanceVal = fixAdv > 0 ? fixAdv : (comm > 0 ? comm : Math.round(finalPrice * 0.1));
+    const vRate = net > 0 ? net : Math.max(0, finalPrice - comm);
 
-    return { finalPrice, fixedAdvance: advanceVal };
+    return { finalPrice, fixedAdvance: advanceVal, vendorRate: vRate };
   };
 
   const dbVendorBikeCards = Array.from(bikeVendorsMap.values()).map(v => {
@@ -559,6 +626,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
         name: b.name,
         price: details.finalPrice,
         fixedAdvance: details.fixedAdvance,
+        vendorRate: details.vendorRate,
         is_active: b.is_active !== false && b.is_closed !== true && b.status !== 'INACTIVE'
       };
     });
@@ -573,11 +641,11 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       const activaPrice = 500 + comm; // e.g. 500 vendor rate + 200 profit = 700
 
       vendorVehicles = [
-        { id: 'activa6g', name: 'Honda Activa 6G', price: activaPrice, fixedAdvance: fixAdv, is_active: true },
-        { id: 'jupiter125', name: 'TVS Jupiter 125', price: activaPrice + 50, fixedAdvance: fixAdv, is_active: true },
-        { id: 'burgman125', name: 'Suzuki Burgman 125', price: activaPrice + 150, fixedAdvance: fixAdv, is_active: true },
-        { id: 'classic350', name: 'Royal Enfield Classic 350', price: 1200, fixedAdvance: 300, is_active: true },
-        { id: 'himalayan', name: 'Royal Enfield Himalayan 450', price: 1600, fixedAdvance: 400, is_active: true }
+        { id: 'activa6g', name: 'Honda Activa 6G', price: activaPrice, fixedAdvance: fixAdv, vendorRate: 500, is_active: true },
+        { id: 'jupiter125', name: 'TVS Jupiter 125', price: activaPrice + 50, fixedAdvance: fixAdv, vendorRate: 550, is_active: true },
+        { id: 'burgman125', name: 'Suzuki Burgman 125', price: activaPrice + 150, fixedAdvance: fixAdv, vendorRate: 650, is_active: true },
+        { id: 'classic350', name: 'Royal Enfield Classic 350', price: 1200, fixedAdvance: 300, vendorRate: 900, is_active: true },
+        { id: 'himalayan', name: 'Royal Enfield Himalayan 450', price: 1600, fixedAdvance: 400, vendorRate: 1200, is_active: true }
       ];
     }
 
@@ -609,9 +677,31 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const selectedVehId = bikeVehicleMap[v.id] || vendorVehicles[0].id;
     const vehicleObj = vendorVehicles.find(veh => String(veh.id) === String(selectedVehId)) || vendorVehicles[0];
 
+    const fullAddr = v.vendor_address || v.address || `${landmark}, Rishikesh`;
+
     return {
       cartKey: `v-bike-${v.id}-${vehicleObj.id}`,
       id: v.id,
+      category: 'Scooty',
+      name: vehicleObj.name,
+      vendorName: vName,
+      price: vehicleObj.price,
+      vendorRate: vehicleObj.vendorRate || (vehicleObj.price - (vehicleObj.fixedAdvance || 200)),
+      fixedAdvance: vehicleObj.fixedAdvance || 200,
+      landmarkLocation: landmark,
+      fullAddress: fullAddr,
+      mapLink: `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}`,
+      image: primaryImg,
+      images: vendorImages,
+      rating,
+      description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
+      isOffline,
+      offlineReason,
+      isBikeVendor: true,
+      vehicles: vendorVehicles,
+      currentVehicleId: vehicleObj.id
+    };
+  });
       category: 'Scooty',
       name: vehicleObj.name,
       vendorName: vName,
