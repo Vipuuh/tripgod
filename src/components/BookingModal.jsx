@@ -58,22 +58,38 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     return `TG-${String(Math.abs(hash)).slice(-6)}`;
   };
 
-  // Default slots based on activity category
-  let defaultSlots = ['08:00 AM', '10:30 AM', '01:30 PM', '04:00 PM'];
+  // Default slots based on activity category and name
+  let defaultSlots = ['Flexible (10:00 AM - 06:00 PM)', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'];
   if (activity) {
     const cat = (activity.category || '').toLowerCase();
-    if (cat === 'rafting') {
-      defaultSlots = ['06:00 AM', '07:00 AM', '08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM'];
-    } else if (cat === 'swing') {
-      defaultSlots = ['10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'];
-    } else if (cat === 'paragliding') {
-      defaultSlots = ['08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '03:00 PM', '04:00 PM', '05:00 PM'];
-    } else if (cat === 'zipline') {
-      defaultSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '03:00 PM', '04:00 PM'];
-    } else if (cat === 'camping') {
-      defaultSlots = ['12:00 PM (Check-in)'];
-    } else if (cat === 'bikes' || cat === 'bikerent') {
-      defaultSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', 'Flexible (Anytime during shop hours)'];
+    const actName = (activity.name || '').toLowerCase();
+
+    if (cat === 'bungee' || cat === 'swing' || cat === 'zipline' || actName.includes('bungee') || actName.includes('swing') || actName.includes('zip')) {
+      defaultSlots = [
+        'Flexible (10:00 AM - 06:00 PM)',
+        '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
+        '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'
+      ];
+    } else if (cat === 'rafting' || cat === 'kayaking' || actName.includes('raft') || actName.includes('kayak')) {
+      defaultSlots = [
+        '07:00 AM (Early Batch)',
+        '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM',
+        '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM (Last Batch)'
+      ];
+    } else if (cat === 'paragliding' || actName.includes('paragliding') || actName.includes('glid')) {
+      defaultSlots = [
+        '07:00 AM (Sunrise Flight)',
+        '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM',
+        '03:00 PM', '04:00 PM', '05:00 PM (Sunset Flight)'
+      ];
+    } else if (cat === 'camping' || actName.includes('camp')) {
+      defaultSlots = ['12:00 PM (Standard Check-in)', '01:00 PM', '02:00 PM', 'Flexible Afternoon Check-in'];
+    } else if (cat === 'bikes' || cat === 'bikerent' || actName.includes('bike') || actName.includes('scooty') || actName.includes('rent')) {
+      defaultSlots = [
+        'Anytime Pickup (08:00 AM - 08:00 PM)',
+        '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM',
+        '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'
+      ];
     }
   }
   const slots = (activity && activity.slots) || defaultSlots;
