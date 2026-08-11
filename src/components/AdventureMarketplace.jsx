@@ -60,6 +60,223 @@ const getInclusionsRibbon = (activityType) => {
   }
 };
 
+const getActivityMetric = (pkg, activityType) => {
+  if (!pkg) return { label: 'Detail', value: '' };
+
+  if (pkg.rules?.custom_metric_label && pkg.rules?.custom_metric_value) {
+    return { label: pkg.rules.custom_metric_label, value: pkg.rules.custom_metric_value };
+  }
+
+  const num = pkg.distance_km || pkg.height_m || 0;
+  const act = (activityType || '').toLowerCase();
+  const pkgName = (pkg.name || '').toLowerCase();
+
+  if (act.includes('bungee') || act.includes('swing') || pkgName.includes('bungee') || pkgName.includes('swing')) {
+    const heightStr = pkg.rules?.bungee_rules?.jump_height || (num > 0 ? `${num} Meters` : (pkg.route?.includes('M') ? pkg.route : '117 Meters'));
+    return {
+      label: act.includes('swing') ? 'Swing Height' : 'Jump Height',
+      value: heightStr.includes('Meter') || heightStr.includes('M') ? heightStr : `${heightStr} Meters`
+    };
+  } else if (act.includes('zipline') || pkgName.includes('zip')) {
+    const lenStr = num >= 1000 ? `${(num / 1000).toFixed(1)} KM` : (num > 0 ? `${num} Meters` : '750 Meters');
+    return {
+      label: 'Zip Length',
+      value: lenStr
+    };
+  } else if (act.includes('paragliding') || pkgName.includes('paragliding')) {
+    const altStr = num > 0 ? `${num} Meters` : '1500 Meters';
+    return {
+      label: 'Flight Altitude',
+      value: altStr
+    };
+  } else if (act.includes('camping')) {
+    return {
+      label: 'Camp Type',
+      value: pkg.route_details || pkg.route || 'Swiss Luxury Tents'
+    };
+  } else {
+    // Rafting or general distance
+    return {
+      label: 'Distance',
+      value: num > 0 ? `${num} KM` : (pkg.route ? pkg.route : '16 KM')
+    };
+  }
+};
+
+const getPerfectForItems = (pkg, activityType) => {
+  if (pkg?.rules?.perfect_for_items && Array.isArray(pkg.rules.perfect_for_items) && pkg.rules.perfect_for_items.length === 4) {
+    return pkg.rules.perfect_for_items;
+  }
+
+  const act = (activityType || '').toLowerCase();
+  const pkgName = (pkg?.name || '').toLowerCase();
+
+  if (act.includes('bungee') || pkgName.includes('bungee')) {
+    return [
+      {
+        title: 'Adults & Teens (12-45 YRS)',
+        subtitle: pkg?.rules?.bungee_rules?.safety_harness || 'Triple Redundant Harness & EN Safety Standards',
+        color: 'indigo',
+        icon: Users
+      },
+      {
+        title: 'First-Timers & Solo Jumpers',
+        subtitle: 'Certified Jump Master & Briefing Included',
+        color: 'emerald',
+        icon: ShieldCheck
+      },
+      {
+        title: 'Extreme Thrill Seekers',
+        subtitle: `${pkg?.distance_km || 117}M Free-Fall Leap & High Platform`,
+        color: 'amber',
+        icon: Zap
+      },
+      {
+        title: 'Friends & Adventure Lovers',
+        subtitle: 'GoPro HD Jump Video & Certificate Available',
+        color: 'sky',
+        icon: Sparkles
+      }
+    ];
+  } else if (act.includes('swing') || pkgName.includes('swing')) {
+    return [
+      {
+        title: 'Tandem Jumpers & Couples',
+        subtitle: 'Double Harness Tandem Swing Option',
+        color: 'indigo',
+        icon: Users
+      },
+      {
+        title: 'Thrill Seekers (12-45 YRS)',
+        subtitle: 'High Altitude Pendulum Swing Experience',
+        color: 'emerald',
+        icon: ShieldCheck
+      },
+      {
+        title: 'First-Timers & Beginners',
+        subtitle: 'Certified Jump Master Guided Safety',
+        color: 'amber',
+        icon: Zap
+      },
+      {
+        title: 'Friend Groups & Duos',
+        subtitle: 'GoPro Video & Photo Addon Available',
+        color: 'sky',
+        icon: Sparkles
+      }
+    ];
+  } else if (act.includes('zipline') || pkgName.includes('zip')) {
+    return [
+      {
+        title: 'Families & Youth (10-60 YRS)',
+        subtitle: 'Dual Zip Cables & Auto-Braking Mechanism',
+        color: 'indigo',
+        icon: Users
+      },
+      {
+        title: 'Nature & View Lovers',
+        subtitle: 'Panoramic Himalayan Valley Aerial Views',
+        color: 'emerald',
+        icon: ShieldCheck
+      },
+      {
+        title: 'Beginners & Kids',
+        subtitle: 'Trained Zip Instructors & Safety Harness',
+        color: 'amber',
+        icon: Zap
+      },
+      {
+        title: 'Groups & Corporates',
+        subtitle: 'Side-by-Side Dual Zipline Flying',
+        color: 'sky',
+        icon: Sparkles
+      }
+    ];
+  } else if (act.includes('paragliding') || pkgName.includes('glid')) {
+    return [
+      {
+        title: 'Solo Flyers & Couples',
+        subtitle: 'Tandem Flight with Certified Veteran Pilot',
+        color: 'indigo',
+        icon: Users
+      },
+      {
+        title: 'Sky Enthusiasts (10-60 YRS)',
+        subtitle: 'High Altitude Thermal Soaring Experience',
+        color: 'emerald',
+        icon: ShieldCheck
+      },
+      {
+        title: 'First-Timers',
+        subtitle: 'Hands-Free Flight & Action Cam Recording',
+        color: 'amber',
+        icon: Zap
+      },
+      {
+        title: 'Adventure Buffs',
+        subtitle: 'Scenic Himalayan & Valley Aerial Views',
+        color: 'sky',
+        icon: Sparkles
+      }
+    ];
+  } else if (act.includes('camping')) {
+    return [
+      {
+        title: 'Families & Couples',
+        subtitle: 'Private Swiss Tents with Attached Washroom',
+        color: 'indigo',
+        icon: Users
+      },
+      {
+        title: 'Peace & Nature Seekers',
+        subtitle: 'Riverside Location & Evening Stargazing',
+        color: 'emerald',
+        icon: ShieldCheck
+      },
+      {
+        title: 'Groups & Celebrations',
+        subtitle: 'Bonfire, Evening Snacks & Music Night',
+        color: 'amber',
+        icon: Zap
+      },
+      {
+        title: 'Weekend Travelers',
+        subtitle: 'All Buffet Meals Included (Breakfast, Lunch & Dinner)',
+        color: 'sky',
+        icon: Sparkles
+      }
+    ];
+  } else {
+    // Rafting default
+    return [
+      {
+        title: 'Adults & Teens (14-55 YRS)',
+        subtitle: 'Adheres to Rafting Safety Standards',
+        color: 'indigo',
+        icon: Users
+      },
+      {
+        title: 'First-Timers & Beginners',
+        subtitle: 'Certified River Guide Included',
+        color: 'emerald',
+        icon: ShieldCheck
+      },
+      {
+        title: 'Thrill Seekers & Youth',
+        subtitle: 'Grade III/IV Rapids & Cliff Jump',
+        color: 'amber',
+        icon: Zap
+      },
+      {
+        title: 'Friend Groups & Corporates',
+        subtitle: '8-Person Shared Rafts Available',
+        color: 'sky',
+        icon: Sparkles
+      }
+    ];
+  }
+};
+
 export default function AdventureMarketplace({ activityType, currentCity, openBookingModal }) {
   const [partnersData, setPartnersData] = useState([]);
   const [rawPackages, setRawPackages] = useState([]);
@@ -783,9 +1000,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                                 <span>•</span>
                               </>
                             )}
-                            {pkg.distance_km > 0 && (
-                              <span>Distance: {pkg.distance_km} KM</span>
-                            )}
+                            {(() => {
+                              const metric = getActivityMetric(pkg, activityType);
+                              if (!metric.value) return null;
+                              return <span>{metric.label}: {metric.value}</span>;
+                            })()}
                           </div>
 
                           <p className="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed">
@@ -971,12 +1190,16 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                           <span className="font-bold text-white">{calculatedTents} Tent{calculatedTents > 1 ? 's' : ''} ({maxPerTent} Max/Tent)</span>
                         </div>
                       ) : (
-                        selectedPackage.distance_km > 0 && (
-                          <div>
-                            <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Distance</span>
-                            <span className="font-bold text-white">{selectedPackage.distance_km} KM</span>
-                          </div>
-                        )
+                        (() => {
+                          const metric = getActivityMetric(selectedPackage, activityType);
+                          if (!metric.value) return null;
+                          return (
+                            <div>
+                              <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">{metric.label}</span>
+                              <span className="font-bold text-white">{metric.value}</span>
+                            </div>
+                          );
+                        })()
                       )}
                       <div>
                         <span className="block text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold">Operator</span>
@@ -1231,54 +1454,91 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     </p>
                   </div>
 
-                  {/* Who is this perfect for? — Symmetrical 4-Option Grid */}
+                  {/* Who is this perfect for? — Dynamic Option Grid */}
                   <div className="space-y-2.5 pt-1">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-black font-display text-slate-900 uppercase tracking-tight">Who is this perfect for?</h4>
                       <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/80">Safety Verified</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200/60 shadow-3xs">
-                        <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-700 shrink-0">
-                          <Users size={14} className="stroke-[2.5]" />
-                        </div>
-                        <div>
-                          <span className="block font-black text-[11px] text-indigo-950 uppercase font-display leading-tight">Adults & Teens (14-55 Yrs)</span>
-                          <span className="text-[9.5px] text-indigo-700/80 font-medium block">Adheres to Rafting Safety Standards</span>
-                        </div>
+                      {getPerfectForItems(selectedPackage, activityType).map((item, idx) => {
+                        const IconComp = item.icon || Users;
+                        const cScheme = item.color === 'emerald' ? {
+                          bg: 'bg-emerald-50/70 border-emerald-200/60',
+                          icon: 'bg-emerald-100 text-emerald-700',
+                          title: 'text-emerald-950',
+                          sub: 'text-emerald-700/80'
+                        } : item.color === 'amber' ? {
+                          bg: 'bg-amber-50/70 border-amber-200/60',
+                          icon: 'bg-amber-100 text-amber-800',
+                          title: 'text-amber-950',
+                          sub: 'text-amber-800/80'
+                        } : item.color === 'sky' ? {
+                          bg: 'bg-sky-50/70 border-sky-200/60',
+                          icon: 'bg-sky-100 text-sky-700',
+                          title: 'text-sky-950',
+                          sub: 'text-sky-700/80'
+                        } : {
+                          bg: 'bg-indigo-50/70 border-indigo-200/60',
+                          icon: 'bg-indigo-100 text-indigo-700',
+                          title: 'text-indigo-950',
+                          sub: 'text-indigo-700/80'
+                        };
+
+                        return (
+                          <div key={idx} className={`flex items-center gap-2.5 p-2.5 rounded-xl border shadow-3xs ${cScheme.bg}`}>
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${cScheme.icon}`}>
+                              <IconComp size={14} className="stroke-[2.5]" />
+                            </div>
+                            <div>
+                              <span className={`block font-black text-[11px] uppercase font-display leading-tight ${cScheme.title}`}>{item.title}</span>
+                              <span className={`text-[9.5px] font-medium block ${cScheme.sub}`}>{item.subtitle}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Bungee / High-Altitude Jump Experience Flow Timeline */}
+                  {(activityType === 'bungee' || activityType === 'swing' || (selectedPackage.name || '').toLowerCase().includes('bungee')) && (
+                    <div className="pt-4 border-t border-slate-200 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-bold font-display text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+                          <Zap size={14} className="text-[#FF5F00]" /> Bungee Jump Experience Flow
+                        </h3>
+                        <span className="text-[9px] font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          Daredevil Certified
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/60 shadow-3xs">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
-                          <ShieldCheck size={14} className="stroke-[2.5]" />
+                      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-2.5">
+                        <div className="p-3 bg-slate-900 text-white rounded-xl space-y-1 relative overflow-hidden border border-slate-800">
+                          <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Step 01</div>
+                          <div className="text-xs font-black font-display">Deck Briefing & Weight</div>
+                          <p className="text-[10px] text-slate-300 leading-tight">Body weight verification ({selectedPackage.rules?.bungee_rules?.weight_range || '35-110kg'}) & safety declaration form.</p>
                         </div>
-                        <div>
-                          <span className="block font-black text-[11px] text-emerald-950 uppercase font-display leading-tight">First-Timers & Beginners</span>
-                          <span className="text-[9.5px] text-emerald-700/80 font-medium block">Certified River Guide Included</span>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 shadow-3xs">
-                        <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 shrink-0">
-                          <Zap size={14} className="stroke-[2.5]" />
+                        <div className="p-3 bg-slate-900 text-white rounded-xl space-y-1 relative overflow-hidden border border-slate-800">
+                          <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Step 02</div>
+                          <div className="text-xs font-black font-display">Triple Lock Harness</div>
+                          <p className="text-[10px] text-slate-300 leading-tight">{selectedPackage.rules?.bungee_rules?.safety_harness || 'EN 12277 triple redundant waist & ankle harness fitting by Jump Masters.'}</p>
                         </div>
-                        <div>
-                          <span className="block font-black text-[11px] text-amber-950 uppercase font-display leading-tight">Thrill Seekers & Youth</span>
-                          <span className="text-[9.5px] text-amber-800/80 font-medium block">Grade III/IV Rapids & Cliff Jump</span>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/60 shadow-3xs">
-                        <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center text-sky-700 shrink-0">
-                          <Sparkles size={14} className="stroke-[2.5]" />
+                        <div className="p-3 bg-gradient-to-br from-[#FF5F00] to-[#E04F00] text-white rounded-xl space-y-1 relative overflow-hidden shadow-sm">
+                          <div className="text-[9px] font-black text-amber-200 uppercase tracking-widest">Step 03 • The Leap</div>
+                          <div className="text-xs font-black font-display">3 - 2 - 1 BUNGEE!</div>
+                          <p className="text-[10px] text-orange-100 leading-tight">Free fall leap off the {selectedPackage.distance_km || 117}M platform into the valley!</p>
                         </div>
-                        <div>
-                          <span className="block font-black text-[11px] text-sky-950 uppercase font-display leading-tight">Friend Groups & Corporates</span>
-                          <span className="text-[9.5px] text-sky-700/80 font-medium block">8-Person Shared Rafts Available</span>
+
+                        <div className="p-3 bg-slate-900 text-white rounded-xl space-y-1 relative overflow-hidden border border-slate-800">
+                          <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Step 04</div>
+                          <div className="text-xs font-black font-display">Recovery & Certificate</div>
+                          <p className="text-[10px] text-slate-300 leading-tight">Lowered to river deck; collect your HD GoPro video & Daredevil Certificate.</p>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Safety & Eligibility Guidelines */}
                   <div className="space-y-3 pt-4 border-t border-slate-200">

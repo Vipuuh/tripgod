@@ -5632,7 +5632,11 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                {formData.activity_type === 'rafting' ? 'Route' : (formData.activity_type === 'camping' ? 'Campsite Location' : 'Location/Detail')}
+                {formData.activity_type === 'bungee' || formData.activity_type === 'swing' ? 'Jump Spot / Location' :
+                 formData.activity_type === 'zipline' ? 'Zip Line Location' :
+                 formData.activity_type === 'paragliding' ? 'Takeoff Point' :
+                 formData.activity_type === 'camping' ? 'Campsite Location' :
+                 formData.activity_type === 'rafting' ? 'Rafting Route' : 'Location / Detail'}
               </label>
               <input
                 type="text"
@@ -5641,6 +5645,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 onChange={(e) => setFormData(prev => ({ ...prev, route: e.target.value }))}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none"
                 placeholder={
+                  formData.activity_type === 'bungee' || formData.activity_type === 'swing' ? 'e.g. 117M Shivpuri Jump Tower' :
                   formData.activity_type === 'rafting' ? 'e.g. Shivpuri to Nim Beach' : 
                   (formData.activity_type === 'camping' ? 'e.g. Shivpuri Riverbank' : 'e.g. 117 Metres / Shivpuri Hills')
                 }
@@ -5650,7 +5655,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             {formData.activity_type !== 'camping' ? (
               <div className="space-y-1">
                 <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
-                  {formData.activity_type === 'rafting' ? 'Distance (KM)' : 'Height/Distance value'}
+                  {formData.activity_type === 'bungee' || formData.activity_type === 'swing' ? 'Jump Height (in Meters)' :
+                   formData.activity_type === 'zipline' ? 'Zipline Length (in Meters)' :
+                   formData.activity_type === 'paragliding' ? 'Flight Altitude (in Meters)' :
+                   formData.activity_type === 'rafting' ? 'Distance (KM)' : 'Height / Distance Value'}
                 </label>
                 <input
                   type="number"
@@ -6173,6 +6181,186 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 )}
               </div>
 
+            </div>
+          )}
+
+          {/* ----------------- BUNGEE & ADRENALINE JUMP SPECIFIC CONFIGURATION ----------------- */}
+          {(['bungee', 'swing', 'zipline', 'paragliding'].includes(formData.activity_type) || (formData.name || '').toLowerCase().includes('bungee')) && (
+            <div className="space-y-4 pt-4 border-t border-slate-900">
+              <div className="bg-slate-950/90 border border-slate-850 p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🪂</span>
+                    <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">
+                      {formData.activity_type === 'swing' ? 'Giant Swing Platform Specs' :
+                       formData.activity_type === 'zipline' ? 'Zipline Deck & Cable Specs' :
+                       formData.activity_type === 'paragliding' ? 'Paragliding Tandem Specs' :
+                       'Bungee Jumping Platform & Safety Specs'}
+                    </label>
+                  </div>
+
+                  {/* Quick pre-fill preset button for Bungee */}
+                  {(formData.activity_type === 'bungee' || (formData.name || '').toLowerCase().includes('bungee')) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          distance_km: 117,
+                          duration: '45 - 60 Mins',
+                          age_limit: 12,
+                          free_video_type: 'gopro',
+                          inclusions: [
+                            '117M Extreme Bungee Jump Experience',
+                            'Certified Jump Master & Pre-Jump Briefing',
+                            'EN 12277 Triple-Lock Safety Harness & Ankle Lock',
+                            'Free Daredevil Jump Certificate',
+                            'GoPro HD Jump Video Access'
+                          ],
+                          exclusions: [
+                            'Personal Transport to Jump Office',
+                            'Hard-copy Photo Prints (Available at Deck)',
+                            'Personal Travel Insurance'
+                          ],
+                          rules: {
+                            ...(prev.rules || {}),
+                            custom_metric_label: 'Jump Height',
+                            custom_metric_value: '117 Meters',
+                            bungee_rules: {
+                              jump_height: '117 Meters',
+                              weight_range: '35 kg - 110 kg',
+                              safety_harness: 'EN 12277 Triple Redundant Safety Locks',
+                              platform_type: 'Fixed Steel Cantilever Tower Over River',
+                              has_certificate: true,
+                              instant_voucher: true
+                            }
+                          }
+                        }));
+                      }}
+                      className="py-1 px-3 bg-amber-500/15 hover:bg-amber-500/30 text-amber-400 font-black text-[9px] uppercase tracking-wider rounded-lg border border-amber-500/30 cursor-pointer transition-all flex items-center gap-1"
+                    >
+                      ⚡ Pre-fill 117M Bungee Specs
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Custom Metric Label</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Jump Height"
+                      value={formData.rules?.custom_metric_label || (formData.activity_type === 'bungee' ? 'Jump Height' : 'Metric')}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: { ...(prev.rules || {}), custom_metric_label: e.target.value }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Custom Metric Display Value</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 117 Meters"
+                      value={formData.rules?.custom_metric_value || (formData.distance_km ? `${formData.distance_km} Meters` : '117 Meters')}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: { ...(prev.rules || {}), custom_metric_value: e.target.value }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Allowed Weight Range</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 35 kg - 110 kg"
+                      value={formData.rules?.bungee_rules?.weight_range || '35 kg - 110 kg'}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...(prev.rules || {}),
+                          bungee_rules: { ...(prev.rules?.bungee_rules || {}), weight_range: e.target.value }
+                        }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Safety Harness Standard</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. EN 12277 Triple-Lock Harness System"
+                      value={formData.rules?.bungee_rules?.safety_harness || 'Triple Redundant Safety Lock Harness'}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...(prev.rules || {}),
+                          bungee_rules: { ...(prev.rules?.bungee_rules || {}), safety_harness: e.target.value }
+                        }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Jump Deck / Platform Spec</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 117M Cantilever Steel Tower Over River"
+                      value={formData.rules?.bungee_rules?.platform_type || 'Cantilever Steel Platform'}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...(prev.rules || {}),
+                          bungee_rules: { ...(prev.rules?.bungee_rules || {}), platform_type: e.target.value }
+                        }
+                      }))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4 pt-2 border-t border-slate-900/60 text-xs font-semibold text-slate-300">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={formData.rules?.bungee_rules?.has_certificate ?? true}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...(prev.rules || {}),
+                          bungee_rules: { ...(prev.rules?.bungee_rules || {}), has_certificate: e.target.checked }
+                        }
+                      }))}
+                      className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+                    />
+                    <span>Include Daredevil Jump Certificate</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={formData.rules?.bungee_rules?.instant_voucher ?? true}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...(prev.rules || {}),
+                          bungee_rules: { ...(prev.rules?.bungee_rules || {}), instant_voucher: e.target.checked }
+                        }
+                      }))}
+                      className="rounded border-slate-800 bg-slate-900 text-accent focus:ring-0"
+                    />
+                    <span>Instant WhatsApp Voucher Confirmation</span>
+                  </label>
+                </div>
+              </div>
             </div>
           )}
 
