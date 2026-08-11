@@ -5716,17 +5716,26 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </label>
 
             <div className="space-y-1">
-              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Age Limit</label>
+              <label className="block text-[9px] font-black uppercase text-gray-400 tracking-wider">Age Limit Display</label>
               {formData.activity_type === 'camping' ? (
                 <div className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-400 text-[11px] font-semibold">
                   18+ (Primary Guest)
                 </div>
               ) : (
                 <input
-                  type="number"
-                  required
-                  value={formData.age_limit || 12}
-                  onChange={(e) => setFormData(prev => ({ ...prev, age_limit: Number(e.target.value) }))}
+                  type="text"
+                  placeholder="e.g. 12 - 45 Years"
+                  value={formData.rules?.age_limit_text !== undefined ? formData.rules.age_limit_text : (formData.age_limit ? `${formData.age_limit} - 45 Years` : '12 - 45 Years')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const numMatch = val.match(/\d+/);
+                    const parsedNum = numMatch ? parseInt(numMatch[0]) : 12;
+                    setFormData(prev => ({
+                      ...prev,
+                      age_limit: parsedNum,
+                      rules: { ...(prev.rules || {}), age_limit_text: val }
+                    }));
+                  }}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white focus:outline-none text-xs"
                 />
               )}

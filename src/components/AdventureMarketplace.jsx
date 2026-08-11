@@ -1502,39 +1502,62 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
 
                   {/* Bungee / High-Altitude Jump Experience Flow Timeline */}
                   {(activityType === 'bungee' || activityType === 'swing' || (selectedPackage.name || '').toLowerCase().includes('bungee')) && (
-                    <div className="pt-4 border-t border-slate-200 space-y-3">
+                    <div className="pt-5 border-t border-slate-200/80 space-y-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xs font-bold font-display text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
-                          <Zap size={14} className="text-[#FF5F00]" /> Bungee Jump Experience Flow
-                        </h3>
-                        <span className="text-[9px] font-black text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                          Daredevil Certified
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#FF5F00] to-[#FF8533] flex items-center justify-center text-white shadow-xs">
+                            <Zap size={14} className="stroke-[2.5]" />
+                          </div>
+                          <div>
+                            <h3 className="text-xs font-black font-display text-slate-900 uppercase tracking-tight leading-none">Bungee Jump Experience Flow</h3>
+                            <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">4-Step Safety Verified Jump Procedure</span>
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-black text-amber-700 bg-amber-50/90 px-2.5 py-1 rounded-full border border-amber-200/80 shadow-2xs flex items-center gap-1">
+                          <Award size={11} /> Daredevil Certified
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-2.5">
-                        <div className="p-3 bg-slate-900 text-white rounded-xl space-y-1 relative overflow-hidden border border-slate-800">
-                          <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Step 01</div>
-                          <div className="text-xs font-black font-display">Deck Briefing & Weight</div>
-                          <p className="text-[10px] text-slate-300 leading-tight">Body weight verification ({selectedPackage.rules?.bungee_rules?.weight_range || '35-110kg'}) & safety declaration form.</p>
+                      {/* Connected Timeline Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative">
+                        {/* Step 1 */}
+                        <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
+                          <div className="flex items-center justify-between">
+                            <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">01</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Deck Briefing</span>
+                          </div>
+                          <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">Body Weight & Safety Check</div>
+                          <p className="text-[10px] text-slate-300 leading-relaxed font-medium">Verified weight range ({selectedPackage.rules?.bungee_rules?.weight_range || '35kg - 110kg'}) and medical declaration form at jump deck.</p>
                         </div>
 
-                        <div className="p-3 bg-slate-900 text-white rounded-xl space-y-1 relative overflow-hidden border border-slate-800">
-                          <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Step 02</div>
-                          <div className="text-xs font-black font-display">Triple Lock Harness</div>
-                          <p className="text-[10px] text-slate-300 leading-tight">{selectedPackage.rules?.bungee_rules?.safety_harness || 'EN 12277 triple redundant waist & ankle harness fitting by Jump Masters.'}</p>
+                        {/* Step 2 */}
+                        <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
+                          <div className="flex items-center justify-between">
+                            <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">02</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Safety Gear</span>
+                          </div>
+                          <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">Triple Lock Harness</div>
+                          <p className="text-[10px] text-slate-300 leading-relaxed font-medium">{selectedPackage.rules?.bungee_rules?.safety_harness || 'EN 12277 triple redundant waist & ankle harness fitting by Jump Masters.'}</p>
                         </div>
 
-                        <div className="p-3 bg-gradient-to-br from-[#FF5F00] to-[#E04F00] text-white rounded-xl space-y-1 relative overflow-hidden shadow-sm">
-                          <div className="text-[9px] font-black text-amber-200 uppercase tracking-widest">Step 03 • The Leap</div>
-                          <div className="text-xs font-black font-display">3 - 2 - 1 BUNGEE!</div>
-                          <p className="text-[10px] text-orange-100 leading-tight">Free fall leap off the {selectedPackage.distance_km || 117}M platform into the valley!</p>
+                        {/* Step 3 - Highlighted Jump Leap */}
+                        <div className="p-4 bg-gradient-to-br from-[#FF5F00] via-[#FF6B00] to-[#E04F00] text-white rounded-2xl space-y-2 relative overflow-hidden shadow-md border border-orange-400/30 group scale-[1.01]">
+                          <div className="flex items-center justify-between">
+                            <span className="w-6 h-6 rounded-full bg-white/20 text-white text-[10px] font-black font-display flex items-center justify-center backdrop-blur-xs border border-white/30">03</span>
+                            <span className="text-[9px] font-black text-amber-200 uppercase tracking-widest">The Extreme Leap</span>
+                          </div>
+                          <div className="text-xs font-black font-display text-white">3 - 2 - 1 BUNGEE!</div>
+                          <p className="text-[10px] text-orange-100 leading-relaxed font-medium">Adrenaline free fall leap off the {selectedPackage.distance_km || 117}M cantilever steel platform into the river valley!</p>
                         </div>
 
-                        <div className="p-3 bg-slate-900 text-white rounded-xl space-y-1 relative overflow-hidden border border-slate-800">
-                          <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest">Step 04</div>
-                          <div className="text-xs font-black font-display">Recovery & Certificate</div>
-                          <p className="text-[10px] text-slate-300 leading-tight">Lowered to river deck; collect your HD GoPro video & Daredevil Certificate.</p>
+                        {/* Step 4 - Media & Certificate */}
+                        <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
+                          <div className="flex items-center justify-between">
+                            <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">04</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DSLR & Cert</span>
+                          </div>
+                          <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">Recovery & DSLR Video</div>
+                          <p className="text-[10px] text-slate-300 leading-relaxed font-medium">Safely lowered to river recovery deck; collect your HD DSLR Jump Video & official Daredevil Certificate.</p>
                         </div>
                       </div>
                     </div>
@@ -1547,19 +1570,23 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Weight Range</span>
                         <span className="text-xs font-black text-slate-800">
-                          {activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
-                           activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
-                           activityType === 'paragliding' ? '30 kg - 90 kg' :
-                           activityType === 'zipline' ? '30 kg - 115 kg' : 'No Limit'}
+                          {selectedPackage.rules?.bungee_rules?.weight_range || (
+                            activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
+                            activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
+                            activityType === 'paragliding' ? '30 kg - 90 kg' :
+                            activityType === 'zipline' ? '30 kg - 115 kg' : 'No Limit'
+                          )}
                         </span>
                       </div>
                       <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Age Limit</span>
                         <span className="text-xs font-black text-slate-800">
-                          {activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
-                           activityType === 'bungee' || activityType === 'swing' ? '12 - 45 Years' :
-                           activityType === 'paragliding' ? '10 - 60 Years' :
-                           activityType === 'zipline' ? '10 - 65 Years' : 'All Ages'}
+                          {selectedPackage.rules?.age_limit_text || (
+                            activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
+                            activityType === 'bungee' || activityType === 'swing' ? `${selectedPackage.age_limit || 12} - 45 Years` :
+                            activityType === 'paragliding' ? '10 - 60 Years' :
+                            activityType === 'zipline' ? '10 - 65 Years' : 'All Ages'
+                          )}
                         </span>
                       </div>
                       <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
@@ -1776,65 +1803,107 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             })}
                             className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
                           >
-                            Book Operator
+                            {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice
+                              ? `PAY ₹${advanceAmount.toLocaleString('en-IN')} TO BOOK →`
+                              : 'BOOK OPERATOR →'}
                           </button>
                         )}
                       </div>
                     );
                   })()}
 
-                  {/* Mobile Sticky Booking Bar */}
-                  <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200/90 pt-3.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] px-4 flex items-center justify-between gap-3 md:hidden shadow-[0_-12px_40px_rgba(0,0,0,0.15)] after:content-[''] after:absolute after:top-full after:left-0 after:right-0 after:h-40 after:bg-white">
-                    <div>
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">Total Price</span>
-                      <div className="flex items-baseline gap-1.5 mt-0.5">
-                        <span className="text-xl font-black text-slate-900 leading-none">₹{totalPrice.toLocaleString('en-IN')}</span>
+                  {/* Mobile Sticky Booking Bar — Hotel-styled rounded top bar */}
+                  {(() => {
+                    const pMode = selectedPackage.payment_mode || 'commission_advance';
+                    const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
+                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+
+                    let advanceAmount = 0;
+                    if (pMode === 'full_payment') {
+                      advanceAmount = totalPrice;
+                    } else if (pMode === 'fixed_advance') {
+                      advanceAmount = fixedAmt;
+                    } else {
+                      advanceAmount = Math.round((totalPrice * commPct) / 100);
+                    }
+                    const remainingAmount = Math.max(0, totalPrice - advanceAmount);
+
+                    return (
+                      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-2xl sm:rounded-t-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.12)] md:hidden">
+                        <div>
+                          <span className="block text-[9px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[140px] sm:max-w-[220px]">
+                            {selectedPackage.name}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-base sm:text-lg font-black text-slate-900 leading-none">
+                              ₹{totalPrice.toLocaleString('en-IN')}
+                            </span>
+                            {advanceAmount > 0 && advanceAmount < totalPrice && (
+                              <span className="text-[9.5px] text-orange-700 font-extrabold bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
+                                ₹{advanceAmount.toLocaleString('en-IN')} Token
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[9.5px] text-emerald-700 font-black block mt-0.5">
+                            {advanceAmount > 0 && advanceAmount < totalPrice
+                              ? `Pay ₹${advanceAmount.toLocaleString('en-IN')} online • ₹${remainingAmount.toLocaleString('en-IN')} at venue`
+                              : (activityType === 'camping' 
+                                  ? `${calculatedTents} Tent(s) · ${totalGuests} Guest(s)` 
+                                  : (totalGuests > 1 ? `${totalGuests} Guests (₹${activeRoomPrice}/person)` : 'per person • direct voucher'))}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {checkIfClosed(selectedPackage).closed ? (
+                            <button
+                              disabled
+                              className="py-3 px-5 text-gray-400 bg-gray-200 text-xs font-black uppercase rounded-xl cursor-not-allowed font-display"
+                            >
+                              Closed
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                openBookingModal({
+                                  id: selectedPackage.id,
+                                  name: `${selectedPackage.name}${selectedCategoryName ? ' (' + selectedCategoryName + ')' : ''} - ${selectedPartner?.name}`,
+                                  stretch: selectedPackage.route || selectedPackage.stretch,
+                                  price: totalPrice,
+                                  room_price: activeRoomPrice,
+                                  num_rooms: calculatedTents,
+                                  num_adults: numAdults,
+                                  num_kids: numKids,
+                                  rooms_left: tentsLeft,
+                                  tents_left: tentsLeft,
+                                  selected_meals: selectedMeals,
+                                  category: activityType,
+                                  city_id: selectedPackage.city_id,
+                                  vendor_id: selectedPackage.vendor_id,
+                                  payment_mode: pMode,
+                                  commission_percentage: commPct,
+                                  fixed_advance_amount: fixedAmt,
+                                  free_video_type: selectedPackage.free_video_type || 'none',
+                                  is_closed: selectedPackage.is_closed,
+                                  closed_reason: selectedPackage.closed_reason,
+                                  closed_from: selectedPackage.closed_from,
+                                  closed_until: selectedPackage.closed_until,
+                                  vendors: selectedPartner
+                                });
+                              }}
+                              className="py-2.5 sm:py-3 px-4 sm:px-6 bg-accent-gradient text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg hover:shadow-accent/30 hover:scale-[1.02] transition-all border-none cursor-pointer font-display flex items-center justify-center gap-1.5"
+                            >
+                              <span>
+                                {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice
+                                  ? `PAY ₹${advanceAmount.toLocaleString('en-IN')} TO BOOK`
+                                  : 'BOOK NOW'}
+                              </span>
+                              <ArrowRight size={13} />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-[9px] text-slate-400 font-bold leading-none block mt-0.5">
-                        {activityType === 'camping' 
-                          ? `${calculatedTents} Tent(s) · ${totalGuests} Guest(s)` 
-                          : (totalGuests > 1 ? `${totalGuests} Guests (₹${activeRoomPrice}/person)` : 'per person • direct voucher')}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        const pMode = selectedPackage.payment_mode || 'commission_advance';
-                        const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
-                        const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
-
-                        openBookingModal({
-                          id: selectedPackage.id,
-                          name: `${selectedPackage.name}${selectedCategoryName ? ' (' + selectedCategoryName + ')' : ''} - ${selectedPartner?.name}`,
-                          stretch: selectedPackage.route || selectedPackage.stretch,
-                          price: totalPrice,
-                          room_price: activeRoomPrice,
-                          num_rooms: calculatedTents,
-                          num_adults: numAdults,
-                          num_kids: numKids,
-                          rooms_left: tentsLeft,
-                          tents_left: tentsLeft,
-                          selected_meals: selectedMeals,
-                          category: activityType,
-                          city_id: selectedPackage.city_id,
-                          vendor_id: selectedPackage.vendor_id,
-                          payment_mode: pMode,
-                          commission_percentage: commPct,
-                          fixed_advance_amount: fixedAmt,
-                          free_video_type: selectedPackage.free_video_type || 'none',
-                          is_closed: selectedPackage.is_closed,
-                          closed_reason: selectedPackage.closed_reason,
-                          closed_from: selectedPackage.closed_from,
-                          closed_until: selectedPackage.closed_until,
-                          vendors: selectedPartner
-                        });
-                      }}
-                      className="py-3 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase rounded-xl shadow-[0_4px_15px_rgba(255,95,0,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-1.5"
-                    >
-                      <span>Book Now</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
+                    );
+                  })()}
 
                   {/* Reviews list */}
                   <div className="pt-8 border-t border-slate-200">

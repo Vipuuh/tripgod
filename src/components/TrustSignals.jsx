@@ -5,7 +5,7 @@ export default function TrustSignals({ freeCancellation = true, instantConfirmat
   const signals = [
     { id: 'verified', label: 'Verified Operator', icon: ShieldCheck, color: 'text-emerald-700 bg-emerald-50 border-emerald-200/60' },
     { id: 'guides', label: 'Certified Guides', icon: Compass, color: 'text-sky-700 bg-sky-50 border-sky-200/60' },
-    { id: 'secure', label: '10% Advance Booking', icon: Lock, color: 'text-orange-700 bg-orange-50 border-orange-200/60' },
+    { id: 'secure', label: 'Minimum Token Advance', icon: Lock, color: 'text-orange-700 bg-orange-50 border-orange-200/60' },
     { id: 'lowest', label: 'Best Price Guarantee', icon: Award, color: 'text-amber-700 bg-amber-50 border-amber-200/60' }
   ];
 
