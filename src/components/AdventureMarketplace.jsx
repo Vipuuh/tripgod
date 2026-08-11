@@ -1206,8 +1206,16 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         <span className="font-bold text-white">{selectedPartner?.name}</span>
                       </div>
                     </div>
-                    <div className="px-2.5 py-1 bg-[#FF5F00]/15 text-[#FF5F00] border border-[#FF5F00]/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs shrink-0 self-start xs:self-auto">
-                      <ShieldCheck size={12} /> Safe & Verified
+                    <div className="flex items-center gap-2 flex-wrap shrink-0 self-start xs:self-auto">
+                      {(selectedPackage.free_video_type === 'dslr' || selectedPackage.free_video_type === 'gopro' || selectedPackage.rules?.bungee_rules?.has_video || (selectedPackage.inclusions && selectedPackage.inclusions.some(i => i.toLowerCase().includes('video')))) && (
+                        <div className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold rounded-lg flex items-center gap-1.5 text-[10px] sm:text-xs">
+                          <Camera size={12} className="text-emerald-400 stroke-[2.5]" />
+                          <span>{selectedPackage.free_video_type === 'dslr' ? 'Free HD DSLR Video' : selectedPackage.free_video_type === 'gopro' ? 'Free GoPro Video' : 'Free HD Video'}</span>
+                        </div>
+                      )}
+                      <div className="px-2.5 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs">
+                        <ShieldCheck size={12} className="stroke-[2.5]" /> Safe & Verified
+                      </div>
                     </div>
                   </div>
 
@@ -1829,7 +1837,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     const remainingAmount = Math.max(0, totalPrice - advanceAmount);
 
                     return (
-                      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-slate-200/90 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] px-4 z-40 flex items-center justify-between gap-3 max-w-4xl mx-auto rounded-t-2xl sm:rounded-t-3xl shadow-[0_-12px_40px_rgba(0,0,0,0.15)] md:hidden after:content-[''] after:absolute after:top-full after:left-0 after:right-0 after:h-40 after:bg-white">
+                      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-2xl sm:rounded-t-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.12)] md:hidden">
                         <div>
                           <span className="block text-[9px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[140px] sm:max-w-[220px]">
                             {selectedPackage.name}
