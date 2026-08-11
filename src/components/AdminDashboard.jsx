@@ -33,12 +33,13 @@ const getSimpleBookingId = (id) => {
 
 const isVendorMultiService = (v) => {
   if (!v || !v.category) return false;
-  const cat = v.category.toLowerCase();
+  const cat = String(v.category).toLowerCase();
   return (
     cat.includes('multi') || 
     cat.includes('all services') || 
     cat.includes('all-in-one') || 
-    cat.includes('adventure & bike')
+    cat.includes('adventure & bike') ||
+    cat.includes('all')
   );
 };
 
@@ -138,7 +139,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
   const [newCityName, setNewCityName] = useState('');
   const [newCitySlug, setNewCitySlug] = useState('');
   const [newVendor, setNewVendor] = useState({
-    name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+    name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
     shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
     since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
     reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
@@ -311,7 +312,19 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
       ]);
 
       if (citiesData) setCities(citiesData);
-      if (vendorsData) setVendors(vendorsData);
+      if (vendorsData) {
+        const autoRepairedVendors = vendorsData.map(v => {
+          if (v.category === 'Hotel') {
+            const newCat = v.name && (v.name.toLowerCase().includes('bungee') || v.name.toLowerCase().includes('bungy'))
+              ? 'Bungee'
+              : 'Multi-Service / All Services';
+            supabase.from('vendors').update({ category: newCat }).eq('id', v.id).then();
+            return { ...v, category: newCat };
+          }
+          return v;
+        });
+        setVendors(autoRepairedVendors);
+      }
       if (bookingsData) setBookings(bookingsData);
       if (hotelsData) setHotels(hotelsData);
       if (raftingData) setRaftingList(raftingData);
@@ -619,7 +632,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
       }
 
       setNewVendor({
-        name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+        name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
         shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
         since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
         reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
@@ -1760,7 +1773,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                         type="button"
                         onClick={() => {
                           setNewVendor({
-                            name: '', category: 'Hotel', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+                            name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
                             shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
                             since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
                             reporting_time: '', parking_details: '', badges: '', short_highlight: ''
@@ -8553,13 +8566,15 @@ const getVendorsForType = (activityType, vendorsList) => {
   return vendorsList.filter(v => {
     if (isVendorMultiService(v)) return true;
     const cat = (v.category || '').toLowerCase();
-    if (typeLower === 'rafting') return cat.includes('rafting') || cat.includes('adventure');
-    if (typeLower === 'camping') return cat.includes('camping') || cat.includes('adventure');
-    if (typeLower === 'bungee') return cat.includes('bungee');
-    if (typeLower === 'zipline') return cat.includes('zipline');
-    if (typeLower === 'swing') return cat.includes('swing');
-    if (typeLower === 'paragliding') return cat.includes('paragliding');
-    return cat.includes('rafting') || cat.includes('camping');
+    const name = (v.name || '').toLowerCase();
+    
+    if (typeLower === 'rafting') return cat.includes('rafting') || cat.includes('adventure') || name.includes('rafting');
+    if (typeLower === 'camping') return cat.includes('camping') || cat.includes('adventure') || name.includes('camping');
+    if (typeLower === 'bungee' || typeLower === 'bungy') return cat.includes('bungee') || cat.includes('bungy') || name.includes('bungee') || name.includes('bungy');
+    if (typeLower === 'zipline') return cat.includes('zipline') || name.includes('zipline');
+    if (typeLower === 'swing') return cat.includes('swing') || name.includes('swing');
+    if (typeLower === 'paragliding') return cat.includes('paragliding') || name.includes('paragliding');
+    return cat.includes('rafting') || cat.includes('camping') || cat.includes('bungee') || cat.includes('bungy') || cat.includes('swing');
   });
 };
 
