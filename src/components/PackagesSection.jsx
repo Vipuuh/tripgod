@@ -1,25 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import TripGodSpecialBanner from './TripGodSpecialBanner';
-import CustomComboPage from '../pages/CustomComboPage';
 
-export default function PackagesSection({ onBookPackage }) {
-  const [showComboPage, setShowComboPage] = useState(false);
+export default function PackagesSection({ setRoute, onBookPackage }) {
+  const handleOpenComboBuilder = () => {
+    if (setRoute) {
+      setRoute('custom-combo');
+    } else {
+      window.history.pushState(null, '', '/custom-combo');
+      window.dispatchEvent(new Event('popstate'));
+    }
+  };
 
   return (
-    <>
-      <TripGodSpecialBanner onOpenComboBuilder={() => setShowComboPage(true)} />
-
-      {showComboPage && (
-        <CustomComboPage 
-          onClose={() => setShowComboPage(false)}
-          onBookCustomCombo={(bookingPayload) => {
-            setShowComboPage(false);
-            if (onBookPackage) {
-              onBookPackage(bookingPayload);
-            }
-          }}
-        />
-      )}
-    </>
+    <TripGodSpecialBanner onOpenComboBuilder={handleOpenComboBuilder} />
   );
 }
+

@@ -1226,7 +1226,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       <ExploreDestinations setRoute={setRoute} />
 
       {/* 2.3. Hot Combo Packages Section */}
-      <PackagesSection onBookPackage={openBookingModal} />
+      <PackagesSection setRoute={setRoute} onBookPackage={openBookingModal} />
 
       {/* 2.5. Recommended Hotels Section */}
       <div className="py-20 border-b border-black/5 bg-white">

@@ -24,6 +24,7 @@ import Kayaking from './pages/Kayaking';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import RefundPolicy from './pages/RefundPolicy';
+import CustomComboPage from './pages/CustomComboPage';
 
 // Components
 import BookingModal from './components/BookingModal';
@@ -248,11 +249,29 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Disable browser auto-scroll restoration to prevent jumping to footer on back button press
+  // Universal Scroll Position Saver (Saves scroll Y position per path)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
+    let scrollTimeout;
+    const saveCurrentScroll = () => {
+      const currentPath = window.location.pathname || '/';
+      if (window.scrollY > 0) {
+        sessionStorage.setItem(`tripgod_scroll_${currentPath}`, window.scrollY.toString());
+      }
+    };
+
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(saveCurrentScroll, 100);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('beforeunload', saveCurrentScroll);
+
+    return () => {
+      saveCurrentScroll();
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('beforeunload', saveCurrentScroll);
+    };
   }, []);
 
   // Sync path routing if user uses back/forward buttons (HTML5 History API)
@@ -267,7 +286,7 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'partner', 'privacy', 'terms', 'refund'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'partner', 'privacy', 'terms', 'refund', 'custom-combo'];
 
       const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || path.startsWith('kayaking/') || path.startsWith('tours/');
 
@@ -285,8 +304,16 @@ export default function App() {
 
         setRoute(resolvedRoute);
 
-        // Instant reset scroll to top on back navigation to prevent footer jumps
-        window.scrollTo(0, 0);
+        // Restore saved scroll position for current URL path if available
+        const currentPath = window.location.pathname || '/';
+        const savedY = sessionStorage.getItem(`tripgod_scroll_${currentPath}`);
+        if (savedY && Number(savedY) > 0) {
+          setTimeout(() => {
+            window.scrollTo({ top: Number(savedY), behavior: 'instant' });
+          }, 80);
+        } else {
+          window.scrollTo(0, 0);
+        }
 
         if (resolvedRoute === 'home' && hash === '#adventures') {
           setTimeout(() => {
@@ -308,6 +335,11 @@ export default function App() {
 
   // Update URL path when route changes
   const navigateTo = (newRoute) => {
+    const currentPath = window.location.pathname || '/';
+    if (window.scrollY > 0) {
+      sessionStorage.setItem(`tripgod_scroll_${currentPath}`, window.scrollY.toString());
+    }
+
     if (newRoute === 'adventures') {
       window.history.pushState(null, '', '/#adventures');
       setRoute('home');
@@ -327,7 +359,15 @@ export default function App() {
       
       window.history.pushState(null, '', targetPath);
       setRoute(resolvedRoute);
-      window.scrollTo(0, 0);
+
+      const savedY = sessionStorage.getItem(`tripgod_scroll_${targetPath}`);
+      if (savedY && Number(savedY) > 0) {
+        setTimeout(() => {
+          window.scrollTo({ top: Number(savedY), behavior: 'instant' });
+        }, 80);
+      } else {
+        window.scrollTo(0, 0);
+      }
     }
   };
 
@@ -536,6 +576,16 @@ export default function App() {
             {route === 'privacy' && <Privacy />}
             {route === 'terms' && <Terms />}
             {route === 'refund' && <RefundPolicy />}
+            {route === 'custom-combo' && (
+              <ErrorBoundary>
+                <CustomComboPage 
+                  onClose={() => navigateTo('home')}
+                  onBookCustomCombo={(bookingPayload) => {
+                    openBookingModal(bookingPayload);
+                  }}
+                />
+              </ErrorBoundary>
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
