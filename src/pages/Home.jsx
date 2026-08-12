@@ -221,6 +221,15 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   });
   const [raftingGuests, setRaftingGuests] = useState(2);
 
+  // Bungee search states
+  const [bungeeDate, setBungeeDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [bungeeGuests, setBungeeGuests] = useState(1);
+  const [selectedBungeeStretch, setSelectedBungeeStretch] = useState('117M Jump (Mohan Chatti)');
+
   // Bike Rental search states
   const [bikeDate, setBikeDate] = useState(() => {
     const tomorrow = new Date();
@@ -307,9 +316,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
 
   const quickAccess = [
     { label: 'Hotels', icon: Hotel, route: 'hotels', color: 'text-indigo-600 bg-indigo-50 border-indigo-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
-    { label: 'Scooty Rent', icon: Bike, route: 'bikerent', color: 'text-emerald-600 bg-emerald-50 border-emerald-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
+    { label: 'Bungee', icon: Zap, route: 'bungee', color: 'text-amber-600 bg-amber-50 border-amber-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
     { label: 'Rafting', icon: Ship, route: 'rafting', color: 'text-cyan-600 bg-cyan-50 border-cyan-100 group-hover:bg-[#FF6B00] group-hover:text-white' },
-    { label: 'Bungee', icon: Zap, route: 'bungee', coming_soon: true, color: 'text-amber-600 bg-amber-50 border-amber-100 group-hover:bg-[#FF6B00] group-hover:text-white' }
+    { label: 'Scooty Rent', icon: Bike, route: 'bikerent', color: 'text-emerald-600 bg-emerald-50 border-emerald-100 group-hover:bg-[#FF6B00] group-hover:text-white' }
   ];
 
   const [activitiesList, setActivitiesList] = useState([
@@ -327,8 +336,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       desc: 'Leap from 83m above the Ganges – the highest bungee in India.',
       price: '3,500',
       img: '/bungee-hero.jpg',
-      route: 'bungee',
-      coming_soon: true
+      route: 'bungee'
     },
     {
       id: 'camping',
@@ -795,8 +803,9 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
             <div className="w-full md:w-auto flex items-center gap-1.5 md:gap-2 bg-black/75 backdrop-blur-xl px-4 md:px-6 py-2.5 md:py-3.5 rounded-t-2xl md:rounded-t-3xl border-t border-x border-white/15 overflow-x-auto no-scrollbar flex-nowrap justify-start md:justify-center scroll-smooth">
               {[
                 { id: 'hotels', label: 'Hotels', icon: Building2 },
-                { id: 'bikerent', label: 'Scooty Rental', icon: Bike },
-                { id: 'rafting', label: 'Rafting', icon: Waves }
+                { id: 'bungee', label: 'Bungee', icon: Zap },
+                { id: 'rafting', label: 'Rafting', icon: Waves },
+                { id: 'bikerent', label: 'Scooty Rental', icon: Bike }
               ].map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeSearchTab === tab.id;
@@ -897,6 +906,54 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 </div>
               )}
  
+              {activeSearchTab === 'bungee' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <MapPin className="text-[#FF5F00] shrink-0" size={18} />
+                    <div className="flex flex-col text-left">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Jump Height / Option</span>
+                      <select 
+                        value={selectedBungeeStretch}
+                        onChange={(e) => setSelectedBungeeStretch(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      >
+                        <option value="117M Jump (Mohan Chatti)">117M Jump (Mohan Chatti)</option>
+                        <option value="101M Jump (Shivpuri)">101M Jump (Shivpuri)</option>
+                        <option value="83M Jump (Mohan Chatti)">83M Jump (Mohan Chatti)</option>
+                        <option value="104M Jump (Rishikesh)">104M Jump (Rishikesh)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] cursor-pointer shadow-xs" onClick={() => document.getElementById('bungee-date')?.showPicker()}>
+                    <Calendar className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left w-full">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Jump Date</span>
+                      <input 
+                        type="date" 
+                        id="bungee-date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={bungeeDate}
+                        onChange={(e) => setBungeeDate(e.target.value)}
+                        className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
+                      />
+                    </div>
+                  </div>
+                  <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
+                    <Users className="text-slate-400 shrink-0" size={18} />
+                    <div className="flex flex-col text-left flex-1">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Total Jumpers</span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-sm font-extrabold text-slate-900">{bungeeGuests} Person{bungeeGuests > 1 ? 's' : ''}</span>
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => setBungeeGuests(g => Math.max(1, g - 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">-</button>
+                          <button type="button" onClick={() => setBungeeGuests(g => Math.min(20, g + 1))} className="w-5 h-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex items-center justify-center font-bold cursor-pointer">+</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {activeSearchTab === 'rafting' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center pb-4 md:pb-0">
                   <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
@@ -1116,6 +1173,10 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                       setPrefDate(hotelCheckIn);
                       setPrefGuests(hotelGuests);
                       setRoute('hotels');
+                    } else if (activeSearchTab === 'bungee') {
+                      setPrefDate(bungeeDate);
+                      setPrefGuests(bungeeGuests);
+                      setRoute('bungee');
                     } else if (activeSearchTab === 'rafting') {
                       setPrefDate(raftingDate);
                       setPrefGuests(raftingGuests);
