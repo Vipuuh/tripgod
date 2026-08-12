@@ -1814,16 +1814,32 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   {/* Checkout Widget Card */}
                   {(() => {
                     const pMode = selectedPackage.payment_mode || 'commission_advance';
-                    const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
-                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+                    const commType = selectedPackage.commission_type || selectedPartner?.commission_type || (selectedPackage.fixed_advance_amount > 0 ? 'flat' : 'percentage');
+                    const commVal = selectedPackage.commission_value !== undefined && selectedPackage.commission_value !== null
+                      ? Number(selectedPackage.commission_value)
+                      : (selectedPackage.fixed_advance_amount > 0
+                          ? Number(selectedPackage.fixed_advance_amount)
+                          : (selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null
+                              ? Number(selectedPackage.commission_percentage)
+                              : 10.0));
+
+                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null && selectedPackage.fixed_advance_amount !== ''
+                      ? Number(selectedPackage.fixed_advance_amount)
+                      : (commType === 'flat' ? commVal : 0);
+
+                    const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 10);
 
                     let advanceAmount = 0;
                     if (pMode === 'full_payment') {
                       advanceAmount = totalPrice;
-                    } else if (pMode === 'fixed_advance') {
-                      advanceAmount = fixedAmt;
+                    } else if (fixedAmt > 0) {
+                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      advanceAmount = Math.min(totalPrice, fixedAmt * units);
+                    } else if (commType === 'flat' && commVal > 0) {
+                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      advanceAmount = Math.min(totalPrice, commVal * units);
                     } else {
-                      advanceAmount = Math.round((totalPrice * commPct) / 100);
+                      advanceAmount = Math.max(1, Math.round((totalPrice * commPct) / 100));
                     }
                     const remainingAmount = Math.max(0, totalPrice - advanceAmount);
 
@@ -1871,6 +1887,8 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               city_id: selectedPackage.city_id,
                               vendor_id: selectedPackage.vendor_id,
                               payment_mode: pMode,
+                              commission_type: commType,
+                              commission_value: commVal,
                               commission_percentage: commPct,
                               fixed_advance_amount: fixedAmt,
                               free_video_type: selectedPackage.free_video_type || 'none',
@@ -1894,16 +1912,32 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                   {/* Mobile Sticky Booking Bar — Hotel-styled rounded top bar */}
                   {(() => {
                     const pMode = selectedPackage.payment_mode || 'commission_advance';
-                    const commPct = selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null ? Number(selectedPackage.commission_percentage) : 10;
-                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null ? Number(selectedPackage.fixed_advance_amount) : 0;
+                    const commType = selectedPackage.commission_type || selectedPartner?.commission_type || (selectedPackage.fixed_advance_amount > 0 ? 'flat' : 'percentage');
+                    const commVal = selectedPackage.commission_value !== undefined && selectedPackage.commission_value !== null
+                      ? Number(selectedPackage.commission_value)
+                      : (selectedPackage.fixed_advance_amount > 0
+                          ? Number(selectedPackage.fixed_advance_amount)
+                          : (selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null
+                              ? Number(selectedPackage.commission_percentage)
+                              : 10.0));
+
+                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null && selectedPackage.fixed_advance_amount !== ''
+                      ? Number(selectedPackage.fixed_advance_amount)
+                      : (commType === 'flat' ? commVal : 0);
+
+                    const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 10);
 
                     let advanceAmount = 0;
                     if (pMode === 'full_payment') {
                       advanceAmount = totalPrice;
-                    } else if (pMode === 'fixed_advance') {
-                      advanceAmount = fixedAmt;
+                    } else if (fixedAmt > 0) {
+                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      advanceAmount = Math.min(totalPrice, fixedAmt * units);
+                    } else if (commType === 'flat' && commVal > 0) {
+                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      advanceAmount = Math.min(totalPrice, commVal * units);
                     } else {
-                      advanceAmount = Math.round((totalPrice * commPct) / 100);
+                      advanceAmount = Math.max(1, Math.round((totalPrice * commPct) / 100));
                     }
                     const remainingAmount = Math.max(0, totalPrice - advanceAmount);
 
@@ -1959,6 +1993,8 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                                   city_id: selectedPackage.city_id,
                                   vendor_id: selectedPackage.vendor_id,
                                   payment_mode: pMode,
+                                  commission_type: commType,
+                                  commission_value: commVal,
                                   commission_percentage: commPct,
                                   fixed_advance_amount: fixedAmt,
                                   free_video_type: selectedPackage.free_video_type || 'none',
