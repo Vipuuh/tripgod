@@ -12,6 +12,7 @@ import { supabase } from '../supabase';
 import CustomerReelSection from '../components/CustomerReelSection';
 import ExploreDestinations from '../components/ExploreDestinations';
 import PackagesSection from '../components/PackagesSection';
+import MediaDisplay from '../components/MediaDisplay';
 
 function ExpandableText({ text, maxLength = 90, className = "" }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1303,7 +1304,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   className="flex-shrink-0 w-[85%] sm:w-[50%] md:w-[32%] snap-center group bg-white border border-slate-150 rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-all duration-300 cursor-pointer hover:-translate-y-1"
                 >
                   <div className="h-52 bg-slate-100 overflow-hidden relative">
-                    <img src={hotel.img} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <MediaDisplay src={hotel.img} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     
                     {/* Top Left Overlay Chip */}
                     {hotel.is_limited_offer && (
@@ -1451,13 +1452,12 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
               onClick={() => setRoute(act.route)}
               className="group bg-white border border-slate-100 rounded-3xl overflow-hidden cursor-pointer shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col h-full hover:-translate-y-1"
             >
-              {/* Image box */}
+              {/* Media box (Photo / Video) */}
               <div className="h-32 sm:h-56 bg-slate-100 overflow-hidden relative">
-                <img 
+                <MediaDisplay 
                   src={act.img} 
                   alt={act.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  loading="lazy"
                 />
                 <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-accent-gradient text-white text-[9px] sm:text-xs font-black py-1 px-2.5 sm:px-3.5 rounded-full shadow-[0_4px_12px_rgba(255,95,0,0.25)]">
                   {act.coming_soon ? 'COMING SOON' : `FROM ₹${act.price}`}
@@ -1532,7 +1532,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 )}
 
                 <div className="h-48 bg-gray-100 overflow-hidden relative border-b border-black/5">
-                  <img src={bike.img} alt={bike.name} className="w-full h-full object-cover" />
+                  <MediaDisplay src={bike.img} alt={bike.name} className="w-full h-full object-cover" />
                   <div className="absolute bottom-4 left-4 bg-[#FF5F00] text-white text-xs font-black py-1 px-3 rounded-full shadow-[0_4px_10px_rgba(255,95,0,0.25)]">
                     FROM ₹{bike.price}/DAY
                   </div>

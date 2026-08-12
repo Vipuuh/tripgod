@@ -12,6 +12,7 @@ import ReviewsSection from './ReviewsSection';
 import WhatsAppSupportInbox from './WhatsAppSupportInbox';
 import VendorImageCarousel from './VendorImageCarousel';
 import MaintenanceManager from './MaintenanceManager';
+import MediaDisplay from './MediaDisplay';
 
 const getSimpleBookingId = (id) => {
   if (!id) return 'TG-000000';
@@ -1256,9 +1257,9 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                   return (
                     <div key={item.id} className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between">
                       <div>
-                        {/* Thumbnail image */}
+                        {/* Thumbnail image / video */}
                         <div className="h-44 bg-slate-900 relative">
-                          <img src={thumbnail} alt={item.name} className="w-full h-full object-cover" />
+                          <MediaDisplay src={thumbnail} alt={item.name} className="w-full h-full object-cover" />
                           <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-xs text-accent text-xs font-black py-0.5 px-2.5 rounded border border-accent/25">
                             {['adventures', 'bikes', 'tours'].includes(activeTab) ? `From ₹${item.price}` : (item.price === 0 ? 'Free' : `₹${item.price}`)}
                           </div>
@@ -1597,12 +1598,12 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                       <label className="flex flex-col items-center justify-center p-3 border-2 border-dashed border-slate-800 hover:border-[#FF5F00]/50 rounded-xl cursor-pointer bg-slate-950/40 hover:bg-slate-900 transition-all">
                         <div className="flex items-center gap-2 text-slate-300">
                           <PlusCircle size={16} className="text-[#FF5F00]" />
-                          <span className="text-xs font-bold">Choose Photos (Select Multiple)</span>
+                          <span className="text-xs font-bold">Choose Media (Photos / Videos)</span>
                         </div>
-                        <span className="text-[9px] text-slate-500 mt-0.5 font-medium">Select multiple images at once</span>
+                        <span className="text-[9px] text-slate-500 mt-0.5 font-medium">Select photos or videos at once</span>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/*,video/*"
                           multiple
                           onChange={async (e) => {
                             const files = Array.from(e.target.files || []);
@@ -1893,14 +1894,14 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                   <input
                     type="file"
                     multiple
-                    accept="image/*"
+                    accept="image/*,video/*"
                     onChange={handleMediaUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <div className="space-y-2">
                     <PlusCircle className="w-8 h-8 text-slate-500 group-hover:text-accent mx-auto transition-colors" />
                     <span className="block text-xs font-bold text-slate-300">Drag & Drop or Click to Upload</span>
-                    <span className="block text-[10px] text-slate-500">Supports PNG, JPG, JPEG</span>
+                    <span className="block text-[10px] text-slate-500">Supports Photos (PNG, JPG) & Videos (MP4, MOV, WEBM)</span>
                   </div>
                 </div>
 
@@ -2834,7 +2835,9 @@ function HomepageManager({ hotels = [], toursList = [], bikesList = [], vendors 
                         <GripVertical size={14} className="text-slate-600 shrink-0" />
                         <span className="text-[10px] font-black text-[#FF5F00] w-4 shrink-0">{idx + 1}</span>
                         {getImg(item) && (
-                          <img src={getImg(item)} alt={getLabel(item)} className="w-8 h-8 rounded-lg object-cover border border-slate-800 shrink-0" />
+                          <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-800 shrink-0 bg-black">
+                            <MediaDisplay src={getImg(item)} alt={getLabel(item)} className="w-full h-full object-cover" />
+                          </div>
                         )}
                         <span className="text-xs font-bold text-white flex-1 truncate">{getLabel(item)}</span>
                         <span className="text-[10px] text-slate-400 font-bold shrink-0">{getPrice(item)}</span>
@@ -4256,16 +4259,16 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         />
       </div>
 
-      {/* 3. Image URLs Manager */}
+      {/* 3. Image & Video Media URLs Manager */}
       <div className="space-y-2">
         <div className="flex justify-between items-center bg-slate-900/10 p-2 rounded-xl border border-slate-800/40 font-semibold">
-          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Gallery Images</label>
+          <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">Gallery Media (Photos & Videos)</label>
           <div className="flex items-center gap-2">
             <label className="py-1 px-3 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded text-[10px] text-slate-350 font-bold cursor-pointer flex items-center justify-center">
               <input
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,video/*"
                 onChange={async (e) => {
                   const files = Array.from(e.target.files || []);
                   if (files.length === 0) return;
@@ -4290,7 +4293,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                 }}
                 className="hidden"
               />
-              <span>Upload Photos</span>
+              <span>Upload Media (Photos / Videos)</span>
             </label>
             <button
               type="button"
@@ -4304,20 +4307,25 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         <div className="space-y-2">
           {(formData.images || []).map((img, idx) => (
             <div key={idx} className="flex gap-2 items-center">
+              {img && (
+                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-800 bg-black">
+                  <MediaDisplay src={img} className="w-full h-full object-cover" />
+                </div>
+              )}
               <input
                 type="text"
                 required
                 value={img}
                 onChange={(e) => handleArrayChange('images', idx, e.target.value)}
-                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none"
-                placeholder="https://..."
+                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none text-xs"
+                placeholder="Photo URL, MP4 video link, or YouTube Short URL..."
               />
               
-              {/* Image Upload Button */}
+              {/* Media Upload Button */}
               <label className="py-2.5 px-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 rounded-xl cursor-pointer flex items-center justify-center shrink-0">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   onChange={(e) => handleImageFileUpload(e, idx)}
                   className="hidden"
                   disabled={uploadingImageIndices[idx]}
@@ -5513,10 +5521,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
                           </svg>
-                          <span className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider">Upload Images</span>
+                          <span className="text-[10px] font-black text-[#FF5F00] uppercase tracking-wider">Upload Media (Photos / Videos)</span>
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,video/*"
                             multiple
                             className="hidden"
                             onChange={async (e) => {
@@ -6139,10 +6147,10 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
                           )}
                           <div className="flex items-center gap-2">
                             <label className="px-2.5 py-1 bg-accent/10 border border-accent/30 text-accent rounded-lg text-[9.5px] font-bold cursor-pointer hover:bg-accent/20">
-                              + Upload Images
+                              + Upload Media
                               <input
                                 type="file"
-                                accept="image/*"
+                                accept="image/*,video/*"
                                 multiple
                                 className="hidden"
                                 onChange={async (e) => {

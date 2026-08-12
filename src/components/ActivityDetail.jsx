@@ -5,6 +5,7 @@ import {
   HeartCrack, Info, Play, Calendar, Clock, Sparkles, ChevronLeft
 } from 'lucide-react';
 import OperatorSelector from './OperatorSelector';
+import MediaDisplay from './MediaDisplay';
 
 
 export default function ActivityDetail({ 
@@ -179,20 +180,15 @@ export default function ActivityDetail({
           </div>
         </div>
 
-        {/* Slider / Image Gallery */}
+        {/* Slider / Image & Video Gallery */}
         <div className="h-48 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-black/10 group">
-          <AnimatePresence mode="wait">
-            <motion.img 
-              key={currentImgIdx}
-              src={images[currentImgIdx]} 
-              alt={`${title} view ${currentImgIdx + 1}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-full h-full object-cover absolute inset-0"
-            />
-          </AnimatePresence>
+          <MediaDisplay 
+            key={currentImgIdx}
+            src={images[currentImgIdx]} 
+            alt={`${title} view ${currentImgIdx + 1}`}
+            className="w-full h-full object-cover absolute inset-0"
+            showSoundToggle={true}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35" />
           
           {/* Left/Right Navigation Buttons */}

@@ -12,6 +12,7 @@ import MarketplaceFilters from '../components/MarketplaceFilters';
 import ReviewsSection from '../components/ReviewsSection';
 import TrustSignals from '../components/TrustSignals';
 import VendorImageCarousel from '../components/VendorImageCarousel';
+import MediaDisplay from '../components/MediaDisplay';
 
 // Consistent hash generator for mock data
 const getHash = (str) => {
@@ -503,9 +504,9 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                         </div>
                       )}
 
-                      {/* Tour Image — top of card */}
+                      {/* Tour Media (Photo / Video) — top of card */}
                       <div className="w-full h-44 relative overflow-hidden bg-slate-100 group">
-                        <img
+                        <MediaDisplay
                           src={pkg.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'}
                           alt={pkg.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
@@ -679,10 +680,11 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
 
               {/* Hero Image */}
               <div className="h-60 sm:h-80 w-full rounded-2xl overflow-hidden relative border border-slate-200 group">
-                <img
+                <MediaDisplay
                   src={selectedTour.images[currentImgIdx]}
                   alt={selectedTour.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  showSoundToggle={true}
                 />
                 {selectedTour.images.length > 1 && (
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">

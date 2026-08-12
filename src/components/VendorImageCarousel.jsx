@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import MediaDisplay from './MediaDisplay';
 
 export default function VendorImageCarousel({
   images = [],
@@ -88,36 +89,12 @@ export default function VendorImageCarousel({
       <div className={`${className} flex items-center justify-center bg-slate-800 text-slate-500`}>
         <div className="flex flex-col items-center gap-1">
           <ImageIcon size={24} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">No Photo</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider">No Media</span>
         </div>
         {children}
       </div>
     );
   }
-
-  // Animation variants for smooth sliding
-  const slideVariants = {
-    enter: (dir) => ({
-      x: dir > 0 ? '100%' : '-100%',
-      opacity: 0.8,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        x: { type: 'spring', stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 }
-      }
-    },
-    exit: (dir) => ({
-      x: dir < 0 ? '100%' : '-100%',
-      opacity: 0.8,
-      transition: {
-        x: { type: 'spring', stiffness: 300, damping: 30 },
-        opacity: { duration: 0.2 }
-      }
-    })
-  };
 
   return (
     <div
@@ -128,33 +105,24 @@ export default function VendorImageCarousel({
         setIsDragging(false);
       }}
     >
-      {/* Animated Image Slide */}
+      {/* Animated Media Slide */}
       <div className="w-full h-full relative overflow-hidden">
         <AnimatePresence initial={false} custom={direction}>
-          <motion.img
+          <motion.div
             key={currentIndex}
-            src={normalizedImages[currentIndex]}
-            alt={`${alt} ${currentIndex + 1}`}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            drag={normalizedImages.length > 1 ? "x" : false}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragStart={() => setIsDragging(true)}
-            onDragEnd={(e, { offset, velocity }) => {
-              setIsDragging(false);
-              const swipeThreshold = 50;
-              if (offset.x < -swipeThreshold || velocity.x < -300) {
-                handleNext();
-              } else if (offset.x > swipeThreshold || velocity.x > 300) {
-                handlePrev();
-              }
-            }}
-            className={`absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing select-none ${imageClassName}`}
-          />
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 w-full h-full"
+          >
+            <MediaDisplay
+              src={normalizedImages[currentIndex]}
+              alt={`${alt} ${currentIndex + 1}`}
+              className={`w-full h-full ${imageClassName}`}
+              showSoundToggle={true}
+            />
+          </motion.div>
         </AnimatePresence>
       </div>
 

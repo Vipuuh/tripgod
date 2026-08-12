@@ -13,6 +13,7 @@ import ReviewsSection from './ReviewsSection';
 import TrustSignals from './TrustSignals';
 import DiningAndMealPanel from './DiningAndMealPanel';
 import VendorImageCarousel from './VendorImageCarousel';
+import MediaDisplay from './MediaDisplay';
 
 // Consistent hash generator for mock data
 const getHash = (str) => {
@@ -974,9 +975,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         </div>
                       )}
 
-                      {/* Package Image */}
+                      {/* Package Media (Photo / Video) */}
                       <div className="w-full md:w-[200px] h-40 md:h-auto shrink-0 relative overflow-hidden bg-slate-100">
-                        <img src={pkg.images[0]} alt={pkg.name} className="w-full h-full object-cover" />
+                        <MediaDisplay src={pkg.images[0]} alt={pkg.name} className="w-full h-full object-cover" />
                       </div>
 
                       {/* Package details */}
@@ -1156,10 +1157,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
 
                   {/* Slider / Image Gallery */}
                   <div className="h-52 sm:h-72 w-full rounded-2xl overflow-hidden relative border border-slate-200 group">
-                    <img 
+                    <MediaDisplay 
                       src={activeImages[currentImgIdx] || selectedPackage.images[0] || selectedPackage.img || '/rafting-4.jpg'} 
                       alt={selectedPackage.name}
                       className="w-full h-full object-cover"
+                      showSoundToggle={true}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35" />
                     
@@ -1315,7 +1317,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               </div>
                               {roomImages.length > 0 && (
                                 <div className="w-full h-20 rounded-xl overflow-hidden mt-3 bg-slate-200">
-                                  <img src={roomImages[0]} alt={room.name} className="w-full h-full object-cover" />
+                                  <MediaDisplay src={roomImages[0]} alt={room.name} className="w-full h-full object-cover" />
                                 </div>
                               )}
                             </button>
