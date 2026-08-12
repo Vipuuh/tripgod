@@ -228,7 +228,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     return tomorrow.toISOString().split('T')[0];
   });
   const [bungeeGuests, setBungeeGuests] = useState(1);
-  const [selectedBungeeStretch, setSelectedBungeeStretch] = useState('117M Jump (Mohan Chatti)');
+  const [selectedBungeeStretch, setSelectedBungeeStretch] = useState('Himalayan Bungee (Mohan Chatti)');
 
   // Bike Rental search states
   const [bikeDate, setBikeDate] = useState(() => {
@@ -911,16 +911,16 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                   <div className="p-3.5 border border-slate-200/60 hover:border-[#FF5F00]/40 rounded-2xl bg-white/70 hover:bg-white/90 transition-all duration-300 flex items-center gap-3 min-h-[68px] shadow-xs">
                     <MapPin className="text-[#FF5F00] shrink-0" size={18} />
                     <div className="flex flex-col text-left">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Jump Height / Option</span>
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Operator / Location</span>
                       <select 
                         value={selectedBungeeStretch}
                         onChange={(e) => setSelectedBungeeStretch(e.target.value)}
                         className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
                       >
-                        <option value="117M Jump (Mohan Chatti)">117M Jump (Mohan Chatti)</option>
-                        <option value="101M Jump (Shivpuri)">101M Jump (Shivpuri)</option>
-                        <option value="83M Jump (Mohan Chatti)">83M Jump (Mohan Chatti)</option>
-                        <option value="104M Jump (Rishikesh)">104M Jump (Rishikesh)</option>
+                        <option value="Himalayan Bungee (Mohan Chatti)">Himalayan Bungee (Mohan Chatti)</option>
+                        <option value="Shivpuri Bungee Zone">Shivpuri Bungee Zone</option>
+                        <option value="Jumpin Heights (Mohan Chatti)">Jumpin Heights (Mohan Chatti)</option>
+                        <option value="All Verified Bungee Operators">All Verified Operators</option>
                       </select>
                     </div>
                   </div>
