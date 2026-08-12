@@ -202,34 +202,8 @@ export default function ActivityDetail({
             showSoundToggle={true}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35 pointer-events-none" />
-          
-          {/* Left/Right Navigation Buttons */}
-          {images && images.length > 1 && (
-            <>
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImgIdx((prev) => (prev - 1 + images.length) % images.length);
-                }}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 flex items-center justify-center text-white border border-white/20 z-20 cursor-pointer shadow-lg active:scale-90 transition-all opacity-90 hover:opacity-100"
-                aria-label="Previous slide"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImgIdx((prev) => (prev + 1) % images.length);
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 flex items-center justify-center text-white border border-white/20 z-20 cursor-pointer shadow-lg active:scale-90 transition-all opacity-90 hover:opacity-100"
-                aria-label="Next slide"
-              >
-                <ChevronLeft size={18} className="rotate-180" />
-              </button>
 
-              {/* Bottom Slide Indicators (Dots) */}
+          {/* Bottom Slide Indicators (Dots) */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15">
                 {images.map((_, dotIdx) => (
                   <button

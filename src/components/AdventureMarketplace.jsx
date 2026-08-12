@@ -1177,34 +1177,6 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       showSoundToggle={true}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/35 pointer-events-none" />
-                    
-                    {/* Left & Right Arrow Navigation Buttons */}
-                    {activeImages && activeImages.length > 1 && (
-                      <>
-                        <button 
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentImgIdx((prev) => (prev - 1 + activeImages.length) % activeImages.length);
-                          }}
-                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-xs flex items-center justify-center border border-white/20 z-20 cursor-pointer shadow-lg active:scale-90 transition-all opacity-90 hover:opacity-100"
-                          aria-label="Previous slide"
-                        >
-                          <ChevronLeft size={18} />
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentImgIdx((prev) => (prev + 1) % activeImages.length);
-                          }}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-xs flex items-center justify-center border border-white/20 z-20 cursor-pointer shadow-lg active:scale-90 transition-all opacity-90 hover:opacity-100"
-                          aria-label="Next slide"
-                        >
-                          <ChevronLeft size={18} className="rotate-180" />
-                        </button>
-                      </>
-                    )}
 
                     {/* Slider dots */}
                     {activeImages && activeImages.length > 1 && (
