@@ -112,10 +112,43 @@ const getPerfectForItems = (pkg, activityType) => {
   const act = (activityType || '').toLowerCase();
   const pkgName = (pkg?.name || '').toLowerCase();
 
+  // Helper to extract clean dynamic age string
+  const getAgeStr = (fallback) => {
+    const ageText = pkg?.rules?.age_limit_text || (pkg?.age_limit ? `${pkg.age_limit} - 65 Years` : null);
+    if (ageText && typeof ageText === 'string' && ageText.trim()) {
+      let clean = ageText.trim();
+      clean = clean.replace(/\s*years\s*/gi, ' YRS').replace(/\s*yrs\s*/gi, ' YRS').trim();
+      if (!clean.toUpperCase().includes('YRS')) {
+        clean = `${clean} YRS`;
+      }
+      return clean;
+    }
+    return fallback;
+  };
+
+  // Helper to extract clean dynamic video text
+  const getVideoSub = (fallback) => {
+    const freeVid = (pkg?.free_video_type || '').toLowerCase();
+    const inclusions = Array.isArray(pkg?.inclusions) ? pkg.inclusions : [];
+    const hasDslr = freeVid === 'dslr' || inclusions.some(i => typeof i === 'string' && i.toLowerCase().includes('dslr'));
+    const hasGopro = freeVid === 'gopro' || inclusions.some(i => typeof i === 'string' && i.toLowerCase().includes('gopro'));
+
+    if (hasDslr) {
+      return 'Free HD DSLR Video & Certificate Included';
+    }
+    if (hasGopro) {
+      return 'GoPro HD Jump Video & Certificate Available';
+    }
+    if (freeVid === 'none') {
+      return 'Action Photos & Certificate Available';
+    }
+    return fallback;
+  };
+
   if (act.includes('bungee') || pkgName.includes('bungee')) {
     return [
       {
-        title: 'Adults & Teens (12-45 YRS)',
+        title: `Adults & Teens (${getAgeStr('12-45 YRS')})`,
         subtitle: pkg?.rules?.bungee_rules?.safety_harness || 'Triple Redundant Harness & EN Safety Standards',
         color: 'indigo',
         icon: Users
@@ -134,7 +167,7 @@ const getPerfectForItems = (pkg, activityType) => {
       },
       {
         title: 'Friends & Adventure Lovers',
-        subtitle: 'GoPro HD Jump Video & Certificate Available',
+        subtitle: getVideoSub('GoPro HD Jump Video & Certificate Available'),
         color: 'sky',
         icon: Sparkles
       }
@@ -148,7 +181,7 @@ const getPerfectForItems = (pkg, activityType) => {
         icon: Users
       },
       {
-        title: 'Thrill Seekers (12-45 YRS)',
+        title: `Thrill Seekers (${getAgeStr('12-45 YRS')})`,
         subtitle: 'High Altitude Pendulum Swing Experience',
         color: 'emerald',
         icon: ShieldCheck
@@ -161,7 +194,7 @@ const getPerfectForItems = (pkg, activityType) => {
       },
       {
         title: 'Friend Groups & Duos',
-        subtitle: 'GoPro Video & Photo Addon Available',
+        subtitle: getVideoSub('GoPro Video & Photo Addon Available'),
         color: 'sky',
         icon: Sparkles
       }
@@ -169,7 +202,7 @@ const getPerfectForItems = (pkg, activityType) => {
   } else if (act.includes('zipline') || pkgName.includes('zip')) {
     return [
       {
-        title: 'Families & Youth (10-60 YRS)',
+        title: `Families & Youth (${getAgeStr('10-60 YRS')})`,
         subtitle: 'Dual Zip Cables & Auto-Braking Mechanism',
         color: 'indigo',
         icon: Users
@@ -188,7 +221,7 @@ const getPerfectForItems = (pkg, activityType) => {
       },
       {
         title: 'Groups & Corporates',
-        subtitle: 'Side-by-Side Dual Zipline Flying',
+        subtitle: getVideoSub('Side-by-Side Dual Zipline Flying'),
         color: 'sky',
         icon: Sparkles
       }
@@ -202,7 +235,7 @@ const getPerfectForItems = (pkg, activityType) => {
         icon: Users
       },
       {
-        title: 'Sky Enthusiasts (10-60 YRS)',
+        title: `Sky Enthusiasts (${getAgeStr('10-60 YRS')})`,
         subtitle: 'High Altitude Thermal Soaring Experience',
         color: 'emerald',
         icon: ShieldCheck
@@ -215,7 +248,7 @@ const getPerfectForItems = (pkg, activityType) => {
       },
       {
         title: 'Adventure Buffs',
-        subtitle: 'Scenic Himalayan & Valley Aerial Views',
+        subtitle: getVideoSub('Scenic Himalayan & Valley Aerial Views'),
         color: 'sky',
         icon: Sparkles
       }
@@ -251,7 +284,7 @@ const getPerfectForItems = (pkg, activityType) => {
     // Rafting default
     return [
       {
-        title: 'Adults & Teens (14-55 YRS)',
+        title: `Adults & Teens (${getAgeStr('14-55 YRS')})`,
         subtitle: 'Adheres to Rafting Safety Standards',
         color: 'indigo',
         icon: Users
@@ -270,7 +303,7 @@ const getPerfectForItems = (pkg, activityType) => {
       },
       {
         title: 'Friend Groups & Corporates',
-        subtitle: '8-Person Shared Rafts Available',
+        subtitle: getVideoSub('8-Person Shared Rafts Available'),
         color: 'sky',
         icon: Sparkles
       }
@@ -1226,10 +1259,16 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap shrink-0 self-start xs:self-auto">
-                      {(selectedPackage.free_video_type === 'dslr' || selectedPackage.free_video_type === 'gopro' || selectedPackage.rules?.bungee_rules?.has_video || (selectedPackage.inclusions && selectedPackage.inclusions.some(i => i.toLowerCase().includes('video')))) && (
+                      {(selectedPackage.free_video_type === 'dslr' || selectedPackage.free_video_type === 'gopro' || selectedPackage.rules?.bungee_rules?.has_video || (selectedPackage.inclusions && selectedPackage.inclusions.some(i => typeof i === 'string' && i.toLowerCase().includes('video')))) && (
                         <div className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold rounded-lg flex items-center gap-1.5 text-[10px] sm:text-xs">
                           <Camera size={12} className="text-emerald-400 stroke-[2.5]" />
-                          <span>{selectedPackage.free_video_type === 'dslr' ? 'Free HD DSLR Video' : selectedPackage.free_video_type === 'gopro' ? 'Free GoPro Video' : 'Free HD Video'}</span>
+                          <span>
+                            {selectedPackage.free_video_type === 'dslr' || (selectedPackage.inclusions && selectedPackage.inclusions.some(i => typeof i === 'string' && i.toLowerCase().includes('dslr')))
+                              ? 'Free HD DSLR Video'
+                              : selectedPackage.free_video_type === 'gopro' || (selectedPackage.inclusions && selectedPackage.inclusions.some(i => typeof i === 'string' && i.toLowerCase().includes('gopro')))
+                              ? 'Free GoPro Video'
+                              : 'Free HD Video'}
+                          </span>
                         </div>
                       )}
                       <div className="px-2.5 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold rounded-lg flex items-center gap-1 text-[10px] sm:text-xs">
@@ -1578,14 +1617,27 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         </div>
 
                         {/* Step 4 - Media & Certificate */}
-                        <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
-                          <div className="flex items-center justify-between">
-                            <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">04</span>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">DSLR & Cert</span>
-                          </div>
-                          <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">Recovery & DSLR Video</div>
-                          <p className="text-[10px] text-slate-300 leading-relaxed font-medium">Safely lowered to river recovery deck; collect your HD DSLR Jump Video & official Daredevil Certificate.</p>
-                        </div>
+                        {(() => {
+                          const freeVid = (selectedPackage.free_video_type || '').toLowerCase();
+                          const incs = Array.isArray(selectedPackage.inclusions) ? selectedPackage.inclusions : [];
+                          const isDslr = freeVid === 'dslr' || incs.some(i => typeof i === 'string' && i.toLowerCase().includes('dslr'));
+                          const isGopro = freeVid === 'gopro' || incs.some(i => typeof i === 'string' && i.toLowerCase().includes('gopro'));
+
+                          const badgeText = isDslr ? 'DSLR & CERT' : isGopro ? 'GOPRO & CERT' : 'MEDIA & CERT';
+                          const titleText = isDslr ? 'Recovery & DSLR Video' : isGopro ? 'Recovery & GoPro Video' : 'Recovery & Jump Media';
+                          const vidText = isDslr ? 'HD DSLR' : isGopro ? 'HD GoPro' : 'HD Jump';
+
+                          return (
+                            <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
+                              <div className="flex items-center justify-between">
+                                <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">04</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{badgeText}</span>
+                              </div>
+                              <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">{titleText}</div>
+                              <p className="text-[10px] text-slate-300 leading-relaxed font-medium">Safely lowered to river recovery deck; collect your {vidText} Video & official Daredevil Certificate.</p>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
