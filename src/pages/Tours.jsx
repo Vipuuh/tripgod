@@ -678,21 +678,68 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                 )}
               </div>
 
-              {/* Hero Image */}
-              <div className="h-60 sm:h-80 w-full rounded-2xl overflow-hidden relative border border-slate-200 group">
+              {/* Hero Image & Video Gallery */}
+              <div 
+                className="h-60 sm:h-80 w-full rounded-2xl overflow-hidden relative border border-slate-200 group select-none"
+                onTouchStart={(e) => { e.currentTarget.dataset.touchStart = e.touches[0].clientX; }}
+                onTouchEnd={(e) => {
+                  const startX = Number(e.currentTarget.dataset.touchStart || 0);
+                  const diff = startX - e.changedTouches[0].clientX;
+                  if (diff > 40 && selectedTour.images.length > 1) {
+                    setCurrentImgIdx((prev) => (prev + 1) % selectedTour.images.length);
+                  } else if (diff < -40 && selectedTour.images.length > 1) {
+                    setCurrentImgIdx((prev) => (prev - 1 + selectedTour.images.length) % selectedTour.images.length);
+                  }
+                }}
+              >
                 <MediaDisplay
+                  key={currentImgIdx}
                   src={selectedTour.images[currentImgIdx]}
                   alt={selectedTour.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   showSoundToggle={true}
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                
+                {/* Left/Right Navigation Buttons */}
+                {selectedTour.images && selectedTour.images.length > 1 && (
+                  <>
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImgIdx((prev) => (prev - 1 + selectedTour.images.length) % selectedTour.images.length);
+                      }}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 flex items-center justify-center text-white border border-white/20 z-20 cursor-pointer shadow-lg active:scale-90 transition-all opacity-90 hover:opacity-100"
+                      aria-label="Previous slide"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImgIdx((prev) => (prev + 1) % selectedTour.images.length);
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 flex items-center justify-center text-white border border-white/20 z-20 cursor-pointer shadow-lg active:scale-90 transition-all opacity-90 hover:opacity-100"
+                      aria-label="Next slide"
+                    >
+                      <ChevronLeft size={18} className="rotate-180" />
+                    </button>
+                  </>
+                )}
+
                 {selectedTour.images.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/15">
                     {selectedTour.images.map((_, dotIdx) => (
                       <button
                         key={dotIdx}
-                        onClick={() => setCurrentImgIdx(dotIdx)}
-                        className={`h-1.5 rounded-full transition-all cursor-pointer border-none ${dotIdx === currentImgIdx ? 'bg-white w-5' : 'bg-white/50 w-1.5'}`}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImgIdx(dotIdx);
+                        }}
+                        className={`h-2 rounded-full transition-all cursor-pointer border-none ${dotIdx === currentImgIdx ? 'bg-[#FF6B00] w-5' : 'bg-white/60 hover:bg-white w-2'}`}
                       />
                     ))}
                   </div>
