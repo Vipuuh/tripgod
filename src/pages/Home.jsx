@@ -228,7 +228,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
     return tomorrow.toISOString().split('T')[0];
   });
   const [bungeeGuests, setBungeeGuests] = useState(1);
-  const [selectedBungeeStretch, setSelectedBungeeStretch] = useState('Himalayan Bungee (Mohan Chatti)');
+  const [selectedBungeeStretch, setSelectedBungeeStretch] = useState('All Verified Operators');
 
   // Bike Rental search states
   const [bikeDate, setBikeDate] = useState(() => {
@@ -917,10 +917,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                         onChange={(e) => setSelectedBungeeStretch(e.target.value)}
                         className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
                       >
-                        <option value="Himalayan Bungee (Mohan Chatti)">Himalayan Bungee (Mohan Chatti)</option>
-                        <option value="Shivpuri Bungee Zone">Shivpuri Bungee Zone</option>
-                        <option value="Jumpin Heights (Mohan Chatti)">Jumpin Heights (Mohan Chatti)</option>
-                        <option value="All Verified Bungee Operators">All Verified Operators</option>
+                        <option value="All Verified Operators">All Verified Operators</option>
                       </select>
                     </div>
                   </div>
