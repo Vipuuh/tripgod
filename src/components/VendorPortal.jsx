@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Lock, Phone, ShieldCheck, Power, RefreshCw, LogOut, CheckCircle2, XCircle, 
-  DollarSign, Calendar, User, Clock, Package, Edit2, Save, Bike, Waves, Building2, MapPin
+  DollarSign, Calendar, User, Clock, Package, Edit2, Save, Bike, Waves, Building2, MapPin, Plus, Minus
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
-export default function VendorPortal({ onNavigateHome }) {
+export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }) {
   // Auth state
   const [phoneInput, setPhoneInput] = useState('');
   const [otpInput, setOtpInput] = useState('');
@@ -324,6 +324,11 @@ export default function VendorPortal({ onNavigateHome }) {
   useEffect(() => {
     if (currentVendor) {
       fetchVendorData();
+      // Auto background sync every 20s between app & website
+      const interval = setInterval(() => {
+        fetchVendorData();
+      }, 20000);
+      return () => clearInterval(interval);
     }
   }, [currentVendor]);
 
@@ -616,6 +621,49 @@ export default function VendorPortal({ onNavigateHome }) {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+        {/* Prominent Shop Status Banner */}
+        <div className={`mb-6 p-5 rounded-3xl border transition-all ${
+          currentVendor.status === 'Active'
+            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-200'
+            : 'bg-red-950/40 border-red-500/30 text-red-200'
+        }`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 ${
+                currentVendor.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+              }`}>
+                <Power className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${
+                    currentVendor.status === 'Active' ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'
+                  }`} />
+                  <h2 className="text-base font-black uppercase tracking-wide">
+                    ● {currentVendor.status === 'Active' ? 'ONLINE' : 'OFFLINE'}
+                  </h2>
+                </div>
+                <p className="text-xs mt-1 opacity-90 font-medium">
+                  {currentVendor.status === 'Active'
+                    ? 'Your services are currently available for customers on the TripGod website & app.'
+                    : 'Your services are currently unavailable for customers.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={toggleMasterStatus}
+              className={`px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shrink-0 ${
+                currentVendor.status === 'Active'
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
+                  : 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/20'
+              }`}
+            >
+              Switch to {currentVendor.status === 'Active' ? 'OFFLINE' : 'ONLINE'}
+            </button>
+          </div>
+        </div>
+
         {/* Status Message Alert */}
         {statusMessage && (
           <div className="mb-6 p-4 bg-orange-500/10 border border-orange-500/30 text-orange-300 rounded-2xl text-xs font-bold uppercase tracking-wider">
@@ -730,26 +778,51 @@ export default function VendorPortal({ onNavigateHome }) {
                             Selling Price
                           </span>
                           {isEditing ? (
-                            <div className="flex items-center gap-2 mt-1">
-                              <input
-                                type="number"
-                                value={newPrice}
-                                onChange={(e) => setNewPrice(e.target.value)}
-                                placeholder={item.price}
-                                className="w-24 px-3 py-1.5 bg-slate-950 border border-orange-500/50 rounded-xl text-white text-sm font-bold focus:outline-none"
-                              />
-                              <button
-                                onClick={() => handleSavePrice(item)}
-                                className="p-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl transition-colors"
-                              >
-                                <Save className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => setEditingItemId(null)}
-                                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl transition-colors"
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </button>
+                            <div className="flex flex-col gap-2 mt-1">
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setNewPrice(prev => Math.max(0, (Number(prev) || Number(item.net_price || item.price) || 0) - 50).toString())}
+                                  className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold border-none cursor-pointer shrink-0"
+                                  title="Decrease by ₹50"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <input
+                                  type="number"
+                                  value={newPrice}
+                                  onChange={(e) => setNewPrice(e.target.value)}
+                                  placeholder={item.net_price || item.price}
+                                  className="w-24 px-3 py-1.5 bg-slate-950 border border-orange-500/50 rounded-xl text-white text-sm font-bold focus:outline-none text-center"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setNewPrice(prev => ((Number(prev) || Number(item.net_price || item.price) || 0) + 50).toString())}
+                                  className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center font-bold border-none cursor-pointer shrink-0"
+                                  title="Increase by ₹50"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSavePrice(item)}
+                                  className="p-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl transition-colors border-none cursor-pointer shrink-0"
+                                  title="Save Base Price"
+                                >
+                                  <Save className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingItemId(null)}
+                                  className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl transition-colors border-none cursor-pointer shrink-0"
+                                  title="Cancel"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <span className="text-[10px] text-orange-400 font-medium">
+                                Base Price: ₹{newPrice || item.net_price || item.price}
+                              </span>
                             </div>
                           ) : (
                             <div className="text-lg font-black text-white mt-0.5">

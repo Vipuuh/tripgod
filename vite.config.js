@@ -9,6 +9,12 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
-    chunkSizeWarningLimit: 1600
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      input: {
+        main: './index.html',
+        vendor: './vendor.html'
+      }
+    }
   }
 })
