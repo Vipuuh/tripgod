@@ -283,50 +283,47 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
       };
 
       // Category filter rules to prevent showing unowned Hotels to Scooty/Rafting vendors
-      const isAllCategory = vendorCategory.includes('multi') || vendorCategory.includes('all') || vendorCategory === '' || vendorCategory.includes('partner');
-      const acceptsBikes = isAllCategory || vendorCategory.includes('bike') || vendorCategory.includes('scooty') || vendorCategory.includes('rent') || vendorCategory.includes('vehicle');
-      const acceptsRafting = isAllCategory || vendorCategory.includes('raft') || vendorCategory.includes('adventure') || vendorCategory.includes('camp');
-      const acceptsHotels = isAllCategory || vendorCategory.includes('hotel') || vendorCategory.includes('resort') || vendorCategory.includes('stay') || vendorCategory.includes('cottage');
-      const acceptsTours = isAllCategory || vendorCategory.includes('tour') || vendorCategory.includes('package') || vendorCategory.includes('trek');
+      const acceptsHotels = vendorCategory.includes('hotel') || vendorCategory.includes('resort') || vendorCategory.includes('stay') || vendorCategory.includes('cottage') || vendorCategory.includes('homestay');
+      const acceptsBikes = vendorCategory.includes('bike') || vendorCategory.includes('scooty') || vendorCategory.includes('rent') || vendorCategory.includes('vehicle') || vendorCategory.includes('multi') || vendorCategory.includes('all') || vendorCategory === '';
+      const acceptsRafting = vendorCategory.includes('raft') || vendorCategory.includes('adventure') || vendorCategory.includes('camp') || vendorCategory.includes('river') || vendorCategory.includes('multi') || vendorCategory.includes('all') || vendorCategory === '';
+      const acceptsTours = vendorCategory.includes('tour') || vendorCategory.includes('package') || vendorCategory.includes('trek');
 
-      // Helper: Only allow phone fallback if item does NOT explicitly belong to another vendor ID
-      const isPhoneMatchAllowed = (item) => {
-        if (item.vendor_id && item.vendor_id !== vId && item.vendor_id !== rawVendorId) {
-          return false;
-        }
-        return true;
+      // Helper: Check if item belongs to this vendor explicitly
+      const isItemOwned = (item) => {
+        if (!item) return false;
+        return item.vendor_id === vId || (rawVendorId && item.vendor_id === rawVendorId) || item.id === vId;
       };
 
       // 1. Fetch bikes
       const { data: bikes } = await supabase.from('bikes').select('*');
       const filteredBikes = (bikes || []).filter(b => {
-        if (b.vendor_id === vId || (rawVendorId && b.vendor_id === rawVendorId) || b.id === vId) return true;
+        if (isItemOwned(b)) return true;
         if (isDirect) return (currentVendor.category === 'Bike Rental' || acceptsBikes) && matchesPhone(b.whatsapp_number);
-        return acceptsBikes && isPhoneMatchAllowed(b) && matchesPhone(b.whatsapp_number);
+        return acceptsBikes && (!b.vendor_id || b.vendor_id === vId) && matchesPhone(b.whatsapp_number);
       });
 
       // 2. Fetch rafting
       const { data: rafting } = await supabase.from('rafting').select('*');
       const filteredRafting = (rafting || []).filter(r => {
-        if (r.vendor_id === vId || (rawVendorId && r.vendor_id === rawVendorId) || r.id === vId) return true;
+        if (isItemOwned(r)) return true;
         if (isDirect) return (currentVendor.category === 'Rafting' || acceptsRafting) && matchesPhone(r.whatsapp_number);
-        return acceptsRafting && isPhoneMatchAllowed(r) && matchesPhone(r.whatsapp_number);
+        return acceptsRafting && (!r.vendor_id || r.vendor_id === vId) && matchesPhone(r.whatsapp_number);
       });
 
       // 3. Fetch hotels
       const { data: hotels } = await supabase.from('hotels').select('*');
       const filteredHotels = (hotels || []).filter(h => {
-        if (h.vendor_id === vId || (rawVendorId && h.vendor_id === rawVendorId) || h.id === vId) return true;
+        if (isItemOwned(h)) return true;
         if (isDirect) return (currentVendor.category === 'Hotel' || acceptsHotels) && (matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
-        return acceptsHotels && isPhoneMatchAllowed(h) && (matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
+        return acceptsHotels && (!h.vendor_id || h.vendor_id === vId) && (matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
       });
 
       // 4. Fetch tours
       const { data: tours } = await supabase.from('tours').select('*');
       const filteredTours = (tours || []).filter(t => {
-        if (t.vendor_id === vId || (rawVendorId && t.vendor_id === rawVendorId) || t.id === vId) return true;
+        if (isItemOwned(t)) return true;
         if (isDirect) return (currentVendor.category === 'Tour' || acceptsTours) && (matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
-        return acceptsTours && isPhoneMatchAllowed(t) && (matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
+        return acceptsTours && (!t.vendor_id || t.vendor_id === vId) && (matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
       });
 
       // Combine items with category tag
