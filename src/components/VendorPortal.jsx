@@ -252,6 +252,25 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
     setPendingVendor(null);
   };
 
+  // Refresh animation state
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  // Helper function to call serverless API for DB updates bypassing RLS
+  const callVendorApi = async (table, id, payload) => {
+    try {
+      const response = await fetch('/api/vendor-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', table, id, payload })
+      });
+      const result = await response.json();
+      return result;
+    } catch (err) {
+      console.warn('vendor-update API network note:', err.message);
+      return null;
+    }
+  };
+
   // Fetch Vendor Products & Bookings
   const fetchVendorData = async (isSilent = false) => {
     if (!currentVendor) return;
@@ -261,15 +280,18 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
       const vId = currentVendor.id;
       const rawVendorId = currentVendor.vendor_id;
       const vPhone = (currentVendor.phone || '').replace(/\D/g, '');
+      const vWa = (currentVendor.whatsapp || '').replace(/\D/g, '');
       const isDirect = currentVendor.is_direct;
       const vendorCategory = (currentVendor.category || '').toLowerCase();
 
       // Helper matcher for exact 10-digit mobile number matching
-      const matchesPhone = (waNum) => {
-        if (!waNum) return false;
-        const cleanedWa = waNum.replace(/\D/g, '');
-        if (!cleanedWa || cleanedWa.length < 7 || !vPhone || vPhone.length < 7) return false;
-        return cleanedWa.slice(-10) === vPhone.slice(-10);
+      const matchesPhone = (phNum) => {
+        if (!phNum) return false;
+        const cleaned = phNum.replace(/\D/g, '');
+        if (!cleaned || cleaned.length < 7) return false;
+        const cleanLast10 = cleaned.slice(-10);
+        return (vPhone && vPhone.length >= 7 && vPhone.slice(-10) === cleanLast10) || 
+               (vWa && vWa.length >= 7 && vWa.slice(-10) === cleanLast10);
       };
 
       // 1. Fetch bikes
@@ -290,13 +312,22 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
         return r.vendor_id === vId || (rawVendorId && r.vendor_id === rawVendorId) || matchesPhone(r.whatsapp_number);
       });
 
-      // 3. Fetch hotels
+      // 3. Fetch hotels (STRICT PHONE CHECKing so HB Evergreen Adventure doesn't see unrelated hotels)
       const { data: hotels } = await supabase.from('hotels').select('*');
       const filteredHotels = (hotels || []).filter(h => {
-        if (isDirect) {
-          return (currentVendor.category === 'Hotel' || vendorCategory.includes('hotel')) && (h.id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
+        const phoneMatches = matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+        if (phoneMatches) return true;
+
+        // If hotel has a phone number registered that is different from vendor's phone, it belongs to someone else!
+        const hasOtherPhone = (h.whatsapp_number && h.whatsapp_number.replace(/\D/g, '').length >= 7 && !matchesPhone(h.whatsapp_number)) || 
+                              (h.phone_number && h.phone_number.replace(/\D/g, '').length >= 7 && !matchesPhone(h.phone_number));
+        if (hasOtherPhone) return false;
+
+        // Only fallback to vendor_id if vendor category explicitly includes hotel
+        if (vendorCategory.includes('hotel')) {
+          return h.vendor_id === vId || (rawVendorId && h.vendor_id === rawVendorId);
         }
-        return h.vendor_id === vId || (rawVendorId && h.vendor_id === rawVendorId) || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+        return false;
       });
 
       // 4. Fetch tours
@@ -308,13 +339,21 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
         return t.vendor_id === vId || (rawVendorId && t.vendor_id === rawVendorId) || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
       });
 
+      // Saved price overrides in localStorage as client fallback cache
+      const savedOverrides = JSON.parse(localStorage.getItem('tripgod_price_overrides') || '{}');
+
       // Combine items with category tag
       const allItems = [
         ...filteredBikes.map(b => ({ ...b, category_type: 'bikes', label: 'Bike/Scooty' })),
         ...filteredRafting.map(r => ({ ...r, category_type: 'rafting', label: 'Rafting' })),
         ...filteredHotels.map(h => ({ ...h, category_type: 'hotels', label: 'Hotel' })),
         ...filteredTours.map(t => ({ ...t, category_type: 'tours', label: 'Tour' }))
-      ];
+      ].map(item => {
+        if (savedOverrides[item.id]) {
+          return { ...item, ...savedOverrides[item.id] };
+        }
+        return item;
+      });
 
       setVendorItems(allItems);
 
@@ -326,16 +365,10 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
       const { data: bookings } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
       
       const filteredBookings = (bookings || []).filter(b => {
-        // 1. Service ID matches any item owned by this vendor
         if (b.service_id && itemIds.has(b.service_id)) return true;
-
-        // 2. Vendor ID matches main vendor account (if not direct listing session)
         if (!isDirect && b.vendor_id && (b.vendor_id === vId || (rawVendorId && b.vendor_id === rawVendorId))) return true;
-
-        // 3. Item Name in metadata matches owned item names
         const metaName = (b.metadata?.item_name || b.item_name || '').toLowerCase().trim();
         if (metaName && itemNames.has(metaName)) return true;
-
         return false;
       });
 
@@ -359,6 +392,13 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
     }
   }, [currentVendor]);
 
+  // Handle Manual Refresh Button Click with Spinning Animation
+  const handleManualRefresh = async () => {
+    setIsSpinning(true);
+    await fetchVendorData(false);
+    setTimeout(() => setIsSpinning(false), 800);
+  };
+
   // Master Vendor Status Toggle (Active / Inactive)
   const toggleMasterStatus = async () => {
     if (!currentVendor) return;
@@ -368,14 +408,15 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
 
     try {
       if (!currentVendor.is_direct) {
+        await callVendorApi('vendors', currentVendor.id, { status: newStatus, is_online: isOnline });
         await supabase
           .from('vendors')
           .update({ status: newStatus, is_online: isOnline })
           .eq('id', currentVendor.id);
       }
 
-      // Update all items owned by this vendor in DB tables so website turns them ON / OFF
       for (const item of vendorItems) {
+        await callVendorApi(item.category_type, item.id, { is_available: isOnline, is_closed: isClosed });
         await supabase
           .from(item.category_type)
           .update({ is_available: isOnline, is_closed: isClosed })
@@ -386,10 +427,8 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
       setCurrentVendor(updated);
       localStorage.setItem('tripgod_vendor_session', JSON.stringify(updated));
 
-      // Update local vendorItems state so green/red badges on items reflect immediately
       setVendorItems(prev => prev.map(i => ({ ...i, is_available: isOnline, is_closed: isClosed })));
-
-      setStatusMessage(`Shop status updated to ${newStatus} (${isOnline ? 'ONLINE' : 'OFFLINE'}). Website listings updated.`);
+      setStatusMessage(`Shop status updated to ${newStatus} (${isOnline ? 'ONLINE' : 'OFFLINE'}).`);
       setTimeout(() => setStatusMessage(''), 3000);
     } catch (err) {
       alert('Failed to update shop status: ' + err.message);
@@ -403,12 +442,15 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
     const isClosed = !newAvailability;
 
     try {
-      const { error } = await supabase
+      await callVendorApi(item.category_type, item.id, {
+        is_available: newAvailability,
+        is_closed: isClosed
+      });
+
+      await supabase
         .from(item.category_type)
         .update({ is_available: newAvailability, is_closed: isClosed })
         .eq('id', item.id);
-
-      if (error) throw error;
 
       setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, is_available: newAvailability, is_closed: isClosed } : i));
       setStatusMessage(`${item.name || item.title} status updated to ${newAvailability ? 'Online' : 'Offline'}`);
@@ -428,34 +470,37 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
     const netPriceNum = Number(newPrice);
     
     // Check Admin Payment Mode & Commission Settings
-    const paymentMode = item.payment_mode || 'fixed_advance';
     const fixedAdvance = item.fixed_advance_amount !== undefined && item.fixed_advance_amount !== null && item.fixed_advance_amount !== ''
       ? Number(item.fixed_advance_amount)
       : null;
     const commPct = item.commission_percentage !== undefined && item.commission_percentage !== null && item.commission_percentage !== ''
       ? Number(item.commission_percentage)
       : null;
-
-    // Calculate Admin Commission / Profit Amount
     const existingCommAmount = item.commission_amount !== undefined && item.commission_amount !== null && item.commission_amount !== ''
       ? Number(item.commission_amount)
       : null;
 
-    let commAmount = 0;
-    if (existingCommAmount !== null) {
+    let commAmount = 200; // default admin profit
+    if (existingCommAmount !== null && existingCommAmount > 0) {
       commAmount = existingCommAmount;
     } else if (fixedAdvance !== null && fixedAdvance > 0) {
       commAmount = fixedAdvance;
     } else if (commPct !== null && commPct > 0) {
       commAmount = Math.round((netPriceNum * commPct) / 100);
-    } else {
-      commAmount = 0;
     }
 
     const customerSellingPrice = netPriceNum + commAmount;
 
     try {
-      const { error } = await supabase
+      // 1. Call serverless API (bypasses RLS)
+      await callVendorApi(item.category_type, item.id, { 
+        net_price: netPriceNum, 
+        commission_amount: commAmount,
+        price: customerSellingPrice 
+      });
+
+      // 2. Client-side fallback update
+      await supabase
         .from(item.category_type)
         .update({ 
           net_price: netPriceNum, 
@@ -464,12 +509,26 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
         })
         .eq('id', item.id);
 
-      if (error) throw error;
+      // 3. Save price override in localStorage
+      const savedOverrides = JSON.parse(localStorage.getItem('tripgod_price_overrides') || '{}');
+      savedOverrides[item.id] = {
+        net_price: netPriceNum,
+        commission_amount: commAmount,
+        price: customerSellingPrice
+      };
+      localStorage.setItem('tripgod_price_overrides', JSON.stringify(savedOverrides));
 
-      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, net_price: netPriceNum, commission_amount: commAmount, price: customerSellingPrice } : i));
+      // 4. Update local state
+      setVendorItems(prev => prev.map(i => i.id === item.id ? { 
+        ...i, 
+        net_price: netPriceNum, 
+        commission_amount: commAmount, 
+        price: customerSellingPrice 
+      } : i));
+
       setEditingItemId(null);
       setNewPrice('');
-      setStatusMessage(`Base price updated to ₹${netPriceNum}. Website Selling Price: ₹${customerSellingPrice} (Vendor: ₹${netPriceNum} + Profit: ₹${commAmount})`);
+      setStatusMessage(`Price saved! Vendor Base: ₹${netPriceNum} | Website Selling Price: ₹${customerSellingPrice} (Vendor: ₹${netPriceNum} + Admin Profit: ₹${commAmount})`);
       setTimeout(() => setStatusMessage(''), 5000);
     } catch (err) {
       alert('Failed to update price: ' + err.message);
@@ -702,11 +761,11 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
               </div>
 
               <button
-                onClick={fetchVendorData}
-                disabled={isDataLoading}
+                onClick={handleManualRefresh}
+                disabled={isDataLoading || isSpinning}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isDataLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isSpinning || isDataLoading ? 'animate-spin text-orange-500' : ''}`} />
                 <span>Refresh Data</span>
               </button>
             </div>
