@@ -546,24 +546,43 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const vName = selectedVendor.company_name || selectedVendor.name || 'HB Evergreen Adventure';
     const landmark = toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
 
-    // Get REAL uploaded rafting photo from backend DB!
-    const realRaftImg = getRaftingStretchImage(stretchDef.id, stretchDef.image);
+    // 1. Get DB Rafting packages from dbRafting table
+    const raftingPkgsInDb = dbRafting.filter(r => {
+      const act = (r.activity_type || 'rafting').toLowerCase();
+      return act === 'rafting' || act === '';
+    });
 
-    const isOffline = selectedVendor.status === 'INACTIVE' || 
-                      selectedVendor.status === 'OFF' || 
-                      selectedVendor.status === 'MONSOON_OFF' || 
-                      selectedVendor.is_active === false || 
-                      selectedVendor.is_closed === true;
+    // Check if ANY rafting package in DB is active
+    const hasActiveRaftingBackend = raftingPkgsInDb.length === 0 || raftingPkgsInDb.some(r => 
+      r.is_active !== false && 
+      r.is_closed !== true && 
+      r.is_closed !== 1 && 
+      r.is_closed !== 'true' &&
+      r.coming_soon !== true && 
+      (!r.status || (r.status.toLowerCase() !== 'inactive' && r.status.toLowerCase() !== 'closed' && r.status.toLowerCase() !== 'off'))
+    );
 
-    let offlineReason = 'AVAILABLE';
-    if (selectedVendor.offline_reason || selectedVendor.status_reason) {
+    const isVendorOffline = selectedVendor.status === 'INACTIVE' || 
+                            selectedVendor.status === 'OFF' || 
+                            selectedVendor.status === 'MONSOON_OFF' || 
+                            selectedVendor.is_active === false || 
+                            selectedVendor.is_closed === true;
+
+    // Card is offline if vendor is offline OR if backend rafting packages are marked temporarily closed/inactive
+    const isOffline = isVendorOffline || !hasActiveRaftingBackend;
+
+    const closedPkg = raftingPkgsInDb.find(r => r.closure_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.offline_reason);
+    let offlineReason = 'TEMPORARILY CLOSED';
+    if (closedPkg && (closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason)) {
+      offlineReason = closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason;
+    } else if (selectedVendor.offline_reason || selectedVendor.status_reason) {
       offlineReason = selectedVendor.offline_reason || selectedVendor.status_reason;
     } else if (isOffline) {
-      offlineReason = 'MONSOON PAUSE';
+      offlineReason = 'TEMPORARILY CLOSED';
     }
 
+    const realRaftImg = getRaftingStretchImage(stretchDef.id, stretchDef.image);
     const vendorImages = getRealVendorImages(selectedVendor, [], realRaftImg);
-    // Prioritize REAL Rafting boat photo FIRST over storefront shop photos
     const cardImages = [realRaftImg, ...vendorImages.filter(img => img !== realRaftImg)];
 
     return {
