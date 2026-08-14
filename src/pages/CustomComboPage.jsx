@@ -606,6 +606,37 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   );
   const displayBikeVendors = activeBikeVendors.length > 0 ? activeBikeVendors : bikeVendorsList;
 
+  const getBikeCustomerDetails = (b, v) => {
+    if (!b) return { finalPrice: 700, fixedAdvance: 200, vendorRate: 500 };
+    const p = Number(b.price || 0);
+    const net = Number(b.net_price || 0);
+    
+    let fixAdv = 0;
+    if (b.fixed_advance_amount !== null && b.fixed_advance_amount !== undefined && b.fixed_advance_amount !== '') {
+      fixAdv = Number(b.fixed_advance_amount);
+    } else if (v && (v.fixed_advance_amount !== null && v.fixed_advance_amount !== undefined && v.fixed_advance_amount !== '')) {
+      fixAdv = Number(v.fixed_advance_amount);
+    }
+
+    let comm = 0;
+    if (b.commission_amount !== null && b.commission_amount !== undefined && b.commission_amount !== '') {
+      comm = Number(b.commission_amount);
+    } else if (b.commission_percentage && net > 0) {
+      comm = Math.round((net * Number(b.commission_percentage)) / 100);
+    } else if (v && (v.commission_amount !== null && v.commission_amount !== undefined && v.commission_amount !== '')) {
+      comm = Number(v.commission_amount);
+    } else {
+      comm = 200;
+    }
+
+    const calculatedTotal = net > 0 ? (net + comm) : (p > 0 && p !== net ? p : p + comm);
+    const finalPrice = Math.max(p, calculatedTotal, 700);
+    const advanceVal = fixAdv > 0 ? fixAdv : (comm > 0 ? comm : Math.round(finalPrice * 0.1));
+    const vRate = net > 0 ? net : Math.max(0, finalPrice - comm);
+
+    return { finalPrice, fixedAdvance: advanceVal, vendorRate: vRate };
+  };
+
   // Group real bikes from Supabase dbBikes table by normalized vehicle model name
   const dbBikeModelsGroupMap = new Map();
 
