@@ -28,6 +28,7 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
   const [vendorItems, setVendorItems] = useState([]);
   const [vendorBookings, setVendorBookings] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
   const [newPrice, setNewPrice] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
@@ -252,6 +253,15 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
     setPendingVendor(null);
   };
 
+  // Manual Top Refresh Button Handler with Spin Animation
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchVendorData(false);
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 800);
+  };
+
   // Fetch Vendor Products & Bookings
   const fetchVendorData = async (isSilent = false) => {
     if (!currentVendor) return;
@@ -272,40 +282,51 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
         return cleanedWa.slice(-10) === vPhone.slice(-10);
       };
 
+      // Category filter rules to prevent showing unowned Hotels to Scooty/Rafting vendors
+      const isAllCategory = vendorCategory.includes('multi') || vendorCategory.includes('all') || vendorCategory === '' || vendorCategory.includes('partner');
+      const acceptsBikes = isAllCategory || vendorCategory.includes('bike') || vendorCategory.includes('scooty') || vendorCategory.includes('rent') || vendorCategory.includes('vehicle');
+      const acceptsRafting = isAllCategory || vendorCategory.includes('raft') || vendorCategory.includes('adventure') || vendorCategory.includes('camp');
+      const acceptsHotels = isAllCategory || vendorCategory.includes('hotel') || vendorCategory.includes('resort') || vendorCategory.includes('stay') || vendorCategory.includes('cottage');
+      const acceptsTours = isAllCategory || vendorCategory.includes('tour') || vendorCategory.includes('package') || vendorCategory.includes('trek');
+
+      // Helper: Only allow phone fallback if item does NOT explicitly belong to another vendor ID
+      const isPhoneMatchAllowed = (item) => {
+        if (item.vendor_id && item.vendor_id !== vId && item.vendor_id !== rawVendorId) {
+          return false;
+        }
+        return true;
+      };
+
       // 1. Fetch bikes
       const { data: bikes } = await supabase.from('bikes').select('*');
       const filteredBikes = (bikes || []).filter(b => {
-        if (isDirect) {
-          return (currentVendor.category === 'Bike Rental' || vendorCategory.includes('bike')) && (b.id === vId || matchesPhone(b.whatsapp_number));
-        }
-        return b.vendor_id === vId || (rawVendorId && b.vendor_id === rawVendorId) || matchesPhone(b.whatsapp_number);
+        if (b.vendor_id === vId || (rawVendorId && b.vendor_id === rawVendorId) || b.id === vId) return true;
+        if (isDirect) return (currentVendor.category === 'Bike Rental' || acceptsBikes) && matchesPhone(b.whatsapp_number);
+        return acceptsBikes && isPhoneMatchAllowed(b) && matchesPhone(b.whatsapp_number);
       });
 
       // 2. Fetch rafting
       const { data: rafting } = await supabase.from('rafting').select('*');
       const filteredRafting = (rafting || []).filter(r => {
-        if (isDirect) {
-          return (currentVendor.category === 'Rafting' || vendorCategory.includes('rafting')) && (r.id === vId || matchesPhone(r.whatsapp_number));
-        }
-        return r.vendor_id === vId || (rawVendorId && r.vendor_id === rawVendorId) || matchesPhone(r.whatsapp_number);
+        if (r.vendor_id === vId || (rawVendorId && r.vendor_id === rawVendorId) || r.id === vId) return true;
+        if (isDirect) return (currentVendor.category === 'Rafting' || acceptsRafting) && matchesPhone(r.whatsapp_number);
+        return acceptsRafting && isPhoneMatchAllowed(r) && matchesPhone(r.whatsapp_number);
       });
 
       // 3. Fetch hotels
       const { data: hotels } = await supabase.from('hotels').select('*');
       const filteredHotels = (hotels || []).filter(h => {
-        if (isDirect) {
-          return (currentVendor.category === 'Hotel' || vendorCategory.includes('hotel')) && (h.id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
-        }
-        return h.vendor_id === vId || (rawVendorId && h.vendor_id === rawVendorId) || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+        if (h.vendor_id === vId || (rawVendorId && h.vendor_id === rawVendorId) || h.id === vId) return true;
+        if (isDirect) return (currentVendor.category === 'Hotel' || acceptsHotels) && (matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
+        return acceptsHotels && isPhoneMatchAllowed(h) && (matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
       });
 
       // 4. Fetch tours
       const { data: tours } = await supabase.from('tours').select('*');
       const filteredTours = (tours || []).filter(t => {
-        if (isDirect) {
-          return (currentVendor.category === 'Tour' || vendorCategory.includes('tour')) && (t.id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
-        }
-        return t.vendor_id === vId || (rawVendorId && t.vendor_id === rawVendorId) || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
+        if (t.vendor_id === vId || (rawVendorId && t.vendor_id === rawVendorId) || t.id === vId) return true;
+        if (isDirect) return (currentVendor.category === 'Tour' || acceptsTours) && (matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
+        return acceptsTours && isPhoneMatchAllowed(t) && (matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
       });
 
       // Combine items with category tag
@@ -428,7 +449,6 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
     const netPriceNum = Number(newPrice);
     
     // Check Admin Payment Mode & Commission Settings
-    const paymentMode = item.payment_mode || 'fixed_advance';
     const fixedAdvance = item.fixed_advance_amount !== undefined && item.fixed_advance_amount !== null && item.fixed_advance_amount !== ''
       ? Number(item.fixed_advance_amount)
       : null;
@@ -436,14 +456,16 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
       ? Number(item.commission_percentage)
       : null;
 
-    // Calculate Admin Commission / Profit Amount
+    // Preserve existing Admin Commission / Profit Amount
     const existingCommAmount = item.commission_amount !== undefined && item.commission_amount !== null && item.commission_amount !== ''
       ? Number(item.commission_amount)
       : null;
 
     let commAmount = 0;
-    if (existingCommAmount !== null) {
+    if (existingCommAmount !== null && existingCommAmount > 0) {
       commAmount = existingCommAmount;
+    } else if (item.price && item.net_price && Number(item.price) > Number(item.net_price)) {
+      commAmount = Number(item.price) - Number(item.net_price);
     } else if (fixedAdvance !== null && fixedAdvance > 0) {
       commAmount = fixedAdvance;
     } else if (commPct !== null && commPct > 0) {
@@ -464,15 +486,24 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
         })
         .eq('id', item.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase price update error:', error);
+        throw error;
+      }
 
-      setVendorItems(prev => prev.map(i => i.id === item.id ? { ...i, net_price: netPriceNum, commission_amount: commAmount, price: customerSellingPrice } : i));
+      setVendorItems(prev => prev.map(i => i.id === item.id ? { 
+        ...i, 
+        net_price: netPriceNum, 
+        commission_amount: commAmount, 
+        price: customerSellingPrice 
+      } : i));
+
       setEditingItemId(null);
       setNewPrice('');
       setStatusMessage(`Base price updated to ₹${netPriceNum}. Website Selling Price: ₹${customerSellingPrice} (Vendor: ₹${netPriceNum} + Profit: ₹${commAmount})`);
       setTimeout(() => setStatusMessage(''), 5000);
     } catch (err) {
-      alert('Failed to update price: ' + err.message);
+      alert('Failed to update price: ' + (err.message || 'Database error occurred. Please check Supabase permissions.'));
     }
   };
 
@@ -622,6 +653,17 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Top Refresh Button with Spinning Animation */}
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing || isDataLoading}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-800/90 hover:bg-slate-700 active:scale-95 text-slate-200 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all border border-slate-700/60 shadow-md disabled:opacity-50"
+              title="Refresh Vendor Data"
+            >
+              <RefreshCw className={`w-4 h-4 text-orange-400 ${isRefreshing || isDataLoading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
             {/* Master Shop Status Toggle */}
             <button
               onClick={toggleMasterStatus}
@@ -812,7 +854,9 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
                           ) : (
                             <div>
                               <div className="text-lg font-black text-white mt-0.5">
-                                ₹{item.net_price || item.price}{' '}
+                                ₹{item.net_price !== null && item.net_price !== undefined && item.net_price !== ''
+                                  ? item.net_price 
+                                  : (item.commission_amount ? (item.price - item.commission_amount) : item.price)}{' '}
                                 {item.original_price && (
                                   <span className="text-xs text-slate-500 line-through font-normal">
                                     ₹{item.original_price}
@@ -820,7 +864,7 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
                                 )}
                               </div>
                               <div className="text-[10px] text-slate-400 font-medium mt-0.5">
-                                Website Price: ₹{item.price}
+                                Website Price: ₹{item.price} {item.commission_amount ? `(Profit: ₹${item.commission_amount})` : ''}
                               </div>
                             </div>
                           )}
@@ -830,7 +874,10 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
                           <button
                             onClick={() => {
                               setEditingItemId(item.id);
-                              setNewPrice(item.net_price || item.price);
+                              const base = (item.net_price !== null && item.net_price !== undefined && item.net_price !== '')
+                                ? item.net_price
+                                : (item.commission_amount ? (item.price - item.commission_amount) : item.price);
+                              setNewPrice(base.toString());
                             }}
                             className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition-colors"
                           >
