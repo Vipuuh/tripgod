@@ -28,5 +28,12 @@
   <body class="bg-slate-950 text-white font-sans antialiased overflow-x-hidden select-none">
     <div id="vendor-root"></div>
     <script type="module" src="/src/vendor-main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw-vendor.js').catch(err => console.log('SW register note:', err));
+        });
+      }
+    </script>
   </body>
 </html>

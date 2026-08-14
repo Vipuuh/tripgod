@@ -32,6 +32,31 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
   const [newPrice, setNewPrice] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
 
+  // PWA Installation handling
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowInstallGuide(prev => !prev);
+    }
+  };
+
   // Step 1: Send OTP to Vendor Mobile
   const handleSendOtp = async (e) => {
     e.preventDefault();
@@ -470,6 +495,44 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
             <p className="text-slate-400 text-xs mt-2 font-medium">
               Vendor Login for Shop Status, Price Control & Live Bookings
             </p>
+
+            {/* Install App Quick Action Banner */}
+            <div className="mt-4 p-3.5 bg-gradient-to-r from-[#FF6B00]/15 to-[#FF4500]/15 border border-[#FF6B00]/30 rounded-2xl text-left">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">📲</span>
+                  <div>
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider">Install App on Phone</h4>
+                    <p className="text-[10px] text-slate-300 font-medium">Add to phone's app drawer for 1-tap access</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleInstallApp}
+                  className="px-3 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] hover:scale-105 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md border-none cursor-pointer shrink-0"
+                >
+                  Install App
+                </button>
+              </div>
+
+              {showInstallGuide && (
+                <div className="mt-3 pt-3 border-t border-[#FF6B00]/20 text-[11px] text-slate-300 space-y-1.5">
+                  <div className="font-bold text-orange-400">How to install TripGod Vendor App:</div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-white">1.</span>
+                    <span>Click <strong>3 Dots (⋮)</strong> in Chrome at top right.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-white">2.</span>
+                    <span>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-white">3.</span>
+                    <span>The official TripGod Vendor app icon will be added to your app drawer!</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {authError && (
