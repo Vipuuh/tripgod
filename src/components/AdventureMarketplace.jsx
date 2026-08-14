@@ -838,7 +838,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
 
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 font-bold">
                             <span className="flex items-center gap-1">
-                              📍 {partner.landmark || partner.address}
+                              📍 {(partner.landmark || partner.address || '').replace(/📍/g, '').trim()}
                             </span>
                             <span>•</span>
                             <span>Since {partner.since}</span>
@@ -970,7 +970,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     <span className="text-slate-400">({selectedPartner.bookings_count} bookings)</span>
                   </div>
                   <span>•</span>
-                  <span>📍 {selectedPartner.landmark || selectedPartner.address}</span>
+                  <span>📍 {(selectedPartner.landmark || selectedPartner.address || '').replace(/📍/g, '').trim()}</span>
                   <span>•</span>
                   <span>Since {selectedPartner.since}</span>
                   <span>•</span>

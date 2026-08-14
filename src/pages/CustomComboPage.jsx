@@ -8,8 +8,11 @@ import VendorImageCarousel from '../components/VendorImageCarousel';
 
 // Helper to convert raw address text into clean short landmark badges like "📍 Tapovan", "📍 Janki Setu", "📍 Triveni Ghat"
 const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
-  if (!fullAddress) return `📍 ${fallback}`;
-  const lower = fullAddress.toLowerCase();
+  const cleanFallback = String(fallback || 'Tapovan').replace(/📍/g, '').trim();
+  if (!fullAddress) return `📍 ${cleanFallback}`;
+  
+  const sanitized = String(fullAddress).replace(/📍/g, '').trim();
+  const lower = sanitized.toLowerCase();
 
   if (lower.includes('janki setu')) return '📍 Janki Setu';
   if (lower.includes('tapovan')) return '📍 Tapovan';
@@ -21,8 +24,8 @@ const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
   if (lower.includes('brahmpuri')) return '📍 Brahmpuri';
   if (lower.includes('gangakshetra')) return '📍 Gangakshetra';
 
-  const clean = fullAddress.replace(/\d+/g, '').replace(/pincode|uttarakhand|india/gi, '').split(',')[0].trim();
-  return `📍 ${clean || fallback}`;
+  const clean = sanitized.replace(/\d+/g, '').replace(/pincode|uttarakhand|india/gi, '').split(',')[0].trim();
+  return `📍 ${clean || cleanFallback}`;
 };
 
 // Robust image URL parser (handles JSON string arrays like '["https://..."]', plain strings, delimiter strings, or arrays)
@@ -718,7 +721,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     }
 
     const calculatedTotal = net > 0 ? (net + comm) : (p > 0 && p !== net ? p : p + comm);
-    const finalPrice = Math.max(p, calculatedTotal, 700);
+    const rawTotal = Math.max(p, calculatedTotal);
+    const finalPrice = rawTotal > 0 ? rawTotal : 700;
     const advanceVal = fixAdv > 0 ? fixAdv : (comm > 0 ? comm : Math.round(finalPrice * 0.1));
     const vRate = net > 0 ? net : Math.max(0, finalPrice - comm);
 
