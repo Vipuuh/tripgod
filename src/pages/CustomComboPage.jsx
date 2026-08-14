@@ -606,133 +606,121 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   );
   const displayBikeVendors = activeBikeVendors.length > 0 ? activeBikeVendors : bikeVendorsList;
 
-  const VEHICLE_MODEL_DEFINITIONS = [
-    {
-      id: 'activa6g',
-      name: 'Honda Activa 6G (110cc)',
-      price: 700,
-      fixedAdvance: 200,
-      vendorRate: 500,
-      badge: 'SCOOTY',
-      image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
-      description: 'Reliable, gearless automatic 110cc scooter with helmet & quick verification. Excellent mileage for Rishikesh city rides.'
-    },
-    {
-      id: 'activa125',
-      name: 'Honda Activa 125',
-      price: 700,
-      fixedAdvance: 200,
-      vendorRate: 500,
-      badge: 'SCOOTY',
-      image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
-      description: 'Powerful 125cc gearless automatic scooter for effortless double riding & hill navigation.'
-    },
-    {
-      id: 'access125',
-      name: 'Suzuki Access 125',
-      price: 750,
-      fixedAdvance: 200,
-      vendorRate: 550,
-      badge: 'SCOOTY',
-      image: '/scooty-rent.jpg',
-      description: 'Popular 125cc power scooter with smooth acceleration and comfortable seating.'
-    },
-    {
-      id: 'burgman125',
-      name: 'Suzuki Burgman Street 125',
-      price: 850,
-      fixedAdvance: 200,
-      vendorRate: 650,
-      badge: 'SCOOTY',
-      image: '/scooty-rent.jpg',
-      description: 'Maxi-style premium scooter with front windscreen, footrests & spacious legroom.'
-    },
-    {
-      id: 'jupiter125',
-      name: 'TVS Jupiter 125',
-      price: 700,
-      fixedAdvance: 200,
-      vendorRate: 500,
-      badge: 'SCOOTY',
-      image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
-      description: 'Wide seat comfort scooter with external fuel filling & large underseat storage.'
-    },
-    {
-      id: 'classic350',
-      name: 'Royal Enfield Classic 350',
-      price: 1200,
-      fixedAdvance: 300,
-      vendorRate: 900,
-      badge: 'BIKE',
-      image: '/classic-rent.png',
-      description: 'Iconic 350cc cruiser motorcycle for roaring mountain road trips to Devprayag & Tehri Lake.'
-    },
-    {
-      id: 'bullet350',
-      name: 'Royal Enfield Bullet 350',
-      price: 1300,
-      fixedAdvance: 300,
-      vendorRate: 1000,
-      badge: 'BIKE',
-      image: '/classic-rent.png',
-      description: 'Legendary Bullet 350 with classic thump engine sound, ideal for highway & hill tours.'
-    },
-    {
-      id: 'hunter350',
-      name: 'Royal Enfield Hunter 350',
-      price: 1299,
-      fixedAdvance: 300,
-      vendorRate: 999,
-      badge: 'BIKE',
-      image: '/classic-rent.png',
-      description: 'Agile & stylish 350cc roadster bike with light handling for Rishikesh city & ghats.'
-    },
-    {
-      id: 'xpulse200',
-      name: 'Hero Xpulse 200 4V',
-      price: 1200,
-      fixedAdvance: 300,
-      vendorRate: 900,
-      badge: 'BIKE',
-      image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600',
-      description: 'Lightweight off-road dual-purpose adventure motorcycle built for trail riding & rough mountain paths.'
-    },
-    {
-      id: 'himalayan411',
-      name: 'Royal Enfield Himalayan 411',
-      price: 1700,
-      fixedAdvance: 400,
-      vendorRate: 1300,
-      badge: 'BIKE',
-      image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600',
-      description: 'Proven adventure tourer with high ground clearance, luggage racks & long-travel suspension.'
-    },
-    {
-      id: 'himalayan450',
-      name: 'Royal Enfield Himalayan 450',
-      price: 1600,
-      fixedAdvance: 400,
-      vendorRate: 1200,
-      badge: 'BIKE',
-      image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600',
-      description: 'Next-gen liquid-cooled Sherpa 450 adventure bike for long Himalayan tours & off-roading.'
+  // Group real bikes from Supabase dbBikes table by normalized vehicle model name
+  const dbBikeModelsGroupMap = new Map();
+
+  dbBikes.forEach(b => {
+    if (b.is_active === false || b.is_closed === true || b.status === 'INACTIVE') return;
+    const rawName = (b.name || '').trim();
+    if (!rawName) return;
+
+    const normKey = rawName.toLowerCase();
+    if (!dbBikeModelsGroupMap.has(normKey)) {
+      dbBikeModelsGroupMap.set(normKey, {
+        name: rawName,
+        items: [b]
+      });
+    } else {
+      dbBikeModelsGroupMap.get(normKey).items.push(b);
     }
-  ];
+  });
 
-  const dbVendorBikeCards = VEHICLE_MODEL_DEFINITIONS.map(vehDef => {
-    // Check if dbBikes has real uploaded cutout photos for this model
-    const matchingDbBike = dbBikes.find(b => 
-      b.name && b.name.toLowerCase().includes(vehDef.name.toLowerCase().split(' ')[0]) && (b.image || b.images)
-    );
+  // If dbBikes has items, use DB models exclusively! If empty, fallback to standard active DB models
+  let vehicleModelList = Array.from(dbBikeModelsGroupMap.values()).map(group => {
+    const nameLower = group.name.toLowerCase();
+    
+    // Find uploaded image from DB items
+    let dbImg = null;
+    for (const item of group.items) {
+      const parsed = parseImageUrl(item.images) || parseImageUrl(item.image) || parseImageUrl(item.photo);
+      if (parsed) { dbImg = parsed; break; }
+    }
 
-    const realBikeImg = matchingDbBike ? (parseImageUrl(matchingDbBike.image) || parseImageUrl(matchingDbBike.images)) : null;
-    const vehiclePhoto = realBikeImg || vehDef.image;
+    let defaultImg = 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600';
+    let badge = 'SCOOTY';
+    if (nameLower.includes('classic') || nameLower.includes('bullet') || nameLower.includes('hunter')) {
+      defaultImg = '/classic-rent.png';
+      badge = 'BIKE';
+    } else if (nameLower.includes('himalayan') || nameLower.includes('xpulse') || nameLower.includes('bike') || nameLower.includes('royalenfield')) {
+      defaultImg = 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600';
+      badge = 'BIKE';
+    } else if (nameLower.includes('access') || nameLower.includes('burgman')) {
+      defaultImg = '/scooty-rent.jpg';
+    }
 
-    const selectedVendorId = bikeVendorSelectionMap[vehDef.id] || (displayBikeVendors[0]?.id || 'v-bike-default');
-    const selectedVendor = displayBikeVendors.find(v => String(v.id) === String(selectedVendorId)) || displayBikeVendors[0] || {};
+    const minPrice = Math.min(...group.items.map(b => getBikeCustomerDetails(b).finalPrice));
 
-    const vName = selectedVendor.company_name || selectedVendor.name || 'Hike N Ride';
-    const landmark = toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
+    return {
+      id: group.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      name: group.name,
+      price: minPrice > 0 && isFinite(minPrice) ? minPrice : 700,
+      badge,
+      image: dbImg || defaultImg,
+      dbItems: group.items,
+      description: `${group.name} available for rent in Rishikesh with helmets included and quick document verification.`
+    };
+  });
+
+  // Fallback if dbBikes was empty
+  if (vehicleModelList.length === 0) {
+    vehicleModelList = [
+      { id: 'activa6g', name: 'Honda Activa 6G (110cc)', price: 700, badge: 'SCOOTY', image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600', description: 'Reliable, gearless automatic 110cc scooter with helmet & quick verification.' },
+      { id: 'activa125', name: 'Honda Activa 125', price: 700, badge: 'SCOOTY', image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600', description: 'Powerful 125cc gearless automatic scooter for effortless double riding.' },
+      { id: 'access125', name: 'Suzuki Access 125', price: 750, badge: 'SCOOTY', image: '/scooty-rent.jpg', description: 'Popular 125cc power scooter with smooth acceleration.' },
+      { id: 'burgman125', name: 'Suzuki Burgman Street 125', price: 850, badge: 'SCOOTY', image: '/scooty-rent.jpg', description: 'Maxi-style premium scooter with front windscreen.' },
+      { id: 'classic350', name: 'Royal Enfield Classic 350', price: 1200, badge: 'BIKE', image: '/classic-rent.png', description: 'Iconic 350cc cruiser motorcycle for roaring mountain road trips.' },
+      { id: 'bullet350', name: 'Royal Enfield Bullet 350', price: 1300, badge: 'BIKE', image: '/classic-rent.png', description: 'Legendary Bullet 350 with classic thump engine sound.' },
+      { id: 'himalayan450', name: 'Royal Enfield Himalayan 450', price: 1600, badge: 'BIKE', image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600', description: 'Next-gen liquid-cooled Sherpa 450 adventure bike for long Himalayan tours.' }
+    ];
+  }
+
+  const dbVendorBikeCards = vehicleModelList.map(vehDef => {
+    // Build available vendors list dynamically for this bike model from linked DB items
+    const modelVendorMap = new Map();
+
+    if (vehDef.dbItems && vehDef.dbItems.length > 0) {
+      vehDef.dbItems.forEach(bItem => {
+        const vId = String(bItem.vendor_id);
+        const matchingVendor = displayBikeVendors.find(v => String(v.id) === vId);
+        const details = getBikeCustomerDetails(bItem, matchingVendor);
+        const vName = (matchingVendor?.company_name || matchingVendor?.name || bItem.vendor_name || bItem.operator_name || 'Bike Rental');
+        const vLandmark = toShortLandmark(matchingVendor?.landmark || matchingVendor?.address || bItem.landmark || bItem.address, 'Janki Setu');
+
+        if (!modelVendorMap.has(vId)) {
+          modelVendorMap.set(vId, {
+            id: vId,
+            company_name: vName,
+            name: vName,
+            landmark: vLandmark,
+            price: details.finalPrice,
+            fixedAdvance: details.fixedAdvance,
+            vendorRate: details.vendorRate,
+            fullVendorObj: matchingVendor
+          });
+        }
+      });
+    }
+
+    let availableVendorsForModel = Array.from(modelVendorMap.values());
+    if (availableVendorsForModel.length === 0) {
+      availableVendorsForModel = displayBikeVendors.map(v => ({
+        id: v.id,
+        company_name: v.company_name || v.name,
+        name: v.company_name || v.name,
+        landmark: toShortLandmark(v.landmark || v.address, 'Janki Setu'),
+        price: vehDef.price || 700,
+        fixedAdvance: 200,
+        vendorRate: (vehDef.price || 700) - 200,
+        fullVendorObj: v
+      }));
+    }
+
+    const selectedVendorId = bikeVendorSelectionMap[vehDef.id] || (availableVendorsForModel[0]?.id || 'v-bike-default');
+    const selectedVendorData = availableVendorsForModel.find(v => String(v.id) === String(selectedVendorId)) || availableVendorsForModel[0] || {};
+    const selectedVendor = selectedVendorData.fullVendorObj || displayBikeVendors[0] || {};
+
+    const vName = selectedVendorData.company_name || selectedVendor.company_name || selectedVendor.name || 'Hike N Ride';
+    const landmark = selectedVendorData.landmark || toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
 
     const isOffline = selectedVendor.status === 'INACTIVE' || 
                       selectedVendor.status === 'OFF' || 
@@ -741,9 +729,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
     const offlineReason = selectedVendor.offline_reason || selectedVendor.status_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
 
-    const vendorImages = getRealVendorImages(selectedVendor, [], vehiclePhoto);
-    // Prioritize Vehicle Photo FIRST over storefront shop photos
-    const cardImages = [vehiclePhoto, ...vendorImages.filter(img => img !== vehiclePhoto)];
+    const vendorImages = getRealVendorImages(selectedVendor, [], vehDef.image);
+    const cardImages = [vehDef.image, ...vendorImages.filter(img => img !== vehDef.image)];
 
     return {
       cartKey: `scooty-veh-${vehDef.id}-v-${selectedVendor.id || 'default'}`,
@@ -752,12 +739,12 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       categoryBadge: vehDef.badge,
       name: vehDef.name,
       vendorName: vName,
-      price: vehDef.price,
-      vendorRate: vehDef.vendorRate,
-      fixedAdvance: vehDef.fixedAdvance,
+      price: selectedVendorData.price || vehDef.price || 700,
+      vendorRate: selectedVendorData.vendorRate || (vehDef.price ? vehDef.price - 200 : 500),
+      fixedAdvance: selectedVendorData.fixedAdvance || 200,
       landmarkLocation: landmark,
       fullAddress: selectedVendor.vendor_address || selectedVendor.address || `${landmark}, Rishikesh`,
-      image: vehiclePhoto,
+      image: vehDef.image,
       images: cardImages,
       rating: getRealVendorRating(selectedVendor),
       description: vehDef.description,
@@ -766,7 +753,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       isBikeModelCard: true,
       vehicleId: vehDef.id,
       selectedVendorId: selectedVendor.id,
-      availableVendors: displayBikeVendors
+      availableVendors: availableVendorsForModel
     };
   });
 
