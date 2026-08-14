@@ -498,26 +498,6 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
   const RAFTING_STRETCH_DEFINITIONS = [
     {
-      id: '16km',
-      name: '16 KM Shivpuri Rafting (Most Popular)',
-      price: 899,
-      fixedAdvance: 200,
-      vendorRate: 699,
-      badge: 'RAFTING',
-      image: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
-      description: 'Experience 16 KM river rafting from Shivpuri to Nim Beach with Grade III rapids, Roller Coaster, Golf Course & cliff jump.'
-    },
-    {
-      id: '24km',
-      name: '24 KM Marine Drive Rafting (Extreme)',
-      price: 1499,
-      fixedAdvance: 300,
-      vendorRate: 1199,
-      badge: 'RAFTING',
-      image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600',
-      description: 'Thrilling 24 KM long stretch from Marine Drive featuring 16 major Grade III/IV rapids, bodysurfing & cliff jumping.'
-    },
-    {
       id: '12km',
       name: '12 KM Brahmpuri Rafting (Family & Kids)',
       price: 599,
@@ -525,35 +505,83 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       vendorRate: 449,
       badge: 'RAFTING',
       image: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
-      description: 'Gentle 12 KM rafting stretch from Brahmpuri suitable for families, first-timers & senior citizens.'
+      description: 'Gentle 12 KM rafting stretch from Brahmpuri to Neem Beach suitable for families, first-timers & kids.'
     },
     {
-      id: '36km',
-      name: '36 KM Kaudiyala Extreme Expedition',
-      price: 2499,
-      fixedAdvance: 500,
-      vendorRate: 1999,
+      id: '14km',
+      name: '14 KM Club House Rafting (Popular)',
+      price: 699,
+      fixedAdvance: 200,
+      vendorRate: 499,
+      badge: 'RAFTING',
+      image: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
+      description: '14 KM river rafting route from Club House to Nim Beach featuring Grade II & III rapids.'
+    },
+    {
+      id: '18km',
+      name: '18 KM Shivpuri Rafting (Most Popular)',
+      price: 999,
+      fixedAdvance: 200,
+      vendorRate: 799,
+      badge: 'RAFTING',
+      image: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
+      description: 'The most famous 18 KM Shivpuri to Nim Beach rafting stretch featuring Roller Coaster, Golf Course rapids & cliff jumping.'
+    },
+    {
+      id: '26km',
+      name: '26 KM Marine Drive Rafting (Extreme)',
+      price: 1499,
+      fixedAdvance: 300,
+      vendorRate: 1199,
       badge: 'RAFTING',
       image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600',
-      description: 'Ultimate 36 KM extreme expedition from Kaudiyala featuring Grade IV+ The Wall rapid for experienced rafters.'
+      description: 'Thrilling 26 KM long stretch from Marine Drive featuring 16 major Grade III/IV rapids, bodysurfing & cliff jumping.'
     }
   ];
 
   const dbVendorRaftingCards = RAFTING_STRETCH_DEFINITIONS.map(stretchDef => {
-    const selectedVendorId = raftingVendorSelectionMap[stretchDef.id] || (displayRaftingVendors[0]?.id || 'v-default');
-    const selectedVendor = displayRaftingVendors.find(v => String(v.id) === String(selectedVendorId)) || displayRaftingVendors[0] || {};
-
-    const vName = selectedVendor.company_name || selectedVendor.name || 'HB Evergreen Adventure';
-    const landmark = toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
-
-    // 1. Get DB Rafting packages from dbRafting table
-    const raftingPkgsInDb = dbRafting.filter(r => {
+    // 1. Filter DB rafting packages from dbRafting for this specific stretch
+    const stretchDbRaftingItems = dbRafting.filter(r => {
       const act = (r.activity_type || 'rafting').toLowerCase();
-      return act === 'rafting' || act === '';
+      if (act !== 'rafting' && act !== '') return false;
+      const rName = (r.name || '').toLowerCase();
+      const dist = String(r.distance_km || '');
+      if (stretchDef.id === '12km') return rName.includes('12') || dist === '12';
+      if (stretchDef.id === '14km') return rName.includes('14') || dist === '14';
+      if (stretchDef.id === '18km') return rName.includes('18') || rName.includes('shivpuri') || dist === '18';
+      if (stretchDef.id === '26km') return rName.includes('26') || rName.includes('24') || rName.includes('marine') || dist === '26' || dist === '24';
+      return false;
     });
 
-    // Check if ANY rafting package in DB is active
-    const hasActiveRaftingBackend = raftingPkgsInDb.length === 0 || raftingPkgsInDb.some(r => 
+    // 2. Build available vendors list dynamically ONLY for vendors who offer this stretch in DB
+    const vendorMapForStretch = new Map();
+
+    stretchDbRaftingItems.forEach(rItem => {
+      if (rItem.is_closed === true || rItem.is_active === false || rItem.status === 'INACTIVE' || rItem.status === 'CLOSED') return;
+      const vId = String(rItem.vendor_id);
+      const matchingVendor = displayRaftingVendors.find(v => String(v.id) === vId);
+      const vName = matchingVendor?.company_name || matchingVendor?.name || rItem.vendor_name || rItem.operator_name || 'Rafting Crew';
+      const vLandmark = toShortLandmark(matchingVendor?.landmark || matchingVendor?.address || rItem.landmark || rItem.address, 'Janki Setu');
+      const itemPrice = Number(rItem.price || rItem.net_price || stretchDef.price);
+
+      if (!vendorMapForStretch.has(vId)) {
+        vendorMapForStretch.set(vId, {
+          id: vId,
+          company_name: vName,
+          name: vName,
+          landmark: vLandmark,
+          price: itemPrice > 0 ? itemPrice : stretchDef.price,
+          vendorRate: Number(rItem.vendor_rate || rItem.net_price || (itemPrice ? itemPrice - 200 : stretchDef.vendorRate)),
+          fixedAdvance: Number(rItem.fixed_advance_amount || rItem.advance_amount || stretchDef.fixedAdvance),
+          fullVendorObj: matchingVendor
+        });
+      }
+    });
+
+    let availableVendorsForStretch = Array.from(vendorMapForStretch.values());
+
+    // Check if ANY DB rafting package for this stretch is active
+    const hasActiveStretchBackend = stretchDbRaftingItems.length > 0 && stretchDbRaftingItems.some(r => 
       r.is_active !== false && 
       r.is_closed !== true && 
       r.is_closed !== 1 && 
@@ -562,27 +590,44 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       (!r.status || (r.status.toLowerCase() !== 'inactive' && r.status.toLowerCase() !== 'closed' && r.status.toLowerCase() !== 'off'))
     );
 
-    const isVendorOffline = selectedVendor.status === 'INACTIVE' || 
-                            selectedVendor.status === 'OFF' || 
-                            selectedVendor.status === 'MONSOON_OFF' || 
-                            selectedVendor.is_active === false || 
-                            selectedVendor.is_closed === true;
+    // Also check global rafting closure status in dbRafting
+    const globalClosedRafting = dbRafting.some(r => 
+      (r.activity_type === 'rafting' || !r.activity_type) && 
+      (r.is_closed === true || r.is_closed === 1 || r.is_closed === 'true' || r.status === 'CLOSED' || r.status === 'INACTIVE')
+    );
 
-    // Card is offline if vendor is offline OR if backend rafting packages are marked temporarily closed/inactive
-    const isOffline = isVendorOffline || !hasActiveRaftingBackend;
+    const isOffline = (stretchDbRaftingItems.length > 0 && !hasActiveStretchBackend) || globalClosedRafting;
 
-    const closedPkg = raftingPkgsInDb.find(r => r.closure_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.offline_reason);
+    const closedPkg = stretchDbRaftingItems.find(r => r.closure_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.offline_reason);
     let offlineReason = 'TEMPORARILY CLOSED';
     if (closedPkg && (closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason)) {
       offlineReason = closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason;
-    } else if (selectedVendor.offline_reason || selectedVendor.status_reason) {
-      offlineReason = selectedVendor.offline_reason || selectedVendor.status_reason;
     } else if (isOffline) {
       offlineReason = 'TEMPORARILY CLOSED';
     }
 
+    if (availableVendorsForStretch.length === 0) {
+      availableVendorsForStretch = displayRaftingVendors.map(v => ({
+        id: v.id,
+        company_name: v.company_name || v.name,
+        name: v.company_name || v.name,
+        landmark: toShortLandmark(v.landmark || v.address, 'Janki Setu'),
+        price: stretchDef.price,
+        vendorRate: stretchDef.vendorRate,
+        fixedAdvance: stretchDef.fixedAdvance,
+        fullVendorObj: v
+      }));
+    }
+
+    const selectedVendorId = raftingVendorSelectionMap[stretchDef.id] || (availableVendorsForStretch[0]?.id || 'v-default');
+    const selectedVendorData = availableVendorsForStretch.find(v => String(v.id) === String(selectedVendorId)) || availableVendorsForStretch[0] || {};
+    const selectedVendor = selectedVendorData.fullVendorObj || displayRaftingVendors[0] || {};
+
+    const vName = selectedVendorData.company_name || selectedVendor.company_name || selectedVendor.name || 'HB Evergreen Adventure';
+    const landmark = selectedVendorData.landmark || toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
+
     const realRaftImg = getRaftingStretchImage(stretchDef.id, stretchDef.image);
-    const vendorImages = getRealVendorImages(selectedVendor, [], realRaftImg);
+    const vendorImages = getRealVendorImages(selectedVendor, stretchDbRaftingItems, realRaftImg);
     const cardImages = [realRaftImg, ...vendorImages.filter(img => img !== realRaftImg)];
 
     return {
@@ -592,9 +637,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       categoryBadge: 'RAFTING',
       name: stretchDef.name,
       vendorName: vName,
-      price: stretchDef.price,
-      vendorRate: stretchDef.vendorRate,
-      fixedAdvance: stretchDef.fixedAdvance,
+      price: selectedVendorData.price || stretchDef.price,
+      vendorRate: selectedVendorData.vendorRate || stretchDef.vendorRate,
+      fixedAdvance: selectedVendorData.fixedAdvance || stretchDef.fixedAdvance,
       landmarkLocation: landmark,
       fullAddress: selectedVendor.vendor_address || selectedVendor.address || `${landmark}, Rishikesh`,
       image: realRaftImg,
@@ -606,7 +651,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       isRaftingStretchCard: true,
       stretchId: stretchDef.id,
       selectedVendorId: selectedVendor.id,
-      availableVendors: displayRaftingVendors
+      availableVendors: availableVendorsForStretch
     };
   });
 
