@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, LogIn, MessageSquare, X, 
   MapPin, Phone, Mail, ChevronRight, Waves, Bike, Car, Building2, User,
-  MapPinned, ShieldCheck, Lock, Handshake
+  MapPinned, ShieldCheck, Lock, Handshake, Smartphone
 } from 'lucide-react';
 import { supabase } from './supabase';
 
@@ -706,6 +706,7 @@ export default function App() {
             <ul className={`${footerServicesOpen ? 'block animate-fade-in' : 'hidden'} md:block space-y-2.5 text-xs font-medium text-gray-400 pl-1 md:pl-0`}>
               <li><button onClick={() => navigateTo('bikerent')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Bike &amp; Scooty Rent</button></li>
               <li><button onClick={() => navigateTo('hotels')} className="hover:text-accent transition-colors bg-transparent border-none text-left p-0 cursor-pointer font-sans text-gray-400 font-medium">Boutique Stays</button></li>
+              <li><a href="/vendor.html" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 font-bold transition-colors flex items-center gap-1.5 no-underline"><Smartphone size={13} /> TripGod Vendor App</a></li>
             </ul>
           </div>
 
@@ -733,7 +734,16 @@ export default function App() {
         {/* Copyright */}
         <div className="max-w-6xl mx-auto px-6 py-6 md:py-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
           <span>&copy; 2026 TripGod.in. All rights reserved.</span>
-          <div className="flex flex-wrap gap-4 sm:gap-6 justify-center sm:justify-end">
+          <div className="flex flex-wrap gap-4 sm:gap-6 justify-center sm:justify-end items-center">
+            <a 
+              href="/vendor.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] text-white font-extrabold rounded-full text-[11px] uppercase tracking-wider hover:scale-105 transition-all shadow-md no-underline"
+            >
+              <Smartphone size={13} />
+              <span>TripGod Vendor App</span>
+            </a>
             <button onClick={() => navigateTo('vendor')} className="text-orange-400 font-bold hover:text-orange-300 transition-colors cursor-pointer">Vendor Partner Login</button>
             <button onClick={() => navigateTo('privacy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</button>
             <button onClick={() => navigateTo('terms')} className="hover:text-white transition-colors cursor-pointer">Terms &amp; Conditions</button>
