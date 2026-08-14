@@ -253,57 +253,59 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
   };
 
   // Fetch Vendor Products & Bookings
-  const fetchVendorData = async () => {
+  const fetchVendorData = async (isSilent = false) => {
     if (!currentVendor) return;
-    setIsDataLoading(true);
+    if (!isSilent) setIsDataLoading(true);
 
     try {
       const vId = currentVendor.id;
       const rawVendorId = currentVendor.vendor_id;
       const vPhone = (currentVendor.phone || '').replace(/\D/g, '');
       const isDirect = currentVendor.is_direct;
+      const vendorCategory = (currentVendor.category || '').toLowerCase();
 
-      // Helper matcher for direct WhatsApp numbers
+      // Helper matcher for exact 10-digit mobile number matching
       const matchesPhone = (waNum) => {
         if (!waNum) return false;
         const cleanedWa = waNum.replace(/\D/g, '');
-        return cleanedWa && vPhone && (cleanedWa.includes(vPhone) || vPhone.includes(cleanedWa));
+        if (!cleanedWa || cleanedWa.length < 7 || !vPhone || vPhone.length < 7) return false;
+        return cleanedWa.slice(-10) === vPhone.slice(-10);
       };
 
       // 1. Fetch bikes
       const { data: bikes } = await supabase.from('bikes').select('*');
       const filteredBikes = (bikes || []).filter(b => {
         if (isDirect) {
-          return b.id === vId || matchesPhone(b.whatsapp_number);
+          return (currentVendor.category === 'Bike Rental' || vendorCategory.includes('bike')) && (b.id === vId || matchesPhone(b.whatsapp_number));
         }
-        return b.vendor_id === vId || matchesPhone(b.whatsapp_number);
+        return b.vendor_id === vId || (rawVendorId && b.vendor_id === rawVendorId) || matchesPhone(b.whatsapp_number);
       });
 
       // 2. Fetch rafting
       const { data: rafting } = await supabase.from('rafting').select('*');
       const filteredRafting = (rafting || []).filter(r => {
         if (isDirect) {
-          return r.id === vId || matchesPhone(r.whatsapp_number);
+          return (currentVendor.category === 'Rafting' || vendorCategory.includes('rafting')) && (r.id === vId || matchesPhone(r.whatsapp_number));
         }
-        return r.vendor_id === vId || matchesPhone(r.whatsapp_number);
+        return r.vendor_id === vId || (rawVendorId && r.vendor_id === rawVendorId) || matchesPhone(r.whatsapp_number);
       });
 
       // 3. Fetch hotels
       const { data: hotels } = await supabase.from('hotels').select('*');
       const filteredHotels = (hotels || []).filter(h => {
         if (isDirect) {
-          return h.id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+          return (currentVendor.category === 'Hotel' || vendorCategory.includes('hotel')) && (h.id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
         }
-        return h.vendor_id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+        return h.vendor_id === vId || (rawVendorId && h.vendor_id === rawVendorId) || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
       });
 
       // 4. Fetch tours
       const { data: tours } = await supabase.from('tours').select('*');
       const filteredTours = (tours || []).filter(t => {
         if (isDirect) {
-          return t.id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
+          return (currentVendor.category === 'Tour' || vendorCategory.includes('tour')) && (t.id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
         }
-        return t.vendor_id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
+        return t.vendor_id === vId || (rawVendorId && t.vendor_id === rawVendorId) || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
       });
 
       // Combine items with category tag
@@ -342,16 +344,16 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
     } catch (err) {
       console.error('Error fetching vendor data:', err);
     } finally {
-      setIsDataLoading(false);
+      if (!isSilent) setIsDataLoading(false);
     }
   };
 
   useEffect(() => {
     if (currentVendor) {
-      fetchVendorData();
-      // Auto background sync every 20s between app & website
+      fetchVendorData(false);
+      // Auto background sync every 20s silently between app & website
       const interval = setInterval(() => {
-        fetchVendorData();
+        fetchVendorData(true);
       }, 20000);
       return () => clearInterval(interval);
     }
@@ -495,54 +497,6 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
             <p className="text-slate-400 text-xs mt-2 font-medium">
               Vendor Login for Shop Status, Price Control & Live Bookings
             </p>
-
-            {/* Install App Quick Action Banner */}
-            <div className="mt-4 p-3.5 bg-gradient-to-r from-[#FF6B00]/15 to-[#FF4500]/15 border border-[#FF6B00]/30 rounded-2xl text-left space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">📲</span>
-                  <div>
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">Get TripGod Vendor App</h4>
-                    <p className="text-[10px] text-slate-300 font-medium">Native APK file or 1-tap web app install</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-1 border-t border-[#FF6B00]/20">
-                <a
-                  href="/TripGod_Vendor.apk"
-                  download="TripGod_Vendor.apk"
-                  className="flex-1 py-2 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:scale-[1.02] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md text-center no-underline flex items-center justify-center gap-1.5"
-                >
-                  <span>⬇️ Download APK (5.3 MB)</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={handleInstallApp}
-                  className="py-2 px-3 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] hover:scale-[1.02] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md border-none cursor-pointer shrink-0"
-                >
-                  PWA Install
-                </button>
-              </div>
-
-              {showInstallGuide && (
-                <div className="mt-3 pt-3 border-t border-[#FF6B00]/20 text-[11px] text-slate-300 space-y-1.5">
-                  <div className="font-bold text-orange-400">How to install TripGod Vendor App:</div>
-                  <div className="flex items-start gap-2">
-                    <span className="font-bold text-white">1.</span>
-                    <span>Click <strong>3 Dots (⋮)</strong> in Chrome at top right.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="font-bold text-white">2.</span>
-                    <span>Tap <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="font-bold text-white">3.</span>
-                    <span>The official TripGod Vendor app icon will be added to your app drawer!</span>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           {authError && (
@@ -694,48 +648,6 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        {/* Prominent Shop Status Banner */}
-        <div className={`mb-6 p-5 rounded-3xl border transition-all ${
-          currentVendor.status === 'Active'
-            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-200'
-            : 'bg-red-950/40 border-red-500/30 text-red-200'
-        }`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 ${
-                currentVendor.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-              }`}>
-                <Power className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${
-                    currentVendor.status === 'Active' ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'
-                  }`} />
-                  <h2 className="text-base font-black uppercase tracking-wide">
-                    ● {currentVendor.status === 'Active' ? 'ONLINE' : 'OFFLINE'}
-                  </h2>
-                </div>
-                <p className="text-xs mt-1 opacity-90 font-medium">
-                  {currentVendor.status === 'Active'
-                    ? 'Your services are currently available for customers on the TripGod website & app.'
-                    : 'Your services are currently unavailable for customers.'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={toggleMasterStatus}
-              className={`px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md shrink-0 ${
-                currentVendor.status === 'Active'
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20'
-                  : 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/20'
-              }`}
-            >
-              Switch to {currentVendor.status === 'Active' ? 'OFFLINE' : 'ONLINE'}
-            </button>
-          </div>
-        </div>
 
         {/* Status Message Alert */}
         {statusMessage && (
@@ -847,8 +759,8 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
                       {/* Item Pricing Control */}
                       <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
                         <div>
-                          <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                            Selling Price
+                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                            Your Price (Base)
                           </span>
                           {isEditing ? (
                             <div className="flex flex-col gap-2 mt-1">
@@ -898,13 +810,18 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
                               </span>
                             </div>
                           ) : (
-                            <div className="text-lg font-black text-white mt-0.5">
-                              ₹{item.price}{' '}
-                              {item.original_price && (
-                                <span className="text-xs text-slate-500 line-through font-normal">
-                                  ₹{item.original_price}
-                                </span>
-                              )}
+                            <div>
+                              <div className="text-lg font-black text-white mt-0.5">
+                                ₹{item.net_price || item.price}{' '}
+                                {item.original_price && (
+                                  <span className="text-xs text-slate-500 line-through font-normal">
+                                    ₹{item.original_price}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                                Website Price: ₹{item.price}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -913,7 +830,7 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
                           <button
                             onClick={() => {
                               setEditingItemId(item.id);
-                              setNewPrice(item.price);
+                              setNewPrice(item.net_price || item.price);
                             }}
                             className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition-colors"
                           >

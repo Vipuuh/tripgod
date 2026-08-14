@@ -71,6 +71,11 @@ export default function VendorApp() {
                 transition={{ duration: 0.4, ease: 'out' }}
                 className="flex flex-col items-center text-center relative z-10"
               >
+                {/* Official TripGod Icon Shield */}
+                <div className="w-20 h-20 mb-4 rounded-3xl overflow-hidden shadow-2xl shadow-orange-500/30 border border-orange-500/30 flex items-center justify-center bg-slate-900">
+                  <img src="/vendor-icon-192.png" alt="TripGod Icon" className="w-full h-full object-cover" />
+                </div>
+
                 {/* Logo Stack */}
                 <div className="flex items-center justify-center select-none mb-3">
                   <span className="font-black text-4xl sm:text-5xl tracking-tighter text-white">TRIP</span>

@@ -738,20 +738,11 @@ export default function App() {
             <a 
               href="/TripGod_Vendor.apk"
               download="TripGod_Vendor.apk"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold rounded-full text-[11px] uppercase tracking-wider hover:scale-105 transition-all shadow-md no-underline"
-              title="Download Android APK file (5.3 MB)"
-            >
-              <Smartphone size={13} />
-              <span>Download Android APK</span>
-            </a>
-            <a 
-              href="/vendor.html"
-              target="_blank"
-              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] text-white font-extrabold rounded-full text-[11px] uppercase tracking-wider hover:scale-105 transition-all shadow-md no-underline"
+              title="Download TripGod Vendor APK file (5.3 MB)"
             >
               <Smartphone size={13} />
-              <span>Vendor Web App</span>
+              <span>Download Vendor APK</span>
             </a>
             <button onClick={() => navigateTo('vendor')} className="text-orange-400 font-bold hover:text-orange-300 transition-colors cursor-pointer">Vendor Partner Login</button>
             <button onClick={() => navigateTo('privacy')} className="hover:text-white transition-colors cursor-pointer">Privacy Policy</button>

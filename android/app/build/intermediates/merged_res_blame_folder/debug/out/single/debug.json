@@ -8,6 +8,46 @@
         "source": "in.tripgod.vendor.app-main-6:/mipmap-xxhdpi/ic_launcher_round.png"
     },
     {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "in.tripgod.vendor.app-main-6:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "in.tripgod.vendor.app-main-6:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "in.tripgod.vendor.app-main-6:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
         "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-xxxhdpi_ic_launcher.png.flat",
         "source": "in.tripgod.vendor.app-main-6:/mipmap-xxxhdpi/ic_launcher.png"
     },
@@ -16,16 +56,16 @@
         "source": "in.tripgod.vendor.app-main-6:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-mdpi_ic_launcher_round.png.flat",
-        "source": "in.tripgod.vendor.app-main-6:/mipmap-mdpi/ic_launcher_round.png"
-    },
-    {
         "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-xhdpi_ic_launcher_round.png.flat",
         "source": "in.tripgod.vendor.app-main-6:/mipmap-xhdpi/ic_launcher_round.png"
     },
     {
-        "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-hdpi_ic_launcher.png.flat",
-        "source": "in.tripgod.vendor.app-main-6:/mipmap-hdpi/ic_launcher.png"
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-xhdpi/ic_launcher_round.png"
     },
     {
         "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-mdpi_ic_launcher.png.flat",
@@ -36,7 +76,7 @@
         "source": "in.tripgod.vendor.app-main-6:/mipmap-hdpi/ic_launcher_round.png"
     },
     {
-        "merged": "in.tripgod.vendor.app-merged_res-4:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
-        "source": "in.tripgod.vendor.app-main-6:/mipmap-xxxhdpi/ic_launcher_round.png"
+        "merged": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-merged_res-4:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "/Users/vipuhere/.gradle/daemon/8.5/in.tripgod.vendor.app-main-6:/mipmap-hdpi/ic_launcher_round.png"
     }
 ]
