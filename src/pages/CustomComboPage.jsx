@@ -529,7 +529,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     }
 
     const vendorImages = getRealVendorImages(selectedVendor, [], stretchDef.image);
-    const primaryImg = vendorImages[0] || stretchDef.image;
+    // Prioritize Rafting Action photo FIRST over storefront shop photos
+    const cardImages = [stretchDef.image, ...vendorImages.filter(img => img !== stretchDef.image)];
+    const primaryImg = stretchDef.image;
 
     return {
       cartKey: `rafting-stretch-${stretchDef.id}-v-${selectedVendor.id || 'default'}`,
@@ -544,7 +546,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       landmarkLocation: landmark,
       fullAddress: selectedVendor.vendor_address || selectedVendor.address || `${landmark}, Rishikesh`,
       image: primaryImg,
-      images: vendorImages,
+      images: cardImages,
       rating: getRealVendorRating(selectedVendor),
       description: stretchDef.description,
       isOffline,
@@ -556,7 +558,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     };
   });
 
-  // 3. Build Super Clear Vehicle-Model-First Scooty & Bike Cards
+  // 3. Build Super Clear Vehicle-Model-First Scooty & Bike Cards (All 11 Models)
   const bikeVendorsMap = new Map();
   effectiveVendors.forEach(v => {
     const cat = (v.service_category || v.category || '').toLowerCase();
@@ -580,17 +582,37 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       vendorRate: 500,
       badge: 'SCOOTY',
       image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
-      description: 'Reliable, gearless automatic scooter with helmet & quick verification. Excellent mileage for Rishikesh sightseeing.'
+      description: 'Reliable, gearless automatic 110cc scooter with helmet & quick verification. Excellent mileage for Rishikesh city rides.'
+    },
+    {
+      id: 'activa125',
+      name: 'Honda Activa 125',
+      price: 700,
+      fixedAdvance: 200,
+      vendorRate: 500,
+      badge: 'SCOOTY',
+      image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
+      description: 'Powerful 125cc gearless automatic scooter for effortless double riding & hill navigation.'
     },
     {
       id: 'access125',
-      name: 'Suzuki Access 125 (Power Scooter)',
+      name: 'Suzuki Access 125',
       price: 750,
       fixedAdvance: 200,
       vendorRate: 550,
       badge: 'SCOOTY',
       image: '/scooty-rent.jpg',
-      description: 'Powerful 125cc scooter for smooth double riding & hill climbs to Neelkanth Mahadev temple.'
+      description: 'Popular 125cc power scooter with smooth acceleration and comfortable seating.'
+    },
+    {
+      id: 'burgman125',
+      name: 'Suzuki Burgman Street 125',
+      price: 850,
+      fixedAdvance: 200,
+      vendorRate: 650,
+      badge: 'SCOOTY',
+      image: '/scooty-rent.jpg',
+      description: 'Maxi-style premium scooter with front windscreen, footrests & spacious legroom.'
     },
     {
       id: 'jupiter125',
@@ -600,7 +622,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       vendorRate: 500,
       badge: 'SCOOTY',
       image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
-      description: 'Comfortable wide seat scooter with large boot space & external fuel filling for effortless Rishikesh rides.'
+      description: 'Wide seat comfort scooter with external fuel filling & large underseat storage.'
     },
     {
       id: 'classic350',
@@ -613,6 +635,46 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       description: 'Iconic 350cc cruiser motorcycle for roaring mountain road trips to Devprayag & Tehri Lake.'
     },
     {
+      id: 'bullet350',
+      name: 'Royal Enfield Bullet 350',
+      price: 1300,
+      fixedAdvance: 300,
+      vendorRate: 1000,
+      badge: 'BIKE',
+      image: '/classic-rent.png',
+      description: 'Legendary Bullet 350 with classic thump engine sound, ideal for highway & hill tours.'
+    },
+    {
+      id: 'hunter350',
+      name: 'Royal Enfield Hunter 350',
+      price: 1299,
+      fixedAdvance: 300,
+      vendorRate: 999,
+      badge: 'BIKE',
+      image: '/classic-rent.png',
+      description: 'Agile & stylish 350cc roadster bike with light handling for Rishikesh city & ghats.'
+    },
+    {
+      id: 'xpulse200',
+      name: 'Hero Xpulse 200 4V',
+      price: 1200,
+      fixedAdvance: 300,
+      vendorRate: 900,
+      badge: 'BIKE',
+      image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600',
+      description: 'Lightweight off-road dual-purpose adventure motorcycle built for trail riding & rough mountain paths.'
+    },
+    {
+      id: 'himalayan411',
+      name: 'Royal Enfield Himalayan 411',
+      price: 1700,
+      fixedAdvance: 400,
+      vendorRate: 1300,
+      badge: 'BIKE',
+      image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600',
+      description: 'Proven adventure tourer with high ground clearance, luggage racks & long-travel suspension.'
+    },
+    {
       id: 'himalayan450',
       name: 'Royal Enfield Himalayan 450',
       price: 1600,
@@ -620,11 +682,19 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       vendorRate: 1200,
       badge: 'BIKE',
       image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600',
-      description: 'Premium adventure touring motorcycle designed for extreme mountain terrain, off-road & long Himalayan tours.'
+      description: 'Next-gen liquid-cooled Sherpa 450 adventure bike for long Himalayan tours & off-roading.'
     }
   ];
 
   const dbVendorBikeCards = VEHICLE_MODEL_DEFINITIONS.map(vehDef => {
+    // Check if dbBikes has real uploaded cutout photos for this model
+    const matchingDbBike = dbBikes.find(b => 
+      b.name && b.name.toLowerCase().includes(vehDef.name.toLowerCase().split(' ')[0]) && (b.image || b.images)
+    );
+
+    const realBikeImg = matchingDbBike ? (parseImageUrl(matchingDbBike.image) || parseImageUrl(matchingDbBike.images)) : null;
+    const vehiclePhoto = realBikeImg || vehDef.image;
+
     const selectedVendorId = bikeVendorSelectionMap[vehDef.id] || (displayBikeVendors[0]?.id || 'v-bike-default');
     const selectedVendor = displayBikeVendors.find(v => String(v.id) === String(selectedVendorId)) || displayBikeVendors[0] || {};
 
@@ -638,8 +708,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
     const offlineReason = selectedVendor.offline_reason || selectedVendor.status_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
 
-    const vendorImages = getRealVendorImages(selectedVendor, [], vehDef.image);
-    const primaryImg = vendorImages[0] || vehDef.image;
+    const vendorImages = getRealVendorImages(selectedVendor, [], vehiclePhoto);
+    // Prioritize Vehicle Photo FIRST over storefront shop photos
+    const cardImages = [vehiclePhoto, ...vendorImages.filter(img => img !== vehiclePhoto)];
 
     return {
       cartKey: `scooty-veh-${vehDef.id}-v-${selectedVendor.id || 'default'}`,
@@ -653,8 +724,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       fixedAdvance: vehDef.fixedAdvance,
       landmarkLocation: landmark,
       fullAddress: selectedVendor.vendor_address || selectedVendor.address || `${landmark}, Rishikesh`,
-      image: primaryImg,
-      images: vendorImages,
+      image: vehiclePhoto,
+      images: cardImages,
       rating: getRealVendorRating(selectedVendor),
       description: vehDef.description,
       isOffline,
