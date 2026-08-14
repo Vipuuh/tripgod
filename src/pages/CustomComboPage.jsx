@@ -580,23 +580,26 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
     let availableVendorsForStretch = Array.from(vendorMapForStretch.values());
 
-    // Check if ANY DB rafting package for this stretch is active
-    const hasActiveStretchBackend = stretchDbRaftingItems.length > 0 && stretchDbRaftingItems.some(r => 
-      r.is_active !== false && 
-      r.is_closed !== true && 
-      r.is_closed !== 1 && 
-      r.is_closed !== 'true' &&
-      r.coming_soon !== true && 
-      (!r.status || (r.status.toLowerCase() !== 'inactive' && r.status.toLowerCase() !== 'closed' && r.status.toLowerCase() !== 'off'))
+    // Check if THIS specific stretch package has any active listing in dbRafting
+    const isStretchExplicitlyClosed = stretchDbRaftingItems.length > 0 && stretchDbRaftingItems.every(r => 
+      r.is_closed === true || 
+      r.is_closed === 1 || 
+      r.is_closed === 'true' || 
+      r.is_active === false || 
+      r.status === 'CLOSED' || 
+      r.status === 'INACTIVE' || 
+      r.status === 'OFF'
     );
 
-    // Also check global rafting closure status in dbRafting
-    const globalClosedRafting = dbRafting.some(r => 
-      (r.activity_type === 'rafting' || !r.activity_type) && 
-      (r.is_closed === true || r.is_closed === 1 || r.is_closed === 'true' || r.status === 'CLOSED' || r.status === 'INACTIVE')
-    );
+    // Selected vendor status check
+    const isSelectedVendorOffline = selectedVendorData.fullVendorObj?.status === 'INACTIVE' || 
+                                    selectedVendorData.fullVendorObj?.status === 'OFF' || 
+                                    selectedVendorData.fullVendorObj?.status === 'MONSOON_OFF' || 
+                                    selectedVendorData.fullVendorObj?.is_active === false || 
+                                    selectedVendorData.fullVendorObj?.is_closed === true;
 
-    const isOffline = (stretchDbRaftingItems.length > 0 && !hasActiveStretchBackend) || globalClosedRafting;
+    // Card is offline ONLY if this stretch is explicitly closed OR if selected vendor is offline
+    const isOffline = isStretchExplicitlyClosed || isSelectedVendorOffline;
 
     const closedPkg = stretchDbRaftingItems.find(r => r.closure_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.offline_reason);
     let offlineReason = 'TEMPORARILY CLOSED';
