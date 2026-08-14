@@ -303,15 +303,21 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   else if (cartCount >= 5) discountPercent = discountRules.tier5 || 20;
 
   const rawSubtotalPerPerson = cartItems.reduce((sum, item) => sum + Number(item.price || 0), 0);
-  const discountAmountPerPerson = Math.round((rawSubtotalPerPerson * discountPercent) / 100);
-  const finalPricePerPerson = rawSubtotalPerPerson - discountAmountPerPerson;
+  const rawSubtotalAll = rawSubtotalPerPerson * persons;
+  
+  const rawDiscountCalc = (rawSubtotalAll * discountPercent) / 100;
+  const totalSaved = discountPercent > 0 && rawSubtotalAll > 0 
+    ? Math.max(1, Math.round(rawDiscountCalc)) 
+    : 0;
 
-  const grandTotal = finalPricePerPerson * persons;
-  const totalSaved = discountAmountPerPerson * persons;
+  const discountAmountPerPerson = persons > 0 ? (totalSaved / persons) : 0;
+  const finalPricePerPerson = rawSubtotalPerPerson - discountAmountPerPerson;
+  const grandTotal = rawSubtotalAll - totalSaved;
+
   const handleProceedBooking = () => {
     if (cartItems.length === 0) return;
 
-    // 1. Raw Sum of required backend fixed advances (e.g. ₹199 + ₹200 = ₹399)
+    // 1. Raw Sum of required backend fixed advances
     const rawTotalAdvancePerPerson = cartItems.reduce((sum, item) => {
       const itemAdv = item.fixedAdvance !== undefined && item.fixedAdvance !== null && Number(item.fixedAdvance) >= 0
         ? Number(item.fixedAdvance)
@@ -319,10 +325,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       return sum + itemAdv;
     }, 0);
 
-    // 2. Combo Discount amount (e.g. 5% of raw subtotal ₹1699 = ₹85)
-    const discountAmountPerPerson = Math.round((rawSubtotalPerPerson * discountPercent) / 100);
-
-    // 3. Hotel GST (12% of hotel price = ₹120)
+    // 2. Hotel GST
     const hotelGstPerPerson = cartItems.reduce((sum, item) => {
       if (item.category === 'Hotel' || item.category === 'hotel') {
         const gst = item.gstAmount !== undefined ? item.gstAmount : Math.round(Number(item.price || 0) * 0.12);
@@ -331,11 +334,13 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       return sum;
     }, 0);
 
-    // 4. Exact User Formula: Online Advance = (Sum of Advances ₹399) - (Discount Amount ₹85) + (Hotel GST ₹120) = ₹434
-    const finalAdvancePerPerson = Math.max(1, rawTotalAdvancePerPerson - discountAmountPerPerson + hotelGstPerPerson);
-    const totalAdvance = finalAdvancePerPerson * persons;
+    const totalHotelGst = hotelGstPerPerson * persons;
+    const rawTotalAdvanceAll = rawTotalAdvancePerPerson * persons;
 
-    // 5. Total Vendor Base Payout at Venue (e.g. Hotel ₹800 + Scooty ₹500 = ₹1,300)
+    // 3. Online Advance = Total Advance for all persons - Total Discount + Total Hotel GST
+    const totalAdvance = Math.max(1, rawTotalAdvanceAll - totalSaved + totalHotelGst);
+
+    // 4. Total Vendor Base Payout at Venue
     const totalVendorPayoutPerPerson = cartItems.reduce((sum, item) => {
       const vRate = item.vendorRate !== undefined && item.vendorRate !== null 
         ? Number(item.vendorRate) 
@@ -344,10 +349,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     }, 0);
     const totalVendorPayout = totalVendorPayoutPerPerson * persons;
 
-    // 6. Grand Total Price (incl. GST & Combo Discount)
-    const finalPriceWithGstPerPerson = rawSubtotalPerPerson - discountAmountPerPerson + hotelGstPerPerson;
-    const grandTotalWithGst = finalPriceWithGstPerPerson * persons;
-    const totalHotelGst = hotelGstPerPerson * persons;
+    // 5. Grand Total Price for all persons
+    const grandTotalWithGst = Math.max(0, rawSubtotalAll - totalSaved + totalHotelGst);
+    const finalPriceWithGstPerPerson = persons > 0 ? (grandTotalWithGst / persons) : 0;
 
     const payload = {
       id: `custom-combo-${Date.now()}`,
@@ -367,10 +371,10 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
         mapLink: item.mapLink || `https://maps.google.com/?q=${encodeURIComponent((item.fullAddress || item.vendorName || item.name) + ' Rishikesh')}`
       })),
       discountPercent,
-      rawTotal: rawSubtotalPerPerson * persons,
+      rawTotal: rawSubtotalAll,
       totalSaved,
       totalHotelGst,
-      rawTotalAdvancePerPerson: rawTotalAdvancePerPerson * persons,
+      rawTotalAdvancePerPerson: rawTotalAdvanceAll,
       finalAdvancePerPerson: totalAdvance,
       totalVendorPayout
     };
