@@ -544,86 +544,107 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const stretchDbRaftingItems = dbRafting.filter(r => {
       const act = (r.activity_type || 'rafting').toLowerCase();
       if (act !== 'rafting' && act !== '') return false;
+
       const rName = (r.name || '').toLowerCase();
-      const dist = String(r.distance_km || '');
-      if (stretchDef.id === '12km') return rName.includes('12') || dist === '12';
-      if (stretchDef.id === '14km') return rName.includes('14') || dist === '14';
-      if (stretchDef.id === '18km') return rName.includes('18') || rName.includes('shivpuri') || dist === '18';
-      if (stretchDef.id === '26km') return rName.includes('26') || rName.includes('24') || rName.includes('marine') || dist === '26' || dist === '24';
+      const route = (r.route || '').toLowerCase();
+      const distNum = r.distance_km ? parseInt(String(r.distance_km), 10) : 0;
+      const distStr = String(r.distance_km || '');
+
+      if (stretchDef.id === '12km') {
+        return distNum === 12 || distStr === '12' || rName.includes('12') || rName.includes('brahmpuri') || route.includes('brahmpuri');
+      }
+      if (stretchDef.id === '14km') {
+        return distNum === 14 || distNum === 16 || distStr === '14' || distStr === '16' || rName.includes('14') || rName.includes('16') || rName.includes('club') || route.includes('club');
+      }
+      if (stretchDef.id === '18km') {
+        return distNum === 18 || distStr === '18' || rName.includes('18') || rName.includes('shivpuri') || route.includes('shivpuri');
+      }
+      if (stretchDef.id === '26km') {
+        return distNum === 26 || distNum === 24 || distStr === '26' || distStr === '24' || rName.includes('26') || rName.includes('24') || rName.includes('marine') || route.includes('marine');
+      }
       return false;
     });
 
-    // 2. Build available vendors list dynamically ONLY for vendors who offer this stretch in DB
-    const vendorMapForStretch = new Map();
+    // 2. Build available vendors list dynamically for ALL vendors associated with this stretch in DB
+    const availableVendorsForStretch = [];
 
-    stretchDbRaftingItems.forEach(rItem => {
-      if (rItem.is_closed === true || rItem.is_active === false || rItem.status === 'INACTIVE' || rItem.status === 'CLOSED') return;
-      const vId = String(rItem.vendor_id);
-      const matchingVendor = displayRaftingVendors.find(v => String(v.id) === vId);
-      const vName = matchingVendor?.company_name || matchingVendor?.name || rItem.vendor_name || rItem.operator_name || 'Rafting Crew';
-      const vLandmark = toShortLandmark(matchingVendor?.landmark || matchingVendor?.address || rItem.landmark || rItem.address, 'Janki Setu');
-      const itemPrice = Number(rItem.price || rItem.net_price || stretchDef.price);
+    if (stretchDbRaftingItems.length > 0) {
+      stretchDbRaftingItems.forEach((rItem, idx) => {
+        const vId = rItem.vendor_id ? String(rItem.vendor_id) : `v-item-${rItem.id || idx}`;
+        const matchingVendor = effectiveVendors.find(v => String(v.id) === vId || (v.company_name && rItem.vendor_name && v.company_name.toLowerCase() === rItem.vendor_name.toLowerCase()));
 
-      if (!vendorMapForStretch.has(vId)) {
-        vendorMapForStretch.set(vId, {
-          id: vId,
-          company_name: vName,
-          name: vName,
-          landmark: vLandmark,
-          price: itemPrice > 0 ? itemPrice : stretchDef.price,
-          vendorRate: Number(rItem.vendor_rate || rItem.net_price || (itemPrice ? itemPrice - 200 : stretchDef.vendorRate)),
-          fixedAdvance: Number(rItem.fixed_advance_amount || rItem.advance_amount || stretchDef.fixedAdvance),
-          fullVendorObj: matchingVendor
-        });
-      }
-    });
+        const vName = matchingVendor?.company_name || matchingVendor?.name || rItem.vendor_name || rItem.operator_name || 'Rafting Crew';
+        const vLandmark = toShortLandmark(matchingVendor?.landmark || matchingVendor?.address || rItem.landmark || rItem.address, 'Janki Setu');
+        const itemPrice = Number(rItem.price || rItem.net_price || stretchDef.price);
 
-    let availableVendorsForStretch = Array.from(vendorMapForStretch.values());
+        const isItemClosed = !!(
+          rItem.is_closed === true || 
+          rItem.is_closed === 1 || 
+          rItem.is_closed === 'true' || 
+          rItem.is_active === false || 
+          rItem.status === 'CLOSED' || 
+          rItem.status === 'INACTIVE' || 
+          rItem.status === 'OFF' ||
+          matchingVendor?.is_closed === true ||
+          matchingVendor?.status === 'INACTIVE' ||
+          matchingVendor?.status === 'OFF' ||
+          matchingVendor?.is_active === false
+        );
 
+        const reason = rItem.closed_reason || rItem.closure_reason || rItem.offline_reason || rItem.status_reason || matchingVendor?.status_reason || matchingVendor?.offline_reason || 'TEMPORARILY CLOSED';
+
+        const existingIdx = availableVendorsForStretch.findIndex(v => String(v.id) === vId || v.company_name === vName);
+        if (existingIdx === -1) {
+          availableVendorsForStretch.push({
+            id: vId,
+            company_name: vName,
+            name: vName,
+            landmark: vLandmark,
+            price: itemPrice > 0 ? itemPrice : stretchDef.price,
+            vendorRate: Number(rItem.vendor_rate || rItem.net_price || (itemPrice ? Math.max(0, itemPrice - 200) : stretchDef.vendorRate)),
+            fixedAdvance: Number(rItem.fixed_advance_amount || rItem.advance_amount || stretchDef.fixedAdvance),
+            is_closed: isItemClosed,
+            closed_reason: reason,
+            fullVendorObj: matchingVendor || { id: vId, company_name: vName, landmark: vLandmark }
+          });
+        }
+      });
+    }
+
+    // Fallback ONLY if dbRafting has no items for this stretch
     if (availableVendorsForStretch.length === 0) {
-      availableVendorsForStretch = displayRaftingVendors.map(v => ({
-        id: v.id,
-        company_name: v.company_name || v.name,
-        name: v.company_name || v.name,
-        landmark: toShortLandmark(v.landmark || v.address, 'Janki Setu'),
-        price: stretchDef.price,
-        vendorRate: stretchDef.vendorRate,
-        fixedAdvance: stretchDef.fixedAdvance,
-        fullVendorObj: v
-      }));
+      displayRaftingVendors.forEach(v => {
+        const isVClosed = v.is_closed === true || v.status === 'INACTIVE' || v.status === 'OFF' || v.is_active === false;
+        availableVendorsForStretch.push({
+          id: String(v.id),
+          company_name: v.company_name || v.name,
+          name: v.company_name || v.name,
+          landmark: toShortLandmark(v.landmark || v.address, 'Janki Setu'),
+          price: stretchDef.price,
+          vendorRate: stretchDef.vendorRate,
+          fixedAdvance: stretchDef.fixedAdvance,
+          is_closed: isVClosed,
+          closed_reason: v.offline_reason || v.status_reason || 'TEMPORARILY CLOSED',
+          fullVendorObj: v
+        });
+      });
     }
 
     const selectedVendorId = raftingVendorSelectionMap[stretchDef.id] || (availableVendorsForStretch[0]?.id || 'v-default');
     const selectedVendorData = availableVendorsForStretch.find(v => String(v.id) === String(selectedVendorId)) || availableVendorsForStretch[0] || {};
-    const selectedVendor = selectedVendorData.fullVendorObj || displayRaftingVendors[0] || {};
+    const selectedVendor = selectedVendorData.fullVendorObj || {};
 
-    // Check if THIS specific stretch package has any active listing in dbRafting
-    const isStretchExplicitlyClosed = stretchDbRaftingItems.length > 0 && stretchDbRaftingItems.every(r => 
-      r.is_closed === true || 
-      r.is_closed === 1 || 
-      r.is_closed === 'true' || 
-      r.is_active === false || 
-      r.status === 'CLOSED' || 
-      r.status === 'INACTIVE' || 
-      r.status === 'OFF'
-    );
+    // Is stretch offline?
+    // Stretch is offline if ALL vendors for this stretch are closed OR if the selected vendor is closed
+    const isStretchAllClosed = availableVendorsForStretch.length > 0 && availableVendorsForStretch.every(v => v.is_closed);
+    const isSelectedVendorClosed = !!selectedVendorData.is_closed;
 
-    // Selected vendor status check
-    const isSelectedVendorOffline = selectedVendor.status === 'INACTIVE' || 
-                                    selectedVendor.status === 'OFF' || 
-                                    selectedVendor.status === 'MONSOON_OFF' || 
-                                    selectedVendor.is_active === false || 
-                                    selectedVendor.is_closed === true;
+    const isOffline = isStretchAllClosed || isSelectedVendorClosed;
 
-    // Card is offline ONLY if this stretch is explicitly closed OR if selected vendor is offline
-    const isOffline = isStretchExplicitlyClosed || isSelectedVendorOffline;
-
-    const closedPkg = stretchDbRaftingItems.find(r => r.closure_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.offline_reason);
-    let offlineReason = 'TEMPORARILY CLOSED';
-    if (closedPkg && (closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason)) {
-      offlineReason = closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason;
-    } else if (isOffline) {
-      offlineReason = 'TEMPORARILY CLOSED';
+    const closedPkg = stretchDbRaftingItems.find(r => r.closure_reason || r.closed_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.closed_reason || r.offline_reason);
+    let offlineReason = selectedVendorData.closed_reason || 'TEMPORARILY CLOSED';
+    if (closedPkg && (closedPkg.closed_reason || closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason)) {
+      offlineReason = closedPkg.closed_reason || closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason;
     }
 
     const vName = selectedVendorData.company_name || selectedVendor.company_name || selectedVendor.name || 'HB Evergreen Adventure';
@@ -634,8 +655,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const cardImages = [realRaftImg, ...vendorImages.filter(img => img !== realRaftImg)];
 
     return {
-      cartKey: `rafting-stretch-${stretchDef.id}-v-${selectedVendor.id || 'default'}`,
-      id: selectedVendor.id || stretchDef.id,
+      cartKey: `rafting-stretch-${stretchDef.id}-v-${selectedVendorData.id || 'default'}`,
+      id: selectedVendorData.id || stretchDef.id,
       category: 'Rafting',
       categoryBadge: 'RAFTING',
       name: stretchDef.name,
@@ -653,7 +674,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       offlineReason,
       isRaftingStretchCard: true,
       stretchId: stretchDef.id,
-      selectedVendorId: selectedVendor.id,
+      selectedVendorId: selectedVendorData.id,
       availableVendors: availableVendorsForStretch
     };
   });
@@ -1187,7 +1208,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                             const vN = v.company_name || v.name;
                             return (
                               <option key={v.id} value={v.id}>
-                                {vL} — {vN}
+                                {vL} — {vN}{v.is_closed ? ' (CLOSED)' : ''}
                               </option>
                             );
                           })}
