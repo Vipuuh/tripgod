@@ -497,21 +497,31 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
             </p>
 
             {/* Install App Quick Action Banner */}
-            <div className="mt-4 p-3.5 bg-gradient-to-r from-[#FF6B00]/15 to-[#FF4500]/15 border border-[#FF6B00]/30 rounded-2xl text-left">
+            <div className="mt-4 p-3.5 bg-gradient-to-r from-[#FF6B00]/15 to-[#FF4500]/15 border border-[#FF6B00]/30 rounded-2xl text-left space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">📲</span>
                   <div>
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider">Install App on Phone</h4>
-                    <p className="text-[10px] text-slate-300 font-medium">Add to phone's app drawer for 1-tap access</p>
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider">Get TripGod Vendor App</h4>
+                    <p className="text-[10px] text-slate-300 font-medium">Native APK file or 1-tap web app install</p>
                   </div>
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1 border-t border-[#FF6B00]/20">
+                <a
+                  href="/TripGod_Vendor.apk"
+                  download="TripGod_Vendor.apk"
+                  className="flex-1 py-2 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:scale-[1.02] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md text-center no-underline flex items-center justify-center gap-1.5"
+                >
+                  <span>⬇️ Download APK (5.3 MB)</span>
+                </a>
                 <button
                   type="button"
                   onClick={handleInstallApp}
-                  className="px-3 py-1.5 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] hover:scale-105 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md border-none cursor-pointer shrink-0"
+                  className="py-2 px-3 bg-gradient-to-r from-[#FF6B00] to-[#FF4500] hover:scale-[1.02] text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md border-none cursor-pointer shrink-0"
                 >
-                  Install App
+                  PWA Install
                 </button>
               </div>
 

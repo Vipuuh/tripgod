@@ -1,0 +1,27 @@
+{
+  "packageId": "in.tripgod.vendor",
+  "host": "tripgod.in",
+  "name": "TripGod Vendor",
+  "launcherName": "TripGod Vendor",
+  "display": "standalone",
+  "themeColor": "#FF6B00",
+  "navigationColor": "#0F172A",
+  "backgroundColor": "#0F172A",
+  "enableNotifications": true,
+  "startUrl": "/vendor.html",
+  "iconUrl": "https://tripgod.in/vendor-icon-512.png",
+  "maskableIconUrl": "https://tripgod.in/vendor-icon-maskable.png",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "tripgodvendor"
+  },
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://tripgod.in/manifest-vendor.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  }
+}
