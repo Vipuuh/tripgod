@@ -190,9 +190,11 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // Active Category Filter
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // Vendor Selections Map (vendorId -> selectedStretchId / selectedVehicleId)
+  // Vendor Selections Map
   const [raftingStretchMap, setRaftingStretchMap] = useState({});
   const [bikeVehicleMap, setBikeVehicleMap] = useState({});
+  const [raftingVendorSelectionMap, setRaftingVendorSelectionMap] = useState({});
+  const [bikeVendorSelectionMap, setBikeVendorSelectionMap] = useState({});
 
   // Active Service Details Drawer State
   const [activeDetailItem, setActiveDetailItem] = useState(null);
@@ -448,9 +450,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   // Effective Vendor List (Uses Real Database Vendors)
   const effectiveVendors = dbVendors.length > 0 ? dbVendors : FALLBACK_VENDORS;
 
-  // 2. Build Vendor Rafting Cards from Real Database Vendors & Rafting Items
+  // 2. Build Super Clear Rafting Stretch Cards (Grouped by Stretch: 16KM, 24KM, 12KM, 36KM)
   const raftingVendorsMap = new Map();
-
   effectiveVendors.forEach(v => {
     const cat = (v.service_category || v.category || '').toLowerCase();
     if (cat.includes('rafting') || cat.includes('multi-service') || cat.includes('all services') || cat.includes('adventure') || !cat) {
@@ -458,98 +459,105 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     }
   });
 
-  dbRafting.forEach(rItem => {
-    if (rItem.vendor_id && !raftingVendorsMap.has(String(rItem.vendor_id))) {
-      const foundV = dbVendors.find(v => String(v.id) === String(rItem.vendor_id));
-      if (foundV) {
-        raftingVendorsMap.set(String(foundV.id), foundV);
-      } else {
-        const vName = rItem.vendor_name || rItem.operator_name || `Rafting Crew ${rItem.vendor_id}`;
-        raftingVendorsMap.set(String(rItem.vendor_id), {
-          id: rItem.vendor_id,
-          name: vName,
-          company_name: vName,
-          landmark: rItem.landmark || rItem.address || 'Tapovan',
-          star_rating: rItem.rating || 4.5,
-          status: rItem.is_active === false ? 'INACTIVE' : (rItem.status || 'ACTIVE'),
-          shop_image: rItem.images ? parseImageUrl(rItem.images) : null
-        });
-      }
+  const raftingVendorsList = Array.from(raftingVendorsMap.values());
+  const activeRaftingVendors = raftingVendorsList.filter(v => 
+    v.status !== 'INACTIVE' && v.status !== 'OFF' && v.is_active !== false && v.is_closed !== true
+  );
+  const displayRaftingVendors = activeRaftingVendors.length > 0 ? activeRaftingVendors : raftingVendorsList;
+
+  const RAFTING_STRETCH_DEFINITIONS = [
+    {
+      id: '16km',
+      name: '16 KM Shivpuri Rafting (Most Popular)',
+      price: 899,
+      fixedAdvance: 200,
+      vendorRate: 699,
+      badge: 'RAFTING',
+      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      description: 'Experience 16 KM river rafting from Shivpuri to Nim Beach with Grade III rapids, Roller Coaster, Golf Course & cliff jump.'
+    },
+    {
+      id: '24km',
+      name: '24 KM Marine Drive Rafting (Extreme)',
+      price: 1499,
+      fixedAdvance: 300,
+      vendorRate: 1199,
+      badge: 'RAFTING',
+      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      description: 'Thrilling 24 KM long stretch from Marine Drive featuring 16 major Grade III/IV rapids, bodysurfing & cliff jumping.'
+    },
+    {
+      id: '12km',
+      name: '12 KM Brahmpuri Rafting (Family & Kids)',
+      price: 599,
+      fixedAdvance: 150,
+      vendorRate: 449,
+      badge: 'RAFTING',
+      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      description: 'Gentle 12 KM rafting stretch from Brahmpuri suitable for families, first-timers & senior citizens.'
+    },
+    {
+      id: '36km',
+      name: '36 KM Kaudiyala Extreme Expedition',
+      price: 2499,
+      fixedAdvance: 500,
+      vendorRate: 1999,
+      badge: 'RAFTING',
+      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      description: 'Ultimate 36 KM extreme expedition from Kaudiyala featuring Grade IV+ The Wall rapid for experienced rafters.'
     }
-  });
+  ];
 
-  const dbVendorRaftingCards = Array.from(raftingVendorsMap.values()).map(v => {
-    const vName = v.company_name || v.name || 'Rishikesh Rafting Crew';
-    const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Tapovan');
+  const dbVendorRaftingCards = RAFTING_STRETCH_DEFINITIONS.map(stretchDef => {
+    const selectedVendorId = raftingVendorSelectionMap[stretchDef.id] || (displayRaftingVendors[0]?.id || 'v-default');
+    const selectedVendor = displayRaftingVendors.find(v => String(v.id) === String(selectedVendorId)) || displayRaftingVendors[0] || {};
 
-    const vendorRaftingItems = dbRafting.filter(r => 
-      String(r.vendor_id) === String(v.id) || 
-      (r.vendor_name && r.vendor_name.toLowerCase() === vName.toLowerCase()) ||
-      (r.operator_name && r.operator_name.toLowerCase() === vName.toLowerCase())
-    );
+    const vName = selectedVendor.company_name || selectedVendor.name || 'HB Evergreen Adventure';
+    const landmark = toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
 
-    const isVendorInactive = v.status === 'INACTIVE' || 
-                             v.status === 'Inactive' || 
-                             v.status === 'OFF' || 
-                             v.status === 'Disabled' || 
-                             v.status === 'MONSOON_OFF' || 
-                             v.is_active === false || 
-                             v.is_closed === true;
+    const isOffline = selectedVendor.status === 'INACTIVE' || 
+                      selectedVendor.status === 'OFF' || 
+                      selectedVendor.status === 'MONSOON_OFF' || 
+                      selectedVendor.is_active === false || 
+                      selectedVendor.is_closed === true;
 
-    // Check if there are rafting packages in DB, and whether ANY of them is active
-    const hasActiveRaftingItems = vendorRaftingItems.length === 0 || vendorRaftingItems.some(r => 
-      r.is_active !== false && 
-      r.is_closed !== true && 
-      r.coming_soon !== true && 
-      (!r.status || r.status.toLowerCase() === 'active')
-    );
-
-    const isOffline = isVendorInactive || !hasActiveRaftingItems;
-
-    let offlineReason = 'UNAVAILABLE';
-    if (v.offline_reason || v.status_reason) {
-      offlineReason = v.offline_reason || v.status_reason;
-    } else if (v.status === 'MONSOON_OFF' || (v.status && v.status.toLowerCase().includes('monsoon'))) {
-      offlineReason = 'MONSOON PAUSE';
+    let offlineReason = 'AVAILABLE';
+    if (selectedVendor.offline_reason || selectedVendor.status_reason) {
+      offlineReason = selectedVendor.offline_reason || selectedVendor.status_reason;
     } else if (isOffline) {
-      offlineReason = 'MONSOON / BACKEND PAUSE';
+      offlineReason = 'MONSOON PAUSE';
     }
 
-    const vendorImages = getRealVendorImages(
-      v, 
-      vendorRaftingItems, 
-      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
-    );
-    const primaryImg = vendorImages[0] || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600';
-    const rating = getRealVendorRating(v);
-
-    const selectedStretchId = raftingStretchMap[v.id] || '16km';
-    const stretchObj = DEFAULT_RAFTING_STRETCHES.find(s => s.id === selectedStretchId) || DEFAULT_RAFTING_STRETCHES[1];
+    const vendorImages = getRealVendorImages(selectedVendor, [], stretchDef.image);
+    const primaryImg = vendorImages[0] || stretchDef.image;
 
     return {
-      cartKey: `v-rafting-${v.id}-${stretchObj.id}`,
-      id: v.id,
+      cartKey: `rafting-stretch-${stretchDef.id}-v-${selectedVendor.id || 'default'}`,
+      id: selectedVendor.id || stretchDef.id,
       category: 'Rafting',
-      name: stretchObj.name,
+      categoryBadge: 'RAFTING',
+      name: stretchDef.name,
       vendorName: vName,
-      price: stretchObj.price,
+      price: stretchDef.price,
+      vendorRate: stretchDef.vendorRate,
+      fixedAdvance: stretchDef.fixedAdvance,
       landmarkLocation: landmark,
-      fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
+      fullAddress: selectedVendor.vendor_address || selectedVendor.address || `${landmark}, Rishikesh`,
       image: primaryImg,
       images: vendorImages,
-      rating,
-      description: `${vName} offers certified river rafting guides, safety life jackets, helmet & cliff jumping in Rishikesh.`,
+      rating: getRealVendorRating(selectedVendor),
+      description: stretchDef.description,
       isOffline,
       offlineReason,
-      isRaftingVendor: true,
-      stretches: DEFAULT_RAFTING_STRETCHES,
-      currentStretchId: stretchObj.id
+      isRaftingStretchCard: true,
+      stretchId: stretchDef.id,
+      selectedVendorId: selectedVendor.id,
+      availableVendors: displayRaftingVendors
     };
   });
 
-  // 3. Build Vendor Scooty / Bike Rental Cards from Real Database Vendors & Bike Items
+  // 3. Build Super Clear Vehicle-Model-First Scooty & Bike Cards
   const bikeVendorsMap = new Map();
-
   effectiveVendors.forEach(v => {
     const cat = (v.service_category || v.category || '').toLowerCase();
     if (cat.includes('bike') || cat.includes('scooty') || cat.includes('multi-service') || cat.includes('all services') || !cat) {
@@ -557,150 +565,104 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     }
   });
 
-  dbBikes.forEach(bItem => {
-    if (bItem.vendor_id && !bikeVendorsMap.has(String(bItem.vendor_id))) {
-      const foundV = dbVendors.find(v => String(v.id) === String(bItem.vendor_id));
-      if (foundV) {
-        bikeVendorsMap.set(String(foundV.id), foundV);
-      } else {
-        const vName = bItem.vendor_name || bItem.operator_name || `Bike Rental ${bItem.vendor_id}`;
-        bikeVendorsMap.set(String(bItem.vendor_id), {
-          id: bItem.vendor_id,
-          name: vName,
-          company_name: vName,
-          landmark: bItem.landmark || bItem.address || 'Janki Setu',
-          star_rating: bItem.rating || 4.5,
-          status: bItem.is_active === false ? 'INACTIVE' : (bItem.status || 'ACTIVE'),
-          shop_image: bItem.images ? parseImageUrl(bItem.images) : null
-        });
-      }
+  const bikeVendorsList = Array.from(bikeVendorsMap.values());
+  const activeBikeVendors = bikeVendorsList.filter(v => 
+    v.status !== 'INACTIVE' && v.status !== 'OFF' && v.is_active !== false && v.is_closed !== true
+  );
+  const displayBikeVendors = activeBikeVendors.length > 0 ? activeBikeVendors : bikeVendorsList;
+
+  const VEHICLE_MODEL_DEFINITIONS = [
+    {
+      id: 'activa6g',
+      name: 'Honda Activa 6G (110cc)',
+      price: 700,
+      fixedAdvance: 200,
+      vendorRate: 500,
+      badge: 'SCOOTY',
+      image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
+      description: 'Reliable, gearless automatic scooter with helmet & quick verification. Excellent mileage for Rishikesh sightseeing.'
+    },
+    {
+      id: 'access125',
+      name: 'Suzuki Access 125 (Power Scooter)',
+      price: 750,
+      fixedAdvance: 200,
+      vendorRate: 550,
+      badge: 'SCOOTY',
+      image: '/scooty-rent.jpg',
+      description: 'Powerful 125cc scooter for smooth double riding & hill climbs to Neelkanth Mahadev temple.'
+    },
+    {
+      id: 'jupiter125',
+      name: 'TVS Jupiter 125',
+      price: 700,
+      fixedAdvance: 200,
+      vendorRate: 500,
+      badge: 'SCOOTY',
+      image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=600',
+      description: 'Comfortable wide seat scooter with large boot space & external fuel filling for effortless Rishikesh rides.'
+    },
+    {
+      id: 'classic350',
+      name: 'Royal Enfield Classic 350',
+      price: 1200,
+      fixedAdvance: 300,
+      vendorRate: 900,
+      badge: 'BIKE',
+      image: '/classic-rent.png',
+      description: 'Iconic 350cc cruiser motorcycle for roaring mountain road trips to Devprayag & Tehri Lake.'
+    },
+    {
+      id: 'himalayan450',
+      name: 'Royal Enfield Himalayan 450',
+      price: 1600,
+      fixedAdvance: 400,
+      vendorRate: 1200,
+      badge: 'BIKE',
+      image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=600',
+      description: 'Premium adventure touring motorcycle designed for extreme mountain terrain, off-road & long Himalayan tours.'
     }
-  });
-  const getBikeCustomerDetails = (b, v) => {
-    if (!b) return { finalPrice: 700, fixedAdvance: 200, vendorRate: 500 };
-    const p = Number(b.price || 0);
-    const net = Number(b.net_price || 0);
-    
-    // Fixed advance explicit check
-    let fixAdv = 0;
-    if (b.fixed_advance_amount !== null && b.fixed_advance_amount !== undefined && b.fixed_advance_amount !== '') {
-      fixAdv = Number(b.fixed_advance_amount);
-    } else if (v && (v.fixed_advance_amount !== null && v.fixed_advance_amount !== undefined && v.fixed_advance_amount !== '')) {
-      fixAdv = Number(v.fixed_advance_amount);
-    }
+  ];
 
-    // Profit / Commission amount check
-    let comm = 0;
-    if (b.commission_amount !== null && b.commission_amount !== undefined && b.commission_amount !== '') {
-      comm = Number(b.commission_amount);
-    } else if (b.commission_percentage && net > 0) {
-      comm = Math.round((net * Number(b.commission_percentage)) / 100);
-    } else if (v && (v.commission_amount !== null && v.commission_amount !== undefined && v.commission_amount !== '')) {
-      comm = Number(v.commission_amount);
-    } else {
-      comm = 200; // standard default profit per scooty
-    }
+  const dbVendorBikeCards = VEHICLE_MODEL_DEFINITIONS.map(vehDef => {
+    const selectedVendorId = bikeVendorSelectionMap[vehDef.id] || (displayBikeVendors[0]?.id || 'v-bike-default');
+    const selectedVendor = displayBikeVendors.find(v => String(v.id) === String(selectedVendorId)) || displayBikeVendors[0] || {};
 
-    const calculatedTotal = net > 0 ? (net + comm) : (p > 0 && p !== net ? p : p + comm);
-    const finalPrice = Math.max(p, calculatedTotal, 700);
-    const advanceVal = fixAdv > 0 ? fixAdv : (comm > 0 ? comm : Math.round(finalPrice * 0.1));
-    const vRate = net > 0 ? net : Math.max(0, finalPrice - comm);
+    const vName = selectedVendor.company_name || selectedVendor.name || 'Hike N Ride';
+    const landmark = toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
 
-    return { finalPrice, fixedAdvance: advanceVal, vendorRate: vRate };
-  };
+    const isOffline = selectedVendor.status === 'INACTIVE' || 
+                      selectedVendor.status === 'OFF' || 
+                      selectedVendor.is_active === false || 
+                      selectedVendor.is_closed === true;
 
-  const dbVendorBikeCards = Array.from(bikeVendorsMap.values()).map(v => {
-    const vName = v.company_name || v.name || 'Rishikesh Bike Rental';
-    const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
+    const offlineReason = selectedVendor.offline_reason || selectedVendor.status_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
 
-    const vendorBikeItems = dbBikes.filter(b => 
-      String(b.vendor_id) === String(v.id) || 
-      (b.vendor_name && b.vendor_name.toLowerCase() === vName.toLowerCase()) ||
-      (b.operator_name && b.operator_name.toLowerCase() === vName.toLowerCase())
-    );
-
-    // Build real vehicles list for this vendor from DB (calculating vendor rate + profit commission)
-    let vendorVehicles = vendorBikeItems.map(b => {
-      const details = getBikeCustomerDetails(b, v);
-      return {
-        id: String(b.id),
-        name: b.name,
-        price: details.finalPrice,
-        fixedAdvance: details.fixedAdvance,
-        vendorRate: details.vendorRate,
-        is_active: b.is_active !== false && b.is_closed !== true && b.status !== 'INACTIVE'
-      };
-    });
-
-    if (vendorVehicles.length === 0) {
-      const comm = v.commission_amount !== null && v.commission_amount !== undefined 
-        ? Number(v.commission_amount) 
-        : 200;
-      const fixAdv = v.fixed_advance_amount !== null && v.fixed_advance_amount !== undefined && v.fixed_advance_amount !== ''
-        ? Number(v.fixed_advance_amount)
-        : comm;
-      const activaPrice = 500 + comm; // e.g. 500 vendor rate + 200 profit = 700
-
-      vendorVehicles = [
-        { id: 'activa6g', name: 'Honda Activa 6G', price: activaPrice, fixedAdvance: fixAdv, vendorRate: 500, is_active: true },
-        { id: 'jupiter125', name: 'TVS Jupiter 125', price: activaPrice + 50, fixedAdvance: fixAdv, vendorRate: 550, is_active: true },
-        { id: 'burgman125', name: 'Suzuki Burgman 125', price: activaPrice + 150, fixedAdvance: fixAdv, vendorRate: 650, is_active: true },
-        { id: 'classic350', name: 'Royal Enfield Classic 350', price: 1200, fixedAdvance: 300, vendorRate: 900, is_active: true },
-        { id: 'himalayan', name: 'Royal Enfield Himalayan 450', price: 1600, fixedAdvance: 400, vendorRate: 1200, is_active: true }
-      ];
-    }
-
-    const isVendorInactive = v.status === 'INACTIVE' || 
-                             v.status === 'Inactive' || 
-                             v.status === 'OFF' || 
-                             v.status === 'Disabled' || 
-                             v.is_active === false || 
-                             v.is_closed === true;
-
-    const hasActiveBikeItems = vendorBikeItems.length === 0 || vendorBikeItems.some(b => 
-      b.is_active !== false && 
-      b.is_closed !== true && 
-      b.coming_soon !== true && 
-      (!b.status || b.status.toLowerCase() === 'active')
-    );
-
-    const isOffline = isVendorInactive || !hasActiveBikeItems;
-    const offlineReason = v.offline_reason || v.status_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
-
-    const vendorImages = getRealVendorImages(
-      v, 
-      vendorBikeItems, 
-      '/classic-rent.png'
-    );
-    const primaryImg = vendorImages[0] || '/classic-rent.png';
-    const rating = getRealVendorRating(v);
-
-    const selectedVehId = bikeVehicleMap[v.id] || vendorVehicles[0].id;
-    const vehicleObj = vendorVehicles.find(veh => String(veh.id) === String(selectedVehId)) || vendorVehicles[0];
-
-    const fullAddr = v.vendor_address || v.address || `${landmark}, Rishikesh`;
+    const vendorImages = getRealVendorImages(selectedVendor, [], vehDef.image);
+    const primaryImg = vendorImages[0] || vehDef.image;
 
     return {
-      cartKey: `v-bike-${v.id}-${vehicleObj.id}`,
-      id: v.id,
+      cartKey: `scooty-veh-${vehDef.id}-v-${selectedVendor.id || 'default'}`,
+      id: selectedVendor.id || vehDef.id,
       category: 'Scooty',
-      name: vehicleObj.name,
+      categoryBadge: vehDef.badge,
+      name: vehDef.name,
       vendorName: vName,
-      price: vehicleObj.price,
-      vendorRate: vehicleObj.vendorRate || (vehicleObj.price - (vehicleObj.fixedAdvance || 200)),
-      fixedAdvance: vehicleObj.fixedAdvance || 200,
+      price: vehDef.price,
+      vendorRate: vehDef.vendorRate,
+      fixedAdvance: vehDef.fixedAdvance,
       landmarkLocation: landmark,
-      fullAddress: fullAddr,
-      mapLink: `https://maps.google.com/?q=${encodeURIComponent(fullAddr)}`,
+      fullAddress: selectedVendor.vendor_address || selectedVendor.address || `${landmark}, Rishikesh`,
       image: primaryImg,
       images: vendorImages,
-      rating,
-      description: `${vName} provides clean, well-serviced scooters & motorbikes with helmet and quick document verification.`,
+      rating: getRealVendorRating(selectedVendor),
+      description: vehDef.description,
       isOffline,
       offlineReason,
-      isBikeVendor: true,
-      vehicles: vendorVehicles,
-      currentVehicleId: vehicleObj.id
+      isBikeModelCard: true,
+      vehicleId: vehDef.id,
+      selectedVendorId: selectedVendor.id,
+      availableVendors: displayBikeVendors
     };
   });
 
@@ -1013,48 +975,62 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                       <span>{item.landmarkLocation}</span>
                     </div>
 
-                    {/* Rafting Vendor Stretch Selector Dropdown */}
-                    {item.isRaftingVendor && item.stretches && (
+                    {/* Rafting Stretch Card Crew Selector Dropdown */}
+                    {item.isRaftingStretchCard && item.availableVendors && item.availableVendors.length > 0 && (
                       <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="pt-1"
+                        className="pt-1 space-y-0.5"
                       >
+                        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                          Select Crew & Location:
+                        </span>
                         <select
-                          value={item.currentStretchId}
+                          value={item.selectedVendorId}
                           onChange={(e) => {
-                            const newStretchId = e.target.value;
-                            setRaftingStretchMap(prev => ({ ...prev, [item.id]: newStretchId }));
+                            const newVendorId = e.target.value;
+                            setRaftingVendorSelectionMap(prev => ({ ...prev, [item.stretchId]: newVendorId }));
                           }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1 text-[10px] font-bold text-slate-900 outline-none cursor-pointer"
                         >
-                          {item.stretches.map(s => (
-                            <option key={s.id} value={s.id}>
-                              {s.name} — ₹{s.price}
-                            </option>
-                          ))}
+                          {item.availableVendors.map(v => {
+                            const vL = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
+                            const vN = v.company_name || v.name;
+                            return (
+                              <option key={v.id} value={v.id}>
+                                {vL} — {vN}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                     )}
 
-                    {/* Bike Vendor Vehicle Model Selector Dropdown */}
-                    {item.isBikeVendor && item.vehicles && (
+                    {/* Bike Model Card Pickup Location Selector Dropdown */}
+                    {item.isBikeModelCard && item.availableVendors && item.availableVendors.length > 0 && (
                       <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="pt-1"
+                        className="pt-1 space-y-0.5"
                       >
+                        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                          Select Pickup Location:
+                        </span>
                         <select
-                          value={item.currentVehicleId}
+                          value={item.selectedVendorId}
                           onChange={(e) => {
-                            const newVehId = e.target.value;
-                            setBikeVehicleMap(prev => ({ ...prev, [item.id]: newVehId }));
+                            const newVendorId = e.target.value;
+                            setBikeVendorSelectionMap(prev => ({ ...prev, [item.vehicleId]: newVendorId }));
                           }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1 text-[10px] font-bold text-slate-900 outline-none cursor-pointer"
                         >
-                          {item.vehicles.map(v => (
-                            <option key={v.id} value={v.id}>
-                              {v.name} — ₹{v.price}/day
-                            </option>
-                          ))}
+                          {item.availableVendors.map(v => {
+                            const vL = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Janki Setu');
+                            const vN = v.company_name || v.name;
+                            return (
+                              <option key={v.id} value={v.id}>
+                                {vL} — {vN}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                     )}
