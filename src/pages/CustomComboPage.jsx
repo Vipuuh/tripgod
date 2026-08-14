@@ -721,17 +721,33 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const vName = v.company_name || v.name || item.vendor_name || item.operator_name || 'Rishikesh Adventure Crew';
     const landmark = toShortLandmark(item.landmark || v.landmark || v.vendor_address || v.address, 'Shivpuri');
 
-    const itemImages = getRealVendorImages(v, [item], 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600');
-    const primaryImg = itemImages[0] || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600';
-
     const actType = (item.activity_type || '').toLowerCase();
     const nameLower = (item.name || '').toLowerCase();
     let badge = 'BUNGEE & OTHER';
-    if (actType.includes('bungee') || nameLower.includes('bungee')) badge = 'BUNGEE';
-    else if (actType.includes('zipline') || nameLower.includes('zip')) badge = 'ZIPLINE';
-    else if (actType.includes('swing') || nameLower.includes('swing')) badge = 'GIANT SWING';
-    else if (actType.includes('paragliding') || nameLower.includes('para')) badge = 'PARAGLIDING';
-    else if (actType.includes('camping') || nameLower.includes('camp')) badge = 'CAMPING';
+    let activityDefaultImg = 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600';
+
+    if (actType.includes('bungee') || nameLower.includes('bungee')) {
+      badge = 'BUNGEE';
+      activityDefaultImg = 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600';
+    } else if (actType.includes('zipline') || nameLower.includes('zip')) {
+      badge = 'ZIPLINE';
+      activityDefaultImg = '/zipline-hero.jpg';
+    } else if (actType.includes('swing') || nameLower.includes('swing')) {
+      badge = 'GIANT SWING';
+      activityDefaultImg = 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600';
+    } else if (actType.includes('paragliding') || nameLower.includes('para')) {
+      badge = 'PARAGLIDING';
+      activityDefaultImg = 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600';
+    } else if (actType.includes('camping') || nameLower.includes('camp')) {
+      badge = 'CAMPING';
+      activityDefaultImg = 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600';
+    }
+
+    const itemImages = getRealVendorImages(v, [item], activityDefaultImg);
+    if (!itemImages.includes(activityDefaultImg)) {
+      itemImages.unshift(activityDefaultImg);
+    }
+    const primaryImg = itemImages[0] || activityDefaultImg;
 
     const displayPrice = Number(item.price || 0);
     const advanceVal = Number(item.fixed_advance_amount || item.advance_amount || Math.round(displayPrice * 0.1) || 300);
@@ -1065,11 +1081,17 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                     </VendorImageCarousel>
                   </div>
 
-                  {/* Card Text Content: Vendor Shop Name First! */}
+                  {/* Card Text Content: Activity / Package Name FIRST as Main Title */}
                   <div className="p-2.5 sm:p-3 space-y-1">
-                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-[#FF5F00] transition line-clamp-1 leading-tight">
-                      {item.vendorName || item.name}
+                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-[#FF5F00] transition line-clamp-1 leading-tight" title={item.name || item.vendorName}>
+                      {item.name || item.vendorName}
                     </h3>
+                    
+                    {item.vendorName && item.vendorName !== item.name && (
+                      <div className="text-[10px] text-slate-500 font-bold line-clamp-1">
+                        by <span className="text-slate-700 font-extrabold">{item.vendorName}</span>
+                      </div>
+                    )}
                     
                     {/* Clean Short Landmark Address */}
                     <div className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
@@ -1219,11 +1241,13 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
             {/* Title & Short Landmark Address */}
             <div>
               <h3 className="text-lg font-black text-slate-900 font-display">
-                {activeDetailItem.vendorName || activeDetailItem.name}
+                {activeDetailItem.name || activeDetailItem.vendorName}
               </h3>
-              <p className="text-xs text-[#FF5F00] font-bold mt-0.5">
-                {activeDetailItem.name}
-              </p>
+              {activeDetailItem.vendorName && activeDetailItem.vendorName !== activeDetailItem.name && (
+                <p className="text-xs text-[#FF5F00] font-bold mt-0.5">
+                  by {activeDetailItem.vendorName}
+                </p>
+              )}
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-1">
                 <MapPin className="w-3.5 h-3.5 text-[#FF5F00]" />
                 {activeDetailItem.fullAddress}
