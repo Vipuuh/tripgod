@@ -291,39 +291,38 @@ export default function VendorPortal({ onNavigateHome, isStandaloneApp = false }
       // Helper: Check if item belongs to this vendor explicitly
       const isItemOwned = (item) => {
         if (!item) return false;
-        return item.vendor_id === vId || (rawVendorId && item.vendor_id === rawVendorId) || item.id === vId;
+        if (isDirect) {
+          return item.id === vId || matchesPhone(item.whatsapp_number) || matchesPhone(item.phone_number) || matchesPhone(item.contact_number);
+        }
+        return item.vendor_id === vId || (rawVendorId && item.vendor_id === rawVendorId) || item.id === vId || matchesPhone(item.whatsapp_number) || matchesPhone(item.phone_number) || matchesPhone(item.contact_number);
       };
 
       // 1. Fetch bikes (Only if vendor category accepts bikes/scooters)
       const { data: bikes } = await supabase.from('bikes').select('*');
       const filteredBikes = !acceptsBikes ? [] : (bikes || []).filter(b => {
-        if (isItemOwned(b)) return true;
-        if (isDirect) return matchesPhone(b.whatsapp_number);
-        return (!b.vendor_id || b.vendor_id === vId) && matchesPhone(b.whatsapp_number);
+        if (isDirect) return b.id === vId || matchesPhone(b.whatsapp_number) || matchesPhone(b.phone_number);
+        return isItemOwned(b);
       });
 
       // 2. Fetch rafting (Only if vendor category accepts rafting/adventures)
       const { data: rafting } = await supabase.from('rafting').select('*');
       const filteredRafting = !acceptsRafting ? [] : (rafting || []).filter(r => {
-        if (isItemOwned(r)) return true;
-        if (isDirect) return matchesPhone(r.whatsapp_number);
-        return (!r.vendor_id || r.vendor_id === vId) && matchesPhone(r.whatsapp_number);
+        if (isDirect) return r.id === vId || matchesPhone(r.whatsapp_number) || matchesPhone(r.phone_number);
+        return isItemOwned(r);
       });
 
       // 3. Fetch hotels (Strict: ONLY if vendor category explicitly includes Hotel/Resort/Stay/Cottage)
       const { data: hotels } = await supabase.from('hotels').select('*');
       const filteredHotels = !acceptsHotels ? [] : (hotels || []).filter(h => {
-        if (isItemOwned(h)) return true;
-        if (isDirect) return (matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
-        return (!h.vendor_id || h.vendor_id === vId) && (matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number));
+        if (isDirect) return h.id === vId || matchesPhone(h.whatsapp_number) || matchesPhone(h.phone_number);
+        return isItemOwned(h);
       });
 
       // 4. Fetch tours (Strict: ONLY if vendor category explicitly includes Tour/Package/Trek)
       const { data: tours } = await supabase.from('tours').select('*');
       const filteredTours = !acceptsTours ? [] : (tours || []).filter(t => {
-        if (isItemOwned(t)) return true;
-        if (isDirect) return (matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
-        return (!t.vendor_id || t.vendor_id === vId) && (matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number));
+        if (isDirect) return t.id === vId || matchesPhone(t.contact_number) || matchesPhone(t.whatsapp_number);
+        return isItemOwned(t);
       });
 
       // Combine items with category tag

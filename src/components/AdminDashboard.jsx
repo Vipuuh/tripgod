@@ -3827,6 +3827,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         description: formData.description || '',
         price: Number(formData.price),
         whatsapp_number: formData.whatsapp_number || null,
+        phone_number: formData.whatsapp_number ? `+91${formData.whatsapp_number.replace(/\D/g, '').slice(-10)}` : null,
         images: formData.images || [],
         cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
         is_closed: !!formData.is_closed,
