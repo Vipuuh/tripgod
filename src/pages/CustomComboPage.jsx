@@ -465,6 +465,37 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   );
   const displayRaftingVendors = activeRaftingVendors.length > 0 ? activeRaftingVendors : raftingVendorsList;
 
+  // Helper to extract real uploaded rafting image from backend dbRafting packages
+  const getRaftingStretchImage = (stretchId, defaultFallbackImg) => {
+    const match = dbRafting.find(r => {
+      const act = (r.activity_type || 'rafting').toLowerCase();
+      if (act !== 'rafting' && act !== '') return false;
+      const rName = (r.name || '').toLowerCase();
+      const dist = String(r.distance_km || '');
+      if (stretchId === '12km') return rName.includes('12') || dist === '12';
+      if (stretchId === '16km') return rName.includes('16') || rName.includes('14') || rName.includes('shivpuri') || dist === '16' || dist === '14';
+      if (stretchId === '24km') return rName.includes('24') || rName.includes('18') || rName.includes('marine') || dist === '24' || dist === '18';
+      if (stretchId === '36km') return rName.includes('36') || rName.includes('kaudiyala') || dist === '36';
+      return false;
+    });
+
+    if (match) {
+      const img = parseImageUrl(match.images) || parseImageUrl(match.image) || parseImageUrl(match.shop_image);
+      if (img) return img;
+    }
+
+    const anyRafting = dbRafting.find(r => {
+      const act = (r.activity_type || 'rafting').toLowerCase();
+      return (act === 'rafting' || act === '') && (r.images || r.image);
+    });
+    if (anyRafting) {
+      const img = parseImageUrl(anyRafting.images) || parseImageUrl(anyRafting.image);
+      if (img) return img;
+    }
+
+    return defaultFallbackImg;
+  };
+
   const RAFTING_STRETCH_DEFINITIONS = [
     {
       id: '16km',
@@ -473,7 +504,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       fixedAdvance: 200,
       vendorRate: 699,
       badge: 'RAFTING',
-      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      image: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
       description: 'Experience 16 KM river rafting from Shivpuri to Nim Beach with Grade III rapids, Roller Coaster, Golf Course & cliff jump.'
     },
     {
@@ -483,7 +514,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       fixedAdvance: 300,
       vendorRate: 1199,
       badge: 'RAFTING',
-      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600',
       description: 'Thrilling 24 KM long stretch from Marine Drive featuring 16 major Grade III/IV rapids, bodysurfing & cliff jumping.'
     },
     {
@@ -493,7 +524,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       fixedAdvance: 150,
       vendorRate: 449,
       badge: 'RAFTING',
-      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      image: 'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?q=80&w=600',
       description: 'Gentle 12 KM rafting stretch from Brahmpuri suitable for families, first-timers & senior citizens.'
     },
     {
@@ -503,7 +534,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       fixedAdvance: 500,
       vendorRate: 1999,
       badge: 'RAFTING',
-      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600',
       description: 'Ultimate 36 KM extreme expedition from Kaudiyala featuring Grade IV+ The Wall rapid for experienced rafters.'
     }
   ];
@@ -514,6 +545,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
     const vName = selectedVendor.company_name || selectedVendor.name || 'HB Evergreen Adventure';
     const landmark = toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
+
+    // Get REAL uploaded rafting photo from backend DB!
+    const realRaftImg = getRaftingStretchImage(stretchDef.id, stretchDef.image);
 
     const isOffline = selectedVendor.status === 'INACTIVE' || 
                       selectedVendor.status === 'OFF' || 
@@ -528,10 +562,9 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       offlineReason = 'MONSOON PAUSE';
     }
 
-    const vendorImages = getRealVendorImages(selectedVendor, [], stretchDef.image);
-    // Prioritize Rafting Action photo FIRST over storefront shop photos
-    const cardImages = [stretchDef.image, ...vendorImages.filter(img => img !== stretchDef.image)];
-    const primaryImg = stretchDef.image;
+    const vendorImages = getRealVendorImages(selectedVendor, [], realRaftImg);
+    // Prioritize REAL Rafting boat photo FIRST over storefront shop photos
+    const cardImages = [realRaftImg, ...vendorImages.filter(img => img !== realRaftImg)];
 
     return {
       cartKey: `rafting-stretch-${stretchDef.id}-v-${selectedVendor.id || 'default'}`,
@@ -545,7 +578,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
       fixedAdvance: stretchDef.fixedAdvance,
       landmarkLocation: landmark,
       fullAddress: selectedVendor.vendor_address || selectedVendor.address || `${landmark}, Rishikesh`,
-      image: primaryImg,
+      image: realRaftImg,
       images: cardImages,
       rating: getRealVendorRating(selectedVendor),
       description: stretchDef.description,
