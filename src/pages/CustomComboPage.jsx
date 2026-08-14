@@ -580,35 +580,6 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
 
     let availableVendorsForStretch = Array.from(vendorMapForStretch.values());
 
-    // Check if THIS specific stretch package has any active listing in dbRafting
-    const isStretchExplicitlyClosed = stretchDbRaftingItems.length > 0 && stretchDbRaftingItems.every(r => 
-      r.is_closed === true || 
-      r.is_closed === 1 || 
-      r.is_closed === 'true' || 
-      r.is_active === false || 
-      r.status === 'CLOSED' || 
-      r.status === 'INACTIVE' || 
-      r.status === 'OFF'
-    );
-
-    // Selected vendor status check
-    const isSelectedVendorOffline = selectedVendorData.fullVendorObj?.status === 'INACTIVE' || 
-                                    selectedVendorData.fullVendorObj?.status === 'OFF' || 
-                                    selectedVendorData.fullVendorObj?.status === 'MONSOON_OFF' || 
-                                    selectedVendorData.fullVendorObj?.is_active === false || 
-                                    selectedVendorData.fullVendorObj?.is_closed === true;
-
-    // Card is offline ONLY if this stretch is explicitly closed OR if selected vendor is offline
-    const isOffline = isStretchExplicitlyClosed || isSelectedVendorOffline;
-
-    const closedPkg = stretchDbRaftingItems.find(r => r.closure_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.offline_reason);
-    let offlineReason = 'TEMPORARILY CLOSED';
-    if (closedPkg && (closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason)) {
-      offlineReason = closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason;
-    } else if (isOffline) {
-      offlineReason = 'TEMPORARILY CLOSED';
-    }
-
     if (availableVendorsForStretch.length === 0) {
       availableVendorsForStretch = displayRaftingVendors.map(v => ({
         id: v.id,
@@ -625,6 +596,35 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     const selectedVendorId = raftingVendorSelectionMap[stretchDef.id] || (availableVendorsForStretch[0]?.id || 'v-default');
     const selectedVendorData = availableVendorsForStretch.find(v => String(v.id) === String(selectedVendorId)) || availableVendorsForStretch[0] || {};
     const selectedVendor = selectedVendorData.fullVendorObj || displayRaftingVendors[0] || {};
+
+    // Check if THIS specific stretch package has any active listing in dbRafting
+    const isStretchExplicitlyClosed = stretchDbRaftingItems.length > 0 && stretchDbRaftingItems.every(r => 
+      r.is_closed === true || 
+      r.is_closed === 1 || 
+      r.is_closed === 'true' || 
+      r.is_active === false || 
+      r.status === 'CLOSED' || 
+      r.status === 'INACTIVE' || 
+      r.status === 'OFF'
+    );
+
+    // Selected vendor status check
+    const isSelectedVendorOffline = selectedVendor.status === 'INACTIVE' || 
+                                    selectedVendor.status === 'OFF' || 
+                                    selectedVendor.status === 'MONSOON_OFF' || 
+                                    selectedVendor.is_active === false || 
+                                    selectedVendor.is_closed === true;
+
+    // Card is offline ONLY if this stretch is explicitly closed OR if selected vendor is offline
+    const isOffline = isStretchExplicitlyClosed || isSelectedVendorOffline;
+
+    const closedPkg = stretchDbRaftingItems.find(r => r.closure_reason || r.offline_reason || r.status_reason) || dbRafting.find(r => r.closure_reason || r.offline_reason);
+    let offlineReason = 'TEMPORARILY CLOSED';
+    if (closedPkg && (closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason)) {
+      offlineReason = closedPkg.closure_reason || closedPkg.offline_reason || closedPkg.status_reason;
+    } else if (isOffline) {
+      offlineReason = 'TEMPORARILY CLOSED';
+    }
 
     const vName = selectedVendorData.company_name || selectedVendor.company_name || selectedVendor.name || 'HB Evergreen Adventure';
     const landmark = selectedVendorData.landmark || toShortLandmark(selectedVendor.landmark || selectedVendor.vendor_address || selectedVendor.address, 'Janki Setu');
