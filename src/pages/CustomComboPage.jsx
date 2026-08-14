@@ -761,7 +761,8 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   const dbAdventureItems = dbRafting.filter(r => {
     const act = (r.activity_type || '').toLowerCase();
     const nameLower = (r.name || '').toLowerCase();
-    return ['bungee', 'zipline', 'swing', 'paragliding', 'camping'].includes(act) ||
+    return (act && act !== 'rafting') ||
+           ['bungee', 'zipline', 'swing', 'paragliding', 'camping'].includes(act) ||
            nameLower.includes('bungee') ||
            nameLower.includes('zipline') ||
            nameLower.includes('swing') ||
