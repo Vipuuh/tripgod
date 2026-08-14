@@ -704,63 +704,207 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
     };
   });
 
-  // 4. Build Vendor Camping Cards from Real Database Vendors
-  const campingVendorsMap = new Map();
-
-  effectiveVendors.forEach(v => {
-    const cat = (v.service_category || v.category || '').toLowerCase();
-    if (cat.includes('camping')) {
-      campingVendorsMap.set(String(v.id), v);
-    }
+  // 4. Build Vendor Bungee, Zipline, Giant Swing, Camping & Adventure Cards from DB & Fallbacks
+  const dbAdventureItems = dbRafting.filter(r => {
+    const act = (r.activity_type || '').toLowerCase();
+    const nameLower = (r.name || '').toLowerCase();
+    return ['bungee', 'zipline', 'swing', 'paragliding', 'camping'].includes(act) ||
+           nameLower.includes('bungee') ||
+           nameLower.includes('zipline') ||
+           nameLower.includes('swing') ||
+           nameLower.includes('paragliding') ||
+           nameLower.includes('camping');
   });
 
-  const dbVendorCampingCards = Array.from(campingVendorsMap.values()).map(v => {
-    const isOffline = v.status === 'INACTIVE' || 
-                      v.status === 'Inactive' || 
-                      v.status === 'OFF' || 
-                      v.status === 'Disabled' || 
-                      v.is_active === false || 
-                      v.is_closed === true;
-    const offlineReason = v.offline_reason || v.status_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
-    const vName = v.company_name || v.name || 'Shivpuri Campsite';
-    const landmark = toShortLandmark(v.landmark || v.vendor_address || v.address, 'Shivpuri');
+  const dbVendorBungeeCards = dbAdventureItems.map(item => {
+    const v = dbVendors.find(vend => String(vend.id) === String(item.vendor_id)) || {};
+    const vName = v.company_name || v.name || item.vendor_name || item.operator_name || 'Rishikesh Adventure Crew';
+    const landmark = toShortLandmark(item.landmark || v.landmark || v.vendor_address || v.address, 'Shivpuri');
 
-    const vendorImages = getRealVendorImages(
-      v, 
-      [], 
-      'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600'
-    );
-    const primaryImg = vendorImages[0] || 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600';
-    const rating = getRealVendorRating(v);
+    const itemImages = getRealVendorImages(v, [item], 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600');
+    const primaryImg = itemImages[0] || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600';
+
+    const actType = (item.activity_type || '').toLowerCase();
+    const nameLower = (item.name || '').toLowerCase();
+    let badge = 'BUNGEE & OTHER';
+    if (actType.includes('bungee') || nameLower.includes('bungee')) badge = 'BUNGEE';
+    else if (actType.includes('zipline') || nameLower.includes('zip')) badge = 'ZIPLINE';
+    else if (actType.includes('swing') || nameLower.includes('swing')) badge = 'GIANT SWING';
+    else if (actType.includes('paragliding') || nameLower.includes('para')) badge = 'PARAGLIDING';
+    else if (actType.includes('camping') || nameLower.includes('camp')) badge = 'CAMPING';
+
+    const displayPrice = Number(item.price || 0);
+    const advanceVal = Number(item.fixed_advance_amount || item.advance_amount || Math.round(displayPrice * 0.1) || 300);
+    const vendorRateVal = Number(item.vendor_rate || item.net_price || Math.max(0, displayPrice - advanceVal));
+
+    const isOffline = item.is_active === false || item.is_closed === true || v.status === 'INACTIVE' || v.is_active === false;
+    const offlineReason = item.offline_reason || v.offline_reason || (isOffline ? 'OFFLINE IN BACKEND' : 'AVAILABLE');
 
     return {
-      cartKey: `v-camping-${v.id}`,
-      id: v.id,
-      category: 'Camping',
-      name: 'Riverside Camping Stay',
+      cartKey: `v-bungee-extra-${item.id}`,
+      id: item.id,
+      category: 'Bungee & Other',
+      categoryBadge: badge,
+      name: item.name,
       vendorName: vName,
-      price: v.price ? Number(v.price) : 999,
+      price: displayPrice,
+      vendorRate: vendorRateVal,
+      fixedAdvance: advanceVal,
       landmarkLocation: landmark,
       fullAddress: v.vendor_address || v.address || `${landmark}, Rishikesh`,
       image: primaryImg,
-      images: vendorImages,
-      rating,
-      description: `${vName} offers riverside Swiss tent stays with bonfire, evening snacks, live music & buffet dinner.`,
+      images: itemImages,
+      rating: getRealVendorRating(v),
+      description: item.description || `${vName} offers safety-certified ${badge.toLowerCase()} adventure experience in Rishikesh.`,
       isOffline,
       offlineReason
     };
+  });
+
+  // Fallback high-converting activity cards (Bungee, Zipline, Giant Swing, Paragliding, Camping)
+  const DEFAULT_BUNGEE_OTHER_CARDS = [
+    {
+      cartKey: 'fallback-bungee-117m',
+      id: 'fb-bungee-117m',
+      category: 'Bungee & Other',
+      categoryBadge: 'BUNGEE',
+      name: '117M Bungee Jumping Rishikesh',
+      vendorName: 'Rishikesh Bungee Jump Masters',
+      price: 3550,
+      vendorRate: 3050,
+      fixedAdvance: 500,
+      landmarkLocation: '📍 Shivpuri',
+      fullAddress: 'Shivpuri Jump Zone, Rishikesh',
+      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      images: [
+        'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+        'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=600'
+      ],
+      rating: '4.9',
+      description: 'India\'s highest 117M bungee jump platform in Shivpuri with triple-redundant safety harness & certified Jump Masters.',
+      isOffline: false,
+      offlineReason: 'AVAILABLE'
+    },
+    {
+      cartKey: 'fallback-zipline-ganga',
+      id: 'fb-zipline-ganga',
+      category: 'Bungee & Other',
+      categoryBadge: 'ZIPLINE',
+      name: '750M Ganga Zipline Crossing',
+      vendorName: 'Ganga Zip Adventures',
+      price: 1800,
+      vendorRate: 1500,
+      fixedAdvance: 300,
+      landmarkLocation: '📍 Shivpuri',
+      fullAddress: 'Shivpuri Ganga Zipline Deck, Rishikesh',
+      image: '/zipline-hero.jpg',
+      images: [
+        '/zipline-hero.jpg',
+        'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
+      ],
+      rating: '4.8',
+      description: 'Soar 750 metres suspended across the roaring rapids of River Ganga on dual steel zip lines.',
+      isOffline: false,
+      offlineReason: 'AVAILABLE'
+    },
+    {
+      cartKey: 'fallback-giant-swing',
+      id: 'fb-giant-swing',
+      category: 'Bungee & Other',
+      categoryBadge: 'GIANT SWING',
+      name: '117M Giant Swing (Solo / Couple)',
+      vendorName: 'Shivpuri Swing Tower',
+      price: 3550,
+      vendorRate: 3050,
+      fixedAdvance: 500,
+      landmarkLocation: '📍 Shivpuri',
+      fullAddress: 'Shivpuri Swing Zone, Rishikesh',
+      image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600',
+      images: [
+        'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=600'
+      ],
+      rating: '4.8',
+      description: 'Feel the extreme freefall pendulum swing over the valley & Ganges with certified instructors.',
+      isOffline: false,
+      offlineReason: 'AVAILABLE'
+    },
+    {
+      cartKey: 'fallback-paragliding',
+      id: 'fb-paragliding',
+      category: 'Bungee & Other',
+      categoryBadge: 'PARAGLIDING',
+      name: 'Paragliding 15-20 Min Tandem Flight',
+      vendorName: 'Air Hawk Paragliding',
+      price: 3200,
+      vendorRate: 2800,
+      fixedAdvance: 400,
+      landmarkLocation: '📍 Mazum / Shivpuri',
+      fullAddress: 'Mazum Takeoff Point, Rishikesh',
+      image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600',
+      images: [
+        'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600'
+      ],
+      rating: '4.7',
+      description: 'Glide gracefully over Shivalik hills and Ganges with experienced tandem pilots.',
+      isOffline: false,
+      offlineReason: 'AVAILABLE'
+    },
+    {
+      cartKey: 'fallback-camping-stay',
+      id: 'fb-camping-stay',
+      category: 'Bungee & Other',
+      categoryBadge: 'CAMPING',
+      name: 'Riverside Luxury Swiss Tent Stay',
+      vendorName: 'Shivpuri Riverbank Camps',
+      price: 999,
+      vendorRate: 799,
+      fixedAdvance: 200,
+      landmarkLocation: '📍 Shivpuri',
+      fullAddress: 'Shivpuri Riverbank, Rishikesh',
+      image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600',
+      images: [
+        'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600'
+      ],
+      rating: '4.6',
+      description: 'Riverside Swiss tent stays with bonfire, evening snacks, live music & buffet dinner.',
+      isOffline: false,
+      offlineReason: 'AVAILABLE'
+    }
+  ];
+
+  // Merge DB cards and default cards (filling any missing activity types)
+  const finalBungeeOtherCards = [...dbVendorBungeeCards];
+  DEFAULT_BUNGEE_OTHER_CARDS.forEach(defCard => {
+    const hasBadgeInDb = dbVendorBungeeCards.some(dbc => dbc.categoryBadge === defCard.categoryBadge);
+    if (!hasBadgeInDb) {
+      finalBungeeOtherCards.push(defCard);
+    }
   });
 
   const allDisplayItems = [
     ...hotelsCardList,
     ...dbVendorRaftingCards,
     ...dbVendorBikeCards,
-    ...dbVendorCampingCards
+    ...finalBungeeOtherCards
   ];
 
   const filteredDisplayItems = activeCategory === 'all' 
     ? allDisplayItems 
-    : allDisplayItems.filter(i => i.category.toLowerCase() === activeCategory.toLowerCase());
+    : allDisplayItems.filter(i => {
+        if (activeCategory === 'bungee' || activeCategory === 'camping' || activeCategory === 'bungee_other') {
+          const catLower = (i.category || '').toLowerCase();
+          const badgeLower = (i.categoryBadge || '').toLowerCase();
+          return catLower.includes('bungee') || 
+                 catLower.includes('other') || 
+                 catLower.includes('camping') || 
+                 badgeLower.includes('bungee') || 
+                 badgeLower.includes('zipline') || 
+                 badgeLower.includes('swing') || 
+                 badgeLower.includes('paragliding') || 
+                 badgeLower.includes('camping');
+        }
+        return i.category.toLowerCase() === activeCategory.toLowerCase();
+      });
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-50 text-slate-900 overflow-y-auto font-sans animate-fadeIn">
@@ -800,7 +944,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
               Add 2+ Services to Cart & <span className="text-[#FF5F00]">Unlock Up To 20% OFF</span>
             </h1>
             <p className="text-xs text-slate-500 font-medium line-clamp-1">
-              Select Hotels, Rafting & Scooty below • Auto-unlock 5%, 10%, 15% OFF • Instant WhatsApp Location Vouchers!
+              Select Hotels, Rafting, Scooty & Bungee below • Auto-unlock 5%, 10%, 15% OFF • Instant WhatsApp Location Vouchers!
             </p>
           </div>
 
@@ -846,7 +990,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
             { id: 'hotel', label: 'Hotels & Stays' },
             { id: 'rafting', label: 'River Rafting' },
             { id: 'scooty', label: 'Scooty Rentals' },
-            { id: 'camping', label: 'Camping & Extras' }
+            { id: 'bungee', label: 'Bungee & Other' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -868,7 +1012,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
             <AlertCircle className="w-8 h-8 text-[#FF5F00] mx-auto opacity-80" />
             <h3 className="text-base font-extrabold text-slate-900">No Listings Available Yet</h3>
             <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto">
-              New vendors for {activeCategory === 'camping' ? 'Camping & Extras' : activeCategory} will appear here dynamically as soon as they onboard.
+              New vendors for {activeCategory === 'bungee' || activeCategory === 'camping' ? 'Bungee & Other' : activeCategory} will appear here dynamically as soon as they onboard.
             </p>
           </div>
         ) : (
@@ -905,7 +1049,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                       showDots={false}
                     >
                       <span className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900/90 text-white backdrop-blur-xs z-10 pointer-events-none">
-                        {item.category}
+                        {item.categoryBadge || item.category}
                       </span>
 
                       {/* Offline Badge vs Real Rating Badge */}
@@ -1061,7 +1205,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
                 showDots={true}
               >
                 <span className="absolute top-3 left-3 text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 rounded-lg z-10 pointer-events-none">
-                  {activeDetailItem.category}
+                  {activeDetailItem.categoryBadge || activeDetailItem.category}
                 </span>
 
                 {activeDetailItem.isOffline && (
