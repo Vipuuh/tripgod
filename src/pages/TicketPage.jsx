@@ -291,12 +291,28 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
         const displayId = cleanCode.startsWith('TG-') ? cleanCode : (getSimpleBookingId(dbBooking.id) || `TG-${cleanCode}`);
         const cat = (dbBooking.service_type || 'rafting').toLowerCase();
 
+        const resolveDefaultSlot = (c) => {
+          if (c.includes('bungee') || c.includes('swing') || c.includes('zipline')) {
+            return 'Flexible (10:00 AM - 06:00 PM)';
+          }
+          if (c.includes('rafting') || c.includes('kayaking')) {
+            return '09:00 AM / 11:00 AM / 02:00 PM';
+          }
+          if (c.includes('bike') || c.includes('bikerent')) {
+            return 'Flexible Pickup (09:00 AM Onwards)';
+          }
+          if (c.includes('hotel') || c.includes('camp')) {
+            return 'Check-in: 12:00 PM';
+          }
+          return 'Flexible Timing';
+        };
+
         const baseItem = {
           id: dbBooking.service_id || '1',
           vendor_id: dbBooking.vendor_id,
           category: cat,
           name: dbBooking.activity_name || (cat.includes('bungee') ? '111M Freestyle Bungee Jump' : cat.includes('hotel') ? 'Abhinandan Homestay' : 'Rishikesh Activity'),
-          slot: dbBooking.travel_date ? `Travel Date: ${dbBooking.travel_date}` : 'Standard Slot',
+          slot: resolveDefaultSlot(cat),
           fullAddress: null,
           mapLink: null,
           operatorPhone: dbBooking.vendors?.whatsapp || dbBooking.vendors?.phone
@@ -697,7 +713,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                       {isBikeRent ? 'RENTAL DURATION' : 'SLOT / TIMING'}
                     </p>
                     <p className="text-xs font-black text-[#FF5F00] mt-1 leading-snug">
-                      {mainItem.slot || 'Flexible (10:00 AM - 06:00 PM)'}
+                      {mainItem.slot && !mainItem.slot.startsWith('Travel Date') ? mainItem.slot : (isBikeRent ? 'Flexible Pickup (09:00 AM Onwards)' : 'Flexible (10:00 AM - 06:00 PM)')}
                     </p>
                   </div>
                 </div>
@@ -720,14 +736,22 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               {fullAddress}
             </p>
 
-            <a
-              href={venueMapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-md shadow-emerald-600/20"
-            >
-              <MapPin className="w-4 h-4" /> Open Venue Map <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-            </a>
+            {venueMapUrl ? (
+              <a
+                href={venueMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (typeof window !== 'undefined' && venueMapUrl) {
+                    window.open(venueMapUrl, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-md shadow-emerald-600/20 active:scale-95 relative z-10"
+              >
+                <MapPin className="w-4 h-4" /> Open Venue Map <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              </a>
+            ) : null}
           </div>
 
           {/* Payment Summary Section */}
