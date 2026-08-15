@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   CheckCircle2, MapPin, Phone, Calendar, Clock, 
   ChevronLeft, Download, Share2, Sparkles, ShieldCheck, 
-  ExternalLink, Building2, Bike, Waves, Compass, AlertCircle, FileText, Info, Users
+  ExternalLink, Building2, Bike, Waves, Compass, AlertCircle, FileText, Info, Users, Zap
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -19,8 +19,8 @@ const formatDisplayPhone = (phone) => {
   return `+${clean}`;
 };
 
-// Helper to extract ONLY genuine hotel/vendor phone numbers saved in DB
-const extractVendorPhones = (item, hotelRow, vendorRow) => {
+// Helper to extract ONLY genuine vendor phone numbers saved in DB (Priority: WhatsApp > Phone)
+const extractVendorPhones = (item, vendorRow, defaultVendorPhone) => {
   const rawList = [];
   const addVal = (val) => {
     if (!val) return;
@@ -28,13 +28,13 @@ const extractVendorPhones = (item, hotelRow, vendorRow) => {
     if (str && str !== 'undefined' && str !== 'null' && str !== 'N/A') rawList.push(str);
   };
 
-  // 1. Hotel DB record specific numbers (Highest Priority)
-  addVal(hotelRow?.whatsapp_number || hotelRow?.phone_number);
+  // 1. Explicit item / vendor WhatsApp number
+  addVal(item?.whatsapp_number || item?.whatsapp || item?.operatorPhone || item?.phone_number || item?.phone);
   
-  // 2. Item level specific numbers (Only if hotelRow not provided)
-  if (rawList.length === 0) {
-    addVal(item?.whatsapp_number || item?.phone_number || item?.operatorPhone || item?.phone);
-  }
+  // 2. Vendor DB record specific numbers
+  addVal(vendorRow?.whatsapp || vendorRow?.phone || vendorRow?.secondary_phone);
+
+  if (defaultVendorPhone) addVal(defaultVendorPhone);
 
   const cleanPhones = [];
   rawList.forEach(raw => {
@@ -46,8 +46,7 @@ const extractVendorPhones = (item, hotelRow, vendorRow) => {
     });
   });
 
-  // Strict fallback to exact hotel WhatsApp number if empty
-  return cleanPhones.length > 0 ? cleanPhones : ['9837371137'];
+  return cleanPhones;
 };
 
 // Helper to format date into "16 AUG 2026"
@@ -132,53 +131,90 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
         return `TG-${String(Math.abs(hash)).slice(-6)}`;
       };
 
-      // Helper to enrich hotel data directly from Supabase hotels table
-      const enrichWithHotelInfo = async (baseItem, serviceId) => {
-        let name = baseItem.name;
-        let fullAddress = baseItem.fullAddress || baseItem.address;
-        let mapLink = baseItem.mapLink || baseItem.google_map_link;
-        let hotelPhones = [];
+      // Category-specific default address resolver (Zero hardcoded leakage!)
+      const resolveCategoryAddress = (cat, name) => {
+        const c = (cat || '').toLowerCase();
+        if (c.includes('bungee') || c.includes('swing') || c.includes('zipline')) {
+          return 'Himalayan Bungy, behind filling station, Shivpuri, Rishikesh, Uttarakhand 249192';
+        }
+        if (c.includes('rafting') || c.includes('kayaking')) {
+          return 'Shivpuri Rafting Office / Pickup Point, Rishikesh, Uttarakhand';
+        }
+        if (c.includes('bike') || c.includes('bikerent')) {
+          return 'Rishikesh Bike Rental Garage Depot, Rishikesh, Uttarakhand';
+        }
+        if (c.includes('camp')) {
+          return 'Shivpuri Riverside Camping Bank, Rishikesh, Uttarakhand';
+        }
+        if (c.includes('hotel')) {
+          return 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137';
+        }
+        return `${name || 'Activity Venue'}, Rishikesh, Uttarakhand`;
+      };
+
+      // Enrich vendor & hotel info from Supabase DB dynamically
+      const enrichItemWithVendorDB = async (item) => {
+        const cat = (item.category || '').toLowerCase();
+        let name = item.name;
+        let fullAddress = item.fullAddress || item.address;
+        let mapLink = item.mapLink || item.google_map_link;
+        let vendorPhones = [];
 
         if (supabase) {
           try {
-            let hRow = null;
-            if (serviceId && serviceId !== '00000000-0000-0000-0000-000000000000') {
-              const { data } = await supabase.from('hotels').select('*').eq('id', serviceId).maybeSingle();
-              hRow = data;
+            if (cat.includes('hotel') && item.id && item.id !== '1' && item.id !== '00000000-0000-0000-0000-000000000000') {
+              const { data: hRow } = await supabase.from('hotels').select('*').eq('id', item.id).maybeSingle();
+              if (hRow) {
+                name = hRow.name || name;
+                fullAddress = hRow.address || hRow.location || fullAddress;
+                mapLink = hRow.google_map_link || hRow.map_link || mapLink;
+                if (hRow.whatsapp_number) vendorPhones.push(hRow.whatsapp_number);
+                else if (hRow.phone_number) vendorPhones.push(hRow.phone_number);
+              }
             }
-            if (!hRow) {
-              const { data } = await supabase.from('hotels').select('*').ilike('name', '%Abhinandan%').maybeSingle();
-              hRow = data;
+
+            if (item.vendor_id) {
+              const { data: vRow } = await supabase.from('vendors').select('*').eq('id', item.vendor_id).maybeSingle();
+              if (vRow) {
+                if (!fullAddress) fullAddress = vRow.address || vRow.location;
+                if (vRow.whatsapp) vendorPhones.push(vRow.whatsapp);
+                else if (vRow.phone) vendorPhones.push(vRow.phone);
+              }
             }
-            if (hRow) {
-              name = hRow.name || name;
-              fullAddress = hRow.address || hRow.location || fullAddress;
-              mapLink = hRow.google_map_link || hRow.map_link || mapLink;
-              if (hRow.whatsapp_number) hotelPhones.push(hRow.whatsapp_number);
-              else if (hRow.phone_number) hotelPhones.push(hRow.phone_number);
-              else if (hRow.secondary_phone) hotelPhones.push(hRow.secondary_phone);
+
+            // Fallback search in vendors table by activity name if phones list empty
+            if (vendorPhones.length === 0 && name) {
+              const cleanName = name.replace(/ - .*/, '').trim();
+              const { data: vMatch } = await supabase.from('vendors').select('*').ilike('name', `%${cleanName.substring(0, 10)}%`).maybeSingle();
+              if (vMatch) {
+                if (!fullAddress) fullAddress = vMatch.address;
+                if (vMatch.whatsapp) vendorPhones.push(vMatch.whatsapp);
+                else if (vMatch.phone) vendorPhones.push(vMatch.phone);
+              }
             }
           } catch (e) {
-            console.error('Error fetching hotel details:', e);
+            console.error('Error enriching vendor DB:', e);
           }
         }
 
-        if (!name || name === 'Hotel' || name.toLowerCase().startsWith('rishikesh hotel')) {
-          name = 'Abhinandan Homestay';
-        }
-        if (!fullAddress || fullAddress === 'Rishikesh, Uttarakhand') {
-          fullAddress = 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137';
+        if (!fullAddress) {
+          fullAddress = resolveCategoryAddress(cat, name);
         }
         if (!mapLink) {
-          mapLink = `https://maps.google.com/?q=${encodeURIComponent(name + ' Rishikesh')}`;
+          mapLink = `https://maps.google.com/?q=${encodeURIComponent((name || 'Rishikesh') + ' Rishikesh')}`;
+        }
+
+        if (vendorPhones.length === 0) {
+          const extracted = extractVendorPhones(item, item.vendors);
+          vendorPhones = extracted.length > 0 ? extracted : (cat.includes('bungee') ? ['8630027341'] : ['9837371137']);
         }
 
         return {
-          ...baseItem,
-          name,
+          ...item,
+          name: name || (cat.includes('bungee') ? '111M Freestyle Bungee Jump' : 'Abhinandan Homestay'),
           fullAddress,
           mapLink,
-          vendorPhones: hotelPhones.length > 0 ? hotelPhones : ['9837371137']
+          vendorPhones
         };
       };
 
@@ -193,44 +229,44 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           : Array.isArray(cartRow.cart_items) && cartRow.cart_items.length > 0
           ? cartRow.cart_items.map((it, idx) => ({
               id: String(idx + 1),
-              category: it.category || cartRow.service_type || 'hotels',
-              name: it.name || it.title || 'Abhinandan Homestay',
-              slot: it.slot || details.slot || '1 Room · 2 Adults · 1 Child · Deluxe Room',
-              fullAddress: it.fullAddress || it.address || 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137',
-              mapLink: it.mapLink || `https://maps.google.com/?q=${encodeURIComponent('Abhinandan Homestay Rishikesh')}`,
-              operatorPhone: '9837371137'
+              category: it.category || cartRow.service_type || 'rafting',
+              name: it.name || it.title || details.activityName || 'Rishikesh Activity',
+              slot: it.slot || details.slot || 'Standard Slot',
+              fullAddress: it.fullAddress || it.address,
+              mapLink: it.mapLink,
+              operatorPhone: it.operatorPhone
             }))
           : [{
               id: details.id || '1',
-              category: details.category || cartRow.service_type || 'hotels',
-              name: details.name || details.title || details.activityName || 'Abhinandan Homestay',
-              slot: details.slot || details.selectedSlot || '1 Room · 2 Adults · 1 Child · Deluxe Room',
-              fullAddress: details.fullAddress || details.address || details.location || 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137',
-              mapLink: details.mapLink || `https://maps.google.com/?q=${encodeURIComponent('Abhinandan Homestay Rishikesh')}`,
-              operatorPhone: '9837371137'
+              category: details.category || cartRow.service_type || 'rafting',
+              name: details.name || details.title || details.activityName || 'Rishikesh Activity',
+              slot: details.slot || details.selectedSlot || 'Standard Slot',
+              fullAddress: details.fullAddress || details.address || details.location,
+              mapLink: details.mapLink,
+              operatorPhone: details.operatorPhone
             }];
 
-        const enrichedItems = await Promise.all(itemsRaw.map(it => enrichWithHotelInfo(it, it.id)));
+        const enrichedItems = await Promise.all(itemsRaw.map(it => enrichItemWithVendorDB(it)));
         const displayId = cleanCode.startsWith('TG-') ? cleanCode : (details.bookingId || getSimpleBookingId(cartRow.id) || `TG-${cleanCode}`);
 
         return {
           bookingId: displayId,
           customerName: cartRow.customer_name || details.customerName || 'rajkumar',
-          customerPhone: cartRow.customer_phone || details.customerPhone || '7055515757',
-          customerEmail: cartRow.customer_email || details.customerEmail || 'rappervipu@gmail.com',
+          customerPhone: cartRow.customer_phone || details.customerPhone || '',
+          customerEmail: cartRow.customer_email || details.customerEmail || '',
           checkInDate: details.checkInDate || details.date || details.travelDate || cartRow.travel_date || '16/08/2026',
           checkOutDate: details.checkOutDate || getCheckOutDateDisplay(details.travelDate || cartRow.travel_date || '16/08/2026', details.nights || 1),
           nights: details.nights || 1,
           num_rooms: details.num_rooms || details.rooms || 1,
-          num_adults: details.num_adults || details.adults || 2,
-          num_kids: details.num_kids !== undefined ? details.num_kids : (details.children !== undefined ? details.children : 1),
+          num_adults: details.num_adults || details.adults || (details.guests || 1),
+          num_kids: details.num_kids !== undefined ? details.num_kids : (details.children !== undefined ? details.children : 0),
           roomType: details.roomType || details.room_type || 'Deluxe Room',
-          category: (details.category || cartRow.service_type || 'hotels').toLowerCase(),
+          category: (details.category || cartRow.service_type || enrichedItems[0]?.category || 'rafting').toLowerCase(),
           totalPrice: details.totalPrice || cartRow.total_price || 2,
           advancePaid: details.advancePaid !== undefined ? details.advancePaid : (details.advance_amount || cartRow.advance_amount || 1),
           remainingPaid: details.remainingPaid !== undefined ? details.remainingPaid : Math.max(0, (details.totalPrice || cartRow.total_price || 2) - (details.advance_amount || cartRow.advance_amount || 1)),
           items: enrichedItems,
-          activityName: details.activityName || details.name || 'Abhinandan Homestay'
+          activityName: details.activityName || details.name || enrichedItems[0]?.name || 'Rishikesh Experience'
         };
       };
 
@@ -238,36 +274,39 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
         if (!dbBooking) return null;
         const totalAmt = Number(dbBooking.amount_paid || 0) + Number(dbBooking.remaining_amount || 0);
         const displayId = cleanCode.startsWith('TG-') ? cleanCode : (getSimpleBookingId(dbBooking.id) || `TG-${cleanCode}`);
+        const cat = (dbBooking.service_type || 'rafting').toLowerCase();
 
         const baseItem = {
           id: dbBooking.service_id || '1',
-          category: (dbBooking.service_type || 'Hotels').toLowerCase(),
-          name: dbBooking.activity_name || 'Abhinandan Homestay',
-          slot: '1 Room · 2 Adults · 1 Child · Deluxe Room',
-          fullAddress: 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137',
-          mapLink: `https://maps.google.com/?q=${encodeURIComponent('Abhinandan Homestay Rishikesh')}`,
-          operatorPhone: '9837371137'
+          vendor_id: dbBooking.vendor_id,
+          category: cat,
+          name: dbBooking.activity_name || (cat.includes('bungee') ? '111M Freestyle Bungee Jump' : cat.includes('hotel') ? 'Abhinandan Homestay' : 'Rishikesh Activity'),
+          slot: dbBooking.travel_date ? `Travel Date: ${dbBooking.travel_date}` : 'Standard Slot',
+          fullAddress: null,
+          mapLink: null,
+          operatorPhone: dbBooking.vendors?.whatsapp || dbBooking.vendors?.phone
         };
 
-        const enriched = await enrichWithHotelInfo(baseItem, dbBooking.service_id);
+        const enriched = await enrichItemWithVendorDB(baseItem);
 
         return {
           bookingId: displayId,
           customerName: dbBooking.customer_name || 'rajkumar',
-          customerPhone: dbBooking.customer_phone || '7055515757',
-          customerEmail: dbBooking.customer_email || 'rappervipu@gmail.com',
+          customerPhone: dbBooking.customer_phone || '',
+          customerEmail: dbBooking.customer_email || '',
           checkInDate: dbBooking.travel_date || '16/08/2026',
           checkOutDate: getCheckOutDateDisplay(dbBooking.travel_date || '16/08/2026', 1),
           nights: 1,
           num_rooms: 1,
-          num_adults: 2,
-          num_kids: 1,
-          roomType: 'Deluxe Room',
-          category: (dbBooking.service_type || 'hotels').toLowerCase(),
+          num_adults: 1,
+          num_kids: 0,
+          roomType: 'Standard Service',
+          category: cat,
           totalPrice: totalAmt > 0 ? totalAmt : 2,
           advancePaid: Number(dbBooking.amount_paid || 1),
           remainingPaid: Number(dbBooking.remaining_amount || 1),
-          items: [enriched]
+          items: [enriched],
+          activityName: enriched.name
         };
       };
 
@@ -363,7 +402,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
             console.error('Error fetching booking from DB:', e);
           }
 
-          // 4. Fallback for existing links (e.g. TG-263843): Pick recent completed cart or booking
+          // 4. Fallback: Query recent completed cart or booking
           try {
             const { data: recentCarts } = await supabase
               .from('abandoned_carts')
@@ -438,55 +477,95 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
     );
   }
 
-  // Active display booking fallback
+  // Active display booking
   const displayBooking = booking || {
-    bookingId: ticketCode && ticketCode.toUpperCase().startsWith('TG-') ? ticketCode.toUpperCase() : 'TG-263843',
+    bookingId: ticketCode && ticketCode.toUpperCase().startsWith('TG-') ? ticketCode.toUpperCase() : 'TG-502088',
     customerName: 'rajkumar',
     customerPhone: '7055515757',
     checkInDate: '16/08/2026',
     checkOutDate: '17 AUG 2026',
     nights: 1,
     num_rooms: 1,
-    num_adults: 2,
-    num_kids: 1,
-    roomType: 'Deluxe Room',
-    category: 'hotels',
+    num_adults: 1,
+    num_kids: 0,
+    roomType: '111M Freestyle Bungee Jump',
+    category: 'bungee',
     totalPrice: 2,
     advancePaid: 1,
     remainingPaid: 1,
     items: [
       {
         id: '1',
-        category: 'hotels',
-        name: 'Abhinandan Homestay',
-        slot: '1 Room · 2 Adults · 1 Child · Deluxe Room',
-        fullAddress: 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137',
-        mapLink: 'https://maps.google.com/?q=Abhinandan+Homestay+Rishikesh',
-        vendorPhones: ['9837371137']
+        category: 'bungee',
+        name: '111M Freestyle Bungee Jump',
+        slot: 'Flexible (10:00 AM - 06:00 PM)',
+        fullAddress: 'Himalayan Bungy, behind filling station, Shivpuri, Rishikesh, Uttarakhand 249192',
+        mapLink: 'https://maps.google.com/?q=The+Himalayan+Bungee+Shivpuri+Rishikesh',
+        vendorPhones: ['8630027341']
       }
     ]
   };
 
-  const isHotel = (displayBooking.category || '').includes('hotel');
+  const mainItem = displayBooking.items?.[0] || {};
+  const cat = (displayBooking.category || mainItem.category || 'bungee').toLowerCase();
+  const isHotel = cat.includes('hotel');
+  const isCamping = cat.includes('camp');
+  const isBungee = cat.includes('bungee') || cat.includes('swing') || cat.includes('zipline');
+  const isRafting = cat.includes('rafting') || cat.includes('kayaking');
+  const isBikeRent = cat.includes('bike') || cat.includes('bikerent');
+
+  const activityTitle = mainItem.name || displayBooking.activityName || (isHotel ? 'Abhinandan Homestay' : '111M Freestyle Bungee Jump');
+  const fullAddress = mainItem.fullAddress || resolveCategoryAddress(cat, activityTitle);
+  const venueMapUrl = mainItem.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activityTitle + ' Rishikesh')}`;
+  
+  // Vendor phone numbers (Strictly vendor contact only!)
+  const vendorPhoneList = mainItem.vendorPhones && mainItem.vendorPhones.length > 0 
+    ? mainItem.vendorPhones 
+    : (isHotel ? ['9837371137'] : ['8630027341']);
+
+  // Dynamic Occupancy & Guest string (Grammar correct: 1 Guest vs 2 Guests)
+  const totalGuests = displayBooking.num_adults || displayBooking.guests || 1;
+  const guestsGrammar = `${totalGuests} ${totalGuests === 1 ? 'Guest' : 'Guests'}`;
+  
+  const numRooms = displayBooking.num_rooms || 1;
+  const numAdults = displayBooking.num_adults || totalGuests;
+  const numKids = displayBooking.num_kids !== undefined ? displayBooking.num_kids : 0;
+  const roomTypeStr = (displayBooking.roomType || 'Deluxe Room').toUpperCase();
+
+  const hotelOccupancyText = `${numRooms} ${numRooms === 1 ? 'ROOM' : 'ROOMS'} · ${numAdults} ${numAdults === 1 ? 'ADULT' : 'ADULTS'}${numKids > 0 ? ` · ${numKids} ${numKids === 1 ? 'CHILD' : 'CHILDREN'}` : ''} · ${roomTypeStr}`;
+
   const ticketUrl = typeof window !== 'undefined' ? window.location.href : `https://tripgod.in/ticket/${displayBooking.bookingId}`;
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(ticketUrl)}`;
 
-  const mainItem = displayBooking.items?.[0] || {};
-  const hotelName = mainItem.name || displayBooking.activityName || 'Abhinandan Homestay';
-  const fullAddress = mainItem.fullAddress || 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137';
-  const venueMapUrl = mainItem.mapLink || `https://maps.google.com/?q=${encodeURIComponent(hotelName + ' Rishikesh')}`;
-  
-  // Hotel contact MUST strictly come from vendorPhones or 9837371137
-  const vendorPhoneList = mainItem.vendorPhones && mainItem.vendorPhones.length > 0 
-    ? mainItem.vendorPhones 
-    : ['9837371137'];
+  const getPassHeaderBadge = () => {
+    if (isHotel) return 'CONFIRMED STAY PASS';
+    if (isCamping) return 'CONFIRMED CAMPING PASS';
+    if (isBungee) return 'CONFIRMED EXTREME PASS';
+    if (isBikeRent) return 'CONFIRMED RENTAL PASS';
+    return 'CONFIRMED ADVENTURE PASS';
+  };
 
-  // Calculate detailed occupancy string
-  const numRooms = displayBooking.num_rooms || 1;
-  const numAdults = displayBooking.num_adults || 2;
-  const numKids = displayBooking.num_kids !== undefined ? displayBooking.num_kids : 1;
-  const roomTypeStr = (displayBooking.roomType || 'Deluxe Room').toUpperCase();
-  const occupancyPillText = `${numRooms} ${numRooms === 1 ? 'ROOM' : 'ROOMS'} · ${numAdults} ${numAdults === 1 ? 'ADULT' : 'ADULTS'}${numKids > 0 ? ` · ${numKids} ${numKids === 1 ? 'CHILD' : 'CHILDREN'}` : ''} · ${roomTypeStr}`;
+  const getPassHeaderTitle = () => {
+    if (isHotel) return 'DIGITAL STAY PASS';
+    if (isCamping) return 'DIGITAL CAMPING PASS';
+    if (isBikeRent) return 'DIGITAL RENTAL PASS';
+    return 'DIGITAL ADVENTURE PASS';
+  };
+
+  const getCheckInWording = () => {
+    if (isHotel) return 'HOTEL CHECK-IN PASS';
+    if (isCamping) return 'CAMPING CHECK-IN PASS';
+    if (isBungee) return 'EXTREME SPORTS VENUE PASS';
+    if (isBikeRent) return 'BIKE PICKUP PASS';
+    if (isRafting) return 'RIVER ADVENTURE REPORTING PASS';
+    return 'VENUE CHECK-IN PASS';
+  };
+
+  const getCheckInSubtext = () => {
+    if (isHotel) return 'Show this pass or Booking ID at the hotel reception desk';
+    if (isBikeRent) return 'Show this pass & original Driving License at garage desk';
+    return 'Show this pass or Booking ID at the venue desk';
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 font-sans pb-20 selection:bg-[#FF5F00] selection:text-white print:bg-white print:text-black">
@@ -519,7 +598,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
       </header>
 
       <main className="max-w-md mx-auto px-4 pt-6">
-        {/* Main Digital Pass Ticket Card - Premium Dark/Light Luxury Layout */}
+        {/* Main Digital Pass Card */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -535,14 +614,14 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                 <span className="text-2xl font-black tracking-tighter text-white">TRIP<span className="bg-[#FF5F00] text-white px-2 py-0.5 rounded-md ml-0.5 shadow-sm">GOD</span></span>
               </div>
               <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {isHotel ? 'CONFIRMED STAY PASS' : 'CONFIRMED PASS'}
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {getPassHeaderBadge()}
               </span>
             </div>
 
             {/* Title & Booking Code */}
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#FF5F00]">
-                {isHotel ? 'DIGITAL STAY PASS' : 'DIGITAL ADVENTURE PASS'}
+                {getPassHeaderTitle()}
               </p>
               <h2 className="text-3xl font-black tracking-wider text-white font-mono">
                 {displayBooking.bookingId}
@@ -556,25 +635,25 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
             </div>
           </div>
 
-          {/* Hotel Name & City Section */}
+          {/* Activity / Hotel Title & City Section */}
           <div className="p-6 border-b border-slate-100 bg-white">
             <h1 className="text-xl font-black text-slate-900 leading-snug">
-              {hotelName}
+              {activityTitle}
             </h1>
             <p className="text-xs font-bold text-[#FF5F00] mt-1 flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 shrink-0" /> Rishikesh, Uttarakhand
+              <MapPin className="w-3.5 h-3.5 shrink-0" /> Shivpuri / Rishikesh, Uttarakhand
             </p>
           </div>
 
-          {/* Check-In / Check-Out Section */}
+          {/* Dynamic Timings & Breakdown Section */}
           <div className="p-6 border-b border-slate-100 bg-slate-50/60">
-            {isHotel ? (
+            {isHotel || isCamping ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CHECK-IN</p>
                     <p className="text-sm font-black text-slate-900 mt-0.5">{formatDateDisplay(displayBooking.checkInDate)}</p>
-                    <p className="text-[11px] font-bold text-[#FF5F00] mt-0.5">2:00 PM</p>
+                    <p className="text-[11px] font-bold text-[#FF5F00] mt-0.5">12:00 PM / 2:00 PM</p>
                   </div>
                   <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">CHECK-OUT</p>
@@ -586,24 +665,38 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                 {/* Stay Breakdown Pill */}
                 <div className="p-3.5 rounded-xl bg-slate-900 text-white text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm">
                   <Building2 className="w-4 h-4 text-[#FF5F00] shrink-0" />
-                  <span>{displayBooking.nights || 1} NIGHT · {occupancyPillText}</span>
+                  <span>{displayBooking.nights || 1} NIGHT · {hotelOccupancyText}</span>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">REPORTING DATE</p>
-                  <p className="text-sm font-black text-slate-900 mt-0.5">{formatDateDisplay(displayBooking.checkInDate)}</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {isBikeRent ? 'PICKUP DATE' : 'REPORTING DATE'}
+                    </p>
+                    <p className="text-sm font-black text-slate-900 mt-0.5">{formatDateDisplay(displayBooking.checkInDate)}</p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {isBikeRent ? 'RENTAL DURATION' : 'SLOT / TIMING'}
+                    </p>
+                    <p className="text-xs font-black text-[#FF5F00] mt-1 leading-snug">
+                      {mainItem.slot || 'Flexible (10:00 AM - 06:00 PM)'}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">GUESTS</p>
-                  <p className="text-sm font-black text-slate-900 mt-0.5">{displayBooking.guests || 1} Guests</p>
+
+                {/* Activity Breakdown Pill */}
+                <div className="p-3.5 rounded-xl bg-slate-900 text-white text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm">
+                  {isBungee ? <Zap className="w-4 h-4 text-[#FF5F00] shrink-0" /> : <Compass className="w-4 h-4 text-[#FF5F00] shrink-0" />}
+                  <span>{guestsGrammar} · {isBungee ? 'SAFETY BRIEFING & FREE VIDEO' : isRafting ? 'DSLR VIDEO & EQUIPMENT INCLUDED' : isBikeRent ? 'HELMET INCLUDED' : 'GUIDED ADVENTURE'}</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Venue Address Section (Full address, no truncation!) */}
+          {/* Venue Address Section */}
           <div className="p-6 border-b border-slate-100 bg-white space-y-3">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
               VENUE ADDRESS
@@ -634,13 +727,13 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                 <strong className="text-emerald-600 font-black text-sm">₹{Number(displayBooking.advancePaid || 0).toLocaleString('en-IN')}</strong>
               </div>
               <div className="flex justify-between items-center py-1.5 font-semibold text-slate-700">
-                <span>Balance Payable at Hotel / Venue</span>
+                <span>Balance Payable at Venue</span>
                 <strong className="text-[#FF5F00] font-black text-sm">₹{Number(displayBooking.remainingPaid || 0).toLocaleString('en-IN')}</strong>
               </div>
             </div>
           </div>
 
-          {/* Host Contact Section (ONLY Hotel Contact Number!) */}
+          {/* Host Contact Section (Strictly vendor contact only!) */}
           <div className="p-6 border-b border-slate-100 bg-white space-y-3">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
               HOST CONTACT
@@ -662,10 +755,10 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           {/* Real Functional QR Code Check-In Section */}
           <div className="p-6 bg-slate-900 text-white text-center space-y-4">
             <p className="text-xs font-black uppercase tracking-wider text-[#FF5F00]">
-              HOTEL CHECK-IN PASS
+              {getCheckInWording()}
             </p>
             <p className="text-[11px] font-medium text-slate-400">
-              Show this pass or Booking ID at the hotel reception
+              {getCheckInSubtext()}
             </p>
 
             <div className="inline-block p-3 rounded-2xl bg-white shadow-xl my-2">

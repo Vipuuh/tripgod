@@ -460,12 +460,32 @@ My payment ID is verified. Please confirm my slots.`;
             };
           });
 
+          const getDefaultAddressForCategory = (cat, actName) => {
+            const c = (cat || '').toLowerCase();
+            if (c.includes('bungee') || c.includes('swing') || c.includes('zipline')) {
+              return 'Himalayan Bungy, behind filling station, Shivpuri, Rishikesh, Uttarakhand 249192';
+            }
+            if (c.includes('rafting') || c.includes('kayaking')) {
+              return 'Shivpuri Rafting Office / Pickup Point, Rishikesh, Uttarakhand';
+            }
+            if (c.includes('bike') || c.includes('bikerent')) {
+              return 'Rishikesh Bike Rental Garage Depot, Rishikesh, Uttarakhand';
+            }
+            if (c.includes('camp')) {
+              return 'Shivpuri Riverside Camping Bank, Rishikesh, Uttarakhand';
+            }
+            if (c.includes('hotel')) {
+              return 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137';
+            }
+            return `${actName || 'Activity Venue'}, Rishikesh, Uttarakhand`;
+          };
+
           const singleItemObj = {
             id: activity.id || '1',
             category: activity.category || 'hotels',
             name: activity.name,
             slot: activity.category === 'hotels' ? `Check-in: ${checkInDate} to ${checkOutDate}` : (slot || 'Flexible Timing'),
-            fullAddress: activity.fullAddress || activity.address || activity.location || 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137',
+            fullAddress: activity.fullAddress || activity.address || activity.location || getDefaultAddressForCategory(activity.category, activity.name),
             mapLink: activity.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activity.name + ' Rishikesh')}`,
             operatorPhone: resolvedOpPhone,
             phone_number: activity.phone_number || activity.phone,
@@ -473,7 +493,7 @@ My payment ID is verified. Please confirm my slots.`;
             vendors: activity.vendors,
             num_rooms: activity.num_rooms || activity.rooms || 1,
             num_adults: activity.num_adults || activity.adults || 2,
-            num_kids: activity.num_kids || activity.children || 1,
+            num_kids: activity.num_kids || activity.children || 0,
             room_type: activity.room_type || activity.selectedRoomType || 'Deluxe Room'
           };
 
