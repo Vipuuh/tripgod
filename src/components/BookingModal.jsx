@@ -445,6 +445,10 @@ ${hasVideoOption ? `*Add-ons:* ${((activity.free_video_type || (activity.categor
 - *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${finalAmountToPay.toLocaleString('en-IN')}${upiDiscountVal > 0 ? ` (UPI Discount of ₹${upiDiscountVal} applied)` : ''}
 - ${effectivePaymentOption === 'full' ? 'Remaining Balance: ₹0 (Paid in Full)' : `Pay at Venue: ₹${remainingPayment.toLocaleString('en-IN')}`}
 ----------------------------------
+My payment ID is verified. Please confirm my slots.`;
+
+        // Save booking locally
+        try {
           const enrichedComboItems = (activity.items || []).map((item, idx) => {
             const key = item.id || item.name || idx;
             return {
