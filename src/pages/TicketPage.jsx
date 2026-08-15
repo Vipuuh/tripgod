@@ -158,51 +158,66 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
         return (str.startsWith('http://') || str.startsWith('https://')) && !str.includes('undefined') && !str.includes('null');
       };
 
+      const resolveVendorMapLink = (vRow, hRow, item, cat, name, address) => {
+        let url = item?.mapLink || item?.google_maps_link || item?.google_map_link || item?.map_link || item?.map_url || item?.location_link;
+
+        if (!isValidMapUrl(url) && hRow) {
+          url = hRow.google_maps_link || hRow.google_map_link || hRow.map_link || hRow.location_link || hRow.map_url;
+        }
+
+        if (!isValidMapUrl(url) && vRow) {
+          url = vRow.google_maps_link || vRow.google_map_link || vRow.map_link || vRow.location_link || vRow.map_url;
+        }
+
+        if (isValidMapUrl(url)) {
+          return url.trim();
+        }
+
+        const searchStr = address || (vRow?.address || hRow?.address) || `${name || 'Activity'} Rishikesh`;
+        return `https://maps.google.com/?q=${encodeURIComponent(searchStr)}`;
+      };
+
       // Enrich vendor & hotel info from Supabase DB dynamically
       const enrichItemWithVendorDB = async (item) => {
         const cat = (item.category || '').toLowerCase();
         let name = item.name;
         let fullAddress = item.fullAddress || item.address;
-        let rawMap = item.mapLink || item.google_map_link || item.map_link || item.map_url || item.location_link;
+        let rawMap = item.mapLink || item.google_maps_link || item.google_map_link || item.map_link || item.map_url || item.location_link;
         let vendorPhones = [];
+        let hRow = null;
+        let vRow = null;
 
         if (supabase) {
           try {
             if (cat.includes('hotel') && item.id && item.id !== '1' && item.id !== '00000000-0000-0000-0000-000000000000') {
-              const { data: hRow } = await supabase.from('hotels').select('*').eq('id', item.id).maybeSingle();
+              const { data } = await supabase.from('hotels').select('*').eq('id', item.id).maybeSingle();
+              hRow = data;
               if (hRow) {
                 name = hRow.name || name;
                 fullAddress = hRow.address || hRow.location || fullAddress;
-                if (!isValidMapUrl(rawMap)) {
-                  rawMap = hRow.google_map_link || hRow.map_link || hRow.location_link || hRow.map_url;
-                }
                 if (hRow.whatsapp_number) vendorPhones.push(hRow.whatsapp_number);
                 else if (hRow.phone_number) vendorPhones.push(hRow.phone_number);
               }
             }
 
             if (item.vendor_id) {
-              const { data: vRow } = await supabase.from('vendors').select('*').eq('id', item.vendor_id).maybeSingle();
+              const { data } = await supabase.from('vendors').select('*').eq('id', item.vendor_id).maybeSingle();
+              vRow = data;
               if (vRow) {
                 if (!fullAddress) fullAddress = vRow.address || vRow.location;
-                if (!isValidMapUrl(rawMap)) {
-                  rawMap = vRow.google_map_link || vRow.map_link || vRow.location_link || vRow.map_url;
-                }
                 if (vRow.whatsapp) vendorPhones.push(vRow.whatsapp);
                 else if (vRow.phone) vendorPhones.push(vRow.phone);
               }
             }
 
             // Fallback search in vendors table by activity name if info missing
-            if (!isValidMapUrl(rawMap) || vendorPhones.length === 0) {
-              const cleanName = name ? name.replace(/ - .*/, '').trim() : '';
+            if (!vRow && name) {
+              const cleanName = name.replace(/ - .*/, '').trim();
               if (cleanName) {
                 const { data: vMatch } = await supabase.from('vendors').select('*').ilike('name', `%${cleanName.substring(0, 10)}%`).maybeSingle();
                 if (vMatch) {
+                  vRow = vMatch;
                   if (!fullAddress) fullAddress = vMatch.address;
-                  if (!isValidMapUrl(rawMap)) {
-                    rawMap = vMatch.google_map_link || vMatch.map_link || vMatch.location_link || vMatch.map_url;
-                  }
                   if (vMatch.whatsapp) vendorPhones.push(vMatch.whatsapp);
                   else if (vMatch.phone) vendorPhones.push(vMatch.phone);
                 }
@@ -217,7 +232,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           fullAddress = resolveCategoryAddress(cat, name);
         }
 
-        const finalMapLink = isValidMapUrl(rawMap) ? rawMap.trim() : null;
+        const finalMapLink = resolveVendorMapLink(vRow, hRow, item, cat, name, fullAddress);
 
         if (vendorPhones.length === 0) {
           const extracted = extractVendorPhones(item, item.vendors);
@@ -547,7 +562,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
 
   const activityTitle = mainItem.name || displayBooking.activityName || (isHotel ? 'Abhinandan Homestay' : '111M Freestyle Bungee Jump');
   const fullAddress = mainItem.fullAddress || resolveCategoryAddress(cat, activityTitle);
-  const venueMapUrl = mainItem.mapLink || null;
+  const venueMapUrl = mainItem.mapLink || `https://maps.google.com/?q=${encodeURIComponent(fullAddress || activityTitle + ' Rishikesh')}`;
   
   // Vendor phone numbers (Strictly vendor contact only!)
   const vendorPhoneList = mainItem.vendorPhones && mainItem.vendorPhones.length > 0 
