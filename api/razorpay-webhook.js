@@ -3,6 +3,8 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
+import sendBookingWhatsAppHandler from './send-booking-whatsapp.js';
+
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || '';
@@ -80,6 +82,48 @@ export default async function handler(req, res) {
           console.error('Error updating booking status via webhook:', updateError);
         } else {
           console.log(`Successfully confirmed booking ${bookingId} via Razorpay webhook.`);
+        }
+
+        // 2. Fetch booking details to send WhatsApp + Email notifications via webhook fallback
+        try {
+          const { data: bookingData } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('id', bookingId)
+            .maybeSingle();
+
+          if (bookingData) {
+            const notificationReq = {
+              method: 'POST',
+              body: {
+                name: bookingData.customer_name || notes.customer_name || 'Customer',
+                email: bookingData.customer_email || customerEmail || 'N/A',
+                phone: bookingData.customer_phone || customerPhone || '',
+                activityName: bookingData.service_type || 'Rishikesh Experience',
+                stretch: bookingData.stretch || '',
+                date: bookingData.travel_date || '',
+                slot: bookingData.slot || 'Flexible',
+                guests: bookingData.guests || 1,
+                totalPrice: (bookingData.amount_paid || 0) + (bookingData.remaining_amount || 0),
+                advancePaid: bookingData.amount_paid || amountPaid,
+                remainingPaid: bookingData.remaining_amount || 0,
+                paymentId: bookingId,
+                category: (bookingData.service_type || 'rafting').toLowerCase(),
+                paymentOption: bookingData.payment_type === 'full_online' ? 'full' : 'advance'
+              }
+            };
+
+            const notificationRes = {
+              setHeader: () => {},
+              status: () => ({ json: () => {}, end: () => {} })
+            };
+
+            sendBookingWhatsAppHandler(notificationReq, notificationRes).catch(err => {
+              console.error('Error triggering WhatsApp/Email notification from webhook:', err);
+            });
+          }
+        } catch (notifErr) {
+          console.error('Failed to trigger webhook notification:', notifErr);
         }
       }
 

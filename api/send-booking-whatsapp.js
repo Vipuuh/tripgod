@@ -198,22 +198,7 @@ export default async function handler(req, res) {
     const paramDate = isHotel && checkInDate ? checkInDate.split('-').reverse().join('/') : date;
     const paramTime = isHotel && checkOutDate ? checkOutDate.split('-').reverse().join('/') : slot;
 
-    // Parameters for approved tripgod_pass_confirmed template (9 parameters):
-    const customerPassParams = [
-      customerName,                                                            // {{1}} - Name
-      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
-      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Your Trip
-      `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
-      `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
-      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      ticketUrl,                                                               // {{7}} - Ticket Pass Link
-      isFullPayment 
-        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
-        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
-      `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{9}} - Helpline Contact
-    ];
-
-    // Fallback Customer Parameters for tripgod_booking_confirmed template (10 parameters):
+    // 1. Customer Parameters for approved tripgod_booking_confirmed template (10 parameters):
     const customerParams = [
       customerName,                                                            // {{1}} - Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
@@ -300,22 +285,15 @@ export default async function handler(req, res) {
       
       const result = await response.json();
       console.log(`Meta API response for ${cleanTo} (${templateName}):`, JSON.stringify(result));
-
-      // If template fails and was not already tripgod_booking_confirmed, retry with tripgod_booking_confirmed
-      if (result.error && templateName !== 'tripgod_booking_confirmed') {
-        console.warn(`Template '${templateName}' failed for ${cleanTo}. Retrying with approved 'tripgod_booking_confirmed'...`);
-        return sendWhatsAppMeta(to, 'tripgod_booking_confirmed', customerParams);
-      }
-
       return result;
     };
 
     // Send notifications in parallel
     const promises = [];
     
-    // 1. Send to Customer using new approved tripgod_pass_confirmed template
+    // 1. Send to Customer using approved tripgod_booking_confirmed template
     if (customerPhone) {
-      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_pass_confirmed", customerPassParams).catch(err => console.error("Error sending to customer:", err)));
+      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParams).catch(err => console.error("Error sending to customer:", err)));
     }
     
     // 2. Send to Admin
