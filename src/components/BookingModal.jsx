@@ -27,6 +27,27 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const [paymentOption, setPaymentOption] = useState('advance');
   const [liabilityAgreed, setLiabilityAgreed] = useState(false);
   const [rentalDays, setRentalDays] = useState(1);
+  const [itemSlotsMap, setItemSlotsMap] = useState({});
+
+  const getItemSlots = (item) => {
+    if (!item) return ['Flexible (10:00 AM - 06:00 PM)'];
+    const cat = (item.category || '').toLowerCase();
+    const name = (item.name || item.title || '').toLowerCase();
+
+    if (cat === 'hotels' || cat === 'camping' || name.includes('camp') || name.includes('hotel') || name.includes('stay')) {
+      return ['Standard Check-in (12:00 PM)', '01:00 PM', '02:00 PM', 'Flexible Afternoon Check-in'];
+    }
+    if (cat === 'bikes' || cat === 'bikerent' || name.includes('bike') || name.includes('scooty')) {
+      return ['06:00 AM (Early Pickup)', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM'];
+    }
+    if (cat === 'rafting' || cat === 'kayaking' || name.includes('raft')) {
+      return ['07:00 AM (Early Batch)', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM (Last Batch)'];
+    }
+    if (cat === 'bungee' || cat === 'swing' || cat === 'zipline' || name.includes('bungee')) {
+      return ['10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
+    }
+    return ['Flexible (10:00 AM - 06:00 PM)', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'];
+  };
 
   // Contact States for direct Razorpay prefilling
   const [name, setName] = useState('');
@@ -143,9 +164,16 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       const today = new Date();
       today.setDate(today.getDate() + 1); // default to tomorrow
       setDate(initialDate || today.toISOString().split('T')[0]);
-      setRentalDays(1);
-      setSlot(slots[0]);
-      const freeVideo = activity.free_video_type !== undefined ? activity.free_video_type : (activity.category === 'rafting' ? 'dslr' : 'none');
+      // Initialize combo item slots map
+      if (activity.items && activity.items.length > 0) {
+        const initialMap = {};
+        activity.items.forEach((item, idx) => {
+          const key = item.id || item.name || idx;
+          const opts = getItemSlots(item);
+          initialMap[key] = item.slot || opts[0];
+        });
+        setItemSlotsMap(initialMap);
+      }
       setHasVideoOption(freeVideo !== 'none');
       setError('');
       // Initialize payment option based on mode
@@ -421,9 +449,23 @@ My payment ID is verified. Please confirm my slots.`;
           const storedBookings = localStorage.getItem(`tripgod_bookings_${email}`) 
             ? JSON.parse(localStorage.getItem(`tripgod_bookings_${email}`)) 
             : [];
+          const enrichedComboItems = (activity.items || []).map((item, idx) => {
+            const key = item.id || item.name || idx;
+            return {
+              ...item,
+              slot: itemSlotsMap[key] || item.slot || 'Flexible',
+              selectedSlot: itemSlotsMap[key] || item.slot || 'Flexible'
+            };
+          });
+
           const newBooking = {
             id: dbBookingId,
-            date: new Date().toLocaleDateString('en-IN'),
+            bookingId: dbBookingId,
+            customerName: name,
+            customerPhone: phone,
+            customerEmail: email,
+            date: dateRangeStr,
+            activityName: activity.name,
             activities: [{
               name: activity.name,
               stretch: activity.stretch || '',
@@ -432,12 +474,24 @@ My payment ID is verified. Please confirm my slots.`;
               guests: guests,
               subtotal: totalPrice
             }],
+            items: enrichedComboItems.length > 0 ? enrichedComboItems : [{
+              id: activity.id || '1',
+              category: activity.category,
+              name: activity.name,
+              slot: slot,
+              fullAddress: activity.fullAddress || activity.address || 'Rishikesh',
+              mapLink: activity.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activity.name + ' Rishikesh')}`,
+              operatorPhone: activity.operatorPhone || activity.whatsapp || activity.phone
+            }],
             totalPrice: totalPrice,
             advancePaid: finalAmountToPay,
             remainingPaid: remainingPayment
           };
           storedBookings.push(newBooking);
           localStorage.setItem(`tripgod_bookings_${email}`, JSON.stringify(storedBookings));
+          if (phone) {
+            localStorage.setItem(`tripgod_bookings_${phone}`, JSON.stringify(storedBookings));
+          }
         } catch (err) {
           console.error('Failed to save booking locally:', err);
         }
@@ -480,6 +534,7 @@ My payment ID is verified. Please confirm my slots.`;
                 email: email,
                 phone: phone,
                 activityName: activity.name,
+                type: activity.type || activity.category,
                 stretch: activity.stretch || '',
                 date: dateRangeStr,
                 checkInDate: activity.category === 'hotels' ? checkInDate : null,
@@ -495,7 +550,15 @@ My payment ID is verified. Please confirm my slots.`;
                 paymentOption: effectivePaymentOption,
                 upiDiscount: upiDiscountVal,
                 commissionPercentage: commissionPercentage,
-                operatorPhone: opPhone
+                operatorPhone: opPhone,
+                items: (activity.items || []).map((item, idx) => {
+                  const key = item.id || item.name || idx;
+                  return {
+                    ...item,
+                    slot: itemSlotsMap[key] || item.slot || 'Flexible',
+                    selectedSlot: itemSlotsMap[key] || item.slot || 'Flexible'
+                  };
+                })
               })
             }).catch(err => console.error('WhatsApp notification error:', err));
 
@@ -1053,6 +1116,52 @@ My payment ID is verified. Please confirm my slots.`;
                       />
                     </div>
                   </div>
+
+                  {activity.items && activity.items.length > 0 && (
+                    <div className="mt-4 p-4 bg-orange-50/70 border border-orange-200/80 rounded-2xl space-y-3 text-left">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase text-[#FF5F00] flex items-center gap-1.5">
+                          <Clock size={14} /> Itemized Timing Slots ({activity.items.length} Services)
+                        </span>
+                        <span className="text-[10px] font-bold text-gray-500">Set timing per item</span>
+                      </div>
+                      
+                      <div className="space-y-2.5">
+                        {activity.items.map((item, idx) => {
+                          const itemKey = item.id || item.name || idx;
+                          const availableItemSlots = getItemSlots(item);
+                          const currentSelected = itemSlotsMap[itemKey] || availableItemSlots[0];
+                          
+                          return (
+                            <div key={itemKey} className="p-3 bg-white rounded-xl border border-gray-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-[#FF5F00]/10 text-[#FF5F00] font-black text-[10px] flex items-center justify-center shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <div>
+                                  <p className="text-xs font-black text-gray-900 leading-tight">{item.name || item.title}</p>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{item.category || 'Service'}</p>
+                                </div>
+                              </div>
+                              
+                              <select
+                                value={currentSelected}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setItemSlotsMap(prev => ({ ...prev, [itemKey]: val }));
+                                }}
+                                className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:border-[#FF5F00] cursor-pointer"
+                              >
+                                {availableItemSlots.map((sOpt, sIdx) => (
+                                  <option key={sIdx} value={sOpt}>{sOpt}</option>
+                                ))}
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

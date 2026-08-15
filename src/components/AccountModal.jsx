@@ -287,6 +287,15 @@ export default function AccountModal({ isOpen, onClose, userName, userEmail, onL
                               <span>Pay at Venue (90%)</span>
                               <span className="font-black">₹{booking.remainingPaid.toLocaleString('en-IN')}</span>
                             </div>
+
+                            <a
+                              href={`/ticket/${getSimpleBookingId(booking.id)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full mt-2 py-2 px-3 rounded-xl bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-xs text-decoration-none"
+                            >
+                              🎟️ View Digital Adventure Pass
+                            </a>
                           </div>
                         </div>
                       </div>

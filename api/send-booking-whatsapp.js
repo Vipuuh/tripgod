@@ -124,6 +124,37 @@ export default async function handler(req, res) {
     const category = data.category || "rafting";
     const isHotel = category === 'hotels';
 
+    // Extract items array for combo bookings
+    const comboItems = Array.isArray(data.items) ? data.items : [];
+    const isCombo = category === 'combo' || data.type === 'custom_combo' || comboItems.length > 0;
+
+    // Generate Digital Ticket Web URL
+    const ticketUrl = `https://tripgod.in/ticket/${simpleBookingCode}`;
+
+    // Helper to format 1 or 2 vendor phone numbers
+    const formatVendorPhoneDisplay = (item) => {
+      const phones = [];
+      const addPh = (p) => {
+        if (!p) return;
+        const clean = p.toString().replace(/\D/g, '');
+        if (clean.length >= 10 && !phones.includes(clean)) phones.push(clean);
+      };
+      if (item) {
+        addPh(item.operatorPhone);
+        addPh(item.phone_number || item.phone);
+        addPh(item.whatsapp_number || item.whatsapp);
+        addPh(item.secondary_phone);
+        if (item.vendors) {
+          addPh(item.vendors.phone);
+          addPh(item.vendors.whatsapp);
+        }
+      }
+      if (phones.length === 0) addPh(data.operatorPhone);
+      if (phones.length === 0) addPh(ADMIN_PHONE);
+
+      return phones.map(p => formatDisplayPhone(p)).join(' / ');
+    };
+
     // Auto-resolve operator/hotel/vendor WhatsApp number from DB if needed
     let rawOperatorPhone = data.operatorPhone;
     if ((!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) && supabase) {
@@ -156,7 +187,7 @@ export default async function handler(req, res) {
     }
 
     const cleanAgencyPhone = formatPhone(rawOperatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
-    const locationLink = LOCATION_MAPS[category] || LOCATION_MAPS.rafting;
+    const locationLink = isCombo ? ticketUrl : (LOCATION_MAPS[category] || LOCATION_MAPS.rafting);
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
     const isFullPayment = paymentOption === 'full' || remainingPaid <= 0;
@@ -178,7 +209,7 @@ export default async function handler(req, res) {
       `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
       `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      locationLink,                                                            // {{7}} - Location
+      locationLink,                                                            // {{7}} - Location (Ticket Link for Combo)
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
         : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
@@ -388,7 +419,59 @@ async function sendEmailAlert(data) {
   };
   const simpleBookingCode = getSimpleBookingId(data.paymentId);
 
-  const paymentOption = data.paymentOption || (data.totalPrice > 0 && data.remainingPaid === 0 ? 'full' : 'advance');
+  // Build itemized breakdown HTML if combo items exist
+  const comboItems = Array.isArray(data.items) ? data.items : [];
+  const ticketPassUrl = `https://tripgod.in/ticket/${simpleBookingCode}`;
+
+  let itemsHtml = '';
+  if (comboItems.length > 0) {
+    itemsHtml = `
+      <h3 style="color: #111; margin-top: 25px; margin-bottom: 12px; font-size: 16px;">📋 Booked Services Breakdown (${comboItems.length} Items)</h3>
+      ${comboItems.map((item, i) => {
+        const itemMap = item.mapLink || `https://maps.google.com/?q=${encodeURIComponent((item.fullAddress || item.vendorName || item.name) + ' Rishikesh')}`;
+        
+        // Vendor phone extraction (handles 1 or 2 phones)
+        const vPhones = [];
+        const addP = (p) => {
+          if (!p) return;
+          const clean = p.toString().replace(/\D/g, '');
+          if (clean.length >= 10 && !vPhones.includes(clean)) vPhones.push(clean);
+        };
+        addP(item.operatorPhone);
+        addP(item.phone_number || item.phone);
+        addP(item.whatsapp_number || item.whatsapp);
+        addP(item.secondary_phone);
+        if (item.vendors) {
+          addP(item.vendors.phone);
+          addP(item.vendors.whatsapp);
+        }
+        if (vPhones.length === 0) addP(data.agencyPhone);
+
+        const phoneDisplayStr = vPhones.map((ph, idx) => `<a href="tel:+${ph}" style="color: #FF6B00; text-decoration: none; font-weight: bold;">+${ph}</a>`).join(' / ');
+
+        return `
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; margin-bottom: 12px;">
+            <div style="font-size: 11px; font-weight: font-black; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Item ${i + 1} • ${(item.category || 'Service').toUpperCase()}</div>
+            <h4 style="margin: 4px 0 8px 0; color: #0f172a; font-size: 15px;">${item.name || item.title}</h4>
+            <table style="width: 100%; font-size: 13px; color: #475569; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 3px 0;"><strong>Timing Slot:</strong> ${item.slot || item.selectedSlot || 'Flexible'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 3px 0;"><strong>Venue / Address:</strong> ${item.fullAddress || 'Rishikesh Station / Venue'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 3px 0;"><strong>Host Contact:</strong> ${phoneDisplayStr}</td>
+              </tr>
+            </table>
+            <div style="margin-top: 10px; font-size: 12px;">
+              <a href="${itemMap}" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 12px;">Open Venue Map 📍</a>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  }
 
   // --- Email 1: To Customer ---
   const customerMailOptions = {
@@ -407,14 +490,18 @@ async function sendEmailAlert(data) {
           <p style="margin: 0; font-size: 14px; color: #555;">Hi <strong>${data.customerName}</strong>, your adventure booking is successfully confirmed. See you in Rishikesh!</p>
         </div>
 
-        <h3 style="color: #111; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 0;">Adventure Details</h3>
+        <div style="text-align: center; margin-bottom: 25px;">
+          <a href="${ticketPassUrl}" style="display: inline-block; background: #FF6B00; color: #ffffff; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 15px; text-decoration: none; box-shadow: 0 4px 12px rgba(255,107,0,0.25);">🎟️ View Digital Adventure Ticket Pass</a>
+        </div>
+
+        <h3 style="color: #111; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 0;">Booking Summary</h3>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr style="background-color: #f9f9f9;">
             <td style="padding: 12px; font-weight: bold; width: 40%; border-bottom: 1px solid #eee;">Booking ID:</td>
             <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee; color: #FF6B00;">${simpleBookingCode}</td>
           </tr>
           <tr>
-            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Activity:</td>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Activity / Package:</td>
             <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.activityName} ${data.stretch ? `(${data.stretch})` : ''}</td>
           </tr>
           <tr>
@@ -422,18 +509,16 @@ async function sendEmailAlert(data) {
             <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.date}</td>
           </tr>
           <tr style="background-color: #f9f9f9;">
-            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Arrival Slot/Time:</td>
-            <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.slot}</td>
-          </tr>
-          <tr>
             <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Total Booked:</td>
             <td style="padding: 12px; border-bottom: 1px solid #eee;">${data.guests} ${unitLabel}</td>
           </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Location:</td>
-            <td style="padding: 12px; border-bottom: 1px solid #eee;"><a href="${data.locationLink}" style="color: #FF6B00; font-weight: bold; text-decoration: none;">Open in Google Maps 📍</a></td>
+          <tr>
+            <td style="padding: 12px; font-weight: bold; border-bottom: 1px solid #eee;">Payment Status:</td>
+            <td style="padding: 12px; border-bottom: 1px solid #eee;">Paid Online: <strong>₹${(data.advancePaid || 0).toLocaleString('en-IN')}</strong> | Balance at Venue: <strong>₹${(data.remainingPaid || 0).toLocaleString('en-IN')}</strong></td>
           </tr>
         </table>
+
+        ${itemsHtml}
 
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; margin-top: 25px;">
           <p style="margin: 0; font-size: 13px; color: #64748b;">Need help with your booking? Contact TripGod Support at <strong>+91 9410572857</strong></p>
