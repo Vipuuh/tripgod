@@ -119,7 +119,7 @@ export default async function handler(req, res) {
       }
       return `TG-${String(Math.abs(hash)).slice(-6)}`;
     };
-    const simpleBookingCode = getSimpleBookingId(paymentId);
+    const simpleBookingCode = data.bookingId || data.simpleBookingCode || getSimpleBookingId(data.dbBookingId || paymentId);
     
     const category = data.category || "rafting";
     const isHotel = category === 'hotels';

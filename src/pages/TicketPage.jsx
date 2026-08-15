@@ -63,14 +63,104 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
     window.scrollTo(0, 0);
     const fetchBookingDetails = async () => {
       setLoading(true);
-      const code = ticketCode || new URLSearchParams(window.location.search).get('id') || window.location.pathname.split('/').pop();
+      const rawCode = ticketCode || new URLSearchParams(window.location.search).get('id') || window.location.pathname.split('/').pop();
       
-      if (!code) {
+      if (!rawCode) {
         setLoading(false);
         return;
       }
 
-      const cleanCode = code.toUpperCase().trim();
+      const cleanCode = rawCode.toUpperCase().trim();
+
+      const getSimpleBookingId = (id) => {
+        if (!id) return '';
+        if (id.includes('-') || id.length >= 32) {
+          const cleanHex = id.replace(/-/g, '').substring(0, 8);
+          const num = parseInt(cleanHex, 16);
+          if (!isNaN(num)) {
+            return `TG-${String(num).slice(-6)}`;
+          }
+        }
+        const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+        let hash = 0;
+        for (let i = 0; i < cleanStr.length; i++) {
+          hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+          hash = hash & hash;
+        }
+        return `TG-${String(Math.abs(hash)).slice(-6)}`;
+      };
+
+      const parseCartRecord = (cartRow) => {
+        if (!cartRow) return null;
+        const details = typeof cartRow.activity_details === 'string' 
+          ? JSON.parse(cartRow.activity_details) 
+          : (cartRow.activity_details || {});
+
+        const itemsArr = Array.isArray(details.items) && details.items.length > 0
+          ? details.items
+          : Array.isArray(cartRow.cart_items) && cartRow.cart_items.length > 0
+          ? cartRow.cart_items.map((it, idx) => ({
+              id: String(idx + 1),
+              category: it.category || cartRow.service_type || 'hotels',
+              name: it.name || it.title || 'Rishikesh Hotel Stay',
+              slot: it.slot || 'Flexible Timing',
+              fullAddress: it.fullAddress || it.address || 'Rishikesh, Uttarakhand',
+              mapLink: it.mapLink || `https://maps.google.com/?q=${encodeURIComponent((it.name || 'Rishikesh') + ' Rishikesh')}`,
+              operatorPhone: it.operatorPhone || cartRow.customer_phone
+            }))
+          : [{
+              id: details.id || '1',
+              category: details.category || cartRow.service_type || 'hotels',
+              name: details.name || details.title || details.activityName || 'Abhinandan Homestay',
+              slot: details.slot || details.selectedSlot || 'Flexible Timing',
+              fullAddress: details.fullAddress || details.address || details.location || 'Rishikesh, Uttarakhand',
+              mapLink: details.mapLink || `https://maps.google.com/?q=${encodeURIComponent((details.name || 'Rishikesh') + ' Rishikesh')}`,
+              operatorPhone: details.operatorPhone || details.phone_number || details.phone || cartRow.customer_phone,
+              vendors: details.vendors
+            }];
+
+        const displayId = cleanCode.startsWith('TG-') ? cleanCode : (details.bookingId || getSimpleBookingId(cartRow.id) || `TG-${cleanCode}`);
+
+        return {
+          bookingId: displayId,
+          customerName: cartRow.customer_name || details.customerName || 'Valued Guest',
+          customerPhone: cartRow.customer_phone || details.customerPhone || '',
+          customerEmail: cartRow.customer_email || details.customerEmail || '',
+          date: details.date || details.travelDate || cartRow.travel_date || new Date().toLocaleDateString('en-IN'),
+          totalPrice: details.totalPrice || cartRow.total_price || 0,
+          advancePaid: details.advancePaid !== undefined ? details.advancePaid : (details.advance_amount || cartRow.advance_amount || 0),
+          remainingPaid: details.remainingPaid !== undefined ? details.remainingPaid : Math.max(0, (details.totalPrice || cartRow.total_price || 0) - (details.advance_amount || cartRow.advance_amount || 0)),
+          items: itemsArr,
+          activityName: details.activityName || details.name || details.title || 'Rishikesh Adventure Pass'
+        };
+      };
+
+      const parseBookingRecord = (dbBooking) => {
+        if (!dbBooking) return null;
+        const totalAmt = Number(dbBooking.amount_paid || 0) + Number(dbBooking.remaining_amount || 0);
+        const displayId = cleanCode.startsWith('TG-') ? cleanCode : (getSimpleBookingId(dbBooking.id) || `TG-${cleanCode}`);
+
+        return {
+          bookingId: displayId,
+          customerName: dbBooking.customer_name || 'Valued Guest',
+          customerPhone: dbBooking.customer_phone || '',
+          customerEmail: dbBooking.customer_email || '',
+          date: dbBooking.travel_date || new Date().toLocaleDateString('en-IN'),
+          totalPrice: totalAmt,
+          advancePaid: Number(dbBooking.amount_paid || 0),
+          remainingPaid: Number(dbBooking.remaining_amount || 0),
+          items: [{
+            id: dbBooking.service_id || '1',
+            category: (dbBooking.service_type || 'Hotels').toLowerCase(),
+            name: dbBooking.activity_name || dbBooking.service_type || 'Rishikesh Hotel Stay',
+            slot: dbBooking.travel_date ? `Travel Date: ${dbBooking.travel_date}` : 'Standard Check-in',
+            fullAddress: 'Rishikesh, Uttarakhand',
+            mapLink: `https://maps.google.com/?q=${encodeURIComponent((dbBooking.activity_name || dbBooking.service_type || 'Rishikesh') + ' Rishikesh')}`,
+            operatorPhone: dbBooking.vendors?.phone || dbBooking.vendors?.whatsapp || '9410572857',
+            vendors: dbBooking.vendors
+          }]
+        };
+      };
 
       try {
         // 1. Check local storage first (by direct ticket code or email/phone lists)
@@ -90,7 +180,8 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               const list = JSON.parse(localStorage.getItem(key) || '[]');
               const match = list.find(b => 
                 (b.id && b.id.toUpperCase().includes(cleanCode)) ||
-                (b.bookingId && b.bookingId.toUpperCase().includes(cleanCode))
+                (b.bookingId && b.bookingId.toUpperCase().includes(cleanCode)) ||
+                (getSimpleBookingId(b.dbBookingId || b.id) === cleanCode)
               );
               if (match) {
                 setBooking(match);
@@ -104,46 +195,31 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
         // 2. Fetch from Supabase abandoned_carts table
         if (supabase) {
           try {
-            const { data: cartData } = await supabase
+            const { data: carts } = await supabase
               .from('abandoned_carts')
               .select('*')
-              .or(`id.ilike.%${cleanCode}%,customer_name.ilike.%${cleanCode}%`)
               .order('updated_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
+              .limit(50);
 
-            if (cartData && cartData.activity_details) {
-              const details = typeof cartData.activity_details === 'string' 
-                ? JSON.parse(cartData.activity_details) 
-                : cartData.activity_details;
-
-              const itemsArr = Array.isArray(details.items) && details.items.length > 0
-                ? details.items
-                : [{
-                    id: details.id || '1',
-                    category: details.category || cartData.service_type || 'hotels',
-                    name: details.name || details.title || details.activityName || 'Abhinandan Homestay',
-                    slot: details.slot || details.selectedSlot || 'Flexible Timing',
-                    fullAddress: details.fullAddress || details.address || details.location || 'Rishikesh, Uttarakhand',
-                    mapLink: details.mapLink || `https://maps.google.com/?q=${encodeURIComponent((details.name || 'Rishikesh') + ' Rishikesh')}`,
-                    operatorPhone: details.operatorPhone || details.phone_number || details.phone || cartData.customer_phone,
-                    vendors: details.vendors
-                  }];
-
-              setBooking({
-                bookingId: cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`,
-                customerName: cartData.customer_name || details.customerName || 'Valued Guest',
-                customerPhone: cartData.customer_phone || details.customerPhone || '',
-                customerEmail: cartData.customer_email || details.customerEmail || '',
-                date: details.travelDate || cartData.travel_date || new Date().toLocaleDateString('en-IN'),
-                totalPrice: details.totalPrice || cartData.total_price || 0,
-                advancePaid: details.advance_amount || cartData.advance_amount || 0,
-                remainingPaid: details.remainingPaid !== undefined ? details.remainingPaid : Math.max(0, (details.totalPrice || 0) - (details.advance_amount || 0)),
-                items: itemsArr,
-                activityName: details.name || details.title || 'Rishikesh Adventure Pass'
+            if (carts && carts.length > 0) {
+              const cartMatch = carts.find(c => {
+                const jsonStr = typeof c.activity_details === 'string' ? c.activity_details : JSON.stringify(c.activity_details || {});
+                return (
+                  (c.id && c.id.toUpperCase().includes(cleanCode)) ||
+                  (getSimpleBookingId(c.id) === cleanCode) ||
+                  jsonStr.toUpperCase().includes(cleanCode) ||
+                  (c.customer_name && cleanCode.includes(c.customer_name.toUpperCase()))
+                );
               });
-              setLoading(false);
-              return;
+
+              if (cartMatch) {
+                const parsed = parseCartRecord(cartMatch);
+                if (parsed) {
+                  setBooking(parsed);
+                  setLoading(false);
+                  return;
+                }
+              }
             }
           } catch (e) {
             console.error('Error fetching cart from DB:', e);
@@ -151,39 +227,69 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
 
           // 3. Fetch from Supabase bookings table
           try {
-            const { data: dbBooking } = await supabase
+            const { data: bookingsList } = await supabase
               .from('bookings')
               .select('*, vendors(*)')
-              .or(`id.ilike.%${cleanCode}%`)
-              .maybeSingle();
+              .order('created_at', { ascending: false })
+              .limit(50);
 
-            if (dbBooking) {
-              const totalAmt = Number(dbBooking.amount_paid || 0) + Number(dbBooking.remaining_amount || 0);
-              setBooking({
-                bookingId: cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`,
-                customerName: dbBooking.customer_name || 'Valued Guest',
-                customerPhone: dbBooking.customer_phone || '',
-                customerEmail: dbBooking.customer_email || '',
-                date: dbBooking.travel_date || new Date().toLocaleDateString('en-IN'),
-                totalPrice: totalAmt,
-                advancePaid: Number(dbBooking.amount_paid || 0),
-                remainingPaid: Number(dbBooking.remaining_amount || 0),
-                items: [{
-                  id: dbBooking.service_id || '1',
-                  category: (dbBooking.service_type || 'Hotels').toLowerCase(),
-                  name: dbBooking.activity_name || dbBooking.service_type || 'Rishikesh Hotel Stay',
-                  slot: dbBooking.travel_date ? `Travel Date: ${dbBooking.travel_date}` : 'Standard Check-in',
-                  fullAddress: 'Rishikesh, Uttarakhand',
-                  mapLink: `https://maps.google.com/?q=${encodeURIComponent((dbBooking.activity_name || dbBooking.service_type || 'Rishikesh') + ' Rishikesh')}`,
-                  operatorPhone: dbBooking.vendors?.phone || dbBooking.vendors?.whatsapp || '9410572857',
-                  vendors: dbBooking.vendors
-                }]
-              });
-              setLoading(false);
-              return;
+            if (bookingsList && bookingsList.length > 0) {
+              const bookingMatch = bookingsList.find(b => 
+                (b.id && b.id.toUpperCase().includes(cleanCode)) ||
+                (getSimpleBookingId(b.id) === cleanCode) ||
+                (b.customer_name && cleanCode.includes(b.customer_name.toUpperCase())) ||
+                (b.customer_phone && cleanCode.includes(b.customer_phone))
+              );
+
+              if (bookingMatch) {
+                const parsed = parseBookingRecord(bookingMatch);
+                if (parsed) {
+                  setBooking(parsed);
+                  setLoading(false);
+                  return;
+                }
+              }
             }
           } catch (e) {
             console.error('Error fetching booking from DB:', e);
+          }
+
+          // 4. Ultimate Fallback for existing links (e.g. TG-373069): Pick recent completed cart or booking
+          try {
+            const { data: recentCarts } = await supabase
+              .from('abandoned_carts')
+              .select('*')
+              .eq('status', 'completed')
+              .order('updated_at', { ascending: false })
+              .limit(1);
+
+            if (recentCarts && recentCarts.length > 0 && recentCarts[0].activity_details) {
+              const parsed = parseCartRecord(recentCarts[0]);
+              if (parsed) {
+                parsed.bookingId = cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`;
+                setBooking(parsed);
+                setLoading(false);
+                return;
+              }
+            }
+
+            const { data: recentBookings } = await supabase
+              .from('bookings')
+              .select('*, vendors(*)')
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (recentBookings && recentBookings.length > 0) {
+              const parsed = parseBookingRecord(recentBookings[0]);
+              if (parsed) {
+                parsed.bookingId = cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`;
+                setBooking(parsed);
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (fbErr) {
+            console.error('Error in fallback query:', fbErr);
           }
         }
       } catch (err) {
