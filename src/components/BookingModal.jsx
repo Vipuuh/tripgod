@@ -449,8 +449,6 @@ My payment ID is verified. Please confirm my slots.`;
 
         // Save booking locally
         try {
-          const resolvedOpPhone = activity.whatsapp_number || activity.whatsapp || activity.phone_number || activity.phone || activity.vendors?.whatsapp || activity.vendors?.phone || activity.operatorPhone || '9410572857';
-
           const enrichedComboItems = (activity.items || []).map((item, idx) => {
             const key = item.id || item.name || idx;
             return {
@@ -460,41 +458,17 @@ My payment ID is verified. Please confirm my slots.`;
             };
           });
 
-          const getDefaultAddressForCategory = (cat, actName) => {
-            const c = (cat || '').toLowerCase();
-            if (c.includes('bungee') || c.includes('swing') || c.includes('zipline')) {
-              return 'Himalayan Bungy, behind filling station, Shivpuri, Rishikesh, Uttarakhand 249192';
-            }
-            if (c.includes('rafting') || c.includes('kayaking')) {
-              return 'Shivpuri Rafting Office / Pickup Point, Rishikesh, Uttarakhand';
-            }
-            if (c.includes('bike') || c.includes('bikerent')) {
-              return 'Rishikesh Bike Rental Garage Depot, Rishikesh, Uttarakhand';
-            }
-            if (c.includes('camp')) {
-              return 'Shivpuri Riverside Camping Bank, Rishikesh, Uttarakhand';
-            }
-            if (c.includes('hotel')) {
-              return 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137';
-            }
-            return `${actName || 'Activity Venue'}, Rishikesh, Uttarakhand`;
-          };
-
           const singleItemObj = {
             id: activity.id || '1',
             category: activity.category || 'hotels',
             name: activity.name,
             slot: activity.category === 'hotels' ? `Check-in: ${checkInDate} to ${checkOutDate}` : (slot || 'Flexible Timing'),
-            fullAddress: activity.fullAddress || activity.address || activity.location || getDefaultAddressForCategory(activity.category, activity.name),
+            fullAddress: activity.fullAddress || activity.address || activity.location || 'Rishikesh, Uttarakhand',
             mapLink: activity.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activity.name + ' Rishikesh')}`,
-            operatorPhone: resolvedOpPhone,
+            operatorPhone: opPhone,
             phone_number: activity.phone_number || activity.phone,
-            whatsapp_number: activity.whatsapp_number || activity.whatsapp || resolvedOpPhone,
-            vendors: activity.vendors,
-            num_rooms: activity.num_rooms || activity.rooms || 1,
-            num_adults: activity.num_adults || activity.adults || 2,
-            num_kids: activity.num_kids || activity.children || 0,
-            room_type: activity.room_type || activity.selectedRoomType || 'Deluxe Room'
+            whatsapp_number: activity.whatsapp_number || activity.whatsapp,
+            vendors: activity.vendors
           };
 
           const newBooking = {
@@ -505,15 +479,7 @@ My payment ID is verified. Please confirm my slots.`;
             customerPhone: phone,
             customerEmail: email,
             date: dateRangeStr,
-            checkInDate: checkInDate,
-            checkOutDate: checkOutDate,
-            nights: nights || 1,
-            num_rooms: activity.num_rooms || activity.rooms || 1,
-            num_adults: activity.num_adults || activity.adults || 2,
-            num_kids: activity.num_kids || activity.children || 1,
-            room_type: activity.room_type || activity.selectedRoomType || 'Deluxe Room',
             activityName: activity.name,
-            operatorPhone: resolvedOpPhone,
             activities: [{
               name: activity.name,
               stretch: activity.stretch || '',
@@ -537,18 +503,20 @@ My payment ID is verified. Please confirm my slots.`;
           localStorage.setItem(`tripgod_booking_${dbBookingId}`, JSON.stringify(newBooking));
           localStorage.setItem('tripgod_last_booking', JSON.stringify(newBooking));
 
-          // Also save ticket detail directly into abandoned_carts using valid UUID (logId)
-          if (logId) {
-            supabase.from('abandoned_carts').update({
-              status: 'completed',
-              total_price: totalPrice,
-              advance_amount: finalAmountToPay,
-              activity_details: newBooking,
-              updated_at: new Date().toISOString()
-            }).eq('id', logId).then(({ error }) => {
-              if (error) console.error("Error updating cart log:", error);
-            });
-          }
+          // Also upsert ticket detail directly into abandoned_carts using simpleBookingCode
+          supabase.from('abandoned_carts').upsert([{
+            id: simpleBookingCode,
+            customer_name: name,
+            customer_email: email,
+            customer_phone: phone,
+            status: 'completed',
+            total_price: totalPrice,
+            advance_amount: finalAmountToPay,
+            activity_details: newBooking,
+            updated_at: new Date().toISOString()
+          }]).then(({ error }) => {
+            if (error) console.error("Error saving ticket log:", error);
+          });
         } catch (err) {
           console.error('Failed to save booking locally:', err);
         }
@@ -602,9 +570,7 @@ My payment ID is verified. Please confirm my slots.`;
                 totalPrice: totalPrice,
                 advancePaid: finalAmountToPay,
                 remainingPaid: remainingPayment,
-                paymentId: paymentId,
-                bookingId: simpleBookingCode,
-                dbBookingId: dbBookingId,
+                paymentId: dbBookingId,
                 category: activity.category,
                 paymentOption: effectivePaymentOption,
                 upiDiscount: upiDiscountVal,
