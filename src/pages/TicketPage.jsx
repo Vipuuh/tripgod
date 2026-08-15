@@ -152,12 +152,18 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
         return `${name || 'Activity Venue'}, Rishikesh, Uttarakhand`;
       };
 
+      const isValidMapUrl = (url) => {
+        if (!url || typeof url !== 'string') return false;
+        const str = url.trim();
+        return (str.startsWith('http://') || str.startsWith('https://')) && !str.includes('undefined') && !str.includes('null');
+      };
+
       // Enrich vendor & hotel info from Supabase DB dynamically
       const enrichItemWithVendorDB = async (item) => {
         const cat = (item.category || '').toLowerCase();
         let name = item.name;
         let fullAddress = item.fullAddress || item.address;
-        let mapLink = item.mapLink || item.google_map_link;
+        let rawMap = item.mapLink || item.google_map_link || item.map_link || item.map_url || item.location_link;
         let vendorPhones = [];
 
         if (supabase) {
@@ -167,7 +173,9 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               if (hRow) {
                 name = hRow.name || name;
                 fullAddress = hRow.address || hRow.location || fullAddress;
-                mapLink = hRow.google_map_link || hRow.map_link || mapLink;
+                if (!isValidMapUrl(rawMap)) {
+                  rawMap = hRow.google_map_link || hRow.map_link || hRow.location_link || hRow.map_url;
+                }
                 if (hRow.whatsapp_number) vendorPhones.push(hRow.whatsapp_number);
                 else if (hRow.phone_number) vendorPhones.push(hRow.phone_number);
               }
@@ -177,19 +185,27 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               const { data: vRow } = await supabase.from('vendors').select('*').eq('id', item.vendor_id).maybeSingle();
               if (vRow) {
                 if (!fullAddress) fullAddress = vRow.address || vRow.location;
+                if (!isValidMapUrl(rawMap)) {
+                  rawMap = vRow.google_map_link || vRow.map_link || vRow.location_link || vRow.map_url;
+                }
                 if (vRow.whatsapp) vendorPhones.push(vRow.whatsapp);
                 else if (vRow.phone) vendorPhones.push(vRow.phone);
               }
             }
 
-            // Fallback search in vendors table by activity name if phones list empty
-            if (vendorPhones.length === 0 && name) {
-              const cleanName = name.replace(/ - .*/, '').trim();
-              const { data: vMatch } = await supabase.from('vendors').select('*').ilike('name', `%${cleanName.substring(0, 10)}%`).maybeSingle();
-              if (vMatch) {
-                if (!fullAddress) fullAddress = vMatch.address;
-                if (vMatch.whatsapp) vendorPhones.push(vMatch.whatsapp);
-                else if (vMatch.phone) vendorPhones.push(vMatch.phone);
+            // Fallback search in vendors table by activity name if info missing
+            if (!isValidMapUrl(rawMap) || vendorPhones.length === 0) {
+              const cleanName = name ? name.replace(/ - .*/, '').trim() : '';
+              if (cleanName) {
+                const { data: vMatch } = await supabase.from('vendors').select('*').ilike('name', `%${cleanName.substring(0, 10)}%`).maybeSingle();
+                if (vMatch) {
+                  if (!fullAddress) fullAddress = vMatch.address;
+                  if (!isValidMapUrl(rawMap)) {
+                    rawMap = vMatch.google_map_link || vMatch.map_link || vMatch.location_link || vMatch.map_url;
+                  }
+                  if (vMatch.whatsapp) vendorPhones.push(vMatch.whatsapp);
+                  else if (vMatch.phone) vendorPhones.push(vMatch.phone);
+                }
               }
             }
           } catch (e) {
@@ -200,9 +216,8 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
         if (!fullAddress) {
           fullAddress = resolveCategoryAddress(cat, name);
         }
-        if (!mapLink) {
-          mapLink = `https://maps.google.com/?q=${encodeURIComponent((name || 'Rishikesh') + ' Rishikesh')}`;
-        }
+
+        const finalMapLink = isValidMapUrl(rawMap) ? rawMap.trim() : null;
 
         if (vendorPhones.length === 0) {
           const extracted = extractVendorPhones(item, item.vendors);
@@ -213,7 +228,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           ...item,
           name: name || (cat.includes('bungee') ? '111M Freestyle Bungee Jump' : 'Abhinandan Homestay'),
           fullAddress,
-          mapLink,
+          mapLink: finalMapLink,
           vendorPhones
         };
       };
@@ -516,7 +531,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
 
   const activityTitle = mainItem.name || displayBooking.activityName || (isHotel ? 'Abhinandan Homestay' : '111M Freestyle Bungee Jump');
   const fullAddress = mainItem.fullAddress || resolveCategoryAddress(cat, activityTitle);
-  const venueMapUrl = mainItem.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activityTitle + ' Rishikesh')}`;
+  const venueMapUrl = mainItem.mapLink || null;
   
   // Vendor phone numbers (Strictly vendor contact only!)
   const vendorPhoneList = mainItem.vendorPhones && mainItem.vendorPhones.length > 0 
