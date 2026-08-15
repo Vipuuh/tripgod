@@ -157,39 +157,49 @@ export default async function handler(req, res) {
 
     // Auto-resolve operator/hotel/vendor WhatsApp number from DB if needed
     let rawOperatorPhone = data.operatorPhone;
-    if ((!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) && supabase) {
+    let dbMapsLink = null;
+
+    if (supabase) {
       try {
         if (isHotel && activityName) {
           const cleanHotelName = activityName.replace(/ - .*/, '').trim();
           const { data: hotelRow } = await supabase
             .from('hotels')
-            .select('whatsapp_number, phone_number, vendors(whatsapp, phone)')
+            .select('whatsapp_number, phone_number, maps_link, vendors(whatsapp, phone, google_maps_link)')
             .ilike('name', `%${cleanHotelName}%`)
             .limit(1)
             .maybeSingle();
           if (hotelRow) {
-            rawOperatorPhone = hotelRow.whatsapp_number || hotelRow.vendors?.whatsapp || hotelRow.vendors?.phone || hotelRow.phone_number;
+            if (!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) {
+              rawOperatorPhone = hotelRow.whatsapp_number || hotelRow.vendors?.whatsapp || hotelRow.vendors?.phone || hotelRow.phone_number;
+            }
+            dbMapsLink = hotelRow.maps_link || hotelRow.vendors?.google_maps_link;
           }
         }
-        if ((!rawOperatorPhone || rawOperatorPhone.endsWith('9410572857')) && data.vendor_id) {
+        if (data.vendor_id || data.vendorId) {
           const { data: vendorRow } = await supabase
             .from('vendors')
-            .select('whatsapp, phone')
-            .eq('id', data.vendor_id)
+            .select('whatsapp, phone, google_maps_link')
+            .eq('id', data.vendor_id || data.vendorId)
             .maybeSingle();
           if (vendorRow) {
-            rawOperatorPhone = vendorRow.whatsapp || vendorRow.phone;
+            if (!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) {
+              rawOperatorPhone = vendorRow.whatsapp || vendorRow.phone;
+            }
+            if (!dbMapsLink) dbMapsLink = vendorRow.google_maps_link;
           }
         }
       } catch (dbErr) {
-        console.error('Error auto-resolving vendor phone from Supabase DB:', dbErr);
+        console.error('Error auto-resolving vendor phone/location from Supabase DB:', dbErr);
       }
     }
 
     const agencyPhoneRaw = rawOperatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE;
     const cleanAgencyPhone = formatPhone(agencyPhoneRaw);
 
-    const locationLink = LOCATION_MAPS[category] || LOCATION_MAPS.hotels || "https://tripgod.in";
+    // Resolve exact Google Maps Location link for Parameter {{7}}
+    const rawLocationLink = data.google_maps_link || data.mapLink || data.maps_link || data.locationLink || data.location || (comboItems[0] && (comboItems[0].google_maps_link || comboItems[0].mapLink || comboItems[0].maps_link)) || dbMapsLink;
+    const resolvedLocationLink = rawLocationLink || LOCATION_MAPS[category] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((activityName || 'Rishikesh Adventure') + ' Rishikesh')}`;
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
     const isFullPayment = paymentOption === 'full' || remainingPaid <= 0;
@@ -209,7 +219,7 @@ export default async function handler(req, res) {
       `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
       `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      ticketUrl,                                                               // {{7}} - Ticket Pass Link
+      resolvedLocationLink,                                                    // {{7}} - Actual Google Maps Location Link
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
         : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
@@ -225,7 +235,7 @@ export default async function handler(req, res) {
       `*${paramDate}*`,                                                        // {{4}} - Date
       `*${paramTime}*`,                                                        // {{5}} - Slot/Time
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      ticketUrl,                                                               // {{7}} - Ticket Pass Link
+      resolvedLocationLink,                                                    // {{7}} - Actual Google Maps Location Link
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
         : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
@@ -241,7 +251,7 @@ export default async function handler(req, res) {
       `*${paramDate}*`,                                                        // {{4}} - Date
       `*${paramTime}*`,                                                        // {{5}} - Slot/Time
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      ticketUrl,                                                               // {{7}} - Ticket Pass Link
+      resolvedLocationLink,                                                    // {{7}} - Actual Google Maps Location Link
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
         : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
@@ -322,7 +332,7 @@ export default async function handler(req, res) {
       advancePaid,
       remainingPaid,
       paymentId,
-      locationLink,
+      locationLink: resolvedLocationLink,
       agencyPhone: cleanAgencyPhone
     }).catch(err => console.error("Error sending booking alert email:", err)));
 

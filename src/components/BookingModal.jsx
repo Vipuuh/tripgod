@@ -556,6 +556,8 @@ My payment ID is verified. Please confirm my slots.`;
                 remainingPaid: remainingPayment,
                 paymentId: dbBookingId,
                 category: activity.category,
+                vendor_id: activity.vendor_id || null,
+                google_maps_link: activity.google_maps_link || activity.mapLink || activity.maps_link || activity.vendors?.google_maps_link || null,
                 paymentOption: effectivePaymentOption,
                 upiDiscount: upiDiscountVal,
                 commissionPercentage: commissionPercentage,
