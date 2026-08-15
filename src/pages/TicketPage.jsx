@@ -9,6 +9,37 @@ import CampingTicketView from '../components/ticket/CampingTicketView';
 import TourTicketView from '../components/ticket/TourTicketView';
 import ComboTicketView from '../components/ticket/ComboTicketView';
 
+// Helper to derive simple booking code from UUID or ID string (Matches backend algorithm)
+const getSimpleBookingId = (id) => {
+  if (!id || id === 'N/A') return 'TG-000000';
+  if (id.includes('-') || id.length >= 32) {
+    const cleanHex = id.replace(/-/g, '').substring(0, 8);
+    const num = parseInt(cleanHex, 16);
+    if (!isNaN(num)) {
+      return `TG-${String(num).slice(-6)}`;
+    }
+  }
+  const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+  let hash = 0;
+  for (let i = 0; i < cleanStr.length; i++) {
+    hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return `TG-${String(Math.abs(hash)).slice(-6)}`;
+};
+
+// Robust category normalizer
+const normalizeCategory = (catStr = '', nameStr = '') => {
+  const combined = `${catStr} ${nameStr}`.toLowerCase();
+  if (combined.includes('rafting')) return 'rafting';
+  if (combined.includes('bungee') || combined.includes('swing') || combined.includes('zipline') || combined.includes('kayak')) return 'bungee';
+  if (combined.includes('bike') || combined.includes('scooty') || combined.includes('rental')) return 'bikerent';
+  if (combined.includes('camp')) return 'camping';
+  if (combined.includes('hotel') || combined.includes('homestay') || combined.includes('resort')) return 'hotels';
+  if (combined.includes('tour') || combined.includes('package')) return 'tours';
+  return 'hotels';
+};
+
 export default function TicketPage({ ticketCode, onBackToHome }) {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,16 +58,17 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
       }
 
       const cleanCode = code.toUpperCase().trim();
+      const codeNumOnly = cleanCode.replace(/\D/g, '');
       setNotFoundCode(cleanCode);
 
       try {
-        // 1. Fetch from Supabase `abandoned_carts` table (Stores exact simpleBookingCode like TG-305100)
         if (supabase) {
+          // 1. Fetch from Supabase `abandoned_carts` table (Matches simpleBookingCode like TG-578377)
           try {
             const { data: cartData } = await supabase
               .from('abandoned_carts')
               .select('*')
-              .or(`id.ilike.%${cleanCode}%,customer_name.ilike.%${cleanCode}%`)
+              .or(`id.ilike.%${cleanCode}%,id.ilike.%${codeNumOnly}%`)
               .order('updated_at', { ascending: false })
               .limit(1)
               .maybeSingle();
@@ -60,6 +92,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                   }];
 
               const isCombo = rawItems.length > 1;
+              const cat = isCombo ? 'combo' : normalizeCategory(rawItems[0]?.category || cartData.service_type, rawItems[0]?.name || details.activityName);
 
               setBooking({
                 bookingId: cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`,
@@ -70,7 +103,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                 totalPrice: details.total_price || details.totalPrice || 0,
                 advancePaid: details.advance_amount || cartData.advance_amount || 0,
                 remainingPaid: details.remainingPaid !== undefined ? details.remainingPaid : Math.max(0, (details.total_price || details.totalPrice || 0) - (details.advance_amount || 0)),
-                category: isCombo ? 'combo' : (rawItems[0]?.category || cartData.service_type || 'hotels').toLowerCase(),
+                category: cat,
                 items: rawItems,
                 activityName: details.name || details.title || 'Rishikesh Adventure Pass'
               });
@@ -81,73 +114,88 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
             console.error('Error fetching cart from DB:', e);
           }
 
-          // 2. Fetch from Supabase `bookings` table
+          // 2. Fetch from Supabase `bookings` table by querying recent bookings & computing simpleBookingCode
           try {
-            const { data: dbBooking } = await supabase
+            const { data: dbBookings } = await supabase
               .from('bookings')
               .select('*, vendors(*)')
-              .or(`id.ilike.%${cleanCode}%`)
-              .maybeSingle();
+              .order('created_at', { ascending: false })
+              .limit(100);
 
-            if (dbBooking) {
-              let vendorObj = dbBooking.vendors;
-              if (!vendorObj && dbBooking.vendor_id) {
-                const { data: vData } = await supabase
-                  .from('vendors')
-                  .select('*')
-                  .eq('id', dbBooking.vendor_id)
-                  .maybeSingle();
-                if (vData) vendorObj = vData;
+            if (dbBookings && dbBookings.length > 0) {
+              const dbMatch = dbBookings.find(b => {
+                const computedCode = getSimpleBookingId(b.id);
+                return computedCode.toUpperCase() === cleanCode || 
+                       computedCode.toUpperCase().replace('TG-', '') === cleanCode.replace('TG-', '') ||
+                       b.id.toUpperCase().includes(cleanCode) ||
+                       (codeNumOnly && b.id.replace(/\D/g, '').includes(codeNumOnly));
+              });
+
+              if (dbMatch) {
+                let vendorObj = dbMatch.vendors;
+                if (!vendorObj && dbMatch.vendor_id) {
+                  const { data: vData } = await supabase
+                    .from('vendors')
+                    .select('*')
+                    .eq('id', dbMatch.vendor_id)
+                    .maybeSingle();
+                  if (vData) vendorObj = vData;
+                }
+
+                const cat = normalizeCategory(dbMatch.service_type, dbMatch.activity_name);
+                const totalAmt = Number(dbMatch.amount_paid || 0) + Number(dbMatch.remaining_amount || 0);
+
+                const resolvedBooking = {
+                  bookingId: cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`,
+                  customerName: dbMatch.customer_name || 'Valued Guest',
+                  customerPhone: dbMatch.customer_phone || '',
+                  customerEmail: dbMatch.customer_email || '',
+                  date: dbMatch.travel_date || new Date().toLocaleDateString('en-IN'),
+                  totalPrice: totalAmt,
+                  advancePaid: Number(dbMatch.amount_paid || 0),
+                  remainingPaid: Number(dbMatch.remaining_amount || 0),
+                  category: cat,
+                  vendor: vendorObj || {},
+                  items: [{
+                    id: dbMatch.service_id || '1',
+                    category: cat,
+                    name: dbMatch.activity_name || dbMatch.service_type || 'Rishikesh Adventure Pass',
+                    slot: dbMatch.travel_date ? `Date: ${dbMatch.travel_date}` : 'Standard Timing',
+                    fullAddress: vendorObj?.address || vendorObj?.location || 'Rishikesh, Uttarakhand',
+                    mapLink: vendorObj?.google_maps_link || null,
+                    operatorPhone: vendorObj?.phone || vendorObj?.whatsapp || '9410572857',
+                    vendors: vendorObj
+                  }]
+                };
+
+                setBooking(resolvedBooking);
+                setLoading(false);
+                return;
               }
-
-              const serviceType = (dbBooking.service_type || 'Hotels').toLowerCase();
-              const totalAmt = Number(dbBooking.amount_paid || 0) + Number(dbBooking.remaining_amount || 0);
-
-              const resolvedBooking = {
-                bookingId: cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`,
-                customerName: dbBooking.customer_name || 'Valued Guest',
-                customerPhone: dbBooking.customer_phone || '',
-                customerEmail: dbBooking.customer_email || '',
-                date: dbBooking.travel_date || new Date().toLocaleDateString('en-IN'),
-                totalPrice: totalAmt,
-                advancePaid: Number(dbBooking.amount_paid || 0),
-                remainingPaid: Number(dbBooking.remaining_amount || 0),
-                category: serviceType,
-                vendor: vendorObj || {},
-                items: [{
-                  id: dbBooking.service_id || '1',
-                  category: serviceType,
-                  name: dbBooking.activity_name || dbBooking.service_type || 'TripGod Rishikesh Booking',
-                  slot: dbBooking.travel_date ? `Date: ${dbBooking.travel_date}` : 'Standard Timing',
-                  fullAddress: vendorObj?.address || vendorObj?.location || 'Rishikesh, Uttarakhand',
-                  mapLink: vendorObj?.google_maps_link || null,
-                  operatorPhone: vendorObj?.phone || vendorObj?.whatsapp || '9410572857',
-                  vendors: vendorObj
-                }]
-              };
-
-              setBooking(resolvedBooking);
-              setLoading(false);
-              return;
             }
           } catch (e) {
-            console.error('Error fetching booking from DB:', e);
+            console.error('Error matching booking from DB:', e);
           }
         }
 
         // 3. Check direct localStorage keys
-        const directLocal = localStorage.getItem(`tripgod_booking_${cleanCode}`);
-        if (directLocal) {
-          try {
-            const parsed = JSON.parse(directLocal);
-            const isCombo = Array.isArray(parsed.items) && parsed.items.length > 1;
-            setBooking({
-              ...parsed,
-              category: isCombo ? 'combo' : (parsed.category || parsed.items?.[0]?.category || 'hotels').toLowerCase()
-            });
-            setLoading(false);
-            return;
-          } catch (e) {}
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.includes(cleanCode) || key.includes(codeNumOnly)) {
+            try {
+              const parsed = JSON.parse(localStorage.getItem(key) || '{}');
+              if (parsed && (parsed.bookingId || parsed.id || parsed.items)) {
+                const isCombo = Array.isArray(parsed.items) && parsed.items.length > 1;
+                const cat = isCombo ? 'combo' : normalizeCategory(parsed.category || parsed.items?.[0]?.category, parsed.activityName || parsed.items?.[0]?.name);
+                setBooking({
+                  ...parsed,
+                  category: cat
+                });
+                setLoading(false);
+                return;
+              }
+            } catch (e) {}
+          }
         }
       } catch (err) {
         console.error('Error fetching ticket details:', err);
@@ -168,7 +216,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
     );
   }
 
-  // If no booking was found in DB or localStorage, render a clean "Ticket Not Found" screen (DO NOT render fake hotel pass!)
+  // If no booking was found in DB or localStorage, render clean "Ticket Not Found" screen
   if (!booking) {
     return (
       <div className="min-h-screen bg-slate-100 text-slate-900 font-sans flex flex-col items-center justify-center p-6">
