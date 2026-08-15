@@ -94,6 +94,37 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               const isCombo = rawItems.length > 1;
               const cat = isCombo ? 'combo' : normalizeCategory(rawItems[0]?.category || cartData.service_type, rawItems[0]?.name || details.activityName);
 
+              // Live Overrides for Hotel from DB
+              if (cat === 'hotels') {
+                try {
+                  const searchHName = rawItems[0]?.name || details.activityName || details.name || 'Abhinandan';
+                  const cleanHName = searchHName.replace(/ - .*/, '').trim();
+                  
+                  const { data: liveHotelRow } = await supabase
+                    .from('hotels')
+                    .select('*, vendors(*)')
+                    .or(`name.ilike.%${cleanHName}%,name.ilike.%Abhinandan%`)
+                    .limit(1)
+                    .maybeSingle();
+
+                  if (liveHotelRow) {
+                    const liveMap = liveHotelRow.google_maps_link || liveHotelRow.map_link || liveHotelRow.location_map_link || liveHotelRow.vendors?.google_maps_link;
+                    if (liveMap) {
+                      rawItems[0].mapLink = liveMap;
+                      rawItems[0].google_maps_link = liveMap;
+                    }
+                    if (liveHotelRow.name) rawItems[0].name = liveHotelRow.name;
+                    if (liveHotelRow.address) rawItems[0].fullAddress = liveHotelRow.address;
+                    if (liveHotelRow.whatsapp_number || liveHotelRow.phone_number || liveHotelRow.vendors?.phone) {
+                      rawItems[0].operatorPhone = liveHotelRow.whatsapp_number || liveHotelRow.phone_number || liveHotelRow.vendors?.phone;
+                    }
+                    if (liveHotelRow.vendors?.name) rawItems[0].vendorName = liveHotelRow.vendors.name;
+                  }
+                } catch (hErr) {
+                  console.error('Error fetching live hotel map from DB:', hErr);
+                }
+              }
+
               setBooking({
                 bookingId: cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`,
                 customerName: cartData.customer_name || details.customerName || 'Valued Guest',
@@ -165,7 +196,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                     if (hotelRow) {
                       resolvedName = hotelRow.name || resolvedName;
                       resolvedAddress = hotelRow.address || hotelRow.location || resolvedAddress;
-                      resolvedMap = hotelRow.google_maps_link || hotelRow.map_link || resolvedMap;
+                      resolvedMap = hotelRow.google_maps_link || hotelRow.map_link || hotelRow.location_map_link || resolvedMap;
                       resolvedPhone = hotelRow.whatsapp_number || hotelRow.phone_number || hotelRow.vendors?.phone || hotelRow.vendors?.whatsapp || resolvedPhone;
                       if (hotelRow.vendors) vendorObj = hotelRow.vendors;
                     }
