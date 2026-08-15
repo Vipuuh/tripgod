@@ -186,6 +186,9 @@ export default async function handler(req, res) {
       }
     }
 
+    const agencyPhoneRaw = rawOperatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE;
+    const cleanAgencyPhone = formatPhone(agencyPhoneRaw);
+
     const locationLink = LOCATION_MAPS[category] || LOCATION_MAPS.hotels || "https://tripgod.in";
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
@@ -216,34 +219,34 @@ export default async function handler(req, res) {
 
     // 2. Vendor Parameters (formatted for approved tripgod_booking_confirmed template)
     const vendorParamsConfirmed = [
-      `PARTNER ALERT: ${customerName}`,                                       // {{1}} - Vendor Header
+      customerName,                                                            // {{1}} - Customer Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
       `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Trip/Hotel
       `*${paramDate}*`,                                                        // {{4}} - Date
       `*${paramTime}*`,                                                        // {{5}} - Slot/Time
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      locationLink,                                                            // {{7}} - Location
+      ticketUrl,                                                               // {{7}} - Ticket Pass Link
       isFullPayment 
-        ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Payment)`
-        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Collect: *₹${remainingPaid.toLocaleString('en-IN')}* at venue`, // {{8}} - Payment
-      `*NEW BOOKING ALERT!*`,                                                 // {{9}} - Alert Tag
-      `*Customer Contact: ${formatDisplayPhone(customerPhone)}*`              // {{10}} - Customer Contact
+        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
+        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
+      `*Confirmed!*`,                                                          // {{9}} - Status
+      `*${formatDisplayPhone(customerPhone)}*`                                 // {{10}} - Customer Contact
     ];
 
     // 3. Admin Parameters (formatted for approved tripgod_booking_confirmed template)
     const adminParamsConfirmed = [
-      `ADMIN ALERT: ${customerName}`,                                         // {{1}} - Admin Header
+      customerName,                                                            // {{1}} - Customer Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
       `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Trip/Hotel
       `*${paramDate}*`,                                                        // {{4}} - Date
       `*${paramTime}*`,                                                        // {{5}} - Slot/Time
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      locationLink,                                                            // {{7}} - Location
+      ticketUrl,                                                               // {{7}} - Ticket Pass Link
       isFullPayment 
-        ? `Paid Online: *₹${totalPrice.toLocaleString('en-IN')}* (Full Online)`
-        : `Paid Online: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Razorpay: ${paymentId})`, // {{8}} - Payment
-      `*NEW BOOKING ALERT*`,                                                   // {{9}} - Alert Tag
-      `*Operator: ${formatDisplayPhone(cleanAgencyPhone)}*`                    // {{10}} - Operator Contact
+        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
+        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
+      `*Confirmed!*`,                                                          // {{9}} - Status
+      `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{10}} - Operator Contact
     ];
 
     // Helper to send message using Meta Cloud API with fallback support
