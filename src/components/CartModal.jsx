@@ -256,6 +256,54 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
           Promise.all(bookingPromises).then(() => {
             const dbBookingId = insertedBookingIds[0] || paymentId;
 
+            // Compute simple booking code
+            const getSimpleBookingId = (id) => {
+              if (!id || id === 'N/A') return 'TG-000000';
+              if (id.includes('-') || id.length >= 32) {
+                const cleanHex = id.replace(/-/g, '').substring(0, 8);
+                const num = parseInt(cleanHex, 16);
+                if (!isNaN(num)) return `TG-${String(num).slice(-6)}`;
+              }
+              const cleanStr = id.replace(/[^a-zA-Z0-9]/g, '');
+              let hash = 0;
+              for (let i = 0; i < cleanStr.length; i++) {
+                hash = (hash << 5) - hash + cleanStr.charCodeAt(i);
+                hash = hash & hash;
+              }
+              return `TG-${String(Math.abs(hash)).slice(-6)}`;
+            };
+            const simpleBookingCode = getSimpleBookingId(dbBookingId);
+
+            const comboBookingPayload = {
+              id: simpleBookingCode,
+              bookingId: simpleBookingCode,
+              customerName: name,
+              customerPhone: phone,
+              customerEmail: email,
+              date: new Date().toLocaleDateString('en-IN'),
+              totalPrice: totalCartPrice,
+              advancePaid: totalCartAdvance,
+              remainingPaid: Math.max(0, totalCartPrice - totalCartAdvance),
+              category: cart.length > 1 ? 'combo' : (cart[0]?.category || 'hotels').toLowerCase(),
+              items: cart
+            };
+
+            if (supabase) {
+              supabase.from('abandoned_carts').upsert([{
+                id: simpleBookingCode,
+                customer_name: name,
+                customer_email: email,
+                customer_phone: phone,
+                status: 'completed',
+                total_price: totalCartPrice,
+                advance_amount: totalCartAdvance,
+                activity_details: comboBookingPayload,
+                updated_at: new Date().toISOString()
+              }]).then(({ error }) => {
+                if (error) console.error("Error saving cart ticket payload:", error);
+              });
+            }
+
             // Trigger background automated WhatsApp notifications for each cart item
             cart.forEach((item) => {
               const opPhone = item.whatsapp_number || item.whatsapp || item.vendors?.whatsapp || item.vendors?.phone || item.phone_number || item.operatorPhone || '9410572857';
