@@ -174,6 +174,9 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
         });
         setItemSlotsMap(initialMap);
       }
+      setRentalDays(1);
+      setSlot(slots[0]);
+      const freeVideo = activity.free_video_type !== undefined ? activity.free_video_type : (activity.category === 'rafting' ? 'dslr' : 'none');
       setHasVideoOption(freeVideo !== 'none');
       setError('');
       // Initialize payment option based on mode
