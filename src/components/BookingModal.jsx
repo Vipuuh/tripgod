@@ -449,6 +449,8 @@ My payment ID is verified. Please confirm my slots.`;
 
         // Save booking locally
         try {
+          const resolvedOpPhone = activity.whatsapp_number || activity.whatsapp || activity.phone_number || activity.phone || activity.vendors?.whatsapp || activity.vendors?.phone || activity.operatorPhone || '9410572857';
+
           const enrichedComboItems = (activity.items || []).map((item, idx) => {
             const key = item.id || item.name || idx;
             return {
@@ -463,12 +465,16 @@ My payment ID is verified. Please confirm my slots.`;
             category: activity.category || 'hotels',
             name: activity.name,
             slot: activity.category === 'hotels' ? `Check-in: ${checkInDate} to ${checkOutDate}` : (slot || 'Flexible Timing'),
-            fullAddress: activity.fullAddress || activity.address || activity.location || 'Rishikesh, Uttarakhand',
+            fullAddress: activity.fullAddress || activity.address || activity.location || 'Gangakshetra, Opposite Kailash Gate Police Chowki, Muni Ki Reti, Rishikesh, Uttarakhand 249137',
             mapLink: activity.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activity.name + ' Rishikesh')}`,
-            operatorPhone: opPhone,
+            operatorPhone: resolvedOpPhone,
             phone_number: activity.phone_number || activity.phone,
-            whatsapp_number: activity.whatsapp_number || activity.whatsapp,
-            vendors: activity.vendors
+            whatsapp_number: activity.whatsapp_number || activity.whatsapp || resolvedOpPhone,
+            vendors: activity.vendors,
+            num_rooms: activity.num_rooms || activity.rooms || 1,
+            num_adults: activity.num_adults || activity.adults || 2,
+            num_kids: activity.num_kids || activity.children || 1,
+            room_type: activity.room_type || activity.selectedRoomType || 'Deluxe Room'
           };
 
           const newBooking = {
@@ -479,7 +485,15 @@ My payment ID is verified. Please confirm my slots.`;
             customerPhone: phone,
             customerEmail: email,
             date: dateRangeStr,
+            checkInDate: checkInDate,
+            checkOutDate: checkOutDate,
+            nights: nights || 1,
+            num_rooms: activity.num_rooms || activity.rooms || 1,
+            num_adults: activity.num_adults || activity.adults || 2,
+            num_kids: activity.num_kids || activity.children || 1,
+            room_type: activity.room_type || activity.selectedRoomType || 'Deluxe Room',
             activityName: activity.name,
+            operatorPhone: resolvedOpPhone,
             activities: [{
               name: activity.name,
               stretch: activity.stretch || '',
