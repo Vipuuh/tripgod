@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Calendar, Clock, MapPin, Phone, ExternalLink, Moon, Users, DoorClosed, Sparkles } from 'lucide-react';
+import { Building2, Calendar, Clock, MapPin, Phone, ExternalLink, DoorClosed, Sparkles } from 'lucide-react';
 import TicketHeader from './TicketHeader';
 import TicketQRSection from './TicketQRSection';
 import TicketPaymentSummary from './TicketPaymentSummary';
@@ -16,30 +16,42 @@ export default function HotelTicketView({ booking, onBackToHome }) {
   const item = booking.items?.[0] || {};
   const vendor = item.vendors || booking.vendor || {};
   
-  // Single Source of Truth Field Resolutions
-  const hotelName = item.name || item.title || booking.activityName || 'Rishikesh Hotel Stay';
+  // Clean Single Source of Truth Field Resolutions
+  const rawName = item.name || item.title || booking.activityName || booking.name || '';
+  const hotelName = (!rawName || rawName === 'Hotel' || rawName === 'hotels')
+    ? (booking.activityName && booking.activityName !== 'Hotel' ? booking.activityName : 'Abhinandan Homestay & Resort')
+    : rawName;
+
   const checkInDate = item.checkInDate || booking.checkInDate || booking.date || 'Flexible Date';
   const checkInTime = item.checkInTime || vendor.check_in_time || '12:00 PM';
   const checkOutDate = item.checkOutDate || booking.checkOutDate || 'Next Day';
   const checkOutTime = item.checkOutTime || vendor.check_out_time || '11:00 AM';
-  const nights = item.nights || booking.nights || 1;
   
-  const roomsCount = item.roomsCount || booking.roomsCount || 1;
-  const adultsCount = item.adultsCount || booking.adultsCount || item.guests || booking.guests || 2;
-  const childrenCount = item.childrenCount || booking.childrenCount || 0;
+  const roomsCount = Number(item.roomsCount || booking.roomsCount || 1);
+  const totalGuests = Number(item.guests || booking.guests || item.adultsCount || booking.adultsCount || 2);
+  const childrenCount = Number(item.childrenCount || booking.childrenCount || 0);
   const roomType = item.roomType || booking.roomType || 'Standard Deluxe Room';
-  const mealPlan = item.mealPlan || item.inclusions || 'Complimentary Breakfast Included';
 
-  // Format exact guest breakdown string: e.g. "1 ROOM · 2 ADULTS · 1 CHILD · DELUXE ROOM"
+  // Strict Meal Plan Validation (NO Hardcoded Breakfast Default)
+  const rawMealPlan = item.mealPlan || item.inclusions || item.meals || booking.mealPlan;
+  const isValidMealPlan = rawMealPlan && 
+    typeof rawMealPlan === 'string' && 
+    !rawMealPlan.toLowerCase().includes('not available') && 
+    !rawMealPlan.toLowerCase().includes('no meal') && 
+    !rawMealPlan.toLowerCase().includes('none') &&
+    rawMealPlan.trim().length > 0;
+
+  // Format exact guest breakdown string: e.g. "1 ROOM · 3 GUESTS · DELUXE ROOM"
   const roomLabel = `${roomsCount} ${roomsCount > 1 ? 'ROOMS' : 'ROOM'}`;
-  const adultLabel = `${adultsCount} ${adultsCount > 1 ? 'ADULTS' : 'ADULT'}`;
+  const guestLabel = `${totalGuests} ${totalGuests > 1 ? 'GUESTS' : 'GUEST'}`;
   const childLabel = childrenCount > 0 ? ` · ${childrenCount} ${childrenCount > 1 ? 'CHILDREN' : 'CHILD'}` : '';
-  const guestBreakdownStr = `${roomLabel} · ${adultLabel}${childLabel} · ${roomType.toUpperCase()}`;
+  const guestBreakdownStr = `${roomLabel} · ${guestLabel}${childLabel} · ${roomType.toUpperCase()}`;
 
-  // Vendor contact & address strictly from backend
-  const vendorPhone = item.operatorPhone || vendor.phone || vendor.whatsapp || booking.vendorPhone || '9410572857';
-  const fullAddress = item.fullAddress || vendor.address || item.address || 'Rishikesh, Uttarakhand';
-  const googleMapsUrl = item.mapLink || vendor.google_maps_link || item.google_maps_link || booking.googleMapsLink;
+  // Vendor contact & address resolution
+  const vendorName = item.vendorName || item.vendors?.name || vendor.name;
+  const vendorPhone = item.operatorPhone || item.phone_number || item.whatsapp_number || item.phone || vendor.phone || vendor.whatsapp || booking.vendorPhone || '9410572857';
+  const fullAddress = item.fullAddress || item.address || vendor.address || item.location || vendor.location || 'Rishikesh, Uttarakhand';
+  const googleMapsUrl = item.mapLink || item.google_maps_link || vendor.google_maps_link || booking.googleMapsLink;
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans pb-16 print:bg-white print:text-black">
@@ -77,8 +89,8 @@ export default function HotelTicketView({ booking, onBackToHome }) {
                 </span>
               </div>
               <h2 className="text-xl font-black text-slate-900 leading-snug">{hotelName}</h2>
-              {vendor.name && vendor.name !== hotelName && (
-                <p className="text-xs font-bold text-slate-500 mt-0.5">Operated by: {vendor.name}</p>
+              {vendorName && vendorName !== hotelName && !vendorName.toLowerCase().includes('evergreen') && (
+                <p className="text-xs font-bold text-slate-500 mt-0.5">Operated by: {vendorName}</p>
               )}
             </div>
 
@@ -114,11 +126,11 @@ export default function HotelTicketView({ booking, onBackToHome }) {
               </div>
             </div>
 
-            {/* Meal Plan / Inclusions */}
-            {mealPlan && (
+            {/* Meal Plan / Inclusions (Rendered ONLY if explicitly provided and available) */}
+            {isValidMealPlan && (
               <div className="flex items-center gap-2 text-xs font-bold text-slate-700 bg-amber-50/60 border border-amber-200/60 p-3 rounded-xl">
                 <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Meal Plan / Inclusions: <strong className="text-slate-900">{mealPlan}</strong></span>
+                <span>Meal Plan / Inclusions: <strong className="text-slate-900">{rawMealPlan}</strong></span>
               </div>
             )}
 

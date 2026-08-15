@@ -9,7 +9,7 @@ import CampingTicketView from '../components/ticket/CampingTicketView';
 import TourTicketView from '../components/ticket/TourTicketView';
 import ComboTicketView from '../components/ticket/ComboTicketView';
 
-// Helper to derive simple booking code from UUID or ID string (Matches backend algorithm)
+// Helper to derive simple booking code from UUID or ID string
 const getSimpleBookingId = (id) => {
   if (!id || id === 'N/A') return 'TG-000000';
   if (id.includes('-') || id.length >= 32) {
@@ -63,7 +63,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
 
       try {
         if (supabase) {
-          // 1. Fetch from Supabase `abandoned_carts` table (Matches simpleBookingCode like TG-578377)
+          // 1. Fetch from Supabase `abandoned_carts` table (Stores exact simpleBookingCode & activity_details)
           try {
             const { data: cartData } = await supabase
               .from('abandoned_carts')
@@ -143,6 +143,41 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                 }
 
                 const cat = normalizeCategory(dbMatch.service_type, dbMatch.activity_name);
+                let resolvedName = dbMatch.activity_name;
+                let resolvedAddress = vendorObj?.address || vendorObj?.location || 'Rishikesh, Uttarakhand';
+                let resolvedMap = vendorObj?.google_maps_link || null;
+                let resolvedPhone = vendorObj?.phone || vendorObj?.whatsapp || '9410572857';
+
+                // If Hotel booking, fetch exact hotel details from `hotels` table
+                if (cat === 'hotels' || dbMatch.service_type === 'Hotel') {
+                  try {
+                    let hotelQuery = supabase.from('hotels').select('*, vendors(*)');
+                    if (dbMatch.service_id && dbMatch.service_id !== '00000000-0000-0000-0000-000000000000') {
+                      hotelQuery = hotelQuery.eq('id', dbMatch.service_id);
+                    } else if (dbMatch.activity_name && dbMatch.activity_name !== 'Hotel') {
+                      const cleanHName = dbMatch.activity_name.replace(/ - .*/, '').trim();
+                      hotelQuery = hotelQuery.ilike('name', `%${cleanHName}%`);
+                    } else {
+                      hotelQuery = hotelQuery.ilike('name', '%Abhinandan%');
+                    }
+
+                    const { data: hotelRow } = await hotelQuery.limit(1).maybeSingle();
+                    if (hotelRow) {
+                      resolvedName = hotelRow.name || resolvedName;
+                      resolvedAddress = hotelRow.address || hotelRow.location || resolvedAddress;
+                      resolvedMap = hotelRow.google_maps_link || hotelRow.map_link || resolvedMap;
+                      resolvedPhone = hotelRow.whatsapp_number || hotelRow.phone_number || hotelRow.vendors?.phone || hotelRow.vendors?.whatsapp || resolvedPhone;
+                      if (hotelRow.vendors) vendorObj = hotelRow.vendors;
+                    }
+                  } catch (hErr) {
+                    console.error('Error resolving hotel details from DB:', hErr);
+                  }
+                }
+
+                if (!resolvedName || resolvedName === 'Hotel') {
+                  resolvedName = 'Abhinandan Homestay & Resort';
+                }
+
                 const totalAmt = Number(dbMatch.amount_paid || 0) + Number(dbMatch.remaining_amount || 0);
 
                 const resolvedBooking = {
@@ -159,11 +194,11 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                   items: [{
                     id: dbMatch.service_id || '1',
                     category: cat,
-                    name: dbMatch.activity_name || dbMatch.service_type || 'Rishikesh Adventure Pass',
+                    name: resolvedName,
                     slot: dbMatch.travel_date ? `Date: ${dbMatch.travel_date}` : 'Standard Timing',
-                    fullAddress: vendorObj?.address || vendorObj?.location || 'Rishikesh, Uttarakhand',
-                    mapLink: vendorObj?.google_maps_link || null,
-                    operatorPhone: vendorObj?.phone || vendorObj?.whatsapp || '9410572857',
+                    fullAddress: resolvedAddress,
+                    mapLink: resolvedMap,
+                    operatorPhone: resolvedPhone,
                     vendors: vendorObj
                   }]
                 };
