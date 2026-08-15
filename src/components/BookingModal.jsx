@@ -445,13 +445,6 @@ ${hasVideoOption ? `*Add-ons:* ${((activity.free_video_type || (activity.categor
 - *${effectivePaymentOption === 'full' ? 'Paid 100% Online' : (paymentMode === 'fixed_advance' ? 'Paid Fixed Advance' : `Paid ${commissionPercentage}% Advance`)}:* ₹${finalAmountToPay.toLocaleString('en-IN')}${upiDiscountVal > 0 ? ` (UPI Discount of ₹${upiDiscountVal} applied)` : ''}
 - ${effectivePaymentOption === 'full' ? 'Remaining Balance: ₹0 (Paid in Full)' : `Pay at Venue: ₹${remainingPayment.toLocaleString('en-IN')}`}
 ----------------------------------
-My payment ID is verified. Please confirm my slots.`;
-
-        // Save booking locally
-        try {
-          const storedBookings = localStorage.getItem(`tripgod_bookings_${email}`) 
-            ? JSON.parse(localStorage.getItem(`tripgod_bookings_${email}`)) 
-            : [];
           const enrichedComboItems = (activity.items || []).map((item, idx) => {
             const key = item.id || item.name || idx;
             return {
@@ -461,9 +454,23 @@ My payment ID is verified. Please confirm my slots.`;
             };
           });
 
+          const singleItemObj = {
+            id: activity.id || '1',
+            category: activity.category || 'hotels',
+            name: activity.name,
+            slot: activity.category === 'hotels' ? `Check-in: ${checkInDate} to ${checkOutDate}` : (slot || 'Flexible Timing'),
+            fullAddress: activity.fullAddress || activity.address || activity.location || 'Rishikesh, Uttarakhand',
+            mapLink: activity.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activity.name + ' Rishikesh')}`,
+            operatorPhone: opPhone,
+            phone_number: activity.phone_number || activity.phone,
+            whatsapp_number: activity.whatsapp_number || activity.whatsapp,
+            vendors: activity.vendors
+          };
+
           const newBooking = {
-            id: dbBookingId,
-            bookingId: dbBookingId,
+            id: simpleBookingCode,
+            bookingId: simpleBookingCode,
+            dbBookingId: dbBookingId,
             customerName: name,
             customerPhone: phone,
             customerEmail: email,
@@ -477,24 +484,35 @@ My payment ID is verified. Please confirm my slots.`;
               guests: guests,
               subtotal: totalPrice
             }],
-            items: enrichedComboItems.length > 0 ? enrichedComboItems : [{
-              id: activity.id || '1',
-              category: activity.category,
-              name: activity.name,
-              slot: slot,
-              fullAddress: activity.fullAddress || activity.address || 'Rishikesh',
-              mapLink: activity.mapLink || `https://maps.google.com/?q=${encodeURIComponent(activity.name + ' Rishikesh')}`,
-              operatorPhone: activity.operatorPhone || activity.whatsapp || activity.phone
-            }],
+            items: enrichedComboItems.length > 0 ? enrichedComboItems : [singleItemObj],
             totalPrice: totalPrice,
             advancePaid: finalAmountToPay,
             remainingPaid: remainingPayment
           };
+
           storedBookings.push(newBooking);
           localStorage.setItem(`tripgod_bookings_${email}`, JSON.stringify(storedBookings));
           if (phone) {
             localStorage.setItem(`tripgod_bookings_${phone}`, JSON.stringify(storedBookings));
           }
+          localStorage.setItem(`tripgod_booking_${simpleBookingCode}`, JSON.stringify(newBooking));
+          localStorage.setItem(`tripgod_booking_${dbBookingId}`, JSON.stringify(newBooking));
+          localStorage.setItem('tripgod_last_booking', JSON.stringify(newBooking));
+
+          // Also upsert ticket detail directly into abandoned_carts using simpleBookingCode
+          supabase.from('abandoned_carts').upsert([{
+            id: simpleBookingCode,
+            customer_name: name,
+            customer_email: email,
+            customer_phone: phone,
+            status: 'completed',
+            total_price: totalPrice,
+            advance_amount: finalAmountToPay,
+            activity_details: newBooking,
+            updated_at: new Date().toISOString()
+          }]).then(({ error }) => {
+            if (error) console.error("Error saving ticket log:", error);
+          });
         } catch (err) {
           console.error('Failed to save booking locally:', err);
         }
