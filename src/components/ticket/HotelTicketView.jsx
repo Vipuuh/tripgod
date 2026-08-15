@@ -16,10 +16,10 @@ export default function HotelTicketView({ booking, onBackToHome }) {
   const item = booking.items?.[0] || {};
   const vendor = item.vendors || booking.vendor || {};
   
-  // Clean Single Source of Truth Field Resolutions
+  // Direct 1-to-1 Single Source of Truth Field Resolutions
   const rawName = item.name || item.title || booking.activityName || booking.name || '';
   const hotelName = (!rawName || rawName === 'Hotel' || rawName === 'hotels')
-    ? (booking.activityName && booking.activityName !== 'Hotel' ? booking.activityName : 'Abhinandan Homestay & Resort')
+    ? (booking.activityName && booking.activityName !== 'Hotel' ? booking.activityName : 'Rishikesh Hotel Accommodation')
     : rawName;
 
   const checkInDate = item.checkInDate || booking.checkInDate || booking.date || 'Flexible Date';
@@ -47,16 +47,13 @@ export default function HotelTicketView({ booking, onBackToHome }) {
   const childLabel = childrenCount > 0 ? ` · ${childrenCount} ${childrenCount > 1 ? 'CHILDREN' : 'CHILD'}` : '';
   const guestBreakdownStr = `${roomLabel} · ${guestLabel}${childLabel} · ${roomType.toUpperCase()}`;
 
-  // Vendor contact & address resolution
-  const vendorName = item.vendorName || item.vendors?.name || vendor.name;
-  const vendorPhone = item.operatorPhone || item.phone_number || item.whatsapp_number || item.phone || vendor.phone || vendor.whatsapp || booking.vendorPhone || '9410572857';
-  const fullAddress = item.fullAddress || item.address || vendor.address || item.location || vendor.location || 'Rishikesh, Uttarakhand';
-  // Prioritize live backend google_maps_link over stale item.mapLink
-  let rawMap = item.google_maps_link || vendor.google_maps_link || item.mapLink || booking.googleMapsLink;
-  if (hotelName.toLowerCase().includes('abhinandan') && (!rawMap || rawMap.includes('cEXc2dxuNpDF5k6V8'))) {
-    rawMap = 'https://maps.app.goo.gl/MrQFRbjC4Etio3dS7';
-  }
-  const googleMapsUrl = rawMap;
+  // Direct 1-to-1 Vendor contact & address resolution (Strictly from booked item / hotel record)
+  const vendorName = item.vendorName || (vendor.name && !vendor.name.toLowerCase().includes('evergreen') ? vendor.name : null);
+  const vendorPhone = item.operatorPhone || item.phone_number || item.whatsapp_number || item.phone || (vendor.phone && !vendor.phone.includes('9759001885') ? vendor.phone : null) || booking.vendorPhone || '9837371137';
+  const fullAddress = item.fullAddress || item.address || item.location || (vendor.address && !vendor.address.includes('Madhuban Parking') ? vendor.address : null) || 'Rishikesh, Uttarakhand';
+  
+  // Direct Map Link (Strictly from booked item / hotel record)
+  let googleMapsUrl = item.google_maps_link || item.mapLink || (vendor.google_maps_link && !vendor.google_maps_link.includes('cEXc2dxuNpDF5k6V8') ? vendor.google_maps_link : null) || booking.googleMapsLink;
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans pb-16 print:bg-white print:text-black">
@@ -94,7 +91,7 @@ export default function HotelTicketView({ booking, onBackToHome }) {
                 </span>
               </div>
               <h2 className="text-xl font-black text-slate-900 leading-snug">{hotelName}</h2>
-              {vendorName && vendorName !== hotelName && !vendorName.toLowerCase().includes('evergreen') && (
+              {vendorName && vendorName !== hotelName && (
                 <p className="text-xs font-bold text-slate-500 mt-0.5">Operated by: {vendorName}</p>
               )}
             </div>

@@ -3234,7 +3234,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
       // Set defaults for empty forms
       const defaults = {
         city_id: cities.length > 0 ? cities[0].id : '',
-        vendor_id: vendors.length > 0 ? (vendors.find(v => isVendorMultiService(v) || v.category === (type === 'bikes' ? 'Bike Rental' : type === 'hotels' ? 'Hotel' : ['rafting', 'adventures'].includes(type) ? 'Rafting' : 'Tour'))?.id || vendors[0]?.id) : '',
+        vendor_id: (vendors.length > 0 && type !== 'hotels') ? (vendors.find(v => isVendorMultiService(v) || v.category === (type === 'bikes' ? 'Bike Rental' : ['rafting', 'adventures'].includes(type) ? 'Rafting' : 'Tour'))?.id || '') : '',
         name: '',
         description: '',
         price: 0,
