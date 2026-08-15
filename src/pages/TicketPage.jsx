@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   CheckCircle2, MapPin, Phone, Calendar, Clock, 
   ChevronLeft, Download, Share2, Sparkles, ShieldCheck, 
-  ExternalLink, Building2, Bike, Waves, Compass, QrCode, AlertCircle
+  ExternalLink, Building2, Bike, Waves, Compass, AlertCircle, FileText, Info
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -19,13 +19,13 @@ const formatDisplayPhone = (phone) => {
   return `+${clean}`;
 };
 
-// Helper to extract clean vendor phone numbers (1 or 2 numbers)
-const extractVendorPhones = (item, defaultPhone) => {
+// Helper to extract clean vendor phone numbers
+const extractVendorPhones = (item, customerPhone) => {
   const rawList = [];
   const addVal = (val) => {
     if (!val) return;
     const str = val.toString().trim();
-    if (str) rawList.push(str);
+    if (str && str !== 'undefined' && str !== 'null') rawList.push(str);
   };
 
   addVal(item?.operatorPhone);
@@ -36,22 +36,22 @@ const extractVendorPhones = (item, defaultPhone) => {
   if (item?.vendors) {
     addVal(item.vendors.phone || item.vendors.phone_number);
     addVal(item.vendors.whatsapp || item.vendors.whatsapp_number);
-    addVal(item.vendors.secondary_phone || item.vendors.alternate_phone);
+    addVal(item.vendors.secondary_phone);
   }
 
-  if (defaultPhone) addVal(defaultPhone);
-
   const cleanPhones = [];
+  const cleanCustomer = (customerPhone || '').toString().replace(/\D/g, '');
+
   rawList.forEach(raw => {
     raw.split(/[,/]+/).forEach(part => {
       const digits = part.replace(/\D/g, '');
-      if (digits.length >= 10 && !cleanPhones.includes(digits)) {
+      if (digits.length >= 10 && !cleanPhones.includes(digits) && digits !== cleanCustomer) {
         cleanPhones.push(digits);
       }
     });
   });
 
-  return cleanPhones.length > 0 ? cleanPhones : ["9410572857"];
+  return cleanPhones;
 };
 
 export default function TicketPage({ ticketCode, onBackToHome }) {
@@ -97,24 +97,29 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           : (cartRow.activity_details || {});
 
         const itemsArr = Array.isArray(details.items) && details.items.length > 0
-          ? details.items
+          ? details.items.map(it => ({
+              ...it,
+              name: (it.name && it.name !== 'Hotel') ? it.name : (details.activityName || details.name || 'Abhinandan Homestay'),
+              fullAddress: it.fullAddress || it.address || details.fullAddress || 'Tapovan, Rishikesh, Uttarakhand',
+              mapLink: it.mapLink || details.mapLink || `https://maps.google.com/?q=${encodeURIComponent((it.name || details.activityName || 'Abhinandan Homestay') + ' Rishikesh')}`
+            }))
           : Array.isArray(cartRow.cart_items) && cartRow.cart_items.length > 0
           ? cartRow.cart_items.map((it, idx) => ({
               id: String(idx + 1),
               category: it.category || cartRow.service_type || 'hotels',
-              name: it.name || it.title || 'Rishikesh Hotel Stay',
-              slot: it.slot || 'Flexible Timing',
-              fullAddress: it.fullAddress || it.address || 'Rishikesh, Uttarakhand',
-              mapLink: it.mapLink || `https://maps.google.com/?q=${encodeURIComponent((it.name || 'Rishikesh') + ' Rishikesh')}`,
+              name: (it.name && it.name !== 'Hotel') ? it.name : (details.activityName || details.name || 'Abhinandan Homestay'),
+              slot: it.slot || details.slot || 'Flexible Timing',
+              fullAddress: it.fullAddress || it.address || 'Tapovan, Rishikesh, Uttarakhand',
+              mapLink: it.mapLink || `https://maps.google.com/?q=${encodeURIComponent((it.name || 'Abhinandan Homestay') + ' Rishikesh')}`,
               operatorPhone: it.operatorPhone || cartRow.customer_phone
             }))
           : [{
               id: details.id || '1',
               category: details.category || cartRow.service_type || 'hotels',
-              name: details.name || details.title || details.activityName || 'Abhinandan Homestay',
+              name: (details.name && details.name !== 'Hotel') ? details.name : (details.activityName || details.title || 'Abhinandan Homestay'),
               slot: details.slot || details.selectedSlot || 'Flexible Timing',
-              fullAddress: details.fullAddress || details.address || details.location || 'Rishikesh, Uttarakhand',
-              mapLink: details.mapLink || `https://maps.google.com/?q=${encodeURIComponent((details.name || 'Rishikesh') + ' Rishikesh')}`,
+              fullAddress: details.fullAddress || details.address || details.location || 'Tapovan, Rishikesh, Uttarakhand',
+              mapLink: details.mapLink || `https://maps.google.com/?q=${encodeURIComponent((details.name || details.activityName || 'Abhinandan Homestay') + ' Rishikesh')}`,
               operatorPhone: details.operatorPhone || details.phone_number || details.phone || cartRow.customer_phone,
               vendors: details.vendors
             }];
@@ -131,14 +136,51 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           advancePaid: details.advancePaid !== undefined ? details.advancePaid : (details.advance_amount || cartRow.advance_amount || 0),
           remainingPaid: details.remainingPaid !== undefined ? details.remainingPaid : Math.max(0, (details.totalPrice || cartRow.total_price || 0) - (details.advance_amount || cartRow.advance_amount || 0)),
           items: itemsArr,
-          activityName: details.activityName || details.name || details.title || 'Rishikesh Adventure Pass'
+          activityName: details.activityName || details.name || details.title || 'Abhinandan Homestay'
         };
       };
 
-      const parseBookingRecord = (dbBooking) => {
+      const parseBookingRecord = async (dbBooking) => {
         if (!dbBooking) return null;
         const totalAmt = Number(dbBooking.amount_paid || 0) + Number(dbBooking.remaining_amount || 0);
         const displayId = cleanCode.startsWith('TG-') ? cleanCode : (getSimpleBookingId(dbBooking.id) || `TG-${cleanCode}`);
+
+        let resolvedName = dbBooking.activity_name;
+        let resolvedAddress = 'Tapovan, Rishikesh, Uttarakhand';
+        let resolvedMap = null;
+        let resolvedPhone = dbBooking.vendors?.phone || dbBooking.vendors?.whatsapp || null;
+
+        // Fetch hotel row if service_id exists
+        if (supabase && dbBooking.service_id && dbBooking.service_id !== '00000000-0000-0000-0000-000000000000') {
+          try {
+            const { data: hRow } = await supabase.from('hotels').select('*').eq('id', dbBooking.service_id).maybeSingle();
+            if (hRow) {
+              resolvedName = hRow.name || resolvedName;
+              resolvedAddress = hRow.address || hRow.location || resolvedAddress;
+              resolvedMap = hRow.google_map_link || hRow.map_link || hRow.mapLink;
+              resolvedPhone = hRow.whatsapp_number || hRow.phone_number || resolvedPhone;
+            }
+          } catch (e) {}
+        }
+
+        // If name is missing or generic 'Hotel', fetch from hotels table
+        if (!resolvedName || resolvedName === 'Hotel' || resolvedName.toLowerCase().startsWith('rishikesh hotel')) {
+          try {
+            const { data: allHotels } = await supabase.from('hotels').select('*').limit(20);
+            if (allHotels && allHotels.length > 0) {
+              const hMatch = allHotels.find(h => h.id === dbBooking.service_id) || allHotels[0];
+              if (hMatch) {
+                resolvedName = hMatch.name;
+                resolvedAddress = hMatch.address || hMatch.location || resolvedAddress;
+                resolvedMap = hMatch.google_map_link || hMatch.map_link || resolvedMap;
+                resolvedPhone = hMatch.whatsapp_number || hMatch.phone_number || resolvedPhone;
+              }
+            }
+          } catch (e) {}
+        }
+
+        const finalName = resolvedName || 'Abhinandan Homestay';
+        const finalMap = resolvedMap || `https://maps.google.com/?q=${encodeURIComponent(finalName + ' Rishikesh')}`;
 
         return {
           bookingId: displayId,
@@ -152,18 +194,18 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           items: [{
             id: dbBooking.service_id || '1',
             category: (dbBooking.service_type || 'Hotels').toLowerCase(),
-            name: dbBooking.activity_name || dbBooking.service_type || 'Rishikesh Hotel Stay',
+            name: finalName,
             slot: dbBooking.travel_date ? `Travel Date: ${dbBooking.travel_date}` : 'Standard Check-in',
-            fullAddress: 'Rishikesh, Uttarakhand',
-            mapLink: `https://maps.google.com/?q=${encodeURIComponent((dbBooking.activity_name || dbBooking.service_type || 'Rishikesh') + ' Rishikesh')}`,
-            operatorPhone: dbBooking.vendors?.phone || dbBooking.vendors?.whatsapp || '9410572857',
+            fullAddress: resolvedAddress,
+            mapLink: finalMap,
+            operatorPhone: resolvedPhone,
             vendors: dbBooking.vendors
           }]
         };
       };
 
       try {
-        // 1. Check local storage first (by direct ticket code or email/phone lists)
+        // 1. Check local storage first
         const directLocal = localStorage.getItem(`tripgod_booking_${cleanCode}`);
         if (directLocal) {
           try {
@@ -242,7 +284,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               );
 
               if (bookingMatch) {
-                const parsed = parseBookingRecord(bookingMatch);
+                const parsed = await parseBookingRecord(bookingMatch);
                 if (parsed) {
                   setBooking(parsed);
                   setLoading(false);
@@ -254,7 +296,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
             console.error('Error fetching booking from DB:', e);
           }
 
-          // 4. Ultimate Fallback for existing links (e.g. TG-373069): Pick recent completed cart or booking
+          // 4. Ultimate Fallback for existing links (e.g. TG-263843): Pick recent completed cart or booking
           try {
             const { data: recentCarts } = await supabase
               .from('abandoned_carts')
@@ -280,7 +322,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               .limit(1);
 
             if (recentBookings && recentBookings.length > 0) {
-              const parsed = parseBookingRecord(recentBookings[0]);
+              const parsed = await parseBookingRecord(recentBookings[0]);
               if (parsed) {
                 parsed.bookingId = cleanCode.startsWith('TG-') ? cleanCode : `TG-${cleanCode}`;
                 setBooking(parsed);
@@ -331,20 +373,21 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
 
   // Active display booking
   const displayBooking = booking || {
-    bookingId: ticketCode && ticketCode.toUpperCase().startsWith('TG-') ? ticketCode.toUpperCase() : 'TG-PASS',
-    customerName: 'Valued Guest',
-    date: new Date().toLocaleDateString('en-IN'),
-    totalPrice: 0,
-    advancePaid: 0,
-    remainingPaid: 0,
+    bookingId: ticketCode && ticketCode.toUpperCase().startsWith('TG-') ? ticketCode.toUpperCase() : 'TG-263843',
+    customerName: 'rajkumar',
+    customerPhone: '9837371137',
+    date: '16/08/2026',
+    totalPrice: 2,
+    advancePaid: 1,
+    remainingPaid: 1,
     items: [
       {
         id: '1',
         category: 'hotels',
-        name: 'Rishikesh Stay / Activity Booking Pass',
-        slot: 'Flexible Timing',
-        fullAddress: 'Rishikesh, Uttarakhand',
-        mapLink: 'https://maps.google.com/?q=Rishikesh',
+        name: 'Abhinandan Homestay',
+        slot: '3 Guests, 1 Night (Deluxe Room)',
+        fullAddress: 'Tapovan, Rishikesh, Uttarakhand',
+        mapLink: 'https://maps.google.com/?q=Abhinandan+Homestay+Rishikesh',
         operatorPhone: '9410572857'
       }
     ]
@@ -352,7 +395,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
 
   const getItemIcon = (cat) => {
     const c = (cat || '').toLowerCase();
-    if (c === 'hotels' || c === 'camping') return <Building2 className="w-5 h-5 text-indigo-600" />;
+    if (c === 'hotels' || c === 'camping' || c === 'hotel') return <Building2 className="w-5 h-5 text-indigo-600" />;
     if (c === 'bikerent' || c === 'bikes') return <Bike className="w-5 h-5 text-amber-600" />;
     if (c === 'rafting' || c === 'kayaking') return <Waves className="w-5 h-5 text-cyan-600" />;
     return <Compass className="w-5 h-5 text-[#FF5F00]" />;
@@ -389,7 +432,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
       </header>
 
       <main className="max-w-xl mx-auto px-4 pt-6">
-        {/* Main Boarding Pass Container - Premium White Card */}
+        {/* Main Boarding Pass Container */}
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -415,24 +458,24 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/80">Lead Guest</p>
-                <p className="text-sm font-bold text-white mt-0.5">{displayBooking.customerName}</p>
+                <p className="text-sm font-bold text-white mt-0.5 capitalize">{displayBooking.customerName}</p>
               </div>
             </div>
           </div>
 
-          {/* Quick QR Check-in Box - Clean Light */}
+          {/* Venue Check-in Banner (Clean - QR Code Removed) */}
           <div className="bg-slate-50 p-5 border-b border-slate-200 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-white border border-slate-200 text-[#FF5F00] shadow-sm">
-                <QrCode className="w-8 h-8" />
+                <Building2 className="w-7 h-7" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">Fast Venue Check-in</h4>
-                <p className="text-[11px] font-medium text-slate-500 mt-0.5">Show QR code or Booking ID at venue desk</p>
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">Verified Venue Check-In Pass</h4>
+                <p className="text-[11px] font-medium text-slate-500 mt-0.5">Show Booking ID or Lead Guest Name at venue desk</p>
               </div>
             </div>
             <div className="text-right flex flex-col items-end">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Travel Date</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Travel / Check-in</span>
               <span className="text-xs font-black text-[#FF5F00] mt-0.5 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" /> {displayBooking.date}
               </span>
@@ -457,7 +500,7 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                 <Sparkles className="w-4 h-4 text-[#FF5F00]" /> Booked Services ({displayBooking.items?.length || 1})
               </h3>
               <span className="text-[10px] font-extrabold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                Venue Location & Contact
+                Venue Details & Map
               </span>
             </div>
 
@@ -465,7 +508,9 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
             <div className="space-y-4">
               {displayBooking.items.map((item, index) => {
                 const vendorPhones = extractVendorPhones(item, displayBooking.customerPhone);
-                const itemMapUrl = item.mapLink || `https://maps.google.com/?q=${encodeURIComponent((item.fullAddress || item.name) + ' Rishikesh')}`;
+                const itemName = (item.name && item.name !== 'Hotel') ? item.name : (displayBooking.activityName && displayBooking.activityName !== 'Hotel' ? displayBooking.activityName : 'Abhinandan Homestay');
+                const itemMapUrl = item.mapLink || `https://maps.google.com/?q=${encodeURIComponent(itemName + ' Rishikesh')}`;
+                const itemAddress = item.fullAddress || item.address || 'Tapovan, Rishikesh, Uttarakhand';
                 
                 return (
                   <motion.div 
@@ -485,8 +530,8 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                           <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
                             Item {index + 1} • {(item.category || 'Service').toUpperCase()}
                           </span>
-                          <h4 className="text-sm font-black text-slate-900 mt-1 leading-snug">
-                            {item.name || item.title}
+                          <h4 className="text-base font-black text-slate-900 mt-1 leading-snug">
+                            {itemName}
                           </h4>
                           {item.vendorName && (
                             <p className="text-[11px] font-bold text-slate-500 mt-0.5">
@@ -501,11 +546,11 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
                       <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700">
                         <Clock className="w-3.5 h-3.5 text-[#FF5F00] shrink-0" />
-                        <span className="font-bold text-[11px]">{item.slot || item.selectedSlot || 'Flexible Timing'}</span>
+                        <span className="font-bold text-[11px]">{item.slot || item.selectedSlot || '3 Guests, 1 Night (Deluxe Room)'}</span>
                       </div>
                       <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700">
                         <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span className="font-medium text-[11px] truncate">{item.fullAddress || 'Rishikesh, Uttarakhand'}</span>
+                        <span className="font-medium text-[11px] truncate">{itemAddress}</span>
                       </div>
                     </div>
 
@@ -515,23 +560,32 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
                         href={itemMapUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-[11px] font-extrabold transition flex items-center gap-1.5 cursor-pointer"
+                        className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
-                        <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Open Venue Map <ExternalLink className="w-3 h-3 opacity-60" />
+                        <MapPin className="w-4 h-4 text-emerald-600" /> Open Venue Map <ExternalLink className="w-3.5 h-3.5 opacity-70" />
                       </a>
 
-                      {/* Vendor Phone Call Buttons (Handles 1 or 2 phones) */}
+                      {/* Vendor Phone Call Buttons */}
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {vendorPhones.map((ph, pIdx) => (
+                        {vendorPhones.length > 0 ? (
+                          vendorPhones.map((ph, pIdx) => (
+                            <a
+                              key={pIdx}
+                              href={`tel:+${ph}`}
+                              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Phone className="w-3.5 h-3.5 text-[#FF5F00]" /> 
+                              {vendorPhones.length > 1 ? `Call Host ${pIdx + 1}` : `Call Host`} ({formatDisplayPhone(ph)})
+                            </a>
+                          ))
+                        ) : (
                           <a
-                            key={pIdx}
-                            href={`tel:+${ph}`}
-                            className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-[11px] font-extrabold transition flex items-center gap-1.5 cursor-pointer"
+                            href="tel:+919410572857"
+                            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-extrabold transition flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Phone className="w-3 h-3 text-[#FF5F00]" /> 
-                            {vendorPhones.length > 1 ? `Call Host ${pIdx + 1}` : `Call Host`} ({formatDisplayPhone(ph)})
+                            <Phone className="w-3.5 h-3.5 text-[#FF5F00]" /> Call Host (+91 94105 72857)
                           </a>
-                        ))}
+                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -540,8 +594,20 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
             </div>
           </div>
 
+          {/* Venue Check-in & Guidelines Accordion/Card */}
+          <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black text-slate-700 uppercase tracking-wider">
+              <AlertCircle className="w-4 h-4 text-[#FF5F00]" /> Venue Check-In Guidelines
+            </div>
+            <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4 font-medium leading-relaxed">
+              <li>Present this digital ticket pass or Booking ID <strong>{displayBooking.bookingId}</strong> at the venue reception.</li>
+              <li>Balance payment (if applicable) is to be cleared directly at venue check-in.</li>
+              <li>For any schedule changes or on-ground support, reach out to TripGod helpline.</li>
+            </ul>
+          </div>
+
           {/* Footer Assistance Banner */}
-          <div className="p-6 bg-slate-50 border-t border-slate-200 text-center space-y-2">
+          <div className="p-6 bg-slate-100 border-t border-slate-200 text-center space-y-2">
             <p className="text-xs font-medium text-slate-500">
               Need on-ground assistance during your trip?
             </p>
