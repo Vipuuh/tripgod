@@ -187,7 +187,7 @@ export default async function handler(req, res) {
     }
 
     const cleanAgencyPhone = formatPhone(rawOperatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
-    const locationLink = isCombo ? ticketUrl : (LOCATION_MAPS[category] || LOCATION_MAPS.rafting);
+    const locationLink = ticketUrl; // Always send Web Digital Ticket Link
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
     const isFullPayment = paymentOption === 'full' || remainingPaid <= 0;
@@ -199,9 +199,22 @@ export default async function handler(req, res) {
     const paramDate = isHotel && checkInDate ? checkInDate.split('-').reverse().join('/') : date;
     const paramTime = isHotel && checkOutDate ? checkOutDate.split('-').reverse().join('/') : slot;
 
-    // Parameters for approved tripgod_booking_confirmed template:
+    // Parameters for approved tripgod_pass_confirmed template (9 parameters):
+    const customerPassParams = [
+      customerName,                                                            // {{1}} - Name
+      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
+      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Your Trip
+      `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
+      `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
+      ticketUrl,                                                               // {{7}} - Ticket Pass Link
+      isFullPayment 
+        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
+        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
+      `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{9}} - Helpline Contact
+    ];
 
-    // 1. Customer Parameters
+    // Fallback Customer Parameters for tripgod_booking_confirmed template (10 parameters):
     const customerParams = [
       customerName,                                                            // {{1}} - Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
@@ -209,7 +222,7 @@ export default async function handler(req, res) {
       `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
       `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      locationLink,                                                            // {{7}} - Location (Ticket Link for Combo)
+      ticketUrl,                                                               // {{7}} - Ticket Pass Link
       isFullPayment 
         ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
         : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
@@ -301,9 +314,9 @@ export default async function handler(req, res) {
     // Send notifications in parallel
     const promises = [];
     
-    // 1. Send to Customer
+    // 1. Send to Customer using new approved tripgod_pass_confirmed template
     if (customerPhone) {
-      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParams).catch(err => console.error("Error sending to customer:", err)));
+      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_pass_confirmed", customerPassParams).catch(err => console.error("Error sending to customer:", err)));
     }
     
     // 2. Send to Admin

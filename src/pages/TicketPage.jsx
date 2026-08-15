@@ -88,33 +88,87 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
           }
         }
 
-        // 2. Fetch from Supabase abandoned_carts or bookings
+        // 2. Fetch from Supabase bookings table
         if (supabase) {
-          const { data: cartData } = await supabase
-            .from('abandoned_carts')
-            .select('*')
-            .or(`id.ilike.%${code}%,customer_name.ilike.%${code}%`)
-            .maybeSingle();
+          try {
+            const { data: dbBooking } = await supabase
+              .from('bookings')
+              .select('*, vendors(*)')
+              .or(`id.ilike.%${code}%`)
+              .maybeSingle();
 
-          if (cartData && cartData.activity_details) {
-            const details = typeof cartData.activity_details === 'string' 
-              ? JSON.parse(cartData.activity_details) 
-              : cartData.activity_details;
+            if (dbBooking) {
+              const totalAmt = Number(dbBooking.amount_paid || 0) + Number(dbBooking.remaining_amount || 0);
+              setBooking({
+                bookingId: code.toUpperCase().startsWith('TG-') ? code.toUpperCase() : `TG-${code.substring(0, 6).toUpperCase()}`,
+                customerName: dbBooking.customer_name || 'Valued Guest',
+                customerPhone: dbBooking.customer_phone || '',
+                customerEmail: dbBooking.customer_email || '',
+                date: dbBooking.travel_date || new Date().toLocaleDateString('en-IN'),
+                totalPrice: totalAmt,
+                advancePaid: Number(dbBooking.amount_paid || 0),
+                remainingPaid: Number(dbBooking.remaining_amount || 0),
+                items: [{
+                  id: dbBooking.service_id || '1',
+                  category: (dbBooking.service_type || 'Hotels').toLowerCase(),
+                  name: dbBooking.service_type || 'Rishikesh Experience',
+                  slot: dbBooking.travel_date ? `Travel Date: ${dbBooking.travel_date}` : 'Flexible Timing',
+                  fullAddress: 'Rishikesh, Uttarakhand',
+                  mapLink: `https://maps.google.com/?q=${encodeURIComponent((dbBooking.service_type || 'Rishikesh') + ' Rishikesh')}`,
+                  operatorPhone: dbBooking.vendors?.phone || dbBooking.vendors?.whatsapp || '9410572857',
+                  vendors: dbBooking.vendors
+                }]
+              });
+              setLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.error('Error fetching booking from DB:', e);
+          }
 
-            setBooking({
-              bookingId: code.toUpperCase().startsWith('TG-') ? code.toUpperCase() : `TG-${code.substring(0, 6).toUpperCase()}`,
-              customerName: cartData.customer_name || 'Valued Guest',
-              customerPhone: cartData.customer_phone || '',
-              customerEmail: cartData.customer_email || '',
-              date: details.travelDate || cartData.travel_date || new Date().toLocaleDateString('en-IN'),
-              totalPrice: details.totalPrice || cartData.total_price || 0,
-              advancePaid: details.advance_amount || cartData.advance_amount || 0,
-              remainingPaid: Math.max(0, (details.totalPrice || 0) - (details.advance_amount || 0)),
-              items: details.items || [details],
-              activityName: details.name || details.title || 'Custom Rishikesh Package'
-            });
-            setLoading(false);
-            return;
+          // 3. Fetch from abandoned_carts table
+          try {
+            const { data: cartData } = await supabase
+              .from('abandoned_carts')
+              .select('*')
+              .or(`id.ilike.%${code}%,customer_name.ilike.%${code}%`)
+              .maybeSingle();
+
+            if (cartData && cartData.activity_details) {
+              const details = typeof cartData.activity_details === 'string' 
+                ? JSON.parse(cartData.activity_details) 
+                : cartData.activity_details;
+
+              const itemsArr = Array.isArray(details.items) && details.items.length > 0
+                ? details.items
+                : [{
+                    id: details.id || '1',
+                    category: details.category || 'hotels',
+                    name: details.name || details.title || cartData.service_type || 'Rishikesh Experience',
+                    slot: details.slot || details.selectedSlot || 'Flexible Timing',
+                    fullAddress: details.fullAddress || details.address || 'Rishikesh, Uttarakhand',
+                    mapLink: details.mapLink || `https://maps.google.com/?q=${encodeURIComponent((details.name || 'Rishikesh') + ' Rishikesh')}`,
+                    operatorPhone: details.operatorPhone || details.phone || cartData.customer_phone,
+                    vendors: details.vendors
+                  }];
+
+              setBooking({
+                bookingId: code.toUpperCase().startsWith('TG-') ? code.toUpperCase() : `TG-${code.substring(0, 6).toUpperCase()}`,
+                customerName: cartData.customer_name || 'Valued Guest',
+                customerPhone: cartData.customer_phone || '',
+                customerEmail: cartData.customer_email || '',
+                date: details.travelDate || cartData.travel_date || new Date().toLocaleDateString('en-IN'),
+                totalPrice: details.totalPrice || cartData.total_price || 0,
+                advancePaid: details.advance_amount || cartData.advance_amount || 0,
+                remainingPaid: Math.max(0, (details.totalPrice || 0) - (details.advance_amount || 0)),
+                items: itemsArr,
+                activityName: details.name || details.title || 'Rishikesh Experience'
+              });
+              setLoading(false);
+              return;
+            }
+          } catch (e) {
+            console.error('Error fetching cart from DB:', e);
           }
         }
       } catch (err) {
@@ -154,52 +208,22 @@ export default function TicketPage({ ticketCode, onBackToHome }) {
     );
   }
 
-  // Fallback demo booking if direct code not found
+  // Fallback booking ONLY if code was empty or not found
   const displayBooking = booking || {
-    bookingId: ticketCode && ticketCode.startsWith('TG-') ? ticketCode : 'TG-009300',
-    customerName: 'Guest Adventure Traveler',
+    bookingId: ticketCode && ticketCode.startsWith('TG-') ? ticketCode : 'TG-000000',
+    customerName: 'Valued Traveler',
     date: new Date().toLocaleDateString('en-IN'),
-    totalPrice: 4500,
-    advancePaid: 500,
-    remainingPaid: 4000,
+    totalPrice: 0,
+    advancePaid: 0,
+    remainingPaid: 0,
     items: [
       {
         id: '1',
         category: 'hotels',
-        name: 'Deluxe Riverside Camp & Resort',
-        slot: 'Standard 12:00 PM Check-in',
-        fullAddress: 'Shivpuri Badrinath Road, Rishikesh',
-        mapLink: 'https://maps.google.com/?q=Shivpuri+Riverside+Camping+Rishikesh',
-        operatorPhone: '9410572857',
-        phone_number: '9876543210',
-        vendors: { phone: '9410572857', whatsapp: '9876543210' }
-      },
-      {
-        id: '2',
-        category: 'bikerent',
-        name: 'Honda Activa 6G Scooter Rental (1 Day)',
-        slot: '06:00 AM (Early Pickup)',
-        fullAddress: 'Laxman Jhula Taxi & Scooter Stand, Rishikesh',
-        mapLink: 'https://maps.google.com/?q=Laxman+Jhula+Bike+Rental+Rishikesh',
-        operatorPhone: '9410572857'
-      },
-      {
-        id: '3',
-        category: 'bungee',
-        name: 'Shivpuri 83m Giant Bungee Jump',
-        slot: '11:30 AM Slot',
-        fullAddress: 'Bungee Jump Zone, Shivpuri, Rishikesh',
-        mapLink: 'https://maps.google.com/?q=Shivpuri+Bungee+Jumping+Rishikesh',
-        operatorPhone: '9410572857',
-        secondary_phone: '9123456789'
-      },
-      {
-        id: '4',
-        category: 'rafting',
-        name: '16km Ganga White Water Rafting',
-        slot: '02:00 PM Batch',
-        fullAddress: 'Club House Rafting Office, Shivpuri, Rishikesh',
-        mapLink: 'https://maps.app.goo.gl/81zn6x9SS9pDg6bF7',
+        name: 'Rishikesh Adventure Booking Pass',
+        slot: 'Flexible Timing',
+        fullAddress: 'Rishikesh, Uttarakhand',
+        mapLink: 'https://maps.google.com/?q=Rishikesh',
         operatorPhone: '9410572857'
       }
     ]
