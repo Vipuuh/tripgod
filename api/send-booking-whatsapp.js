@@ -186,8 +186,7 @@ export default async function handler(req, res) {
       }
     }
 
-    const cleanAgencyPhone = formatPhone(rawOperatorPhone || AGENCY_PHONES[category] || ADMIN_PHONE);
-    const locationLink = ticketUrl; // Always send Web Digital Ticket Link
+    const locationLink = LOCATION_MAPS[category] || LOCATION_MAPS.hotels || "https://tripgod.in";
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
     const isFullPayment = paymentOption === 'full' || remainingPaid <= 0;

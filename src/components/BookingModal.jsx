@@ -501,24 +501,6 @@ My payment ID is verified. Please confirm my slots.`;
           }
           localStorage.setItem(`tripgod_booking_${simpleBookingCode}`, JSON.stringify(newBooking));
           localStorage.setItem(`tripgod_booking_${dbBookingId}`, JSON.stringify(newBooking));
-          localStorage.setItem('tripgod_last_booking', JSON.stringify(newBooking));
-
-          // Save ticket payload into abandoned_carts using simpleBookingCode so any device can resolve the ticket URL
-          if (supabase) {
-            supabase.from('abandoned_carts').upsert([{
-              id: simpleBookingCode,
-              customer_name: name,
-              customer_email: email,
-              customer_phone: phone,
-              status: 'completed',
-              total_price: totalPrice,
-              advance_amount: finalAmountToPay,
-              activity_details: newBooking,
-              updated_at: new Date().toISOString()
-            }]).then(({ error }) => {
-              if (error) console.error("Error saving ticket payload:", error);
-            });
-          }
         } catch (err) {
           console.error('Failed to save booking locally:', err);
         }

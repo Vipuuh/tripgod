@@ -25,7 +25,6 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import RefundPolicy from './pages/RefundPolicy';
 import CustomComboPage from './pages/CustomComboPage';
-import TicketPage from './pages/TicketPage';
 
 // Components
 import BookingModal from './components/BookingModal';
@@ -287,9 +286,9 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo', 'ticket', 'pass'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo'];
 
-      const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || path.startsWith('kayaking/') || path.startsWith('tours/') || path.startsWith('ticket/') || path.startsWith('pass/');
+      const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || path.startsWith('kayaking/') || path.startsWith('tours/');
 
       if (validRoutes.includes(path) || isSubRoute) {
         let resolvedRoute = path;
@@ -302,7 +301,6 @@ export default function App() {
         else if (path.startsWith('camping/')) resolvedRoute = 'camping';
         else if (path.startsWith('kayaking/')) resolvedRoute = 'kayaking';
         else if (path.startsWith('tours/')) resolvedRoute = 'tours';
-        else if (path.startsWith('ticket/') || path.startsWith('pass/')) resolvedRoute = 'ticket';
 
         setRoute(resolvedRoute);
 
@@ -586,11 +584,6 @@ export default function App() {
                     openBookingModal(bookingPayload);
                   }}
                 />
-              </ErrorBoundary>
-            )}
-            {route === 'ticket' && (
-              <ErrorBoundary>
-                <TicketPage onBackToHome={() => navigateTo('home')} />
               </ErrorBoundary>
             )}
           </motion.div>

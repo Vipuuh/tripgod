@@ -288,21 +288,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
               items: cart
             };
 
-            if (supabase) {
-              supabase.from('abandoned_carts').upsert([{
-                id: simpleBookingCode,
-                customer_name: name,
-                customer_email: email,
-                customer_phone: phone,
-                status: 'completed',
-                total_price: totalCartPrice,
-                advance_amount: totalCartAdvance,
-                activity_details: comboBookingPayload,
-                updated_at: new Date().toISOString()
-              }]).then(({ error }) => {
-                if (error) console.error("Error saving cart ticket payload:", error);
-              });
-            }
+
 
             // Trigger background automated WhatsApp notifications for each cart item
             cart.forEach((item) => {
