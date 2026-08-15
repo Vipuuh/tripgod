@@ -51,7 +51,12 @@ export default function HotelTicketView({ booking, onBackToHome }) {
   const vendorName = item.vendorName || item.vendors?.name || vendor.name;
   const vendorPhone = item.operatorPhone || item.phone_number || item.whatsapp_number || item.phone || vendor.phone || vendor.whatsapp || booking.vendorPhone || '9410572857';
   const fullAddress = item.fullAddress || item.address || vendor.address || item.location || vendor.location || 'Rishikesh, Uttarakhand';
-  const googleMapsUrl = item.mapLink || item.google_maps_link || vendor.google_maps_link || booking.googleMapsLink;
+  // Prioritize live backend google_maps_link over stale item.mapLink
+  let rawMap = item.google_maps_link || vendor.google_maps_link || item.mapLink || booking.googleMapsLink;
+  if (hotelName.toLowerCase().includes('abhinandan') && (!rawMap || rawMap.includes('cEXc2dxuNpDF5k6V8'))) {
+    rawMap = 'https://maps.app.goo.gl/MrQFRbjC4Etio3dS7';
+  }
+  const googleMapsUrl = rawMap;
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans pb-16 print:bg-white print:text-black">
