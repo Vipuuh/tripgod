@@ -155,12 +155,13 @@ export default async function handler(req, res) {
       return phones.map(p => formatDisplayPhone(p)).join(' / ');
     };
 
-    // Auto-resolve operator/hotel/vendor WhatsApp number from DB if needed
+    // Auto-resolve operator/hotel/vendor WhatsApp number and exact Google Maps Link from DB
     let rawOperatorPhone = data.operatorPhone;
     let dbMapsLink = null;
 
     if (supabase) {
       try {
+        // 1. Hotel lookup by name
         if (isHotel && activityName) {
           const cleanHotelName = activityName.replace(/ - .*/, '').trim();
           const { data: hotelRow } = await supabase
@@ -176,6 +177,8 @@ export default async function handler(req, res) {
             dbMapsLink = hotelRow.maps_link || hotelRow.vendors?.google_maps_link;
           }
         }
+
+        // 2. Vendor lookup by vendor_id
         if (data.vendor_id || data.vendorId) {
           const { data: vendorRow } = await supabase
             .from('vendors')
@@ -187,6 +190,31 @@ export default async function handler(req, res) {
               rawOperatorPhone = vendorRow.whatsapp || vendorRow.phone;
             }
             if (!dbMapsLink) dbMapsLink = vendorRow.google_maps_link;
+          }
+        }
+
+        // 3. Fallback Vendor lookup by activityName matching (e.g. "The Himalayan Bungee", "HB Evergreen", "Shri Ganga")
+        if (!dbMapsLink && activityName) {
+          const parts = activityName.split(/ - | \(/);
+          for (const part of parts) {
+            const cleanPart = part.replace(/\)/g, '').trim();
+            if (cleanPart.length >= 3 && !['Rishikesh', 'Free Video', 'Flexible', '111M', '83M', '101M', '104M', '117M'].includes(cleanPart)) {
+              const { data: matchedVendor } = await supabase
+                .from('vendors')
+                .select('whatsapp, phone, google_maps_link')
+                .ilike('name', `%${cleanPart}%`)
+                .limit(1)
+                .maybeSingle();
+              if (matchedVendor) {
+                if (!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) {
+                  rawOperatorPhone = matchedVendor.whatsapp || matchedVendor.phone;
+                }
+                if (matchedVendor.google_maps_link) {
+                  dbMapsLink = matchedVendor.google_maps_link;
+                  break;
+                }
+              }
+            }
           }
         }
       } catch (dbErr) {
