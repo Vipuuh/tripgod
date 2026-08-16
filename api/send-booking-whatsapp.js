@@ -161,41 +161,69 @@ export default async function handler(req, res) {
 
     if (supabase) {
       try {
-        // 1. Hotel lookup by name
-        if (isHotel && activityName) {
-          const cleanHotelName = activityName.replace(/ - .*/, '').trim();
+        const isUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+        const targetHotelId = data.hotel_id || (isHotel && isUUID(data.service_id) ? data.service_id : (isHotel && isUUID(data.id) ? data.id : null));
+
+        // 1. Direct Hotel lookup by Primary Key ID (100% precise)
+        if (targetHotelId) {
           const { data: hotelRow } = await supabase
             .from('hotels')
             .select('whatsapp_number, phone_number, maps_link, vendors(whatsapp, phone, google_maps_link)')
-            .ilike('name', `%${cleanHotelName}%`)
-            .limit(1)
+            .eq('id', targetHotelId)
             .maybeSingle();
           if (hotelRow) {
             if (!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) {
               rawOperatorPhone = hotelRow.whatsapp_number || hotelRow.vendors?.whatsapp || hotelRow.vendors?.phone || hotelRow.phone_number;
             }
-            dbMapsLink = hotelRow.maps_link || hotelRow.vendors?.google_maps_link;
+            if (hotelRow.maps_link || hotelRow.vendors?.google_maps_link) {
+              dbMapsLink = hotelRow.maps_link || hotelRow.vendors?.google_maps_link;
+            }
           }
         }
 
-        // 2. Vendor lookup by vendor_id
-        if (data.vendor_id || data.vendorId) {
+        // 2. Hotel lookup by Name (Segmented split to handle combined names like "Hotel Manohar & 8 Limbs Yoga School")
+        if (isHotel && activityName && !dbMapsLink) {
+          const segments = activityName.split(/ & | and | - | \+/i).map(s => s.replace(/ - .*/, '').trim()).filter(s => s.length >= 3);
+          for (const segment of segments) {
+            const { data: hotelRow } = await supabase
+              .from('hotels')
+              .select('whatsapp_number, phone_number, maps_link, vendors(whatsapp, phone, google_maps_link)')
+              .ilike('name', `%${segment}%`)
+              .limit(1)
+              .maybeSingle();
+            if (hotelRow) {
+              if (!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) {
+                rawOperatorPhone = hotelRow.whatsapp_number || hotelRow.vendors?.whatsapp || hotelRow.vendors?.phone || hotelRow.phone_number;
+              }
+              if (hotelRow.maps_link || hotelRow.vendors?.google_maps_link) {
+                dbMapsLink = hotelRow.maps_link || hotelRow.vendors?.google_maps_link;
+                break;
+              }
+            }
+          }
+        }
+
+        // 3. Vendor lookup by vendor_id
+        const targetVendorId = data.vendor_id || data.vendorId;
+        if (targetVendorId && isUUID(targetVendorId)) {
           const { data: vendorRow } = await supabase
             .from('vendors')
             .select('whatsapp, phone, google_maps_link')
-            .eq('id', data.vendor_id || data.vendorId)
+            .eq('id', targetVendorId)
             .maybeSingle();
           if (vendorRow) {
             if (!rawOperatorPhone || rawOperatorPhone === ADMIN_PHONE || rawOperatorPhone.endsWith('9410572857')) {
               rawOperatorPhone = vendorRow.whatsapp || vendorRow.phone;
             }
-            if (!dbMapsLink) dbMapsLink = vendorRow.google_maps_link;
+            if (!dbMapsLink && vendorRow.google_maps_link) {
+              dbMapsLink = vendorRow.google_maps_link;
+            }
           }
         }
 
-        // 3. Fallback Vendor lookup by activityName matching (e.g. "The Himalayan Bungee", "HB Evergreen", "Shri Ganga")
+        // 4. Fallback Vendor lookup by activityName segment matching
         if (!dbMapsLink && activityName) {
-          const parts = activityName.split(/ - | \(/);
+          const parts = activityName.split(/ & | and | - | \(/i);
           for (const part of parts) {
             const cleanPart = part.replace(/\)/g, '').trim();
             if (cleanPart.length >= 3 && !['Rishikesh', 'Free Video', 'Flexible', '111M', '83M', '101M', '104M', '117M'].includes(cleanPart)) {
@@ -226,7 +254,7 @@ export default async function handler(req, res) {
     const cleanAgencyPhone = formatPhone(agencyPhoneRaw);
 
     // Resolve exact Google Maps Location link for Parameter {{7}}
-    const rawLocationLink = data.google_maps_link || data.mapLink || data.maps_link || data.locationLink || data.location || (comboItems[0] && (comboItems[0].google_maps_link || comboItems[0].mapLink || comboItems[0].maps_link)) || dbMapsLink;
+    const rawLocationLink = data.maps_link || data.google_maps_link || data.mapLink || data.locationLink || data.location || dbMapsLink || (comboItems[0] && (comboItems[0].maps_link || comboItems[0].google_maps_link || comboItems[0].mapLink));
     const resolvedLocationLink = rawLocationLink || LOCATION_MAPS[category] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((activityName || 'Rishikesh Adventure') + ' Rishikesh')}`;
 
     const paymentOption = data.paymentOption || (totalPrice > 0 && remainingPaid === 0 ? 'full' : 'advance');
