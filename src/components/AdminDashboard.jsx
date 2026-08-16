@@ -32,6 +32,52 @@ const getSimpleBookingId = (id) => {
   return `TG-${String(Math.abs(hash)).slice(-6)}`;
 };
 
+const get24hRefundBadge = (travelDateStr) => {
+  if (!travelDateStr) return null;
+  
+  const now = new Date();
+  const travelDate = new Date(travelDateStr);
+  
+  if (typeof travelDateStr === 'string' && travelDateStr.length === 10) {
+    const [year, month, day] = travelDateStr.split('-').map(Number);
+    travelDate.setFullYear(year, month - 1, day);
+    travelDate.setHours(9, 0, 0, 0); // Default travel start time 09:00 AM
+  }
+
+  const diffMs = travelDate.getTime() - now.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffMs < 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 mt-1.5 bg-slate-900 text-slate-400 border border-slate-800 text-[10px] font-extrabold rounded-lg">
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+        Travel Date Passed
+      </span>
+    );
+  }
+
+  if (diffHours >= 24) {
+    const days = Math.floor(diffHours / 24);
+    const remainingHrs = diffHours % 24;
+    const timeText = days > 0 ? `${days}d ${remainingHrs}h left` : `${diffHours}h left`;
+
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 mt-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-extrabold rounded-lg shadow-3xs">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        100% Refund Eligible ({timeText})
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 mt-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-extrabold rounded-lg shadow-3xs">
+      <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+      Non-Refundable ({diffHours}h left - under 24h)
+    </span>
+  );
+};
+
+
 const isVendorMultiService = (v) => {
   if (!v || !v.category) return false;
   const cat = String(v.category).toLowerCase();
@@ -1082,6 +1128,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                             <span className="block text-[9px] font-black text-slate-500 uppercase">Dates</span>
                             <span className="block font-bold text-slate-300 mt-0.5">Travel: {new Date(b.travel_date).toLocaleDateString('en-IN')}</span>
                             <span className="block font-bold text-slate-500 mt-0.5">Booked: {new Date(b.booking_date).toLocaleDateString('en-IN')}</span>
+                            {get24hRefundBadge(b.travel_date)}
                           </div>
 
                           <div>
