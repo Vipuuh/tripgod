@@ -117,6 +117,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       key: "rzp_live_TAd3hYpU1J84mE",
       amount: amountToPayNow * 100, // paise
       currency: "INR",
+      payment_capture: 1,
       name: "TripGod",
       description: `Cart Checkout (${cart.length} Activities) - ${paymentOption === 'full' ? '100% Full Payment' : 'Advances'}`,
       image: "/tripgod-logo-padded.jpg",

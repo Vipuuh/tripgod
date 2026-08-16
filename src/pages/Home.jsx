@@ -195,7 +195,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   const [selectedHotelCity, setSelectedHotelCity] = useState('');
   const [citiesList, setCitiesList] = useState([]);
   const [selectedRaftingStretch, setSelectedRaftingStretch] = useState('12 KM (Brahmpuri)');
-  const [selectedBikePickupLocation, setSelectedBikePickupLocation] = useState('Ram Jhula');
+  const [selectedBikePickupLocation, setSelectedBikePickupLocation] = useState('Rishikesh');
   const [allTours, setAllTours] = useState([]);
   const [selectedTourOption, setSelectedTourOption] = useState('');
   
@@ -338,6 +338,24 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       route: 'bungee'
     },
     {
+      id: 'swing',
+      name: 'Giant Swing',
+      desc: 'Swing 113m above deep valleys, single or in couples.',
+      price: '3,600',
+      img: '/swing-hero.png',
+      route: 'swing',
+      coming_soon: true
+    },
+    {
+      id: 'zipline',
+      name: 'Ganga Zipline',
+      desc: 'Glide over the gushing Ganges at speeds up to 140-160 km/h.',
+      price: '2,000',
+      img: '/zipline-hero.jpg',
+      route: 'zipline',
+      coming_soon: true
+    },
+    {
       id: 'camping',
       name: 'Riverside Camping',
       desc: 'Swiss tents, bonfire, snacks and buffet meals near Shivpuri.',
@@ -353,24 +371,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       price: '4,550',
       img: '/paragliding-hero.jpg',
       route: 'paragliding',
-      coming_soon: true
-    },
-    {
-      id: 'zipline',
-      name: 'Ganga Zipline',
-      desc: 'Glide over the gushing Ganges at speeds up to 140-160 km/h.',
-      price: '2,000',
-      img: '/zipline-hero.jpg',
-      route: 'zipline',
-      coming_soon: true
-    },
-    {
-      id: 'swing',
-      name: 'Giant Swing',
-      desc: 'Swing 113m above deep valleys, single or in couples.',
-      price: '3,600',
-      img: '/swing-hero.png',
-      route: 'swing',
       coming_soon: true
     },
   ]);
@@ -400,7 +400,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
       price: 1590
     },
     {
-      km: '24 KM',
+      km: '26 KM',
       stretch: 'Kaudiyala → Nim Beach',
       time: '5-6 hrs',
       level: 'Advanced',
@@ -411,7 +411,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   const stats = [
     { label: 'Happy Customers', value: '12,000+' },
     { label: 'Partner Vendors', value: '50+' },
-    { label: 'Adventure Types', value: '15+' },
+    { label: 'Adventure Types', value: '5+' },
     { label: 'Refund Guarantee', value: '100%' }
   ];
 
@@ -964,7 +964,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                         <option value="12 KM (Brahmpuri)">12 KM (Brahmpuri)</option>
                         <option value="14 KM (Shivpuri)">14 KM (Shivpuri)</option>
                         <option value="18 KM (Marine Drive)">18 KM (Marine Drive)</option>
-                        <option value="24 KM (Kaudiyala)">24 KM (Kaudiyala)</option>
+                        <option value="26 KM (Kaudiyala)">26 KM (Kaudiyala)</option>
                       </select>
                     </div>
                   </div>
@@ -1009,11 +1009,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                         onChange={(e) => setSelectedBikePickupLocation(e.target.value)}
                         className="text-sm font-extrabold text-slate-900 bg-transparent border-none focus:ring-0 focus:outline-none w-full p-0 cursor-pointer mt-0.5"
                       >
-                        <option value="Ram Jhula">Ram Jhula</option>
-                        <option value="Laxman Jhula">Laxman Jhula</option>
-                        <option value="Bus Stand">Bus Stand</option>
-                        <option value="Janki Setu (Sita Pul)">Janki Setu (Sita Pul)</option>
-                        <option value="Sita Jhula">Sita Jhula</option>
+                        <option value="Rishikesh">Rishikesh</option>
                       </select>
                     </div>
                   </div>
@@ -1234,7 +1230,7 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 <span className="text-white/20 text-lg">•</span>
                 <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">50+</strong> PARTNER VENDORS</span>
                 <span className="text-white/20 text-lg">•</span>
-                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">15+</strong> ADVENTURE TYPES</span>
+                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">5+</strong> ADVENTURE TYPES</span>
                 <span className="text-white/20 text-lg">•</span>
                 <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">100%</strong> REFUND GUARANTEE</span>
                 <span className="text-white/20 text-lg">•</span>
