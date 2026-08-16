@@ -51,7 +51,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
   const amountToPayNow = paymentOption === 'full' ? totalCost : totalAdvance;
   const remainingPayment = totalCost - amountToPayNow;
 
-  const handleRazorpayCheckout = () => {
+  const handleRazorpayCheckout = async () => {
     if (cart.length === 0) return;
 
     if (!name.trim()) {
@@ -89,21 +89,20 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
 
     const logCheckoutAttempt = async () => {
       try {
-        const formattedItems = cart.map(item => ({
-          name: item.name || item.title || 'Adventure Item',
-          category: item.category || 'rafting',
-          price: item.price || 0,
-          date: item.travelDate || item.date || '',
+        const itemDetailsList = cart.map(item => ({
+          name: item.name,
+          category: item.category,
+          price: item.price,
+          date: item.category === 'hotels' ? `${item.checkInDate} to ${item.checkOutDate}` : item.date,
           guests: item.guests || 1,
           slot: item.slot || ''
         }));
-
         await supabase.from('abandoned_carts').upsert([{
           id: logId,
           customer_name: name,
           customer_email: email || '',
           customer_phone: phone,
-          cart_items: formattedItems,
+          cart_items: itemDetailsList,
           status: 'abandoned',
           updated_at: new Date().toISOString()
         }]);
@@ -113,23 +112,56 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
     };
     logCheckoutAttempt();
 
+    const amountInPaise = amountToPayNow * 100;
+    const notesData = {
+      cart_id: logId,
+      customer_name: name,
+      customer_phone: phone,
+      customer_email: email,
+      item_count: cart.length
+    };
+
+    let orderId = null;
+    try {
+      const orderRes = await fetch('/api/create-razorpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: amountInPaise,
+          currency: 'INR',
+          notes: notesData
+        })
+      });
+      const orderData = await orderRes.json();
+      if (orderData && orderData.order_id) {
+        orderId = orderData.order_id;
+      }
+    } catch (e) {
+      console.warn("Could not pre-create Razorpay Order ID for cart, falling back to direct checkout options", e);
+    }
+
     const options = {
       key: "rzp_live_TAd3hYpU1J84mE",
-      amount: amountToPayNow * 100, // paise
+      amount: amountInPaise,
       currency: "INR",
+      order_id: orderId,
       payment_capture: 1,
       name: "TripGod",
       description: `Cart Checkout (${cart.length} Activities) - ${paymentOption === 'full' ? '100% Full Payment' : 'Advances'}`,
       image: "/tripgod-logo-padded.jpg",
-      notes: {
-        cart_id: logId,
-        customer_name: name,
-        customer_phone: phone,
-        customer_email: email,
-        item_count: cart.length
-      },
+      notes: notesData,
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
+
+        fetch('/api/capture-razorpay-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payment_id: paymentId,
+            amount: amountInPaise,
+            currency: 'INR'
+          })
+        }).catch(err => console.error("Auto-capture API error:", err));
 
         // Mark log completed in database
         supabase.from('abandoned_carts').update({ status: 'completed' }).eq('id', logId).then(({ error }) => {
@@ -353,6 +385,10 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
         color: "#FF5F00"
       }
     };
+
+    if (orderId) {
+      options.order_id = orderId;
+    }
 
     const rzp = new window.Razorpay(options);
     rzp.open();

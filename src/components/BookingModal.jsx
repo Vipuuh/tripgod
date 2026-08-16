@@ -312,7 +312,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const minDate = new Date().toISOString().split('T')[0];
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
-  const handleRazorpayPayment = () => {
+  const handleRazorpayPayment = async () => {
     if (!date) {
       setError('Please select a date.');
       return;
@@ -376,9 +376,39 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     };
     logCheckoutAttempt();
 
+    const amountInPaise = finalAmountToPay * 100;
+    const notesData = {
+      booking_id: dbBookingId,
+      cart_id: logId,
+      customer_name: name,
+      customer_phone: phone,
+      customer_email: email,
+      activity_name: activity.name
+    };
+
+    // Try fetching Razorpay Order ID for guaranteed auto-capture
+    let orderId = null;
+    try {
+      const orderRes = await fetch('/api/create-razorpay-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: amountInPaise,
+          currency: 'INR',
+          notes: notesData
+        })
+      });
+      const orderData = await orderRes.json();
+      if (orderData && orderData.order_id) {
+        orderId = orderData.order_id;
+      }
+    } catch (e) {
+      console.warn("Could not pre-create Razorpay Order ID, falling back to direct checkout options", e);
+    }
+
     const options = {
       key: "rzp_live_TAd3hYpU1J84mE",
-      amount: finalAmountToPay * 100, // paise
+      amount: amountInPaise, // paise
       currency: "INR",
       payment_capture: 1,
       name: "TripGod",
@@ -388,16 +418,20 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
             ? `${activity.name} - ₹${calculatedAdvance.toLocaleString('en-IN')} Advance`
             : `${activity.name} - ${commissionPercentage}% Advance`),
       image: "/tripgod-logo-padded.jpg",
-      notes: {
-        booking_id: dbBookingId,
-        cart_id: logId,
-        customer_name: name,
-        customer_phone: phone,
-        customer_email: email,
-        activity_name: activity.name
-      },
+      notes: notesData,
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
+
+        // Auto-capture fallback call to serverless function
+        fetch('/api/capture-razorpay-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payment_id: paymentId,
+            amount: amountInPaise,
+            currency: 'INR'
+          })
+        }).catch(err => console.error("Auto-capture API error:", err));
 
         // Mark log completed in database
         supabase.from('abandoned_carts').update({ status: 'completed' }).eq('id', logId).then(({ error }) => {
@@ -595,6 +629,10 @@ My payment ID is verified. Please confirm my slots.`;
         color: "#FF5F00"
       }
     };
+
+    if (orderId) {
+      options.order_id = orderId;
+    }
 
     const rzp = new window.Razorpay(options);
     rzp.open();
