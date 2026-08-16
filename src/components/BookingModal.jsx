@@ -232,13 +232,13 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
         ? Number(activity.fixed_advance_amount)
         : (activity && activity.commission_percentage !== undefined && activity.commission_percentage !== null
             ? Number(activity.commission_percentage)
-            : 10.0));
+            : 0));
 
   const fixedAdvanceAmount = activity && activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
     ? Number(activity.fixed_advance_amount)
     : (commType === 'flat' ? commVal : 0);
 
-  const commissionPercentage = commType === 'percentage' ? commVal : 10.0;
+  const commissionPercentage = commType === 'percentage' ? commVal : 0;
   const paymentMode = (activity && activity.payment_mode) || 'commission_advance';
 
   // Calculate nights for hotel bookings
@@ -1249,7 +1249,7 @@ My payment ID is verified. Please confirm my slots.`;
                                 ? `₹${fixedAdvanceAmount} Advance + ₹${taxes} GST`
                                 : (paymentMode === 'fixed_advance'
                                     ? `₹${fixedAdvanceAmount}/person × ${guests} guest${guests > 1 ? 's' : ''}`
-                                    : `Pay ${commissionPercentage}% online`))}
+                                    : (commissionPercentage > 0 ? `Pay ${commissionPercentage}% online` : 'Pay advance online'))}
                         </span>
                       </div>
                       <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{calculatedAdvance.toLocaleString('en-IN')}</span>
@@ -1435,9 +1435,7 @@ My payment ID is verified. Please confirm my slots.`;
                       ? 'Pay Full & Book'
                       : (isCombo && activity?.advance_amount
                           ? `Pay ₹${finalAmountToPay.toLocaleString('en-IN')} Advance & Book`
-                          : (paymentMode === 'fixed_advance'
-                              ? 'Pay Advance & Book'
-                              : `Pay ${commissionPercentage}% & Book`))}
+                          : 'Pay Advance & Book')}
                   </span>
                 </button>
               )}
