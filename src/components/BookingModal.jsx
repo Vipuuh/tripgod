@@ -407,7 +407,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     }
 
     const options = {
-      key: "rzp_live_TAd3hYpU1J84mE",
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_TAd3hYpU1J84mE",
       amount: amountInPaise, // paise
       currency: "INR",
       payment_capture: 1,

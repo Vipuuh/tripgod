@@ -141,7 +141,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
     }
 
     const options = {
-      key: "rzp_live_TAd3hYpU1J84mE",
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_TAd3hYpU1J84mE",
       amount: amountInPaise,
       currency: "INR",
       order_id: orderId,
