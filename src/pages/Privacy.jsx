@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Lock, Eye, FileText, Mail, Phone, MapPin } from 'lucide-react';
+import { Shield, Lock, Eye, FileText, Mail, Phone, MapPin, Users, Building2 } from 'lucide-react';
 
 export default function Privacy() {
   return (
@@ -15,7 +15,7 @@ export default function Privacy() {
             Privacy Policy
           </h1>
           <p className="text-[11px] text-slate-400 font-extrabold uppercase tracking-widest bg-slate-50 px-4 py-1.5 rounded-full w-max mx-auto border border-slate-100">
-            Last Updated: July 2026
+            Last Updated: August 2026
           </p>
         </div>
 
@@ -23,7 +23,7 @@ export default function Privacy() {
 
         {/* Introduction */}
         <p className="text-sm sm:text-base leading-relaxed text-slate-600 font-medium">
-          At <strong className="text-slate-900 font-black">TripGod</strong> (accessible from Tripgod.in), one of our main priorities is the privacy of our visitors. This Privacy Policy document details the types of information collected and recorded by TripGod and how we protect and use it.
+          At <strong className="text-slate-900 font-black">TripGod</strong> (accessible from Tripgod.in), we respect your privacy and are committed to protecting your personal data. TripGod functions as a <strong className="text-slate-900 font-black">local travel booking and connect platform</strong> that facilitates reservations by connecting travelers directly with independent local vendors, including hotels, rafting & adventure operators, camping sites, scooty/bike rental providers, and local transport partners.
         </p>
 
         {/* Sections */}
@@ -36,13 +36,13 @@ export default function Privacy() {
               1. Information We Collect
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              When you book an adventure or register on our site, we collect personal information necessary to execute the booking. This includes:
+              When you make a booking or submit an inquiry on TripGod, we collect information necessary to facilitate your reservation and share trip details:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-650 font-bold">
-              <li>Name and Email Address</li>
-              <li>Contact Number (WhatsApp) for ticket delivery</li>
-              <li>Booking Details (date, slot, activity, count of guests)</li>
-              <li>Payment details (processed securely via our partner gateway Razorpay)</li>
+              <li>Full Name and Email Address</li>
+              <li>Contact Number (WhatsApp) for instant ticket delivery & vendor coordination</li>
+              <li>Booking Details (date, time slot, activity/stay choice, guest/vehicle count)</li>
+              <li>Payment Transaction Details (processed securely through Razorpay)</li>
             </ul>
           </div>
 
@@ -53,58 +53,61 @@ export default function Privacy() {
               2. How We Use Your Information
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              We use the collected information to ensure a seamless and safe adventure yatra:
+              We use your information solely to deliver a smooth and transparent local travel experience:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-650 font-bold">
-              <li>To book slots and coordinate with our certified local operators.</li>
-              <li>To send booking tickets, confirmation details, and coordinates via WhatsApp/Email.</li>
-              <li>To process transactions and coordinate refunds if applicable.</li>
-              <li>To improve our customer service and communication.</li>
+              <li>To confirm your reservation and connect you with the specific local service provider.</li>
+              <li>To send you the vendor's name, address, direct WhatsApp/phone contact, and meeting instructions.</li>
+              <li>To process advance booking fees and handle cancellations or eligible refunds.</li>
+              <li>To provide customer support and coordinate communication between you and the vendor.</li>
             </ul>
           </div>
 
           {/* Section 3 */}
           <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3.5 text-left">
             <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
-              <FileText size={20} className="text-[#FF5F00]" />
-              3. Data Protection & Sharing
+              <Building2 size={20} className="text-[#FF5F00]" />
+              3. Data Sharing with Independent Local Vendors
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              <strong>TripGod</strong> operates on a tie-up/marketplace model. We share only your necessary booking information (Name and Contact Number) with the specific local adventure operator executing your selected activity. We do not sell, rent, or trade your personal data with third-party advertisers.
+              Because TripGod is a connect platform, we share relevant booking details (Name, Contact Number, and Booking Date/Slot) strictly with the independent local vendor (hotel, adventure operator, rental owner, or camp host) who will fulfill your service. 
+            </p>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
+              TripGod does not sell, rent, or trade your personal information with third-party advertisers. 
             </p>
             <p className="text-xs sm:text-sm text-slate-650 leading-relaxed font-bold p-3 bg-white rounded-xl border border-slate-200/60 shadow-3xs">
-              🔒 All online payments are securely processed through Razorpay. We do not store credit/debit card numbers or net banking credentials on our servers.
+              🔒 All online transactions are processed via bank-grade secure payment gateways (Razorpay). TripGod does not store credit/debit card numbers, CVVs, or net banking passwords on its servers.
             </p>
           </div>
 
           {/* Section 4 */}
           <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-left">
-            <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">
-              4. Consent
+            <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
+              <FileText size={20} className="text-[#FF5F00]" />
+              4. User Consent
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              By using our website, you hereby consent to our Privacy Policy and agree to its terms.
+              By using our website, booking services, or submitting inquiries, you hereby consent to our Privacy Policy and agree to the sharing of booking details with local service providers as outlined.
             </p>
           </div>
 
-          {/* Section 5 — Liability Disclaimer */}
+          {/* Section 5 — Liability & Platform Disclaimer */}
           <div className="p-6 bg-rose-50 rounded-2xl border border-rose-100 space-y-3.5 text-left">
             <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
               <Shield size={20} className="text-rose-500" />
-              5. Liability Disclaimer
+              5. Local Connect Model & Liability Disclaimer
             </h2>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold">
-              TripGod is <strong>solely a booking and discovery platform</strong>. We connect travelers with local operators, hotels, and adventure service providers. By using TripGod and completing any booking, you acknowledge and agree to the following:
+              TripGod acts <strong className="text-slate-900 font-black">strictly as an online facilitator and connecting platform</strong>. TripGod does not directly operate hotels, adventure activities (rafting, bungee, zipline, paragliding), camping grounds, scooty/bike rental fleets, or transport vehicles.
             </p>
             <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-650 font-bold">
-              <li>TripGod is not responsible for any accidents, injuries, losses, property damage, or mishaps occurring during tours, adventure activities, hotel stays, camping, or any other activities booked through our platform.</li>
-              <li>The selected local operator or service provider is <strong>solely responsible</strong> for service delivery, safety protocols, and guest welfare during the activity or stay.</li>
-              <li>You agree to comply with all safety instructions provided by the operator at the venue.</li>
-              <li>TripGod acts as an intermediary and does not guarantee the outcome or experience of any booked service beyond the confirmed booking details.</li>
-              <li>In case of disputes related to service quality, the local operator is the primary point of resolution. TripGod will assist in coordination where possible.</li>
+              <li>The actual service is rendered directly by independent local vendors and service providers.</li>
+              <li>To the extent permitted by applicable law, the independent local service provider is solely responsible for service operation, physical safety protocols, equipment condition, vehicle upkeep, hotel/camp premises, staff behavior, and compliance with local laws.</li>
+              <li>TripGod shall not be held liable for any accident, physical injury, loss of property, theft, operational delay, vendor misconduct, or service deficiency occurring at the vendor venue.</li>
+              <li>Customers directly interact with and receive service at the vendor's location using the details provided upon booking completion.</li>
             </ul>
             <p className="text-[11px] text-rose-700 font-extrabold bg-rose-100/80 border border-rose-200 px-4 py-2.5 rounded-xl">
-              ⚠️ By proceeding with any booking on TripGod, you confirm that you have read, understood, and accepted this Liability Disclaimer in full.
+              ⚠️ Completing a booking on TripGod signifies full acknowledgment and acceptance of this Privacy Policy and Platform Role Disclaimer.
             </p>
           </div>
 
@@ -115,7 +118,7 @@ export default function Privacy() {
         {/* Contact Strip */}
         <div className="p-6 bg-slate-950 text-white rounded-3xl space-y-4">
           <h4 className="font-bold text-xs uppercase tracking-widest text-[#FF5F00] text-center font-display">
-            Privacy & Security Queries
+            Privacy & Data Queries
           </h4>
           <p className="text-[11px] text-slate-400 text-center leading-relaxed font-medium">
             For any queries or formal requests regarding your data, reach us instantly at:
@@ -143,3 +146,4 @@ export default function Privacy() {
     </div>
   );
 }
+

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scale, ShieldAlert, Heart, Info, Mail, Phone, MapPin } from 'lucide-react';
+import { Scale, ShieldAlert, Heart, Info, Mail, Phone, MapPin, UserCheck, ShieldCheck } from 'lucide-react';
 
 export default function Terms() {
   return (
@@ -15,19 +15,19 @@ export default function Terms() {
             Terms & Conditions
           </h1>
           <p className="text-[11px] text-slate-400 font-extrabold uppercase tracking-widest bg-slate-50 px-4 py-1.5 rounded-full w-max mx-auto border border-slate-100">
-            Last Updated: July 2026
+            Last Updated: August 2026
           </p>
         </div>
 
         <div className="w-full h-[1px] bg-slate-100" />
 
-        {/* Disclaimer Warning */}
+        {/* Disclaimer Banner */}
         <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2.5 text-left shadow-3xs">
           <h4 className="font-extrabold text-sm text-[#FF5F00] uppercase tracking-wide flex items-center gap-2">
-            <ShieldAlert size={18} /> Marketplace & Liability Disclaimer
+            <ShieldAlert size={18} /> Platform Role & Liability Notice
           </h4>
           <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
-            <strong>TripGod</strong> (Tripgod.in) operates strictly as a booking agent/aggregator under a tie-up model. We do not own, manage, or operate any physical adventure gear, rafting boats, zipline wires, paragliding setups, or camps. All activities are executed by independent, certified local operators.
+            <strong>TripGod</strong> (Tripgod.in) operates strictly as a <strong>local travel booking and connect platform</strong>. We facilitate reservations by connecting customers with independent local service providers (hotels, adventure operators, camping sites, scooty/bike rental vendors, and local transport partners). TripGod does not directly own, manage, or operate physical hotels, rafting boats, bungee platforms, ziplines, rental vehicles, or camping grounds.
           </p>
         </div>
 
@@ -35,48 +35,62 @@ export default function Terms() {
         <div className="space-y-8 pt-2">
           
           {/* Section 1 */}
-          <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3 text-left">
+          <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3.5 text-left">
             <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
               <Info size={20} className="text-[#FF5F00]" />
-              1. Booking & Advance Payment
+              1. Local Booking & Post-Booking Flow
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              To confirm slots for any activity, users are required to pay a <strong>partial booking advance fee</strong> online through our secure gateway (processed by Razorpay). The remaining balance must be paid directly to the local executing operator at the venue before starting the activity.
+              When a customer completes a booking on TripGod:
             </p>
+            <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-650 font-bold">
+              <li>TripGod collects an advance booking fee online (processed securely via Razorpay) to confirm the reservation.</li>
+              <li>Post-booking, TripGod provides the customer with complete vendor details, including vendor name, exact venue address, direct phone/WhatsApp contact, and meeting/reporting instructions.</li>
+              <li>The customer directly visits the respective vendor's location to avail the booked service or collect the rental vehicle/room.</li>
+              <li>Any remaining balance payable for the service must be settled directly with the local vendor at the venue, as per the agreed booking terms.</li>
+            </ul>
           </div>
 
           {/* Section 2 */}
           <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3.5 text-left">
             <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
               <ShieldAlert size={20} className="text-[#FF5F00]" />
-              2. Liability Limitation
+              2. Independent Vendor Responsibility & Liability Limitation
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              Since all activities are physically carried out under the supervision of local operators, <strong>TripGod shall not be held responsible or liable</strong> for any injury, incidence, accident, loss of life, delay, or damage to personal property occurring during the course of the adventure activity. 
+              Because all physical services are operated directly by independent local service providers:
             </p>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              Customers booking through TripGod voluntarily agree to assume all risks associated with extreme adventure sports and must sign the operator's standard waiver forms at the venue before commencing.
-            </p>
+            <ul className="list-disc pl-5 space-y-2 text-xs sm:text-sm text-slate-650 font-bold">
+              <li><strong>Vendor Responsibility</strong>: To the extent permitted by applicable law, the independent local vendor is solely responsible for service execution, physical safety protocols, safety equipment quality, vehicle mechanical condition, hotel/camp premises, vendor staff behavior, and compliance with local municipal/regulatory standards.</li>
+              <li><strong>Limitation of Liability</strong>: TripGod, its founders, employees, and agents shall not be held liable for any personal accident, injury, illness, loss of life, damage/theft of property, operational delays, vendor misconduct, or service deficiencies occurring during the course of any stay, activity, or rental.</li>
+              <li><strong>Assumption of Risk</strong>: Customers engaging in adventure activities (e.g., rafting, bungee, zipline) or operating rental bikes/scooties voluntarily assume all inherent risks associated with extreme sports and road travel, and agree to sign the vendor's standard waiver/registration forms at the venue.</li>
+            </ul>
           </div>
 
           {/* Section 3 */}
           <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-3 text-left">
             <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
               <Heart size={20} className="text-[#FF5F00]" />
-              3. Medical Fitness & Safety
+              3. Safety Compliance, Health & Rules
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
-              It is the customer's responsibility to ensure that they are medically fit and comply with the age, weight, and health parameters detailed in the safety specifications of each activity (e.g., heart conditions, back injuries, pregnancy, weight limits). Local operators reserve the right to deny service if a customer does not meet the necessary criteria, and any refund in such scenarios is subject to the cancellation policy.
+              Customers must adhere strictly to all safety guidelines and eligibility criteria established by local service providers:
             </p>
+            <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm text-slate-650 font-bold">
+              <li><strong>Health Eligibility</strong>: Customers must ensure medical fitness (age, weight, cardiac/spine conditions, pregnancy restrictions) for high-intensity adventure sports.</li>
+              <li><strong>Rental Compliance</strong>: For scooty/bike rentals, customers must possess a valid driving license, wear helmets, and strictly follow motor vehicle laws.</li>
+              <li><strong>Vendor Authority</strong>: Local operators reserve the right to deny service without refund if a client is under the influence of alcohol or drugs, displays unruly behavior, or fails to satisfy safety requirements.</li>
+            </ul>
           </div>
 
           {/* Section 4 */}
           <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-left">
-            <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight">
-              4. Code of Conduct
+            <h2 className="text-lg font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2.5">
+              <UserCheck size={20} className="text-[#FF5F00]" />
+              4. Code of Conduct & Dispute Resolution
             </h2>
-            <p className="text-xs sm:text-sm text-slate-605 leading-relaxed font-semibold">
-              Users must follow the commands, rules, and guidelines provided by the safety guides and operators. Operating agencies reserve the right to cancel bookings on the spot without refund if a client is found under the influence of alcohol, drugs, or displays misbehavior.
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-semibold">
+              TripGod acts as a facilitator and will make reasonable efforts to assist customers in communication and grievance resolution with local vendors. However, primary service delivery obligations rest with the respective independent vendor.
             </p>
           </div>
 
@@ -115,3 +129,4 @@ export default function Terms() {
     </div>
   );
 }
+
