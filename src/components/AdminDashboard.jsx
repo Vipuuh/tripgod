@@ -140,7 +140,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
   const [newCityName, setNewCityName] = useState('');
   const [newCitySlug, setNewCitySlug] = useState('');
   const [newVendor, setNewVendor] = useState({
-    name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+    name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 0, status: 'Active',
     shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
     since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
     reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
@@ -633,7 +633,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
       }
 
       setNewVendor({
-        name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+        name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 0, status: 'Active',
         shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
         since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
         reporting_time: '', parking_details: '', badges: '', short_highlight: '', display_order: 0
@@ -1774,7 +1774,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
                         type="button"
                         onClick={() => {
                           setNewVendor({
-                            name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 10, status: 'Active',
+                            name: '', category: 'Multi-Service / All Services', phone: '', whatsapp: '', address: '', commission_percentage: 0, status: 'Active',
                             shop_image: '', shop_images: [], star_rating: 4.5, landmark: '',
                             since: 2020, bookings_count: 50, google_maps_link: '', meeting_instructions: '',
                             reporting_time: '', parking_details: '', badges: '', short_highlight: ''
@@ -3438,7 +3438,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
           activity_type: formData.activity_type || 'rafting',
           payment_mode: formData.payment_mode || 'fixed_advance',
-          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
+          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 0 : Number(formData.commission_percentage),
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           upi_discount: formData.upi_discount === '' || formData.upi_discount === null ? null : Number(formData.upi_discount),
           free_video_type: formData.free_video_type || 'none',
@@ -3579,7 +3579,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           documents: formData.documents || ['Driving License', 'Aadhar Card'],
           images: formData.images || [],
           payment_mode: formData.payment_mode || 'fixed_advance',
-          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
+          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 0 : Number(formData.commission_percentage),
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           upi_discount: formData.upi_discount === undefined || formData.upi_discount === null || formData.upi_discount === '' ? null : Number(formData.upi_discount)
         };
@@ -3720,7 +3720,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           cancellation_policy: formData.cancellation_policy || 'Free Cancellation up to 24 Hours',
           images: formData.images || [],
           payment_mode: formData.payment_mode || 'fixed_advance',
-          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 10 : Number(formData.commission_percentage),
+          commission_percentage: formData.commission_percentage === '' || formData.commission_percentage === null ? 0 : Number(formData.commission_percentage),
           fixed_advance_amount: formData.fixed_advance_amount === '' || formData.fixed_advance_amount === null ? 0 : Number(formData.fixed_advance_amount),
           is_verified: formData.is_verified !== undefined ? !!formData.is_verified : true,
           is_bestseller: !!formData.is_bestseller,
