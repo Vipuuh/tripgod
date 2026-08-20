@@ -12,13 +12,44 @@ export default function RoomCategoryCard({ room, isSelected, onSelect }) {
   const images = (room.images && room.images.length > 0) ? room.images : [];
   const [currentIdx, setCurrentIdx] = React.useState(0);
 
+  const [touchStart, setTouchStart] = React.useState(null);
+  const [touchEnd, setTouchEnd] = React.useState(null);
+
   const prevSlide = (e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     setCurrentIdx((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
   const nextSlide = (e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     setCurrentIdx((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleTouchStart = (e) => {
+    if (displayImages.length <= 1) return;
+    setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+    setTouchEnd(null);
+  };
+
+  const handleTouchMove = (e) => {
+    if (displayImages.length <= 1 || !touchStart) return;
+    setTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const handleTouchEnd = (e) => {
+    if (displayImages.length <= 1 || !touchStart || !touchEnd) return;
+    const distanceX = touchStart.x - touchEnd.x;
+    const distanceY = touchStart.y - touchEnd.y;
+
+    if (Math.abs(distanceX) > 35 && Math.abs(distanceX) > Math.abs(distanceY)) {
+      if (e && e.stopPropagation) e.stopPropagation();
+      if (distanceX > 0) {
+        nextSlide(e);
+      } else {
+        prevSlide(e);
+      }
+    }
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   const displayImages = images.length > 0 ? images : [];
@@ -42,21 +73,28 @@ export default function RoomCategoryCard({ room, isSelected, onSelect }) {
       </div>
       {/* Image carousel */}
       {displayImages.length > 0 && (
-        <div className="relative w-full h-32 overflow-hidden rounded-md bg-gray-100 group">
+        <div
+          className="relative w-full h-32 overflow-hidden rounded-md bg-gray-100 group touch-pan-y"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <img
             src={displayImages[currentIdx]}
             alt={`${room.name} view ${currentIdx + 1}`}
-            className="w-full h-full object-cover transition-opacity duration-300"
+            className="w-full h-full object-cover transition-opacity duration-300 pointer-events-none"
           />
           {displayImages.length > 1 && (
             <>
               <button
+                type="button"
                 onClick={prevSlide}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/90 hover:bg-white text-black flex items-center justify-center border-none shadow cursor-pointer opacity-0 group-hover:opacity-100"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/90 hover:bg-white text-black flex items-center justify-center border-none shadow cursor-pointer opacity-80 sm:opacity-0 sm:group-hover:opacity-100"
               >◀</button>
               <button
+                type="button"
                 onClick={nextSlide}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/90 hover:bg-white text-black flex items-center justify-center border-none shadow cursor-pointer opacity-0 group-hover:opacity-100"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/90 hover:bg-white text-black flex items-center justify-center border-none shadow cursor-pointer opacity-80 sm:opacity-0 sm:group-hover:opacity-100"
               >▶</button>
             </>
           )}
