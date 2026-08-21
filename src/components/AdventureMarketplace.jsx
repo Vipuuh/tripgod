@@ -1299,48 +1299,48 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     </div>
                   </div>
 
-                  {/* SECTION: MULTI-OCCUPANCY SELECTOR (10x Ultra-Luxurious TripGod Theme) */}
+                  {/* SECTION: MULTI-OCCUPANCY SELECTOR (10x Ultra-Luxurious Single-Line Layout) */}
                   {occupancyOptions && occupancyOptions.length > 0 && (
-                    <div className="bg-gradient-to-br from-slate-900 via-slate-900/98 to-slate-950 text-white rounded-3xl p-5 md:p-6 border border-slate-800/90 shadow-[0_12px_45px_rgba(0,0,0,0.18)] text-left space-y-4 relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-slate-900 via-slate-900/98 to-slate-950 text-white rounded-3xl p-4 sm:p-5.5 border border-slate-800/90 shadow-[0_12px_45px_rgba(0,0,0,0.18)] text-left space-y-3.5 relative overflow-hidden">
                       {/* Signature TripGod Orange Ambient Glow Background */}
                       <div className="absolute -top-16 -right-16 w-44 h-44 bg-[#FF5F00]/15 rounded-full blur-3xl pointer-events-none" />
                       <div className="absolute -bottom-16 -left-16 w-44 h-44 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
                       {/* Header Row: Brand Icon, Title, Discount Badge & Token Advance Pill */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5 relative z-10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_15px_rgba(255,95,0,0.35)] shrink-0">
-                            <Users size={18} className="drop-shadow-xs" />
+                      <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800/80 pb-3 relative z-10">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_15px_rgba(255,95,0,0.35)] shrink-0">
+                            <Users size={16} className="drop-shadow-xs" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-black uppercase tracking-wider text-slate-200 font-display block">
+                              <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-200 font-display block">
                                 OCCUPANCY : <span className="text-white font-black">{activeOccupancy?.name || 'Solo'}</span>
                               </span>
                               {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
-                                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                                <span className="text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">
                                   Save {Math.round((1 - activeRoomPrice / activeOriginalPrice) * 100)}%
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
-                              ⚡ Instant Booking Voucher • Guaranteed Best Rate
+                            <span className="text-[9.5px] sm:text-[10px] text-slate-400 font-semibold block mt-0.5">
+                              ⚡ Instant Voucher • Guaranteed Best Rate
                             </span>
                           </div>
                         </div>
 
                         {activeFixedAdvance > 0 && (
-                          <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-950/80 to-emerald-900/60 border border-emerald-500/40 text-emerald-400 px-3.5 py-1.5 rounded-full shadow-[0_2px_12px_rgba(16,185,129,0.15)] shrink-0">
-                            <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
-                            <span className="text-[11px] font-black text-emerald-300 tracking-tight font-display">
+                          <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-950/80 to-emerald-900/60 border border-emerald-500/40 text-emerald-400 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full shadow-[0_2px_12px_rgba(16,185,129,0.15)] shrink-0">
+                            <ShieldCheck size={13} className="text-emerald-400 shrink-0" />
+                            <span className="text-[10.5px] sm:text-[11px] font-black text-emerald-300 tracking-tight font-display">
                               Token Advance: <span className="font-extrabold text-emerald-200">₹{activeFixedAdvance.toLocaleString('en-IN')}</span>
                             </span>
                           </div>
                         )}
                       </div>
 
-                      {/* Tactile Brand Accent Pill Buttons */}
-                      <div className="flex flex-wrap gap-3 pt-1 relative z-10">
+                      {/* Tactile Brand Accent Pill Buttons — 1 Single Horizontal Row */}
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 pt-0.5 relative z-10">
                         {occupancyOptions.map((opt, idx) => {
                           const isSelected = selectedOccupancyIdx === idx;
 
@@ -1349,18 +1349,18 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               key={opt.id || idx}
                               type="button"
                               onClick={() => setSelectedOccupancyIdx(idx)}
-                              className={`px-5 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer flex items-center gap-2.5 font-display border ${
+                              className={`w-full px-2 py-2.5 sm:px-4 sm:py-3 rounded-2xl text-[11px] sm:text-xs font-black transition-all duration-300 cursor-pointer flex items-center justify-center gap-1 sm:gap-2 font-display border ${
                                 isSelected
-                                  ? 'bg-gradient-to-r from-[#FF6B00] via-[#FF5F00] to-[#FF3E00] text-white border-transparent shadow-[0_6px_25px_rgba(255,95,0,0.45)] scale-[1.03] ring-2 ring-[#FF5F00]/50'
-                                  : 'bg-slate-800/60 text-slate-300 border-slate-700/70 hover:border-slate-500 hover:bg-slate-800 hover:text-white hover:scale-[1.01]'
+                                  ? 'bg-gradient-to-r from-[#FF6B00] via-[#FF5F00] to-[#FF3E00] text-white border-transparent shadow-[0_6px_25px_rgba(255,95,0,0.45)] scale-[1.02] ring-2 ring-[#FF5F00]/50'
+                                  : 'bg-slate-800/60 text-slate-300 border-slate-700/70 hover:border-slate-500 hover:bg-slate-800 hover:text-white'
                               }`}
                             >
                               {isSelected && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0 hidden sm:inline-block" />
                               )}
-                              <span>{opt.name}</span>
+                              <span className="truncate">{opt.name}</span>
                               {opt.price && (
-                                <span className={`text-[10.5px] px-2 py-0.5 rounded-lg font-black tracking-tight ${
+                                <span className={`text-[9.5px] sm:text-[10.5px] px-1.5 py-0.5 rounded-md font-black tracking-tight shrink-0 ${
                                   isSelected ? 'bg-white/20 text-white shadow-2xs' : 'bg-slate-900/80 text-slate-300 border border-slate-700/50'
                                 }`}>
                                   ₹{Number(opt.price).toLocaleString('en-IN')}
