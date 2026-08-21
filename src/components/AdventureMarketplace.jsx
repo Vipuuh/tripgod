@@ -1299,41 +1299,48 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     </div>
                   </div>
 
-                  {/* SECTION: MULTI-OCCUPANCY SELECTOR (Premium OTA Design) */}
+                  {/* SECTION: MULTI-OCCUPANCY SELECTOR (10x Ultra-Luxurious TripGod Theme) */}
                   {occupancyOptions && occupancyOptions.length > 0 && (
-                    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 md:p-6 border border-slate-200/90 shadow-[0_6px_30px_rgba(0,0,0,0.04)] text-left space-y-4 relative overflow-hidden">
-                      {/* Decorative subtle background gradient blur */}
-                      <div className="absolute -top-12 -right-12 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+                    <div className="bg-gradient-to-br from-slate-900 via-slate-900/98 to-slate-950 text-white rounded-3xl p-5 md:p-6 border border-slate-800/90 shadow-[0_12px_45px_rgba(0,0,0,0.18)] text-left space-y-4 relative overflow-hidden">
+                      {/* Signature TripGod Orange Ambient Glow Background */}
+                      <div className="absolute -top-16 -right-16 w-44 h-44 bg-[#FF5F00]/15 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-16 -left-16 w-44 h-44 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100/90 pb-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7.5 h-7.5 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-xs">
-                            <Users size={15} className="text-amber-400" />
+                      {/* Header Row: Brand Icon, Title, Discount Badge & Token Advance Pill */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_15px_rgba(255,95,0,0.35)] shrink-0">
+                            <Users size={18} className="drop-shadow-xs" />
                           </div>
                           <div>
-                            <span className="text-xs font-black uppercase tracking-wider text-slate-800 font-display block">
-                              Occupancy : <span className="text-slate-950 font-black">{activeOccupancy?.name || 'Solo'}</span>
-                            </span>
-                            {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
-                              <span className="text-[10px] text-emerald-600 font-bold">
-                                Save {Math.round((1 - activeRoomPrice / activeOriginalPrice) * 100)}% on {activeOccupancy?.name} Plan
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-black uppercase tracking-wider text-slate-200 font-display block">
+                                OCCUPANCY : <span className="text-white font-black">{activeOccupancy?.name || 'Solo'}</span>
                               </span>
-                            )}
+                              {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
+                                <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+                                  Save {Math.round((1 - activeRoomPrice / activeOriginalPrice) * 100)}%
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
+                              ⚡ Instant Booking Voucher • Guaranteed Best Rate
+                            </span>
                           </div>
                         </div>
 
                         {activeFixedAdvance > 0 && (
-                          <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-full shadow-2xs">
-                            <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
-                            <span className="text-[11px] font-black text-emerald-800 tracking-tight font-display">
-                              Token Advance: <span className="font-extrabold text-emerald-950">₹{activeFixedAdvance.toLocaleString('en-IN')}</span>
+                          <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-950/80 to-emerald-900/60 border border-emerald-500/40 text-emerald-400 px-3.5 py-1.5 rounded-full shadow-[0_2px_12px_rgba(16,185,129,0.15)] shrink-0">
+                            <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
+                            <span className="text-[11px] font-black text-emerald-300 tracking-tight font-display">
+                              Token Advance: <span className="font-extrabold text-emerald-200">₹{activeFixedAdvance.toLocaleString('en-IN')}</span>
                             </span>
                           </div>
                         )}
                       </div>
 
-                      {/* Pill Selection Group */}
-                      <div className="flex flex-wrap gap-2.5 pt-0.5">
+                      {/* Tactile Brand Accent Pill Buttons */}
+                      <div className="flex flex-wrap gap-3 pt-1 relative z-10">
                         {occupancyOptions.map((opt, idx) => {
                           const isSelected = selectedOccupancyIdx === idx;
 
@@ -1342,16 +1349,19 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               key={opt.id || idx}
                               type="button"
                               onClick={() => setSelectedOccupancyIdx(idx)}
-                              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-2 border ${
+                              className={`px-5 py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer flex items-center gap-2.5 font-display border ${
                                 isSelected
-                                  ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.03] ring-2 ring-slate-900/10'
-                                  : 'bg-slate-50/90 text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-white hover:shadow-xs'
+                                  ? 'bg-gradient-to-r from-[#FF6B00] via-[#FF5F00] to-[#FF3E00] text-white border-transparent shadow-[0_6px_25px_rgba(255,95,0,0.45)] scale-[1.03] ring-2 ring-[#FF5F00]/50'
+                                  : 'bg-slate-800/60 text-slate-300 border-slate-700/70 hover:border-slate-500 hover:bg-slate-800 hover:text-white hover:scale-[1.01]'
                               }`}
                             >
+                              {isSelected && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                              )}
                               <span>{opt.name}</span>
                               {opt.price && (
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
-                                  isSelected ? 'bg-white/20 text-white' : 'bg-slate-200/60 text-slate-600'
+                                <span className={`text-[10.5px] px-2 py-0.5 rounded-lg font-black tracking-tight ${
+                                  isSelected ? 'bg-white/20 text-white shadow-2xs' : 'bg-slate-900/80 text-slate-300 border border-slate-700/50'
                                 }`}>
                                   ₹{Number(opt.price).toLocaleString('en-IN')}
                                 </span>
