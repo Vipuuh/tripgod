@@ -1339,8 +1339,8 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         )}
                       </div>
 
-                      {/* Tactile Brand Accent Pill Buttons — 1 Single Horizontal Row */}
-                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 pt-0.5 relative z-10">
+                      {/* Tactile Brand Accent Pill Buttons — Smooth Swipeable Horizontal Slider */}
+                      <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar scroll-smooth pt-0.5 pb-1 relative z-10 -mx-1 px-1">
                         {occupancyOptions.map((opt, idx) => {
                           const isSelected = selectedOccupancyIdx === idx;
 
@@ -1349,18 +1349,18 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               key={opt.id || idx}
                               type="button"
                               onClick={() => setSelectedOccupancyIdx(idx)}
-                              className={`w-full px-2 py-2.5 sm:px-4 sm:py-3 rounded-2xl text-[11px] sm:text-xs font-black transition-all duration-300 cursor-pointer flex items-center justify-center gap-1 sm:gap-2 font-display border ${
+                              className={`shrink-0 min-w-max px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl text-xs font-black transition-all duration-300 cursor-pointer flex items-center gap-2 font-display border ${
                                 isSelected
                                   ? 'bg-gradient-to-r from-[#FF6B00] via-[#FF5F00] to-[#FF3E00] text-white border-transparent shadow-[0_6px_25px_rgba(255,95,0,0.45)] scale-[1.02] ring-2 ring-[#FF5F00]/50'
                                   : 'bg-slate-800/60 text-slate-300 border-slate-700/70 hover:border-slate-500 hover:bg-slate-800 hover:text-white'
                               }`}
                             >
                               {isSelected && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0 hidden sm:inline-block" />
+                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
                               )}
-                              <span className="truncate">{opt.name}</span>
+                              <span className="whitespace-nowrap">{opt.name}</span>
                               {opt.price && (
-                                <span className={`text-[9.5px] sm:text-[10.5px] px-1.5 py-0.5 rounded-md font-black tracking-tight shrink-0 ${
+                                <span className={`text-[10px] sm:text-[10.5px] px-2 py-0.5 rounded-lg font-black tracking-tight shrink-0 ${
                                   isSelected ? 'bg-white/20 text-white shadow-2xs' : 'bg-slate-900/80 text-slate-300 border border-slate-700/50'
                                 }`}>
                                   ₹{Number(opt.price).toLocaleString('en-IN')}
