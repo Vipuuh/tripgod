@@ -178,7 +178,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
         message += `----------------------------------\n`;
         
         cart.forEach((item, index) => {
-          const itemPct = item.commission_percentage || 10.0;
+          const itemPct = item.commission_percentage || 0;
           message += `*${index + 1}. ${item.name}*\n`;
           if (item.stretch) message += `   Route: ${item.stretch}\n`;
           message += `   Date: ${item.date.split('-').reverse().join('/')}\n`;
@@ -256,7 +256,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
 
           const insertedBookingIds = [];
           const bookingPromises = cart.map(async (item) => {
-            const itemPct = item.commission_percentage || 10.0;
+            const itemPct = item.commission_percentage || 0;
             const commissionEarned = item.payment_mode === 'fixed_advance'
               ? Math.min(item.fixed_advance_amount || 0, item.totalPrice)
               : Math.round(item.totalPrice * (itemPct / 100));

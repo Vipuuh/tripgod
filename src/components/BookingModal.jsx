@@ -1301,9 +1301,11 @@ My payment ID is verified. Please confirm my slots.`;
                             ? `Pay ₹${calculatedAdvance.toLocaleString('en-IN')} advance online`
                             : (isHotel
                                 ? `₹${fixedAdvanceAmount} Advance + ₹${taxes} GST`
-                                : (paymentMode === 'fixed_advance'
-                                    ? `₹${fixedAdvanceAmount}/person × ${guests} guest${guests > 1 ? 's' : ''}`
-                                    : (commissionPercentage > 0 ? `Pay ${commissionPercentage}% online` : 'Pay advance online')))}
+                                : (activity?.selectedOccupancyName
+                                    ? `Pay token advance online`
+                                    : (paymentMode === 'fixed_advance' || fixedAdvanceAmount > 0
+                                        ? `Pay token advance online`
+                                        : (commissionPercentage > 0 ? `Pay ${commissionPercentage}% online` : 'Pay token advance online'))))}
                         </span>
                       </div>
                       <span className="block text-sm sm:text-base font-black text-[#FF5F00] mt-3">₹{calculatedAdvance.toLocaleString('en-IN')}</span>

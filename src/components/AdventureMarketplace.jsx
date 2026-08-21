@@ -1907,7 +1907,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                           ? Number(selectedPackage.fixed_advance_amount)
                           : (selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null
                               ? Number(selectedPackage.commission_percentage)
-                              : 10.0));
+                              : 0));
 
                     const fixedAmt = activeFixedAdvance > 0
                       ? activeFixedAdvance
@@ -1915,7 +1915,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                           ? Number(selectedPackage.fixed_advance_amount)
                           : (commType === 'flat' ? commVal : 0));
 
-                    const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 10);
+                    const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 0);
 
                     let advanceAmount = 0;
                     if (pMode === 'full_payment') {
@@ -2013,7 +2013,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                           ? Number(selectedPackage.fixed_advance_amount)
                           : (selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null
                               ? Number(selectedPackage.commission_percentage)
-                              : 10.0));
+                              : 0));
 
                     const fixedAmt = activeFixedAdvance > 0
                       ? activeFixedAdvance
@@ -2021,7 +2021,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                           ? Number(selectedPackage.fixed_advance_amount)
                           : (commType === 'flat' ? commVal : 0));
 
-                    const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 10);
+                    const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 0);
 
                     let advanceAmount = 0;
                     if (pMode === 'full_payment') {

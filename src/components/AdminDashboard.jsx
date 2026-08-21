@@ -3043,7 +3043,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           is_govt_approved: false,
           safety_rating: 4.5,
           full_payment_upi_discount: 0,
-          payment_mode: 'commission_advance',
+          payment_mode: 'fixed_advance',
           fixed_advance_amount: '',
           id: null
         };
@@ -3067,7 +3067,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             is_govt_approved: !!op.is_govt_approved,
             safety_rating: op.safety_rating !== null && op.safety_rating !== undefined ? op.safety_rating : 4.5,
             full_payment_upi_discount: op.full_payment_upi_discount !== null && op.full_payment_upi_discount !== undefined ? op.full_payment_upi_discount : 0,
-            payment_mode: op.payment_mode || 'commission_advance',
+            payment_mode: op.payment_mode || 'fixed_advance',
             fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
             id: op.id
           };
@@ -3092,7 +3092,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           original_price: '',
           commission_percentage: '',
           whatsapp_number: v.whatsapp || '',
-          payment_mode: 'commission_advance',
+          payment_mode: 'fixed_advance',
           fixed_advance_amount: '',
           id: null
         };
@@ -3111,7 +3111,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             original_price: op.original_price !== null && op.original_price !== undefined ? op.original_price : '',
             commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
             whatsapp_number: op.whatsapp_number || op.vendors?.whatsapp || '',
-            payment_mode: op.payment_mode || 'commission_advance',
+            payment_mode: op.payment_mode || 'fixed_advance',
             fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
             id: op.id
           };
@@ -3136,7 +3136,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
           deposit: 0,
           pickup_location: v.address || 'Rishikesh',
           commission_percentage: '',
-          payment_mode: 'commission_advance',
+          payment_mode: 'fixed_advance',
           fixed_advance_amount: '',
           id: null
         };
@@ -3157,7 +3157,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
               deposit: op.deposit !== undefined ? op.deposit : 0,
               pickup_location: op.pickup_location || op.vendors?.address || 'Rishikesh',
               commission_percentage: op.commission_percentage !== null && op.commission_percentage !== undefined ? op.commission_percentage : '',
-              payment_mode: op.payment_mode || 'commission_advance',
+              payment_mode: op.payment_mode || 'fixed_advance',
               fixed_advance_amount: op.fixed_advance_amount !== null && op.fixed_advance_amount !== undefined ? op.fixed_advance_amount : '',
               id: op.id
             };
@@ -3294,7 +3294,7 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
         images: [],
         whatsapp_number: '',
         cancellation_policy: 'Free Cancellation up to 24 Hours',
-        payment_mode: 'commission_advance',
+        payment_mode: 'fixed_advance',
         fixed_advance_amount: 0,
         upi_discount: null,
         free_video_type: 'none',
