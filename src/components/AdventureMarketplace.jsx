@@ -1299,35 +1299,63 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     </div>
                   </div>
 
-                  {/* SECTION: MULTI-OCCUPANCY SELECTOR (Matching Reference Photo UI) */}
+                  {/* SECTION: MULTI-OCCUPANCY SELECTOR (Premium OTA Design) */}
                   {occupancyOptions && occupancyOptions.length > 0 && (
-                    <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs text-left space-y-3.5">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                        <span className="text-xs font-bold text-slate-600 font-display">
-                          Occupancy : <span className="font-extrabold text-slate-900 text-sm">{activeOccupancy?.name || 'Solo'}</span>
-                        </span>
+                    <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 md:p-6 border border-slate-200/90 shadow-[0_6px_30px_rgba(0,0,0,0.04)] text-left space-y-4 relative overflow-hidden">
+                      {/* Decorative subtle background gradient blur */}
+                      <div className="absolute -top-12 -right-12 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100/90 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7.5 h-7.5 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-xs">
+                            <Users size={15} className="text-amber-400" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-black uppercase tracking-wider text-slate-800 font-display block">
+                              Occupancy : <span className="text-slate-950 font-black">{activeOccupancy?.name || 'Solo'}</span>
+                            </span>
+                            {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
+                              <span className="text-[10px] text-emerald-600 font-bold">
+                                Save {Math.round((1 - activeRoomPrice / activeOriginalPrice) * 100)}% on {activeOccupancy?.name} Plan
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
                         {activeFixedAdvance > 0 && (
-                          <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2.5 py-1 rounded-full">
-                            Token Advance: ₹{activeFixedAdvance.toLocaleString('en-IN')}
-                          </span>
+                          <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-full shadow-2xs">
+                            <ShieldCheck size={13} className="text-emerald-600 shrink-0" />
+                            <span className="text-[11px] font-black text-emerald-800 tracking-tight font-display">
+                              Token Advance: <span className="font-extrabold text-emerald-950">₹{activeFixedAdvance.toLocaleString('en-IN')}</span>
+                            </span>
+                          </div>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap gap-2.5">
+                      {/* Pill Selection Group */}
+                      <div className="flex flex-wrap gap-2.5 pt-0.5">
                         {occupancyOptions.map((opt, idx) => {
                           const isSelected = selectedOccupancyIdx === idx;
+
                           return (
                             <button
                               key={opt.id || idx}
                               type="button"
                               onClick={() => setSelectedOccupancyIdx(idx)}
-                              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
+                              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-2 border ${
                                 isSelected
-                                  ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]'
-                                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
+                                  ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.03] ring-2 ring-slate-900/10'
+                                  : 'bg-slate-50/90 text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-white hover:shadow-xs'
                               }`}
                             >
-                              {opt.name}
+                              <span>{opt.name}</span>
+                              {opt.price && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                                  isSelected ? 'bg-white/20 text-white' : 'bg-slate-200/60 text-slate-600'
+                                }`}>
+                                  ₹{Number(opt.price).toLocaleString('en-IN')}
+                                </span>
+                              )}
                             </button>
                           );
                         })}
@@ -1987,9 +2015,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               ? Number(selectedPackage.commission_percentage)
                               : 10.0));
 
-                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null && selectedPackage.fixed_advance_amount !== ''
-                      ? Number(selectedPackage.fixed_advance_amount)
-                      : (commType === 'flat' ? commVal : 0);
+                    const fixedAmt = activeFixedAdvance > 0
+                      ? activeFixedAdvance
+                      : (selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null && selectedPackage.fixed_advance_amount !== ''
+                          ? Number(selectedPackage.fixed_advance_amount)
+                          : (commType === 'flat' ? commVal : 0));
 
                     const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 10);
 
@@ -1997,10 +2027,10 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     if (pMode === 'full_payment') {
                       advanceAmount = totalPrice;
                     } else if (fixedAmt > 0) {
-                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      const units = (activeOccupancy || activityType === 'camping') ? 1 : totalGuests;
                       advanceAmount = Math.min(totalPrice, fixedAmt * units);
                     } else if (commType === 'flat' && commVal > 0) {
-                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      const units = (activeOccupancy || activityType === 'camping') ? 1 : totalGuests;
                       advanceAmount = Math.min(totalPrice, commVal * units);
                     } else {
                       advanceAmount = Math.max(1, Math.round((totalPrice * commPct) / 100));
@@ -2067,6 +2097,8 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                                   commission_value: commVal,
                                   commission_percentage: commPct,
                                   fixed_advance_amount: fixedAmt,
+                                  selectedOccupancyName: activeOccupancy ? activeOccupancy.name : null,
+                                  selectedOccupancy: activeOccupancy,
                                   free_video_type: selectedPackage.free_video_type || 'none',
                                   is_closed: selectedPackage.is_closed,
                                   closed_reason: selectedPackage.closed_reason,
