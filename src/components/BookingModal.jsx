@@ -234,9 +234,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
             ? Number(activity.commission_percentage)
             : 0));
 
-  const fixedAdvanceAmount = activity && activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
-    ? Number(activity.fixed_advance_amount)
-    : (commType === 'flat' ? commVal : 0);
+  const fixedAdvanceAmount = activity && activity.selectedOccupancy && activity.selectedOccupancy.fixed_advance_amount !== undefined && activity.selectedOccupancy.fixed_advance_amount !== null && activity.selectedOccupancy.fixed_advance_amount !== ''
+    ? Number(activity.selectedOccupancy.fixed_advance_amount)
+    : (activity && activity.fixed_advance_amount !== undefined && activity.fixed_advance_amount !== null
+        ? Number(activity.fixed_advance_amount)
+        : (commType === 'flat' ? commVal : 0));
 
   const commissionPercentage = commType === 'percentage' ? commVal : 0;
   const paymentMode = (activity && activity.payment_mode) || 'commission_advance';
@@ -258,8 +260,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     ? Number(activity.totalPrice || (basePrice * guests))
     : (isBikeRent
         ? pricePerPerson * guests * rentalDays
-        : (activity && (activity.category === 'hotels' || (activity.category === 'camping' && activity.room_price))
-            ? basePrice * nights
+        : (activity && (activity.category === 'hotels' || (activity.category === 'camping' && activity.room_price) || activity.selectedOccupancy)
+            ? basePrice
             : pricePerPerson * guests));
   
   const isHotel = activity && activity.category === 'hotels';
@@ -275,11 +277,11 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   } else if (paymentMode === 'full_payment') {
     calculatedAdvance = totalPrice;
   } else if (fixedAdvanceAmount > 0) {
-    const units = isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests);
+    const units = (activity && activity.selectedOccupancy) ? 1 : (isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests));
     calculatedAdvance = Math.min(totalPrice, fixedAdvanceAmount * units + taxes);
   } else if (commType === 'flat') {
     const flatPerUnit = commVal;
-    const units = isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests);
+    const units = (activity && activity.selectedOccupancy) ? 1 : (isBikeRent ? (guests * rentalDays) : (isHotel ? 1 : guests));
     calculatedAdvance = Math.min(totalPrice, flatPerUnit * units + taxes);
   } else {
     // Percentage % (Default 10% advance)
@@ -847,9 +849,16 @@ My payment ID is verified. Please confirm my slots.`;
                 {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-black/5 bg-transparent text-black">
               <div>
-                <span className="text-[9px] tracking-wider uppercase text-[#FF5F00] font-black px-2 py-0.5 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded">
-                  {(activity.category || 'Booking').toUpperCase()}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] tracking-wider uppercase text-[#FF5F00] font-black px-2 py-0.5 bg-[#FF5F00]/10 border border-[#FF5F00]/20 rounded">
+                    {(activity.category || 'Booking').toUpperCase()}
+                  </span>
+                  {activity.selectedOccupancyName && (
+                    <span className="text-[9px] font-black tracking-wider uppercase text-slate-800 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                      Occupancy: {activity.selectedOccupancyName}
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-xl font-bold tracking-tight mt-1 font-display">Book {activity.name}</h3>
               </div>
               <button 

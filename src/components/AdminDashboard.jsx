@@ -6429,6 +6429,170 @@ function ListingForm({ type, data, cities, vendors, onClose }) {
             </div>
           )}
 
+          {/* Multi-Occupancy & Variant Pricing Configuration (Solo, Couple, Triple, Custom Options) */}
+          <div className="bg-slate-950/90 border border-slate-850 p-4 rounded-2xl space-y-4 pt-4 border-t border-slate-900">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🎯</span>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-accent tracking-wider font-display">
+                    Multi-Occupancy & Custom Variant Pricing (Solo / Couple / Triple)
+                  </label>
+                  <p className="text-[9px] text-gray-500 font-medium">Set custom titles, prices, and flat advance/commission per option.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer select-none bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+                  <input
+                    type="checkbox"
+                    checked={!!formData.rules?.enable_occupancy_pricing}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      const currentOpts = formData.rules?.occupancy_pricing || [];
+                      let newOpts = currentOpts;
+                      if (isChecked && currentOpts.length === 0) {
+                        newOpts = [
+                          { id: 'solo', name: 'Solo', price: Number(formData.price || 1500), original_price: Number(formData.original_price || 2000), fixed_advance_amount: Number(formData.fixed_advance_amount || 100), guests_count: 1 },
+                          { id: 'couple', name: 'Couple', price: Math.round(Number(formData.price || 1500) * 1.85), original_price: Math.round(Number(formData.original_price || 2000) * 1.85), fixed_advance_amount: Math.round(Number(formData.fixed_advance_amount || 100) * 3), guests_count: 2 },
+                          { id: 'triple', name: 'Triple', price: Math.round(Number(formData.price || 1500) * 2.6), original_price: Math.round(Number(formData.original_price || 2000) * 2.6), fixed_advance_amount: Math.round(Number(formData.fixed_advance_amount || 100) * 4), guests_count: 3 }
+                        ];
+                      }
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: {
+                          ...(prev.rules || {}),
+                          enable_occupancy_pricing: isChecked,
+                          occupancy_pricing: newOpts
+                        }
+                      }));
+                    }}
+                    className="rounded border-slate-800 bg-slate-950 text-accent focus:ring-0 w-3.5 h-3.5"
+                  />
+                  <span className="text-xs font-bold text-white">Enable Multi-Occupancy Options</span>
+                </label>
+
+                {formData.rules?.enable_occupancy_pricing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const opts = [...(formData.rules?.occupancy_pricing || [])];
+                      opts.push({
+                        id: `opt_${Date.now()}`,
+                        name: 'Group Option',
+                        price: Number(formData.price || 1000),
+                        original_price: Number(formData.original_price || 1500),
+                        fixed_advance_amount: Number(formData.fixed_advance_amount || 200),
+                        guests_count: 1
+                      });
+                      setFormData(prev => ({
+                        ...prev,
+                        rules: { ...prev.rules, occupancy_pricing: opts }
+                      }));
+                    }}
+                    className="text-[10px] font-bold text-emerald-400 hover:text-white bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    + Add Option
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {!formData.rules?.enable_occupancy_pricing ? (
+              <p className="text-[10px] text-gray-500 italic">Multi-occupancy pricing is currently OFF. Normal single pricing (₹{formData.price || 0}) will be active.</p>
+            ) : (
+              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                {(formData.rules?.occupancy_pricing || []).length === 0 ? (
+                  <p className="text-[10px] text-amber-400 italic">No occupancy options added yet. Click "+ Add Option" above.</p>
+                ) : (
+                  (formData.rules?.occupancy_pricing || []).map((opt, oIdx) => (
+                    <div key={oIdx} className="bg-slate-900 border border-slate-800 p-3 rounded-xl relative space-y-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const opts = [...(formData.rules?.occupancy_pricing || [])];
+                          opts.splice(oIdx, 1);
+                          setFormData(prev => ({
+                            ...prev,
+                            rules: { ...prev.rules, occupancy_pricing: opts }
+                          }));
+                        }}
+                        className="absolute top-2.5 right-2.5 text-red-500 hover:text-red-400 font-black text-[10px] bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                      >
+                        Delete Option
+                      </button>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pr-20">
+                        <div className="space-y-1">
+                          <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Option Title / Name</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Solo, Couple, Triple"
+                            value={opt.name || ''}
+                            onChange={(e) => {
+                              const opts = [...(formData.rules?.occupancy_pricing || [])];
+                              opts[oIdx].name = e.target.value;
+                              setFormData(prev => ({ ...prev, rules: { ...prev.rules, occupancy_pricing: opts } }));
+                            }}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Price (₹)</label>
+                          <input
+                            type="number"
+                            required
+                            placeholder="e.g. 1500"
+                            value={opt.price === '' ? '' : opt.price}
+                            onChange={(e) => {
+                              const opts = [...(formData.rules?.occupancy_pricing || [])];
+                              opts[oIdx].price = e.target.value === '' ? '' : Number(e.target.value);
+                              setFormData(prev => ({ ...prev, rules: { ...prev.rules, occupancy_pricing: opts } }));
+                            }}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Original Price (₹ MRP)</label>
+                          <input
+                            type="number"
+                            placeholder="Strikethrough rate"
+                            value={opt.original_price === '' ? '' : opt.original_price || ''}
+                            onChange={(e) => {
+                              const opts = [...(formData.rules?.occupancy_pricing || [])];
+                              opts[oIdx].original_price = e.target.value === '' ? '' : Number(e.target.value);
+                              setFormData(prev => ({ ...prev, rules: { ...prev.rules, occupancy_pricing: opts } }));
+                            }}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-[9px] font-black text-emerald-400 uppercase tracking-wider">Advance / Commission (₹)</label>
+                          <input
+                            type="number"
+                            required
+                            placeholder="e.g. 100 for Solo, 300 for Couple"
+                            value={opt.fixed_advance_amount === '' ? '' : opt.fixed_advance_amount}
+                            onChange={(e) => {
+                              const opts = [...(formData.rules?.occupancy_pricing || [])];
+                              opts[oIdx].fixed_advance_amount = e.target.value === '' ? '' : Number(e.target.value);
+                              setFormData(prev => ({ ...prev, rules: { ...prev.rules, occupancy_pricing: opts } }));
+                            }}
+                            className="w-full bg-slate-950 border border-emerald-500/40 rounded-lg px-2.5 py-1 text-emerald-400 font-bold text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Operators & Pricing */}
           <div className="space-y-3 pt-4 border-t border-slate-900">
             <div className="space-y-1">

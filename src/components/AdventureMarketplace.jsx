@@ -322,6 +322,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
   const [activeFaq, setActiveFaq] = useState(null);
 
   const [selectedRoomIdx, setSelectedRoomIdx] = useState(null);
+  const [selectedOccupancyIdx, setSelectedOccupancyIdx] = useState(0);
   const [numAdults, setNumAdults] = useState(1);
   const [numKids, setNumKids] = useState(0);
   const [selectedMeals, setSelectedMeals] = useState({});
@@ -592,6 +593,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
   const navigateToPackage = (pkg) => {
     setSelectedPackage(pkg);
     setSelectedRoomIdx(null);
+    setSelectedOccupancyIdx(0);
     setNumAdults(1);
     setNumKids(0);
     setSelectedMeals({});
@@ -1114,13 +1116,29 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
 
             {/* Title & Stats block & Dynamic Pricing Calculations */}
             {(() => {
-              const activeRoomPrice = (selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.price)
-                ? Number(selectedPackage.rules.room_categories[selectedRoomIdx].price)
-                : Number(selectedPackage.price);
+              const occupancyOptions = selectedPackage.rules?.enable_occupancy_pricing && Array.isArray(selectedPackage.rules?.occupancy_pricing) && selectedPackage.rules.occupancy_pricing.length > 0
+                ? selectedPackage.rules.occupancy_pricing
+                : null;
 
-              const activeOriginalPrice = (selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.original_price)
-                ? Number(selectedPackage.rules.room_categories[selectedRoomIdx].original_price)
-                : (selectedPackage.original_price ? Number(selectedPackage.original_price) : null);
+              const activeOccupancy = occupancyOptions && occupancyOptions[selectedOccupancyIdx]
+                ? occupancyOptions[selectedOccupancyIdx]
+                : null;
+
+              const activeRoomPrice = activeOccupancy
+                ? Number(activeOccupancy.price)
+                : ((selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.price)
+                    ? Number(selectedPackage.rules.room_categories[selectedRoomIdx].price)
+                    : Number(selectedPackage.price));
+
+              const activeOriginalPrice = activeOccupancy
+                ? (activeOccupancy.original_price ? Number(activeOccupancy.original_price) : null)
+                : ((selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.original_price)
+                    ? Number(selectedPackage.rules.room_categories[selectedRoomIdx].original_price)
+                    : (selectedPackage.original_price ? Number(selectedPackage.original_price) : null));
+
+              const activeFixedAdvance = activeOccupancy && activeOccupancy.fixed_advance_amount !== undefined && activeOccupancy.fixed_advance_amount !== null && activeOccupancy.fixed_advance_amount !== ''
+                ? Number(activeOccupancy.fixed_advance_amount)
+                : (selectedPackage.fixed_advance_amount || selectedPackage.vendors?.fixed_advance_amount || 0);
 
               const activeImages = (selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.images?.length > 0)
                 ? selectedPackage.rules.room_categories[selectedRoomIdx].images
@@ -1140,11 +1158,15 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                 if (mealsRule.dinner?.status === 'paid' && selectedMeals.dinner) mealCostPerGuestPerNight += (Number(mealsRule.dinner.price) || 300);
               }
               const totalMealCost = activityType === 'camping' ? (mealCostPerGuestPerNight * totalGuests) : 0;
-              const totalPrice = activityType === 'camping' ? ((activeRoomPrice * calculatedTents) + totalMealCost) : (activeRoomPrice * totalGuests);
+              const totalPrice = activeOccupancy 
+                ? activeRoomPrice
+                : (activityType === 'camping' ? ((activeRoomPrice * calculatedTents) + totalMealCost) : (activeRoomPrice * totalGuests));
 
-              const selectedCategoryName = selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.name
-                ? selectedPackage.rules.room_categories[selectedRoomIdx].name
-                : (activityType === 'camping' ? 'Standard Tent' : '');
+              const selectedCategoryName = activeOccupancy
+                ? activeOccupancy.name
+                : (selectedRoomIdx !== null && selectedPackage.rules?.room_categories?.[selectedRoomIdx]?.name
+                    ? selectedPackage.rules.room_categories[selectedRoomIdx].name
+                    : (activityType === 'camping' ? 'Standard Tent' : ''));
 
               return (
                 <>
@@ -1276,6 +1298,42 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       </div>
                     </div>
                   </div>
+
+                  {/* SECTION: MULTI-OCCUPANCY SELECTOR (Matching Reference Photo UI) */}
+                  {occupancyOptions && occupancyOptions.length > 0 && (
+                    <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs text-left space-y-3.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                        <span className="text-xs font-bold text-slate-600 font-display">
+                          Occupancy : <span className="font-extrabold text-slate-900 text-sm">{activeOccupancy?.name || 'Solo'}</span>
+                        </span>
+                        {activeFixedAdvance > 0 && (
+                          <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2.5 py-1 rounded-full">
+                            Token Advance: ₹{activeFixedAdvance.toLocaleString('en-IN')}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2.5">
+                        {occupancyOptions.map((opt, idx) => {
+                          const isSelected = selectedOccupancyIdx === idx;
+                          return (
+                            <button
+                              key={opt.id || idx}
+                              type="button"
+                              onClick={() => setSelectedOccupancyIdx(idx)}
+                              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
+                                isSelected
+                                  ? 'bg-slate-900 text-white border-slate-900 shadow-md scale-[1.02]'
+                                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
+                              }`}
+                            >
+                              {opt.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* SECTION: CAMP CATEGORY SELECTOR */}
                   {selectedPackage.rules?.room_categories && selectedPackage.rules.room_categories.length > 0 && (
@@ -1823,9 +1881,11 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               ? Number(selectedPackage.commission_percentage)
                               : 10.0));
 
-                    const fixedAmt = selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null && selectedPackage.fixed_advance_amount !== ''
-                      ? Number(selectedPackage.fixed_advance_amount)
-                      : (commType === 'flat' ? commVal : 0);
+                    const fixedAmt = activeFixedAdvance > 0
+                      ? activeFixedAdvance
+                      : (selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null && selectedPackage.fixed_advance_amount !== ''
+                          ? Number(selectedPackage.fixed_advance_amount)
+                          : (commType === 'flat' ? commVal : 0));
 
                     const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 10);
 
@@ -1833,10 +1893,10 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     if (pMode === 'full_payment') {
                       advanceAmount = totalPrice;
                     } else if (fixedAmt > 0) {
-                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      const units = (activeOccupancy || activityType === 'camping') ? 1 : totalGuests;
                       advanceAmount = Math.min(totalPrice, fixedAmt * units);
                     } else if (commType === 'flat' && commVal > 0) {
-                      const units = activityType === 'camping' ? 1 : totalGuests;
+                      const units = (activeOccupancy || activityType === 'camping') ? 1 : totalGuests;
                       advanceAmount = Math.min(totalPrice, commVal * units);
                     } else {
                       advanceAmount = Math.max(1, Math.round((totalPrice * commPct) / 100));
@@ -1895,6 +1955,8 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               commission_value: commVal,
                               commission_percentage: commPct,
                               fixed_advance_amount: fixedAmt,
+                              selectedOccupancyName: activeOccupancy ? activeOccupancy.name : null,
+                              selectedOccupancy: activeOccupancy,
                               free_video_type: selectedPackage.free_video_type || 'none',
                               is_closed: selectedPackage.is_closed,
                               closed_reason: selectedPackage.closed_reason,
