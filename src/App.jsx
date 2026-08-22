@@ -82,7 +82,21 @@ class ErrorBoundary extends React.Component {
 
 export default function App() {
   // Navigation State
-  const [route, setRoute] = useState('home');
+  const getInitialRoute = () => {
+    try {
+      let path = window.location.pathname || '';
+      if (path.startsWith('/')) path = path.substring(1);
+      if (path.endsWith('/')) path = path.slice(0, -1);
+      path = path.split('?')[0].split('#')[0];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo', 'whatsapp-app'];
+      if (validRoutes.includes(path)) return path;
+      if (path.startsWith('hotels/')) return 'hotels';
+      if (path.startsWith('tours/')) return 'tours';
+    } catch (e) {}
+    return 'home';
+  };
+
+  const [route, setRoute] = useState(getInitialRoute);
   const [selectedTour, setSelectedTour] = useState(null);
   
   // Maintenance Mode & Store Lock State
@@ -166,7 +180,9 @@ export default function App() {
   useEffect(() => {
     const manifestLink = document.querySelector('link[rel="manifest"]');
     if (manifestLink) {
-      if (route === 'vendor' || route === 'partner') {
+      if (route === 'whatsapp-app') {
+        manifestLink.setAttribute('href', '/manifest-whatsapp.json');
+      } else if (route === 'vendor' || route === 'partner') {
         manifestLink.setAttribute('href', '/vendor-manifest.json');
       } else {
         manifestLink.setAttribute('href', '/manifest.json');
@@ -278,10 +294,10 @@ export default function App() {
   // Sync path routing if user uses back/forward buttons (HTML5 History API)
   useEffect(() => {
     const handlePathChange = () => {
-      let path = window.location.pathname;
-      if (path.startsWith('/')) {
-        path = path.substring(1);
-      }
+      let path = window.location.pathname || '';
+      if (path.startsWith('/')) path = path.substring(1);
+      if (path.endsWith('/')) path = path.slice(0, -1);
+      path = path.split('?')[0].split('#')[0];
       if (path === '') {
         path = 'home';
       }

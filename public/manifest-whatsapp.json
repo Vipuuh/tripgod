@@ -1,6 +1,6 @@
 {
   "short_name": "TG WhatsApp",
-  "name": "TripGod WhatsApp Support Console",
+  "name": "TG WhatsApp Support Console",
   "icons": [
     {
       "src": "/apple-touch-icon.png",
@@ -9,6 +9,7 @@
     }
   ],
   "start_url": "/whatsapp-app",
+  "scope": "/whatsapp-app",
   "background_color": "#090d16",
   "theme_color": "#ff6b00",
   "display": "standalone",
