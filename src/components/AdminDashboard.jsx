@@ -10,6 +10,7 @@ import { supabase } from '../supabase';
 import RetargetingTab from './RetargetingTab';
 import ReviewsSection from './ReviewsSection';
 import WhatsAppSupportInbox from './WhatsAppSupportInbox';
+import WhatsAppSessionManager from './WhatsAppSessionManager';
 import VendorImageCarousel from './VendorImageCarousel';
 import MaintenanceManager from './MaintenanceManager';
 import MediaDisplay from './MediaDisplay';
@@ -158,6 +159,7 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
 
   // Active Tab
   const [activeTab, setActiveTab] = useState('analytics');
+  const [whatsappSubTab, setWhatsappSubTab] = useState('inbox'); // 'inbox' or 'sessions'
   const [adventureTypeFilter, setAdventureTypeFilter] = useState('all');
 
   // Database Resource States
@@ -2014,9 +2016,39 @@ export default function AdminDashboard({ setRoute, maintenanceConfig, setMainten
             </div>
           )}
 
-          {/* WHATSAPP LIVE SUPPORT INBOX TAB */}
+          {/* WHATSAPP LIVE SUPPORT INBOX & SESSION MANAGEMENT TAB */}
           {activeTab === 'whatsapp' && (
-            <WhatsAppSupportInbox currentUser={{ name: adminEmail || 'Vipu (Admin)' }} />
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                <button
+                  onClick={() => setWhatsappSubTab('inbox')}
+                  className={`px-4 py-2 rounded-2xl text-xs font-extrabold transition-all ${
+                    whatsappSubTab === 'inbox'
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
+                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  💬 Live Support Inbox
+                </button>
+
+                <button
+                  onClick={() => setWhatsappSubTab('sessions')}
+                  className={`px-4 py-2 rounded-2xl text-xs font-extrabold transition-all ${
+                    whatsappSubTab === 'sessions'
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md'
+                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  🔐 Devices & App Sessions
+                </button>
+              </div>
+
+              {whatsappSubTab === 'inbox' ? (
+                <WhatsAppSupportInbox currentUser={{ name: adminEmail || 'Vipu (Admin)' }} />
+              ) : (
+                <WhatsAppSessionManager />
+              )}
+            </div>
           )}
 
           {/* STORE LOCK & MAINTENANCE MODE TAB */}

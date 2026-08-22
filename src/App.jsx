@@ -37,6 +37,7 @@ import LoginModal from './components/LoginModal';
 import AccountModal from './components/AccountModal';
 import MaintenanceMode from './components/MaintenanceMode';
 import AdminPreviewBanner from './components/AdminPreviewBanner';
+import WhatsAppSupportApp from './components/WhatsAppSupportApp';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -286,7 +287,7 @@ export default function App() {
       }
 
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo', 'whatsapp-app'];
 
       const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || path.startsWith('kayaking/') || path.startsWith('tours/');
 
@@ -446,7 +447,7 @@ export default function App() {
       />
 
       {/* 2. Sticky Header */}
-      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && route !== 'whatsapp-app' && (
       <header className="sticky top-0 z-40 bg-white/80 border-b border-slate-100 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.02)]">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           {/* Left Header Group */}
@@ -573,6 +574,11 @@ export default function App() {
               </ErrorBoundary>
             )}
             {(route === 'vendor' || route === 'vendor-app' || route === 'partner') && <VendorPortal onNavigateHome={() => navigateTo('home')} />}
+            {route === 'whatsapp-app' && (
+              <ErrorBoundary>
+                <WhatsAppSupportApp onNavigateHome={() => navigateTo('home')} />
+              </ErrorBoundary>
+            )}
             {route === 'privacy' && <Privacy />}
             {route === 'terms' && <Terms />}
             {route === 'refund' && <RefundPolicy />}
@@ -591,7 +597,7 @@ export default function App() {
       </main>
 
       {/* 4. Footer */}
-      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && route !== 'whatsapp-app' && (
       <footer className="bg-black text-white font-sans">
 
 
@@ -755,7 +761,7 @@ export default function App() {
       )}
 
       {/* 5. Cookie Consent & Support Floating Action Widget */}
-      {route !== 'admin' && route !== 'vendor' && route !== 'partner' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'partner' && route !== 'whatsapp-app' && (
         <>
           <CookieConsent onNavigatePrivacy={() => navigateTo('privacy')} />
           <SupportFloatingWidget phone="919410572857" />

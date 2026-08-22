@@ -4,7 +4,8 @@ import {
   Search, Send, Paperclip, Image, FileText, Phone, CheckCheck, 
   Clock, Filter, User, MapPin, Sparkles, AlertCircle, RefreshCw, 
   ChevronLeft, Star, CheckCircle2, Shield, Calendar, CreditCard, 
-  BellRing, X, ArrowUpRight, MessageSquare, Tag, Zap, ShoppingCart
+  BellRing, X, ArrowUpRight, MessageSquare, Tag, Zap, ShoppingCart,
+  UserPlus, Lock, Maximize2, Download, Eye, Play, Volume2, FileCheck, Layers
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -37,7 +38,35 @@ const QUICK_REPLIES = [
   }
 ];
 
-export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admin)' } }) {
+// WhatsApp Meta Approved Templates for 24h Window Expiry
+const APPROVED_TEMPLATES = [
+  {
+    id: 'hello_world',
+    name: 'hello_world',
+    title: '👋 Hello World Greeting',
+    language: 'en_US',
+    description: 'Standard Meta greeting template to initiate customer conversation.',
+    vars: []
+  },
+  {
+    id: 'booking_confirmation',
+    name: 'booking_confirmation_v1',
+    title: '🎟️ Booking Confirmation Notification',
+    language: 'en_US',
+    description: 'Send booking confirmation voucher and details.',
+    vars: ['Customer Name', 'Booking ID']
+  },
+  {
+    id: 'reengagement_v1',
+    name: 'reengagement_v1',
+    title: '💬 Customer Support Re-engagement',
+    language: 'en_US',
+    description: 'Re-open support conversation after 24h window expiration.',
+    vars: ['Customer Name']
+  }
+];
+
+export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admin)' }, sessionToken = null, onSessionRevoked = null }) {
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -48,10 +77,24 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
   const [loadingChats, setLoadingChats] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Modals & Drawers
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [showMediaModal, setShowMediaModal] = useState(false);
+  const [showNewChatModal, setShowNewChatModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [lightboxImageUrl, setLightboxImageUrl] = useState(null);
+
+  // Form Inputs
   const [selectedFile, setSelectedFile] = useState(null);
   const [mediaCaption, setMediaCaption] = useState('');
+  const [newChatPhone, setNewChatPhone] = useState('');
+  const [newChatName, setNewChatName] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState(APPROVED_TEMPLATES[0]);
+  const [templateVarValues, setTemplateVarValues] = useState({});
+
+  // UI State
   const [isMobileViewActiveChat, setIsMobileViewActiveChat] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
@@ -61,29 +104,42 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
   const isAtBottomRef = useRef(true);
   const isInitialLoadRef = useRef(true);
 
-  // Play audio chime on new inbound message
+  // Audio notification chime
   const playNotificationSound = () => {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
       gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.3);
-    } catch (e) {
-      console.log('Audio chime error:', e);
-    }
+    } catch (e) {}
   };
 
-  // 1. Fetch Chats on Mount
+  // 1. Fetch Chats & Validate Session on Mount
   useEffect(() => {
     fetchChats();
+
+    // Check session status periodically if token is passed
+    let sessionCheckTimer;
+    if (sessionToken && onSessionRevoked) {
+      sessionCheckTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/whatsapp-sessions?action=validate_session&session_token=${sessionToken}`);
+          const data = await res.json();
+          if (data.revoked) {
+            clearInterval(sessionCheckTimer);
+            onSessionRevoked();
+          }
+        } catch (e) {}
+      }, 10000);
+    }
 
     // Subscribe to Realtime Updates on whatsapp_chats
     const chatsChannel = supabase
@@ -92,7 +148,6 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
         'postgres_changes',
         { event: '*', schema: 'public', table: 'whatsapp_chats' },
         (payload) => {
-          console.log('Realtime chat update:', payload);
           if (payload.eventType === 'INSERT') {
             playNotificationSound();
           }
@@ -102,9 +157,10 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
       .subscribe();
 
     return () => {
+      if (sessionCheckTimer) clearInterval(sessionCheckTimer);
       supabase.removeChannel(chatsChannel);
     };
-  }, []);
+  }, [sessionToken]);
 
   // 2. Fetch Messages & Linked Bookings when Active Chat Changes
   useEffect(() => {
@@ -244,11 +300,93 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
     }
   };
 
+  // Create New Conversation / Search Number
+  const handleStartNewChat = async (e) => {
+    e.preventDefault();
+    if (!newChatPhone.trim()) return;
+
+    const rawDigits = newChatPhone.replace(/\D/g, '');
+    if (rawDigits.length < 10) {
+      alert('Please enter a valid WhatsApp phone number (minimum 10 digits).');
+      return;
+    }
+
+    const cleanPhone = rawDigits.length === 10 ? `91${rawDigits}` : rawDigits;
+    const customerName = newChatName.trim() || `Customer (+${cleanPhone})`;
+
+    // Check if chat already exists
+    let existing = chats.find((c) => c.phone_number === cleanPhone);
+
+    if (existing) {
+      setActiveChat(existing);
+      setShowNewChatModal(false);
+      setNewChatPhone('');
+      setNewChatName('');
+      setIsMobileViewActiveChat(true);
+      return;
+    }
+
+    // Insert new chat record
+    try {
+      const windowExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('whatsapp_chats')
+        .insert({
+          phone_number: cleanPhone,
+          customer_name: customerName,
+          last_message: 'Chat initiated by support team',
+          last_message_at: new Date().toISOString(),
+          unread_count: 0,
+          status: 'open',
+          window_expires_at: windowExpiresAt
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        setChats((prev) => [data, ...prev]);
+        setActiveChat(data);
+        setShowNewChatModal(false);
+        setNewChatPhone('');
+        setNewChatName('');
+        setIsMobileViewActiveChat(true);
+      } else {
+        alert('Failed to create new chat: ' + (error?.message || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error creating chat: ' + err.message);
+    }
+  };
+
+  // Calculate 24-hour Meta service window status
+  const getWindowStatus = (expiresAtStr) => {
+    if (!expiresAtStr) return { active: true, label: '🟢 24h Window Active' };
+    const expiresAt = new Date(expiresAtStr).getTime();
+    const now = Date.now();
+    const diffMs = expiresAt - now;
+
+    if (diffMs <= 0) {
+      return { active: false, label: '⚠️ 24h Window Expired' };
+    }
+    const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
+    const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return { active: true, label: `🟢 ${hoursLeft}h ${minsLeft}m Window` };
+  };
+
+  // Send WhatsApp Reply (Free text or Media)
   const handleSendMessage = async (e) => {
     e?.preventDefault();
     if (!activeChat || (!replyText.trim() && !selectedFile)) return;
 
+    const windowStat = getWindowStatus(activeChat.window_expires_at);
+    if (!windowStat.active) {
+      alert('⚠️ The 24-hour Meta Customer Service Window has expired for this conversation. You must send an Approved Template Message to re-open the conversation.');
+      setShowTemplateModal(true);
+      return;
+    }
+
     setSending(true);
+    setUploadProgress(20);
     const messageToSend = replyText;
     setReplyText('');
     setShowQuickReplies(false);
@@ -257,22 +395,31 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
       let mediaUrl = null;
       let mediaType = 'text';
 
-      // If sending a media file
+      // If sending a media file (upload to temporary storage for zero long-term bloat)
       if (selectedFile) {
+        setUploadProgress(40);
         const fileExt = selectedFile.name.split('.').pop();
         const fileName = `wa_${Date.now()}.${fileExt}`;
-        const filePath = `whatsapp_media/${fileName}`;
+        const filePath = `whatsapp_temp/${fileName}`;
 
         const { data: uploadData, error: uploadErr } = await supabase.storage
           .from('media')
           .upload(filePath, selectedFile);
 
+        setUploadProgress(70);
+
         if (!uploadErr && uploadData) {
           const { data: pubUrlData } = supabase.storage.from('media').getPublicUrl(filePath);
           mediaUrl = pubUrlData.publicUrl;
-          mediaType = selectedFile.type.startsWith('image/') ? 'image' : 'document';
+
+          if (selectedFile.type.startsWith('image/')) mediaType = 'image';
+          else if (selectedFile.type.startsWith('video/')) mediaType = 'video';
+          else if (selectedFile.type.startsWith('audio/')) mediaType = 'audio';
+          else mediaType = 'document';
         }
       }
+
+      setUploadProgress(85);
 
       // Call Vercel Serverless Function to dispatch message to Meta WhatsApp Cloud API
       const response = await fetch('/api/send-whatsapp-reply', {
@@ -303,6 +450,45 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
       alert('Network error while sending message. Please check server log.');
     } finally {
       setSending(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Dispatch Approved Meta Template Message
+  const handleSendTemplateMessage = async (e) => {
+    e.preventDefault();
+    if (!activeChat || !selectedTemplate) return;
+
+    setSending(true);
+    try {
+      const varsArray = selectedTemplate.vars.map((vKey) => templateVarValues[vKey] || 'Val');
+
+      const response = await fetch('/api/send-whatsapp-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: activeChat.id,
+          recipient_phone: activeChat.phone_number,
+          message_type: 'template',
+          template_name: selectedTemplate.name,
+          template_language: selectedTemplate.language,
+          template_variables: varsArray,
+          agent_name: currentUser.name || 'TripGod Support'
+        })
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        alert(`Failed to dispatch Meta Template: ${resData.error || 'Unknown error'}`);
+      } else {
+        setShowTemplateModal(false);
+        setTemplateVarValues({});
+        scrollToBottom(true);
+      }
+    } catch (err) {
+      alert('Error sending template message: ' + err.message);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -313,7 +499,13 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      // Size checks
+      if (file.size > 50 * 1024 * 1024) {
+        alert('File size exceeds maximum WhatsApp API limit of 50 MB.');
+        return;
+      }
+      setSelectedFile(file);
       setShowMediaModal(true);
     }
   };
@@ -325,21 +517,6 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
     if (activeChat?.id === chat.id) {
       setActiveChat({ ...activeChat, status: newStatus });
     }
-  };
-
-  // Calculate 24-hour Meta service window status
-  const getWindowStatus = (expiresAtStr) => {
-    if (!expiresAtStr) return { active: true, label: '🟢 24h Window Active' };
-    const expiresAt = new Date(expiresAtStr).getTime();
-    const now = Date.now();
-    const diffMs = expiresAt - now;
-
-    if (diffMs <= 0) {
-      return { active: false, label: '⚠️ 24h Window Expired' };
-    }
-    const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60));
-    const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    return { active: true, label: `🟢 ${hoursLeft}h ${minsLeft}m Window` };
   };
 
   // Filtered Chats
@@ -360,6 +537,8 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
     return true;
   });
 
+  const activeWindowStatus = activeChat ? getWindowStatus(activeChat.window_expires_at) : { active: true };
+
   return (
     <div className="flex flex-col h-[100dvh] lg:h-[calc(100vh-80px)] bg-slate-950 text-slate-100 font-sans rounded-none lg:rounded-3xl overflow-hidden border-0 lg:border border-slate-800 shadow-2xl">
       
@@ -374,6 +553,14 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowNewChatModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full font-bold text-xs shadow-md hover:scale-105 transition-all"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>New Chat</span>
+          </button>
+
           <button 
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all text-xs font-semibold ${
@@ -402,17 +589,19 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
           isMobileViewActiveChat ? 'hidden lg:flex' : 'flex'
         }`}>
           
-          {/* Search Box */}
+          {/* Search & New Chat Trigger */}
           <div className="p-4 border-b border-slate-800 space-y-3">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search customer name or phone..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-950/80 border border-slate-800 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 transition-all"
-              />
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search customer name or phone..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-950/80 border border-slate-800 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 transition-all"
+                />
+              </div>
             </div>
 
             {/* Filter Pills */}
@@ -449,7 +638,6 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
             ) : (
               filteredChats.map((chat) => {
                 const isActive = activeChat?.id === chat.id;
-                const windowStat = getWindowStatus(chat.window_expires_at);
 
                 return (
                   <div
@@ -537,13 +725,25 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                   <div className="flex items-center gap-3 text-[11px] text-slate-400">
                     <span className="font-mono">+{activeChat.phone_number}</span>
                     <span>•</span>
-                    <span className="text-emerald-400 font-semibold">{getWindowStatus(activeChat.window_expires_at).label}</span>
+                    <span className={`font-semibold ${activeWindowStatus.active ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {activeWindowStatus.label}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Header Action Buttons */}
               <div className="flex items-center gap-2">
+                {!activeWindowStatus.active && (
+                  <button
+                    onClick={() => setShowTemplateModal(true)}
+                    className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>Send Template</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleToggleStarChat(activeChat)}
                   className={`p-2 rounded-xl border text-xs font-semibold transition-all ${
@@ -586,7 +786,6 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
               ) : (
                 messages.map((msg) => {
                   const isInbound = msg.direction === 'inbound';
-                  const isUnsupported = msg.content === '[UNSUPPORTED Message]' || msg.message_type === 'unsupported';
                   const isLocation = msg.message_type === 'location' || msg.content?.includes('📍 Location:');
 
                   return (
@@ -606,53 +805,78 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                           <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
 
-                        {/* Media Display if Present */}
-                        {msg.media_url && (() => {
+                        {/* Rich Media Display with Lightbox & Players */}
+                        {msg.media_url ? (() => {
                           const displayMediaUrl = (msg.media_url.includes('facebook.com') || msg.media_url.includes('fbsbx.com'))
                             ? `/api/whatsapp-media-proxy?url=${encodeURIComponent(msg.media_url)}`
                             : msg.media_url;
 
+                          const isImage = msg.message_type === 'image' || msg.media_mime_type?.startsWith('image/');
+                          const isVideo = msg.message_type === 'video' || msg.media_mime_type?.startsWith('video/');
+                          const isAudio = msg.message_type === 'audio' || msg.message_type === 'voice' || msg.media_mime_type?.startsWith('audio/');
+
                           return (
-                            <div className="my-1 rounded-2xl overflow-hidden border border-black/20 max-w-sm">
-                              {msg.message_type === 'image' || msg.media_mime_type?.startsWith('image/') ? (
-                                <img
-                                  src={displayMediaUrl}
-                                  alt="Attachment"
-                                  className="w-full max-h-60 object-cover rounded-xl"
-                                  onError={(e) => {
-                                    // Fallback if direct load fails
-                                    if (!e.target.src.includes('/api/whatsapp-media-proxy')) {
-                                      e.target.src = `/api/whatsapp-media-proxy?url=${encodeURIComponent(msg.media_url)}`;
-                                    }
-                                  }}
-                                />
-                              ) : msg.message_type === 'video' || msg.media_mime_type?.startsWith('video/') ? (
-                                <video src={displayMediaUrl} controls className="w-full max-h-60 rounded-xl" />
-                              ) : msg.message_type === 'audio' || msg.message_type === 'voice' || msg.media_mime_type?.startsWith('audio/') ? (
-                                <audio src={displayMediaUrl} controls className="w-full p-1" />
-                              ) : (
-                                <a
-                                  href={displayMediaUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-center gap-2 p-3 bg-black/30 text-white hover:bg-black/50 transition-all font-bold"
+                            <div className="my-1 rounded-2xl overflow-hidden border border-black/20 max-w-sm bg-black/20">
+                              {isImage ? (
+                                <div 
+                                  onClick={() => setLightboxImageUrl(displayMediaUrl)}
+                                  className="relative group cursor-pointer overflow-hidden rounded-xl"
                                 >
-                                  <FileText className="w-5 h-5 text-orange-400" />
-                                  <span>Download Attachment Document</span>
-                                  <ArrowUpRight className="w-4 h-4 ml-auto" />
-                                </a>
+                                  <img
+                                    src={displayMediaUrl}
+                                    alt="Attachment"
+                                    className="w-full max-h-60 object-cover rounded-xl group-hover:scale-105 transition-transform duration-300"
+                                    onError={(e) => {
+                                      if (!e.target.src.includes('/api/whatsapp-media-proxy')) {
+                                        e.target.src = `/api/whatsapp-media-proxy?url=${encodeURIComponent(msg.media_url)}`;
+                                      }
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white text-xs font-bold">
+                                    <Maximize2 className="w-4 h-4" /> Click to Expand
+                                  </div>
+                                </div>
+                              ) : isVideo ? (
+                                <video src={displayMediaUrl} controls className="w-full max-h-60 rounded-xl" />
+                              ) : isAudio ? (
+                                <div className="p-2 bg-black/30 rounded-xl flex items-center gap-2">
+                                  <Volume2 className="w-5 h-5 text-orange-400 shrink-0" />
+                                  <audio src={displayMediaUrl} controls className="w-full h-8" />
+                                </div>
+                              ) : (
+                                <div className="p-3 bg-black/30 rounded-xl flex items-center justify-between gap-3">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <FileText className="w-5 h-5 text-orange-400 shrink-0" />
+                                    <div className="min-w-0">
+                                      <p className="font-bold text-white truncate text-xs">PDF Document / Voucher</p>
+                                      <p className="text-[10px] text-slate-400 font-mono">{msg.media_mime_type || 'application/pdf'}</p>
+                                    </div>
+                                  </div>
+                                  <a
+                                    href={displayMediaUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                                    title="View / Download Document"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </a>
+                                </div>
                               )}
                             </div>
                           );
-                        })()}
+                        })() : (
+                          // Fallback if media expired or archived
+                          msg.message_type !== 'text' && msg.message_type !== 'template' && msg.message_type !== 'location' && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/60 text-slate-400 rounded-xl text-[11px] font-bold border border-slate-700">
+                              <Layers className="w-3.5 h-3.5 text-amber-400" />
+                              <span>📦 Attachment Archived / Media Handled</span>
+                            </div>
+                          )
+                        )}
 
                         {/* Text Message Content */}
-                        {isUnsupported ? (
-                          <div className="flex items-center gap-2 p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-[11px]">
-                            <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                            <span>Media format or feature unsupported by WhatsApp Cloud API (e.g. Voice Note, Live Location, or View Once).</span>
-                          </div>
-                        ) : isLocation ? (
+                        {isLocation ? (
                           <div className="space-y-1.5">
                             <p className="whitespace-pre-wrap leading-relaxed text-[12.5px] font-normal">{msg.content}</p>
                             {msg.content.includes('https://') && (
@@ -681,9 +905,25 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Expired Service Window Alert Banner */}
+            {!activeWindowStatus.active && (
+              <div className="p-3 bg-amber-500/10 border-t border-amber-500/20 flex items-center justify-between gap-3 text-amber-300 text-xs">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>24-Hour Customer Service Window Expired. Free-text locked by Meta API rules.</span>
+                </div>
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="px-3 py-1 bg-amber-500 text-slate-950 font-black rounded-xl text-xs hover:bg-amber-400 transition-all"
+                >
+                  Select Approved Template
+                </button>
+              </div>
+            )}
+
             {/* Quick Replies Drawer */}
             <AnimatePresence>
-              {showQuickReplies && (
+              {showQuickReplies && activeWindowStatus.active && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -710,11 +950,12 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
             <form onSubmit={handleSendMessage} className="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center gap-2">
               <button
                 type="button"
+                disabled={!activeWindowStatus.active}
                 onClick={() => setShowQuickReplies(!showQuickReplies)}
                 className={`p-2.5 rounded-2xl border transition-all ${
                   showQuickReplies
                     ? 'bg-orange-500/20 text-orange-400 border-orange-500/40'
-                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white disabled:opacity-40'
                 }`}
                 title="Open Quick Replies"
               >
@@ -723,9 +964,10 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
 
               <button
                 type="button"
+                disabled={!activeWindowStatus.active}
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2.5 bg-slate-800 text-slate-400 hover:text-white border border-slate-700 rounded-2xl transition-all"
-                title="Attach Photo or PDF"
+                className="p-2.5 bg-slate-800 text-slate-400 hover:text-white border border-slate-700 rounded-2xl transition-all disabled:opacity-40"
+                title="Attach Image, PDF, Video or Document"
               >
                 <Paperclip className="w-4 h-4" />
               </button>
@@ -733,21 +975,22 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept="image/*,application/pdf"
+                accept="image/*,application/pdf,video/mp4,audio/*"
                 className="hidden"
               />
 
               <input
                 type="text"
-                placeholder="Type your WhatsApp message reply..."
+                disabled={!activeWindowStatus.active}
+                placeholder={activeWindowStatus.active ? "Type your WhatsApp message reply..." : "24h Window Expired — Use Approved Template above..."}
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 transition-all"
+                className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 transition-all disabled:opacity-50"
               />
 
               <button
                 type="submit"
-                disabled={sending || (!replyText.trim() && !selectedFile)}
+                disabled={sending || !activeWindowStatus.active || (!replyText.trim() && !selectedFile)}
                 className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs rounded-2xl shadow-lg transition-all flex items-center gap-1.5 disabled:opacity-50"
               >
                 {sending ? (
@@ -763,12 +1006,158 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
           </div>
         ) : (
           <div className="hidden lg:flex flex-1 items-center justify-center bg-slate-950 text-slate-500 text-xs">
-            Select a conversation from the left to start live support chat.
+            Select a conversation from the left or click "New Chat" to start live support.
           </div>
         )}
       </div>
 
-      {/* Media Upload Modal */}
+      {/* NEW CHAT MODAL */}
+      <AnimatePresence>
+        {showNewChatModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-md w-full space-y-4 text-xs"
+            >
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-orange-400" /> Start New WhatsApp Chat
+                </h3>
+                <button onClick={() => setShowNewChatModal(false)} className="text-slate-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleStartNewChat} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400">Customer WhatsApp Number</label>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-slate-300 font-mono font-bold">+91</span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="9837371137"
+                      value={newChatPhone}
+                      onChange={(e) => setNewChatPhone(e.target.value)}
+                      className="flex-1 px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-white font-mono placeholder-slate-600 focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400">Customer Name (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rahul Sharma"
+                    value={newChatName}
+                    onChange={(e) => setNewChatName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-white placeholder-slate-600 focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewChatModal(false)}
+                    className="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-2xl"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-lg"
+                  >
+                    Open Conversation
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* APPROVED TEMPLATE SELECTION MODAL */}
+      <AnimatePresence>
+        {showTemplateModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full space-y-4 text-xs"
+            >
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400" /> Meta Approved Template Messages
+                </h3>
+                <button onClick={() => setShowTemplateModal(false)} className="text-slate-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase text-slate-400">Select Template</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+                  {APPROVED_TEMPLATES.map((tmpl) => (
+                    <div
+                      key={tmpl.id}
+                      onClick={() => setSelectedTemplate(tmpl)}
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all ${
+                        selectedTemplate.id === tmpl.id
+                          ? 'bg-amber-500/20 border-amber-500 text-white'
+                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-800'
+                      }`}
+                    >
+                      <h4 className="font-extrabold text-xs">{tmpl.title}</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">{tmpl.description}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Variables Inputs */}
+                {selectedTemplate.vars.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-800">
+                    <label className="text-[10px] font-black uppercase text-slate-400">Fill Template Variables</label>
+                    {selectedTemplate.vars.map((vKey) => (
+                      <div key={vKey} className="flex items-center gap-2">
+                        <span className="text-slate-400 font-bold min-w-24 text-[11px]">{vKey}:</span>
+                        <input
+                          type="text"
+                          placeholder={`Enter ${vKey}...`}
+                          value={templateVarValues[vKey] || ''}
+                          onChange={(e) => setTemplateVarValues({ ...templateVarValues, [vKey]: e.target.value })}
+                          className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTemplateModal(false)}
+                  className="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-2xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendTemplateMessage}
+                  disabled={sending}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black rounded-2xl shadow-lg flex items-center gap-1.5"
+                >
+                  {sending ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Send Template Message'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MEDIA UPLOAD PREVIEW MODAL */}
       <AnimatePresence>
         {showMediaModal && selectedFile && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -800,23 +1189,59 @@ export default function WhatsAppSupportInbox({ currentUser = { name: 'Vipu (Admi
                 className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-2xl text-white placeholder-slate-500 focus:outline-none"
               />
 
-              <div className="flex gap-2">
+              {uploadProgress > 0 && (
+                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div className="bg-orange-500 h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowMediaModal(false)}
-                  className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl font-bold"
+                  className="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-2xl"
                 >
                   Cancel
                 </button>
                 <button
-                  type="button"
                   onClick={handleSendMessage}
                   disabled={sending}
-                  className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black shadow-lg"
+                  className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold rounded-2xl shadow-lg"
                 >
-                  {sending ? 'Sending...' : 'Send File'}
+                  {sending ? 'Uploading...' : 'Send File'}
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* FULLSCREEN LIGHTBOX IMAGE VIEWER */}
+      <AnimatePresence>
+        {lightboxImageUrl && (
+          <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <button
+              onClick={() => setLightboxImageUrl(null)}
+              className="absolute top-4 right-4 p-3 bg-slate-800/80 text-white rounded-full hover:bg-slate-700 transition-colors z-50"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-4xl max-h-[90vh] flex flex-col items-center"
+            >
+              <img src={lightboxImageUrl} alt="Full view" className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl" />
+              <a
+                href={lightboxImageUrl}
+                download="whatsapp_image.jpg"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 px-6 py-2 bg-orange-500 text-white font-bold text-xs rounded-full flex items-center gap-2 hover:bg-orange-600 transition-all shadow-lg"
+              >
+                <Download className="w-4 h-4" /> Download Original Image
+              </a>
             </motion.div>
           </div>
         )}

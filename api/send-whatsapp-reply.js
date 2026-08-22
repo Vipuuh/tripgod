@@ -1,5 +1,5 @@
 // api/send-whatsapp-reply.js
-// Vercel Serverless Function to dispatch outbound WhatsApp replies via Meta Cloud API
+// Vercel Serverless Function to dispatch outbound WhatsApp replies & Template Messages via Meta Cloud API
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "https://xiqirxnnwljwtkabeukr.supabase.co";
@@ -33,10 +33,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chat_id, recipient_phone, message_type = 'text', text, media_url, media_filename, agent_name = 'TripGod Support' } = req.body;
+    const {
+      chat_id,
+      recipient_phone,
+      message_type = 'text',
+      text,
+      media_url,
+      media_filename,
+      template_name,
+      template_language = 'en_US',
+      template_variables = [],
+      agent_name = 'TripGod Support'
+    } = req.body;
 
-    if (!recipient_phone || (!text && !media_url)) {
-      return res.status(400).json({ error: 'Recipient phone number and message text or media URL are required' });
+    if (!recipient_phone || (!text && !media_url && !template_name)) {
+      return res.status(400).json({ error: 'Recipient phone number and message content, media URL, or template name are required' });
     }
 
     const cleanPhone = recipient_phone.replace(/\D/g, '');
@@ -49,7 +60,25 @@ export default async function handler(req, res) {
       to: formattedPhone
     };
 
-    if (message_type === 'image' && media_url) {
+    if (message_type === 'template' && template_name) {
+      metaPayload.type = 'template';
+      metaPayload.template = {
+        name: template_name,
+        language: { code: template_language }
+      };
+
+      if (Array.isArray(template_variables) && template_variables.length > 0) {
+        metaPayload.template.components = [
+          {
+            type: "body",
+            parameters: template_variables.map((val) => ({
+              type: "text",
+              text: String(val)
+            }))
+          }
+        ];
+      }
+    } else if (message_type === 'image' && media_url) {
       metaPayload.type = 'image';
       metaPayload.image = {
         link: media_url,
@@ -61,6 +90,17 @@ export default async function handler(req, res) {
         link: media_url,
         caption: text || '',
         filename: media_filename || 'Voucher.pdf'
+      };
+    } else if (message_type === 'video' && media_url) {
+      metaPayload.type = 'video';
+      metaPayload.video = {
+        link: media_url,
+        caption: text || ''
+      };
+    } else if (message_type === 'audio' && media_url) {
+      metaPayload.type = 'audio';
+      metaPayload.audio = {
+        link: media_url
       };
     } else {
       metaPayload.type = 'text';
@@ -85,8 +125,8 @@ export default async function handler(req, res) {
 
     if (!response.ok || metaData.error) {
       console.error("Meta WhatsApp Send Error:", metaData);
-      return res.status(500).json({
-        error: 'Failed to send WhatsApp message via Meta Cloud API',
+      return res.status(400).json({
+        error: metaData.error?.message || 'Failed to send WhatsApp message via Meta Cloud API',
         details: metaData.error || metaData
       });
     }
@@ -96,8 +136,10 @@ export default async function handler(req, res) {
     // Record outbound message in Supabase
     const supabase = getSupabase();
     if (supabase && chat_id) {
-      const messageContent = text || (message_type === 'image' ? '📷 Photo' : '📄 Document');
-      
+      const messageContent = message_type === 'template'
+        ? `📋 Approved Template: ${template_name} ${text ? `(${text})` : ''}`
+        : text || (message_type === 'image' ? '📷 Photo' : message_type === 'video' ? '🎥 Video' : message_type === 'audio' ? '🎤 Voice' : '📄 Document');
+
       // 1. Insert into whatsapp_messages
       await supabase
         .from('whatsapp_messages')

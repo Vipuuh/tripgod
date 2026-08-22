@@ -1,5 +1,5 @@
 // api/whatsapp-media-proxy.js
-// Proxies Meta WhatsApp media URLs by attaching the META_ACCESS_TOKEN header
+// Proxies Meta WhatsApp media URLs by attaching the META_ACCESS_TOKEN header and setting binary mime types
 
 const META_ACCESS_TOKEN = process.env.META_ACCESS_TOKEN || "EAAVjnkkrc1ABR0CzprLuR7dFOZClD3yfQ2vhZC39tQjAI7PLL1ZCRSEzc9ZCDZCwxoDZBh6G4N2SafXr4a1KQQtZBJMh1ypMXxB2wZBPoufA83MjR5xdr4yOVEaptkvdgZBnPOxkVM5cP5HlNiI51brQi305GkVegMR67AVjZAMCPZBytCvUqPCcbQZB5OeBxcVi6wZDZD";
 
@@ -32,10 +32,10 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: 'Failed to fetch media from Meta' });
+      return res.status(response.status).json({ error: 'Failed to fetch media from Meta Cloud API' });
     }
 
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

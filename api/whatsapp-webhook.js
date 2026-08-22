@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       const value = body.entry[0].changes?.[0]?.value;
       if (!value) return res.status(200).json({ status: 'no_value' });
 
-      // Handle Status Updates (sent, delivered, read)
+      // Handle Status Updates (sent, delivered, read, failed)
       if (value.statuses && value.statuses[0]) {
         const statusObj = value.statuses[0];
         const supabase = getSupabase();
@@ -63,7 +63,9 @@ export default async function handler(req, res) {
         const contact = value.contacts?.[0];
 
         const rawPhone = message.from; // e.g. '919837371137'
-        const cleanPhone = rawPhone.replace(/\D/g, '');
+        const cleanPhone = rawPhone ? rawPhone.replace(/\D/g, '') : '';
+        if (!cleanPhone) return res.status(200).json({ status: 'no_phone' });
+
         const customerName = contact?.profile?.name || `Customer (${cleanPhone.slice(-4)})`;
         const waMessageId = message.id;
         const msgType = message.type || 'text';
@@ -71,44 +73,37 @@ export default async function handler(req, res) {
         let messageContent = '';
         let mediaUrl = null;
         let mediaMimeType = null;
+        let fileFilename = null;
 
+        // Parse Message Types Comprehensive Mapping
         if (msgType === 'text') {
           messageContent = message.text?.body || '';
         } else if (msgType === 'image') {
           messageContent = message.image?.caption || '📷 Photo';
           mediaMimeType = message.image?.mime_type || 'image/jpeg';
           const mediaId = message.image?.id;
-          if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
-          }
+          if (mediaId) mediaUrl = `/api/whatsapp-media-proxy?media_id=${mediaId}`;
         } else if (msgType === 'document') {
-          messageContent = message.document?.caption || message.document?.filename || '📄 Document PDF';
+          fileFilename = message.document?.filename || 'Voucher.pdf';
+          messageContent = message.document?.caption || fileFilename || '📄 Document PDF';
           mediaMimeType = message.document?.mime_type || 'application/pdf';
           const mediaId = message.document?.id;
-          if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
-          }
+          if (mediaId) mediaUrl = `/api/whatsapp-media-proxy?media_id=${mediaId}`;
         } else if (msgType === 'audio' || msgType === 'voice') {
-          messageContent = '🎤 Voice / Audio Note';
+          messageContent = '🎤 Voice Note';
           mediaMimeType = message.audio?.mime_type || message.voice?.mime_type || 'audio/ogg';
           const mediaId = message.audio?.id || message.voice?.id;
-          if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
-          }
+          if (mediaId) mediaUrl = `/api/whatsapp-media-proxy?media_id=${mediaId}`;
         } else if (msgType === 'video') {
           messageContent = message.video?.caption || '🎥 Video Clip';
           mediaMimeType = message.video?.mime_type || 'video/mp4';
           const mediaId = message.video?.id;
-          if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
-          }
+          if (mediaId) mediaUrl = `/api/whatsapp-media-proxy?media_id=${mediaId}`;
         } else if (msgType === 'sticker') {
           messageContent = '🎨 Sticker';
           mediaMimeType = message.sticker?.mime_type || 'image/webp';
           const mediaId = message.sticker?.id;
-          if (mediaId) {
-            mediaUrl = await fetchMetaMediaUrl(mediaId, mediaMimeType);
-          }
+          if (mediaId) mediaUrl = `/api/whatsapp-media-proxy?media_id=${mediaId}`;
         } else if (msgType === 'location') {
           const loc = message.location;
           const locName = loc?.name || loc?.address || 'Shared Location';
@@ -120,19 +115,19 @@ export default async function handler(req, res) {
           messageContent = `👤 Contact: ${contactName} ${contactPhone ? `(${contactPhone})` : ''}`;
         } else if (msgType === 'button' || msgType === 'interactive') {
           const btnReply = message.button?.text || message.interactive?.button_reply?.title || message.interactive?.list_reply?.title;
-          messageContent = btnReply ? `🔘 ${btnReply}` : 'Interactive Reply';
+          messageContent = btnReply ? `🔘 Reply: ${btnReply}` : 'Interactive Response';
         } else if (msgType === 'reaction') {
           const emoji = message.reaction?.emoji || '👍';
           messageContent = `Reacted ${emoji} to a message`;
-        } else if (msgType === 'unsupported') {
-          messageContent = '[UNSUPPORTED Message]';
         } else {
-          messageContent = `[${msgType.toUpperCase()} Message]`;
+          // Dynamic fallback to prevent [UNSUPPORTED Message] generic string
+          const capitalizedType = msgType ? (msgType.charAt(0).toUpperCase() + msgType.slice(1)) : 'WhatsApp';
+          messageContent = `📩 [${capitalizedType} Message]`;
         }
 
         const supabase = getSupabase();
         if (supabase) {
-          // 24-hour customer service window expiry date
+          // 24-hour customer service window expiry date (24h from incoming message)
           const windowExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
           // Find or Create Chat in whatsapp_chats
@@ -140,7 +135,7 @@ export default async function handler(req, res) {
             .from('whatsapp_chats')
             .select('*')
             .eq('phone_number', cleanPhone)
-            .single();
+            .maybeSingle();
 
           let chatId = existingChat?.id;
 
@@ -168,7 +163,7 @@ export default async function handler(req, res) {
             await supabase
               .from('whatsapp_chats')
               .update({
-                customer_name: existingChat.customer_name === `Customer (${cleanPhone.slice(-4)})` ? customerName : existingChat.customer_name,
+                customer_name: (existingChat.customer_name === `Customer (${cleanPhone.slice(-4)})` || !existingChat.customer_name) ? customerName : existingChat.customer_name,
                 last_message: messageContent,
                 last_message_at: new Date().toISOString(),
                 unread_count: newUnread,
@@ -178,22 +173,31 @@ export default async function handler(req, res) {
               .eq('id', chatId);
           }
 
-          // Insert Message into whatsapp_messages
+          // Insert Message into whatsapp_messages with raw_payload preserve
           if (chatId) {
-            await supabase
+            const msgInsertPayload = {
+              chat_id: chatId,
+              wa_message_id: waMessageId,
+              direction: 'inbound',
+              sender_type: 'customer',
+              sender_name: customerName,
+              message_type: msgType,
+              content: messageContent,
+              media_url: mediaUrl,
+              media_mime_type: mediaMimeType,
+              status: 'delivered',
+              raw_payload: message // Preserves complete raw Meta webhook JSON
+            };
+
+            // Safely insert, handling raw_payload column if present
+            const { error: msgErr } = await supabase
               .from('whatsapp_messages')
-              .insert({
-                chat_id: chatId,
-                wa_message_id: waMessageId,
-                direction: 'inbound',
-                sender_type: 'customer',
-                sender_name: customerName,
-                message_type: msgType,
-                content: messageContent,
-                media_url: mediaUrl,
-                media_mime_type: mediaMimeType,
-                status: 'delivered'
-              });
+              .insert(msgInsertPayload);
+
+            if (msgErr && msgErr.message?.includes('raw_payload')) {
+              delete msgInsertPayload.raw_payload;
+              await supabase.from('whatsapp_messages').insert(msgInsertPayload);
+            }
           }
         }
       }
@@ -206,15 +210,4 @@ export default async function handler(req, res) {
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
-}
-
-// Helper function to fetch media proxy URL without consuming Supabase storage space
-async function fetchMetaMediaUrl(mediaId, mimeType) {
-  try {
-    // Pass media_id or fetched Meta URL directly to Proxy API (0 Supabase Storage used)
-    return `/api/whatsapp-media-proxy?media_id=${mediaId}`;
-  } catch (err) {
-    console.error("Failed to format Meta media proxy URL:", err);
-    return null;
-  }
 }
