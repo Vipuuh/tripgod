@@ -19,25 +19,10 @@ export default function WhatsAppSupportApp({ onNavigateHome }) {
   // Check existing auth session on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const savedUser = localStorage.getItem('tripgod_wa_app_user');
-      if (savedUser) {
-        try {
-          setSession(JSON.parse(savedUser));
-        } catch (e) {}
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession && sessionToken) {
+        setSession(currentSession);
       }
-
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (currentSession) {
-          setSession(currentSession);
-          localStorage.setItem('tripgod_wa_app_user', JSON.stringify(currentSession));
-          if (!sessionToken) {
-            const token = `wa_app_sess_${Math.random().toString(36).substring(2)}_${Date.now()}`;
-            localStorage.setItem('tripgod_wa_app_token', token);
-            setSessionToken(token);
-          }
-        }
-      } catch (e) {}
     };
     checkAuth();
 
@@ -64,30 +49,18 @@ export default function WhatsAppSupportApp({ onNavigateHome }) {
     setErrorMsg('');
 
     try {
-      let activeUserSession = null;
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (!error && data?.session) {
-        activeUserSession = data.session;
-      } else {
-        // Fallback for Master Admin Passcode (tripgod2026) or Admin Email
-        if (password === 'tripgod2026' || password === 'admin123' || email.includes('admin')) {
-          activeUserSession = { user: { email: email.trim() || 'admin@tripgod.in' } };
-        } else {
-          throw error || new Error('Invalid login credentials. Please check your email and password.');
-        }
-      }
+      if (error) throw error;
 
-      if (activeUserSession) {
+      if (data.session) {
         const token = `wa_app_sess_${Math.random().toString(36).substring(2)}_${Date.now()}`;
         localStorage.setItem('tripgod_wa_app_token', token);
-        localStorage.setItem('tripgod_wa_app_user', JSON.stringify(activeUserSession));
         setSessionToken(token);
-        setSession(activeUserSession);
+        setSession(data.session);
 
         // Register session on backend
         fetch('/api/whatsapp-sessions', {
@@ -95,7 +68,7 @@ export default function WhatsAppSupportApp({ onNavigateHome }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'create_session',
-            email: activeUserSession.user?.email || email,
+            email: data.session.user.email,
             session_token: token,
             device_info: navigator.userAgent.includes('Mobile') ? 'Mobile App Console' : 'Desktop App Console'
           })
@@ -120,9 +93,8 @@ export default function WhatsAppSupportApp({ onNavigateHome }) {
       }).catch(() => {});
     }
 
-    await supabase.auth.signOut().catch(() => {});
+    await supabase.auth.signOut();
     localStorage.removeItem('tripgod_wa_app_token');
-    localStorage.removeItem('tripgod_wa_app_user');
     setSession(null);
     setSessionToken('');
   };
