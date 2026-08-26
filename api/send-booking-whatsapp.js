@@ -268,42 +268,27 @@ export default async function handler(req, res) {
     const paramDate = isHotel && checkInDate ? checkInDate.split('-').reverse().join('/') : date;
     const paramTime = isHotel && checkOutDate ? checkOutDate.split('-').reverse().join('/') : slot;
 
-    // 1. Customer Parameters for approved tripgod_pass_confirmed template (10 parameters):
+    // 1. Customer Parameters for approved tripgod_pass_confirmed template (EXACT 9 parameters from Meta Manager):
     const fullActivityTitle = `${activityName}${stretch ? ` (${stretch})` : ''}`;
-    const cleanHelpline = (cleanAgencyPhone || ADMIN_PHONE).slice(-10);
+    const cleanHelplineDigits = (cleanAgencyPhone || ADMIN_PHONE).slice(-10);
+    const formattedHelpline = formatDisplayPhone(cleanHelplineDigits || ADMIN_PHONE);
+    const passTicketUrl = `https://tripgod.in/ticket/${simpleBookingCode}`;
 
     const customerPassParams = [
       customerName,                                                            // {{1}} - Name (e.g. Rajkumar)
-      "Rishikesh",                                                             // {{2}} - Destination / City (e.g. Rishikesh)
-      simpleBookingCode,                                                       // {{3}} - Booking Code (e.g. TG-009300)
-      fullActivityTitle,                                                       // {{4}} - Package/Trip full title
-      paramDate,                                                               // {{5}} - Travel Date
-      paramTime,                                                               // {{6}} - Slot/Timing
-      `${guests} Guest${guests > 1 ? 's' : ''}${isHotel ? `, ${nights} Night${nights > 1 ? 's' : ''}` : ''}`, // {{7}} - Details
+      simpleBookingCode,                                                       // {{2}} - Booking Code (e.g. TG-009300)
+      fullActivityTitle,                                                       // {{3}} - Package/Trip (e.g. Custom Rishikesh Package)
+      paramDate,                                                               // {{4}} - Travel Date (e.g. 15/08/2026)
+      paramTime,                                                               // {{5}} - Slot/Timing (e.g. 10:00 AM)
+      `${guests} Guest${guests > 1 ? 's' : ''}${isHotel ? `, ${nights} Night${nights > 1 ? 's' : ''}` : ''}`, // {{6}} - Details (e.g. 1 Guest)
+      passTicketUrl,                                                           // {{7}} - VIEW DIGITAL TICKET PASS & MAPS Link (e.g. https://tripgod.in/ticket/TG-009300)
       isFullPayment 
         ? `Paid: ₹${totalPrice.toLocaleString('en-IN')}`
-        : `Paid: ₹${advancePaid.toLocaleString('en-IN')} | Bal: ₹${remainingPaid.toLocaleString('en-IN')}`, // {{8}} - Payment Status
-      simpleBookingCode,                                                       // {{9}} - Ticket Pass Code for https://tripgod.in/ticket/{{9}}
-      cleanHelpline                                                            // {{10}} - Helpline Number
+        : `Paid: ₹${advancePaid.toLocaleString('en-IN')} | Bal: ₹${remainingPaid.toLocaleString('en-IN')}`, // {{8}} - Payment Status (e.g. Paid: ₹500 | Bal: ₹4000)
+      formattedHelpline                                                        // {{9}} - Helpline (+91 9410572857)
     ];
 
-    // Customer Parameters for backup tripgod_booking_confirmed template (10 parameters)
-    const customerParamsConfirmed = [
-      customerName,                                                            // {{1}} - Name
-      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
-      `*${fullActivityTitle}*`,                                                // {{3}} - Your Trip
-      `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
-      `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
-      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      resolvedLocationLink,                                                    // {{7}} - Actual Google Maps Location Link
-      isFullPayment 
-        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
-        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
-      `*Confirmed!*`,                                                          // {{9}} - Status
-      `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{10}} - Helpline Contact
-    ];
-
-    // 2. Vendor Parameters (formatted for approved tripgod_booking_confirmed template)
+    // 2. Vendor Parameters (formatted for approved tripgod_booking_confirmed template - 10 parameters)
     const vendorParamsConfirmed = [
       customerName,                                                            // {{1}} - Customer Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
@@ -319,7 +304,7 @@ export default async function handler(req, res) {
       `*${formatDisplayPhone(customerPhone)}*`                                 // {{10}} - Customer Contact
     ];
 
-    // 3. Admin Parameters (formatted for approved tripgod_booking_confirmed template)
+    // 3. Admin Parameters (formatted for approved tripgod_booking_confirmed template - 10 parameters)
     const adminParamsConfirmed = [
       customerName,                                                            // {{1}} - Customer Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
@@ -335,74 +320,74 @@ export default async function handler(req, res) {
       `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{10}} - Operator Contact
     ];
 
-    // Helper to send message using Meta Cloud API with fallback support
-    const sendWhatsAppMeta = async (to, templateName, parameters) => {
+    // Helper to send message using Meta Cloud API with dual language fallback (en_US / en)
+    const sendWhatsAppMeta = async (to, templateName, parameters, primaryLang = "en_US") => {
       const cleanTo = to.replace(/\D/g, ''); 
       if (!cleanTo) return null;
 
-      const url = `https://graph.facebook.com/v20.0/${META_PHONE_NUMBER_ID}/messages`;
-      const payload = {
-        messaging_product: "whatsapp",
-        to: cleanTo,
-        type: "template",
-        template: {
-          name: templateName,
-          language: {
-            code: "en"
+      const trySend = async (langCode) => {
+        const url = `https://graph.facebook.com/v20.0/${META_PHONE_NUMBER_ID}/messages`;
+        const payload = {
+          messaging_product: "whatsapp",
+          to: cleanTo,
+          type: "template",
+          template: {
+            name: templateName,
+            language: {
+              code: langCode
+            },
+            components: [
+              {
+                type: "body",
+                parameters: parameters.map(p => ({
+                  type: "text",
+                  text: String(p).substring(0, 1024)
+                }))
+              }
+            ]
+          }
+        };
+
+        console.log(`Sending Meta WhatsApp template '${templateName}' (${langCode}) to ${cleanTo}...`);
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${META_ACCESS_TOKEN}`
           },
-          components: [
-            {
-              type: "body",
-              parameters: parameters.map(p => ({
-                type: "text",
-                text: String(p).substring(0, 1024)
-              }))
-            }
-          ]
-        }
+          body: JSON.stringify(payload)
+        });
+        
+        return await response.json();
       };
 
-      console.log(`Sending Meta WhatsApp template '${templateName}' to ${cleanTo}...`);
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${META_ACCESS_TOKEN}`
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      const result = await response.json();
-      console.log(`Meta API response for ${cleanTo} (${templateName}):`, JSON.stringify(result));
+      let result = await trySend(primaryLang);
+      console.log(`Meta API primary response for ${cleanTo} (${templateName}, ${primaryLang}):`, JSON.stringify(result));
+
+      if (result?.error && (result.error.code === 132001 || result.error.message?.includes('language'))) {
+        const altLang = primaryLang === "en_US" ? "en" : "en_US";
+        console.warn(`Retrying '${templateName}' with alternate language code '${altLang}'...`);
+        result = await trySend(altLang);
+        console.log(`Meta API fallback response for ${cleanTo} (${templateName}, ${altLang}):`, JSON.stringify(result));
+      }
+
       return result;
     };
 
     // Send notifications in parallel
     const promises = [];
     
-    // 1. Send to Customer using tripgod_pass_confirmed with automatic fallback to tripgod_booking_confirmed
+    // 1. Send short ticket pass message (tripgod_pass_confirmed) to Customer
     if (customerPhone) {
-      const sendCustomerNotification = async () => {
-        try {
-          const passRes = await sendWhatsAppMeta(customerPhone, "tripgod_pass_confirmed", customerPassParams);
-          if (passRes?.error || (passRes?.messages && passRes.messages.length === 0)) {
-            console.warn("tripgod_pass_confirmed template error, executing fallback tripgod_booking_confirmed...", passRes?.error);
-            await sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParamsConfirmed);
-          }
-        } catch (err) {
-          console.error("Error sending tripgod_pass_confirmed, executing fallback:", err);
-          await sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParamsConfirmed).catch(e => console.error("Fallback error:", e));
-        }
-      };
-      promises.push(sendCustomerNotification());
+      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_pass_confirmed", customerPassParams, "en_US").catch(err => console.error("Error sending to customer:", err)));
     }
     
-    // 2. Send to Admin
-    promises.push(sendWhatsAppMeta(ADMIN_PHONE, "tripgod_booking_confirmed", adminParamsConfirmed).catch(err => console.error("Error sending to admin:", err)));
+    // 2. Send detailed summary to Admin
+    promises.push(sendWhatsAppMeta(ADMIN_PHONE, "tripgod_booking_confirmed", adminParamsConfirmed, "en").catch(err => console.error("Error sending to admin:", err)));
     
-    // 3. Send to Hotel / Agency / Vendor
+    // 3. Send detailed summary to Hotel / Agency / Vendor
     if (cleanAgencyPhone) {
-      promises.push(sendWhatsAppMeta(cleanAgencyPhone, "tripgod_booking_confirmed", vendorParamsConfirmed).catch(err => console.error("Error sending to vendor:", err)));
+      promises.push(sendWhatsAppMeta(cleanAgencyPhone, "tripgod_booking_confirmed", vendorParamsConfirmed, "en").catch(err => console.error("Error sending to vendor:", err)));
     }
 
     // 4. Send Gmail Alerts (to Admin and Customer) via Nodemailer
