@@ -279,6 +279,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
               customer_name: name,
               customer_phone: phone,
               customer_email: email,
+              activity_name: `${item.name}${item.stretch ? ` (${item.stretch})` : ''}`,
               service_type: item.category === 'hotels' ? 'Hotel' : item.category === 'rafting' ? 'Rafting' : item.category === 'bikerent' ? 'Bike Rental' : item.category === 'tour' ? 'Tour' : item.category === 'camping' ? 'Camping' : 'Rafting',
               service_id: item.id && isValidUUID(item.id) ? item.id : '00000000-0000-0000-0000-000000000000',
               travel_date: item.date,

@@ -99,7 +99,7 @@ export default async function handler(req, res) {
                 name: bookingData.customer_name || notes.customer_name || 'Customer',
                 email: bookingData.customer_email || customerEmail || 'N/A',
                 phone: bookingData.customer_phone || customerPhone || '',
-                activityName: bookingData.service_type || 'Rishikesh Experience',
+                activityName: bookingData.activity_name || bookingData.service_type || 'Rishikesh Experience',
                 stretch: bookingData.stretch || '',
                 date: bookingData.travel_date || '',
                 slot: bookingData.slot || 'Flexible',

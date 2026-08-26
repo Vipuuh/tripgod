@@ -323,7 +323,7 @@ export default function BookingTicketPage({ token, onNavigateHome }) {
   const isBike = cat.includes('bike') || cat.includes('rent') || cat.includes('scooty');
   const isBungee = cat.includes('bungee') || cat.includes('swing') || cat.includes('zipline') || cat.includes('paragliding') || cat.includes('kayak') || cat.includes('camp');
   
-  const activityName = localBookingData?.activityName || service?.name || booking.activity_name || booking.service_type || 'Adventure Booking';
+  const activityName = booking.activity_name || service?.name || localBookingData?.activityName || booking.service_type || 'Adventure Booking';
 
   // Dates & Slots
   const travelDate = booking.travel_date || localBookingData?.date || '';

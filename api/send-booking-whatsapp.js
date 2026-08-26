@@ -268,27 +268,30 @@ export default async function handler(req, res) {
     const paramDate = isHotel && checkInDate ? checkInDate.split('-').reverse().join('/') : date;
     const paramTime = isHotel && checkOutDate ? checkOutDate.split('-').reverse().join('/') : slot;
 
-    // 1. Customer Parameters for approved tripgod_booking_confirmed template (10 parameters):
-    const customerParams = [
-      customerName,                                                            // {{1}} - Name
-      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
-      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Your Trip
-      `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
-      `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
-      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
-      resolvedLocationLink,                                                    // {{7}} - Actual Google Maps Location Link
+    // 1. Customer Parameters for approved tripgod_pass_confirmed template (10 parameters):
+    const fullActivityTitle = `${activityName}${stretch ? ` (${stretch})` : ''}`;
+    const cleanHelpline = (cleanAgencyPhone || ADMIN_PHONE).slice(-10);
+
+    const customerPassParams = [
+      customerName,                                                            // {{1}} - Name (e.g. Rajkumar)
+      "Rishikesh",                                                             // {{2}} - Destination / City (e.g. Rishikesh)
+      simpleBookingCode,                                                       // {{3}} - Booking Code (e.g. TG-009300)
+      fullActivityTitle,                                                       // {{4}} - Package/Trip full title
+      paramDate,                                                               // {{5}} - Travel Date
+      paramTime,                                                               // {{6}} - Slot/Timing
+      `${guests} Guest${guests > 1 ? 's' : ''}${isHotel ? `, ${nights} Night${nights > 1 ? 's' : ''}` : ''}`, // {{7}} - Details
       isFullPayment 
-        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
-        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
-      `*Confirmed!*`,                                                          // {{9}} - Status
-      `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{10}} - Helpline Contact
+        ? `Paid: ₹${totalPrice.toLocaleString('en-IN')}`
+        : `Paid: ₹${advancePaid.toLocaleString('en-IN')} | Bal: ₹${remainingPaid.toLocaleString('en-IN')}`, // {{8}} - Payment Status
+      secureToken,                                                             // {{9}} - Ticket Pass Code/Token for https://tripgod.in/ticket/{{9}}
+      cleanHelpline                                                            // {{10}} - Helpline Number
     ];
 
     // 2. Vendor Parameters (formatted for approved tripgod_booking_confirmed template)
     const vendorParamsConfirmed = [
       customerName,                                                            // {{1}} - Customer Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
-      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Trip/Hotel
+      `*${fullActivityTitle}*`,                                                // {{3}} - Trip/Hotel
       `*${paramDate}*`,                                                        // {{4}} - Date
       `*${paramTime}*`,                                                        // {{5}} - Slot/Time
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
@@ -304,7 +307,7 @@ export default async function handler(req, res) {
     const adminParamsConfirmed = [
       customerName,                                                            // {{1}} - Customer Name
       `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
-      `*${activityName}${stretch ? ` (${stretch})` : ''}*`,                    // {{3}} - Trip/Hotel
+      `*${fullActivityTitle}*`,                                                // {{3}} - Trip/Hotel
       `*${paramDate}*`,                                                        // {{4}} - Date
       `*${paramTime}*`,                                                        // {{5}} - Slot/Time
       `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
@@ -361,9 +364,9 @@ export default async function handler(req, res) {
     // Send notifications in parallel
     const promises = [];
     
-    // 1. Send to Customer using approved tripgod_booking_confirmed template
+    // 1. Send to Customer using approved tripgod_pass_confirmed template (includes Digital Ticket Pass link)
     if (customerPhone) {
-      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParams).catch(err => console.error("Error sending to customer:", err)));
+      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_pass_confirmed", customerPassParams).catch(err => console.error("Error sending to customer:", err)));
     }
     
     // 2. Send to Admin
@@ -554,6 +557,9 @@ async function sendEmailAlert(data) {
 
         <div style="text-align: center; margin-bottom: 25px;">
           <a href="${ticketPassUrl}" style="display: inline-block; background: #FF6B00; color: #ffffff; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 15px; text-decoration: none; box-shadow: 0 4px 12px rgba(255,107,0,0.25);">🎟️ View Digital Adventure Ticket Pass</a>
+          <p style="margin-top: 10px; font-size: 13px; color: #64748b; word-break: break-all;">
+            Direct Ticket URL: <a href="${ticketPassUrl}" style="color: #FF6B00; font-weight: bold;">${ticketPassUrl}</a>
+          </p>
         </div>
 
         <h3 style="color: #111; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 0;">Booking Summary</h3>
