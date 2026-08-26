@@ -38,6 +38,7 @@ import AccountModal from './components/AccountModal';
 import MaintenanceMode from './components/MaintenanceMode';
 import AdminPreviewBanner from './components/AdminPreviewBanner';
 import WhatsAppSupportApp from './components/WhatsAppSupportApp';
+import BookingTicketPage from './components/BookingTicketPage';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -88,7 +89,8 @@ export default function App() {
       if (path.startsWith('/')) path = path.substring(1);
       if (path.endsWith('/')) path = path.slice(0, -1);
       path = path.split('?')[0].split('#')[0];
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo', 'whatsapp-app'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo', 'whatsapp-app', 'booking-ticket', 'ticket'];
+      if (path.startsWith('booking-ticket/') || path.startsWith('ticket/')) return 'booking-ticket';
       if (validRoutes.includes(path)) return path;
       if (path.startsWith('hotels/')) return 'hotels';
       if (path.startsWith('tours/')) return 'tours';
@@ -97,6 +99,15 @@ export default function App() {
   };
 
   const [route, setRoute] = useState(getInitialRoute);
+  const [ticketToken, setTicketToken] = useState(() => {
+    try {
+      let path = window.location.pathname || '';
+      if (path.startsWith('/')) path = path.substring(1);
+      if (path.startsWith('booking-ticket/')) return path.split('booking-ticket/')[1];
+      if (path.startsWith('ticket/')) return path.split('ticket/')[1];
+    } catch (e) {}
+    return '';
+  });
   const [selectedTour, setSelectedTour] = useState(null);
   
   // Maintenance Mode & Store Lock State
@@ -302,8 +313,16 @@ export default function App() {
         path = 'home';
       }
 
+      if (path.startsWith('booking-ticket/') || path.startsWith('ticket/')) {
+        const token = path.split('/')[1] || '';
+        setTicketToken(token);
+        setRoute('booking-ticket');
+        window.scrollTo(0, 0);
+        return;
+      }
+
       const hash = window.location.hash;
-      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo', 'whatsapp-app'];
+      const validRoutes = ['home', 'rafting', 'zipline', 'paragliding', 'bungee', 'swing', 'camping', 'kayaking', 'bikerent', 'pickup', 'hotels', 'tours', 'admin', 'vendor', 'vendor-app', 'partner', 'privacy', 'terms', 'refund', 'custom-combo', 'whatsapp-app', 'booking-ticket', 'ticket'];
 
       const isSubRoute = path.startsWith('hotels/') || path.startsWith('rafting/') || path.startsWith('zipline/') || path.startsWith('paragliding/') || path.startsWith('bungee/') || path.startsWith('swing/') || path.startsWith('camping/') || path.startsWith('kayaking/') || path.startsWith('tours/');
 
@@ -363,6 +382,12 @@ export default function App() {
       setTimeout(() => {
         document.getElementById('adventures')?.scrollIntoView({ behavior: 'smooth' });
       }, 150);
+    } else if (newRoute.startsWith('booking-ticket/') || newRoute.startsWith('ticket/')) {
+      const token = newRoute.split('/')[1] || '';
+      setTicketToken(token);
+      window.history.pushState(null, '', `/${newRoute}`);
+      setRoute('booking-ticket');
+      window.scrollTo(0, 0);
     } else {
       let targetPath;
       let resolvedRoute = newRoute;
@@ -463,7 +488,7 @@ export default function App() {
       />
 
       {/* 2. Sticky Header */}
-      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && route !== 'whatsapp-app' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && route !== 'whatsapp-app' && route !== 'booking-ticket' && (
       <header className="sticky top-0 z-40 bg-white/80 border-b border-slate-100 backdrop-blur-md shadow-[0_2px_20px_rgba(0,0,0,0.02)]">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           {/* Left Header Group */}
@@ -608,12 +633,17 @@ export default function App() {
                 />
               </ErrorBoundary>
             )}
+            {route === 'booking-ticket' && (
+              <ErrorBoundary>
+                <BookingTicketPage token={ticketToken} onNavigateHome={() => navigateTo('home')} />
+              </ErrorBoundary>
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
 
       {/* 4. Footer */}
-      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && route !== 'whatsapp-app' && (
+      {route !== 'admin' && route !== 'vendor' && route !== 'vendor-app' && route !== 'partner' && route !== 'whatsapp-app' && route !== 'booking-ticket' && (
       <footer className="bg-black text-white font-sans">
 
 

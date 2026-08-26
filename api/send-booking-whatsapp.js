@@ -129,7 +129,8 @@ export default async function handler(req, res) {
     const isCombo = category === 'combo' || data.type === 'custom_combo' || comboItems.length > 0;
 
     // Generate Digital Ticket Web URL
-    const ticketUrl = `https://tripgod.in/ticket/${simpleBookingCode}`;
+    const secureToken = data.ticket_token || data.paymentId || data.dbBookingId || simpleBookingCode;
+    const ticketUrl = `https://tripgod.in/booking-ticket/${secureToken}`;
 
     // Helper to format 1 or 2 vendor phone numbers
     const formatVendorPhoneDisplay = (item) => {
@@ -388,6 +389,7 @@ export default async function handler(req, res) {
       advancePaid,
       remainingPaid,
       paymentId,
+      ticket_token: data.ticket_token || data.dbBookingId || paymentId,
       locationLink: resolvedLocationLink,
       agencyPhone: cleanAgencyPhone
     }).catch(err => console.error("Error sending booking alert email:", err)));
@@ -480,7 +482,8 @@ async function sendEmailAlert(data) {
 
   // Build itemized breakdown HTML if combo items exist
   const comboItems = Array.isArray(data.items) ? data.items : [];
-  const ticketPassUrl = `https://tripgod.in/ticket/${simpleBookingCode}`;
+  const secureToken = data.ticket_token || data.paymentId || simpleBookingCode;
+  const ticketPassUrl = `https://tripgod.in/booking-ticket/${secureToken}`;
 
   let itemsHtml = '';
   if (comboItems.length > 0) {
