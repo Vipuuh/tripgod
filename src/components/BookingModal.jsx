@@ -378,14 +378,14 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     };
     logCheckoutAttempt();
 
-    const amountInPaise = finalAmountToPay * 100;
+    const amountInPaise = Math.max(100, Math.round((finalAmountToPay || 0) * 100));
     const notesData = {
-      booking_id: dbBookingId,
-      cart_id: logId,
-      customer_name: name,
-      customer_phone: phone,
-      customer_email: email,
-      activity_name: activity.name
+      booking_id: String(dbBookingId || ''),
+      cart_id: String(logId || ''),
+      customer_name: String(name || 'Customer'),
+      customer_phone: String(phone || ''),
+      customer_email: String(email || ''),
+      activity_name: String(activity?.name || 'Experience')
     };
 
     // Try fetching Razorpay Order ID for guaranteed auto-capture
@@ -412,7 +412,6 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_TAd3hYpU1J84mE",
       amount: amountInPaise, // paise
       currency: "INR",
-      payment_capture: 1,
       name: "TripGod",
       description: effectivePaymentOption === 'full' 
         ? `${activity.name} - 100% Full Payment` 

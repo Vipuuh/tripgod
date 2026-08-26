@@ -144,8 +144,6 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_TAd3hYpU1J84mE",
       amount: amountInPaise,
       currency: "INR",
-      order_id: orderId,
-      payment_capture: 1,
       name: "TripGod",
       description: `Cart Checkout (${cart.length} Activities) - ${paymentOption === 'full' ? '100% Full Payment' : 'Advances'}`,
       image: "/tripgod-logo-padded.jpg",
