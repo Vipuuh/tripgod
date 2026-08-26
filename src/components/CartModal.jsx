@@ -135,9 +135,19 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       const orderData = await orderRes.json();
       if (orderData && orderData.order_id) {
         orderId = orderData.order_id;
+      } else {
+        setError(orderData?.message || orderData?.error || 'Razorpay Order ID creation failed for cart checkout');
+        return;
       }
     } catch (e) {
-      console.warn("Could not pre-create Razorpay Order ID for cart, falling back to direct checkout options", e);
+      console.warn("Could not pre-create Razorpay Order ID for cart", e);
+      setError('Payment gateway error. Please check Razorpay server environment configuration.');
+      return;
+    }
+
+    if (!orderId) {
+      setError('Razorpay Order ID missing. Please check server configuration.');
+      return;
     }
 
     const options = {

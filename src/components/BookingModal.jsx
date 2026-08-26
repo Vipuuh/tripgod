@@ -390,6 +390,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
     // Try fetching Razorpay Order ID for guaranteed auto-capture
     let orderId = null;
+    let orderApiError = null;
     try {
       const orderRes = await fetch('/api/create-razorpay-order', {
         method: 'POST',
@@ -403,9 +404,17 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       const orderData = await orderRes.json();
       if (orderData && orderData.order_id) {
         orderId = orderData.order_id;
+      } else {
+        orderApiError = orderData?.message || orderData?.error || 'Razorpay Order ID creation failed';
       }
     } catch (e) {
-      console.warn("Could not pre-create Razorpay Order ID, falling back to direct checkout options", e);
+      console.warn("Could not pre-create Razorpay Order ID", e);
+      orderApiError = e.message || 'Network error initializing payment gateway';
+    }
+
+    if (!orderId) {
+      setError(`Payment Gateway Error: ${orderApiError}. Please ensure RAZORPAY_KEY_SECRET is added to Vercel Environment Variables and redeployed.`);
+      return;
     }
 
     const options = {
