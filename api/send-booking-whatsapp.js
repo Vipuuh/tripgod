@@ -283,8 +283,24 @@ export default async function handler(req, res) {
       isFullPayment 
         ? `Paid: ₹${totalPrice.toLocaleString('en-IN')}`
         : `Paid: ₹${advancePaid.toLocaleString('en-IN')} | Bal: ₹${remainingPaid.toLocaleString('en-IN')}`, // {{8}} - Payment Status
-      secureToken,                                                             // {{9}} - Ticket Pass Code/Token for https://tripgod.in/ticket/{{9}}
+      simpleBookingCode,                                                       // {{9}} - Ticket Pass Code for https://tripgod.in/ticket/{{9}}
       cleanHelpline                                                            // {{10}} - Helpline Number
+    ];
+
+    // Customer Parameters for backup tripgod_booking_confirmed template (10 parameters)
+    const customerParamsConfirmed = [
+      customerName,                                                            // {{1}} - Name
+      `*${simpleBookingCode}*`,                                                // {{2}} - Booking ID
+      `*${fullActivityTitle}*`,                                                // {{3}} - Your Trip
+      `*${paramDate}*`,                                                        // {{4}} - Check-in / Date
+      `*${paramTime}*`,                                                        // {{5}} - Check-out / Slot
+      `*${guests}* Guest${guests > 1 ? 's' : ''}${isHotel ? `, *${nights}* Night${nights > 1 ? 's' : ''} (${slot.split(' (')[0]})` : ''}`, // {{6}} - Details
+      resolvedLocationLink,                                                    // {{7}} - Actual Google Maps Location Link
+      isFullPayment 
+        ? `Paid: *₹${totalPrice.toLocaleString('en-IN')}* (100% Full Online)`
+        : `Paid: *₹${advancePaid.toLocaleString('en-IN')}* | Bal: *₹${remainingPaid.toLocaleString('en-IN')}* (Pay at venue)`, // {{8}} - Payment
+      `*Confirmed!*`,                                                          // {{9}} - Status
+      `*${formatDisplayPhone(cleanAgencyPhone || ADMIN_PHONE)}*`               // {{10}} - Helpline Contact
     ];
 
     // 2. Vendor Parameters (formatted for approved tripgod_booking_confirmed template)
@@ -364,9 +380,21 @@ export default async function handler(req, res) {
     // Send notifications in parallel
     const promises = [];
     
-    // 1. Send to Customer using approved tripgod_pass_confirmed template (includes Digital Ticket Pass link)
+    // 1. Send to Customer using tripgod_pass_confirmed with automatic fallback to tripgod_booking_confirmed
     if (customerPhone) {
-      promises.push(sendWhatsAppMeta(customerPhone, "tripgod_pass_confirmed", customerPassParams).catch(err => console.error("Error sending to customer:", err)));
+      const sendCustomerNotification = async () => {
+        try {
+          const passRes = await sendWhatsAppMeta(customerPhone, "tripgod_pass_confirmed", customerPassParams);
+          if (passRes?.error || (passRes?.messages && passRes.messages.length === 0)) {
+            console.warn("tripgod_pass_confirmed template error, executing fallback tripgod_booking_confirmed...", passRes?.error);
+            await sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParamsConfirmed);
+          }
+        } catch (err) {
+          console.error("Error sending tripgod_pass_confirmed, executing fallback:", err);
+          await sendWhatsAppMeta(customerPhone, "tripgod_booking_confirmed", customerParamsConfirmed).catch(e => console.error("Fallback error:", e));
+        }
+      };
+      promises.push(sendCustomerNotification());
     }
     
     // 2. Send to Admin

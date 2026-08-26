@@ -553,6 +553,7 @@ My payment ID is verified. Please confirm my slots.`;
         // Save booking to Supabase SQL Database
         try {
           const isValidUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+          const fullActivityTitle = `${activity.name}${activity.stretch ? ` (${activity.stretch})` : ''}`;
           const bookingInsertData = {
             id: dbBookingId,
             city_id: activity.city_id && isValidUUID(activity.city_id) ? activity.city_id : null,
@@ -560,8 +561,7 @@ My payment ID is verified. Please confirm my slots.`;
             customer_name: name,
             customer_phone: phone,
             customer_email: email,
-            activity_name: `${activity.name}${activity.stretch ? ` (${activity.stretch})` : ''}`,
-            service_type: activity.category === 'hotels' ? 'Hotel' : activity.category === 'bikerent' ? 'Bike Rental' : (activity.category === 'tours' || activity.category === 'tour') ? 'Tour' : ['rafting', 'camping', 'bungee', 'paragliding', 'swing', 'zipline', 'kayaking'].includes(activity.category) ? activity.category.charAt(0).toUpperCase() + activity.category.slice(1) : 'Rafting',
+            service_type: fullActivityTitle || (activity.category === 'hotels' ? 'Hotel' : activity.category === 'bikerent' ? 'Bike Rental' : (activity.category === 'tours' || activity.category === 'tour') ? 'Tour' : ['rafting', 'camping', 'bungee', 'paragliding', 'swing', 'zipline', 'kayaking'].includes(activity.category) ? activity.category.charAt(0).toUpperCase() + activity.category.slice(1) : 'Rafting'),
             service_id: activity.id && isValidUUID(activity.id) ? activity.id : '00000000-0000-0000-0000-000000000000',
             travel_date: activity.category === 'hotels' ? checkInDate : date,
             status: 'confirmed',
@@ -601,6 +601,7 @@ My payment ID is verified. Please confirm my slots.`;
                 advancePaid: finalAmountToPay,
                 remainingPaid: remainingPayment,
                 paymentId: dbBookingId,
+                ticket_token: simpleBookingCode,
                 category: activity.category,
                 hotel_id: activity.category === 'hotels' ? activity.id : null,
                 service_id: activity.id || null,

@@ -175,23 +175,33 @@ export default function BookingTicketPage({ token, onNavigateHome }) {
 
       try {
         // Query Supabase bookings table
-        // Matches by UUID id OR simple code derivation OR custom lookup
-        let { data: bookingRow, error: bookingErr } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('id', cleanToken)
-          .maybeSingle();
+        const isUUID = (str) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+        
+        let bookingRow = null;
 
-        // Fallback: If token looks like a simple code or custom ID
-        if (!bookingRow && !bookingErr) {
+        // 1. Direct query by exact UUID id if valid UUID format
+        if (isUUID(cleanToken)) {
+          const { data: directRow } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('id', cleanToken)
+            .maybeSingle();
+          if (directRow) bookingRow = directRow;
+        }
+
+        // 2. Query recent bookings and match by derived simple code or ID
+        if (!bookingRow) {
           const { data: allBookings } = await supabase
             .from('bookings')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(100);
+            .limit(200);
 
           if (allBookings && allBookings.length > 0) {
-            bookingRow = allBookings.find(b => getSimpleBookingId(b.id) === cleanToken || b.id === cleanToken);
+            bookingRow = allBookings.find(b => 
+              b.id === cleanToken || 
+              getSimpleBookingId(b.id).toLowerCase() === cleanToken.toLowerCase()
+            );
           }
         }
 

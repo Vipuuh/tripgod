@@ -272,6 +272,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
             const dbBookingId = generateUUID();
             insertedBookingIds.push(dbBookingId);
 
+            const fullItemTitle = `${item.name}${item.stretch ? ` (${item.stretch})` : ''}`;
             const bookingInsertData = {
               id: dbBookingId,
               city_id: item.city_id && isValidUUID(item.city_id) ? item.city_id : null,
@@ -279,8 +280,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
               customer_name: name,
               customer_phone: phone,
               customer_email: email,
-              activity_name: `${item.name}${item.stretch ? ` (${item.stretch})` : ''}`,
-              service_type: item.category === 'hotels' ? 'Hotel' : item.category === 'rafting' ? 'Rafting' : item.category === 'bikerent' ? 'Bike Rental' : item.category === 'tour' ? 'Tour' : item.category === 'camping' ? 'Camping' : 'Rafting',
+              service_type: fullItemTitle || (item.category === 'hotels' ? 'Hotel' : item.category === 'rafting' ? 'Rafting' : item.category === 'bikerent' ? 'Bike Rental' : item.category === 'tour' ? 'Tour' : item.category === 'camping' ? 'Camping' : 'Rafting'),
               service_id: item.id && isValidUUID(item.id) ? item.id : '00000000-0000-0000-0000-000000000000',
               travel_date: item.date,
               status: 'confirmed',
@@ -359,6 +359,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
                   advancePaid: paymentOption === 'full' ? item.totalPrice : item.advancePayment,
                   remainingPaid: paymentOption === 'full' ? 0 : item.remainingPayment,
                   paymentId: dbBookingId,
+                  ticket_token: simpleBookingCode,
                   category: item.category || 'rafting',
                   hotel_id: item.category === 'hotels' ? item.id : null,
                   service_id: item.id || null,
