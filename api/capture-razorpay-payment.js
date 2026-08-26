@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     }
 
     const keyId = process.env.VITE_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_live_TAd3hYpU1J84mE';
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || process.env.RAZORPAY_WEBHOOK_SECRET || '';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_SECRET || '';
 
     if (!keySecret) {
       console.warn('RAZORPAY_KEY_SECRET missing in server environment.');
