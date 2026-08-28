@@ -378,6 +378,15 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     };
     logCheckoutAttempt();
 
+    // Trigger Meta Pixel InitiateCheckout Event
+    if (typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'InitiateCheckout', {
+        value: finalAmountToPay,
+        currency: 'INR',
+        content_name: activity?.name || 'Experience'
+      });
+    }
+
     const amountInPaise = Math.max(100, Math.round((finalAmountToPay || 0) * 100));
     const notesData = {
       booking_id: String(dbBookingId || ''),
@@ -431,6 +440,15 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       notes: notesData,
       handler: function (response) {
         const paymentId = response.razorpay_payment_id;
+
+        // Trigger Meta Pixel Purchase Event
+        if (typeof window !== 'undefined' && window.fbq) {
+          window.fbq('track', 'Purchase', {
+            value: finalAmountToPay,
+            currency: 'INR',
+            content_name: activity?.name || 'Experience'
+          });
+        }
 
         // Auto-capture fallback call to serverless function
         fetch('/api/capture-razorpay-payment', {
