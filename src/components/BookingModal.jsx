@@ -56,6 +56,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
 
   const [bookingSuccessData, setBookingSuccessData] = useState(null);
   const [checkoutLogId, setCheckoutLogId] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Guard: must come AFTER all hooks
   // Note: We do NOT return null here - we let the AnimatePresence handle isOpen && activity check
@@ -337,6 +338,8 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
       return;
     }
 
+    setIsProcessing(true);
+
     const generateUUID = () => {
       if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -422,6 +425,7 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     }
 
     if (!orderId) {
+      setIsProcessing(false);
       setError(`Payment Gateway Error: ${orderApiError}. Please ensure RAZORPAY_KEY_SECRET is added to Vercel Environment Variables and redeployed.`);
       return;
     }
@@ -438,7 +442,13 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
             : `${activity.name} - ${commissionPercentage}% Advance`),
       image: "/tripgod-logo-padded.jpg",
       notes: notesData,
+      modal: {
+        ondismiss: function () {
+          setIsProcessing(false);
+        }
+      },
       handler: function (response) {
+        setIsProcessing(false);
         const paymentId = response.razorpay_payment_id;
 
         // Trigger Meta Pixel Purchase Event
@@ -1511,16 +1521,30 @@ My payment ID is verified. Please confirm my slots.`;
               ) : (
                 <button
                   onClick={handleRazorpayPayment}
-                  className="w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] border-none cursor-pointer font-display"
+                  disabled={isProcessing}
+                  className={`w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white flex items-center justify-center gap-2 transition-all duration-300 border-none font-display ${
+                    isProcessing 
+                      ? 'opacity-80 cursor-wait' 
+                      : 'hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] hover:scale-[1.02] cursor-pointer'
+                  }`}
                 >
-                  <CreditCard size={16} />
-                  <span>
-                    {effectivePaymentOption === 'full'
-                      ? 'Pay Full & Book'
-                      : (isCombo && activity?.advance_amount
-                          ? `Pay ₹${finalAmountToPay.toLocaleString('en-IN')} Advance & Book`
-                          : 'Pay Advance & Book')}
-                  </span>
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Opening Secure Payment Gateway...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard size={16} />
+                      <span>
+                        {effectivePaymentOption === 'full'
+                          ? 'Pay Full & Book'
+                          : (isCombo && activity?.advance_amount
+                              ? `Pay ₹${finalAmountToPay.toLocaleString('en-IN')} Advance & Book`
+                              : 'Pay Advance & Book')}
+                      </span>
+                    </>
+                  )}
                 </button>
               )}
             </div>

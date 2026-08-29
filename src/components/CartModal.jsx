@@ -11,6 +11,7 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
   const [paymentOption, setPaymentOption] = useState('advance');
   const [bookingSuccessData, setBookingSuccessData] = useState(null);
   const [checkoutLogId, setCheckoutLogId] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const getSimpleBookingId = (id) => {
     if (!id) return 'TG-000000';
@@ -71,6 +72,8 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       setError('Razorpay SDK failed to load. Please check your internet connection or reload the page.');
       return;
     }
+
+    setIsProcessing(true);
 
     const generateUUID = () => {
       if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -136,16 +139,19 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       if (orderData && orderData.order_id) {
         orderId = orderData.order_id;
       } else {
+        setIsProcessing(false);
         setError(orderData?.message || orderData?.error || 'Razorpay Order ID creation failed for cart checkout');
         return;
       }
     } catch (e) {
       console.warn("Could not pre-create Razorpay Order ID for cart", e);
+      setIsProcessing(false);
       setError('Payment gateway error. Please check Razorpay server environment configuration.');
       return;
     }
 
     if (!orderId) {
+      setIsProcessing(false);
       setError('Razorpay Order ID missing. Please check server configuration.');
       return;
     }
@@ -158,7 +164,13 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
       description: `Cart Checkout (${cart.length} Activities) - ${paymentOption === 'full' ? '100% Full Payment' : 'Advances'}`,
       image: "/tripgod-logo-padded.jpg",
       notes: notesData,
+      modal: {
+        ondismiss: function () {
+          setIsProcessing(false);
+        }
+      },
       handler: function (response) {
+        setIsProcessing(false);
         const paymentId = response.razorpay_payment_id;
 
         fetch('/api/capture-razorpay-payment', {
@@ -746,10 +758,24 @@ export default function CartModal({ isOpen, onClose, cart, onRemoveItem, onClear
 
                 <button
                   onClick={handleRazorpayCheckout}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display"
+                  disabled={isProcessing}
+                  className={`w-full py-4 px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white font-black rounded-xl flex items-center justify-center gap-2 transition-all border-none font-display ${
+                    isProcessing 
+                      ? 'opacity-80 cursor-wait' 
+                      : 'hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] hover:scale-[1.02] cursor-pointer'
+                  }`}
                 >
-                  <CreditCard size={18} />
-                  <span>{paymentOption === 'full' ? 'Pay Full & Book All' : 'Pay Advances & Book All'}</span>
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Opening Secure Payment Gateway...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard size={18} />
+                      <span>{paymentOption === 'full' ? 'Pay Full & Book All' : 'Pay Advances & Book All'}</span>
+                    </>
+                  )}
                 </button>
               </div>
             )}
