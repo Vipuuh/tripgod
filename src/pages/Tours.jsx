@@ -1026,7 +1026,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                           vendors: selectedPartner,
                           slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
                         })}
-                        className="w-full sm:w-auto py-3.5 px-8 bg-gradient-to-r from-[#FF5F00] via-[#FF4500] to-[#FF2A00] text-white text-sm font-black uppercase rounded-xl shadow-[0_4px_18px_rgba(255,95,0,0.35)] hover:shadow-[0_6px_25px_rgba(255,95,0,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-2 group"
+                        className="w-full sm:w-auto py-3.5 px-8 bg-gradient-to-r from-[#FF5F00] via-[#FF4500] to-[#FF2A00] text-white text-sm font-black uppercase rounded-xl shadow-[0_4px_18px_rgba(255,95,0,0.35)] hover:shadow-[0_6px_25px_rgba(255,95,0,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 flex items-center justify-center gap-2 group btn-shimmer"
                       >
                         <span>Book Now</span>
                         <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
@@ -1108,7 +1108,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                       slots: ['Morning Departure (08:00 AM)', 'Custom Timing']
                     });
                   }}
-                  className="py-3.5 px-8 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display h-[52px] flex flex-col items-center justify-center"
+                  className="py-3.5 px-8 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl hover:shadow-[0_4px_20px_rgba(255,95,0,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display h-[52px] flex flex-col items-center justify-center btn-shimmer"
                 >
                   <span className="leading-none">BOOK NOW →</span>
                   <span className="text-[8px] text-orange-200 font-bold leading-none mt-0.5">Instant Confirmation</span>

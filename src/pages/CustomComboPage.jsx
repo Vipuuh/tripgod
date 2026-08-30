@@ -1464,7 +1464,7 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
               <button
                 type="button"
                 onClick={handleProceedBooking}
-                className="flex-1 sm:flex-initial px-5 py-3 rounded-xl bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:scale-105 active:scale-95 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-[#FF5F00]/20 transition flex items-center justify-center gap-1.5 border-none cursor-pointer"
+                className="flex-1 sm:flex-initial px-5 py-3 rounded-xl bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:scale-105 active:scale-95 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-[#FF5F00]/20 transition flex items-center justify-center gap-1.5 border-none cursor-pointer btn-shimmer"
               >
                 <span>PROCEED TO BOOK</span>
                 <ArrowRight className="w-3.5 h-3.5" />

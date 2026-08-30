@@ -15,6 +15,29 @@ const formatDisplayPhone = (phone) => {
   return `+${clean}`;
 };
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(true));
+      existing.addEventListener('error', () => resolve(false));
+      // In case it already finished loading
+      if (window.Razorpay) return resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function BookingModal({ isOpen, onClose, activity, onAddToCart, initialDate, initialGuests }) {
   // All hooks must be declared before any conditional returns (React Rules of Hooks)
   const [date, setDate] = useState('');
@@ -315,13 +338,15 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
   const minDate = new Date().toISOString().split('T')[0];
   const unitLabel = isBikeRent ? 'Vehicle(s)' : 'Person(s)';
 
-  const handleRazorpayPayment = async () => {
-    if (!date) {
-      setError('Please select a date.');
-      return;
+  useEffect(() => {
+    if (isOpen && typeof window !== 'undefined' && !window.Razorpay) {
+      loadRazorpayScript();
     }
-    if (!name.trim()) {
-      setError('Please enter your name.');
+  }, [isOpen]);
+
+  const handleRazorpayPayment = async () => {
+    if (!name || name.trim().length === 0) {
+      setError('Please enter your full name.');
       return;
     }
     if (!phone || phone.length < 10) {
@@ -334,8 +359,13 @@ export default function BookingModal({ isOpen, onClose, activity, onAddToCart, i
     }
 
     if (!window.Razorpay) {
-      setError('Razorpay SDK failed to load. Please check your internet connection or reload the page.');
-      return;
+      setIsProcessing(true);
+      const loaded = await loadRazorpayScript();
+      if (!loaded || !window.Razorpay) {
+        setIsProcessing(false);
+        setError('Razorpay SDK failed to load. Please check your internet connection or reload the page.');
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -1522,7 +1552,7 @@ My payment ID is verified. Please confirm my slots.`;
                 <button
                   onClick={handleRazorpayPayment}
                   disabled={isProcessing}
-                  className={`w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white flex items-center justify-center gap-2 transition-all duration-300 border-none font-display ${
+                  className={`w-full py-3.5 px-4 rounded-xl font-black text-sm bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white flex items-center justify-center gap-2 transition-all duration-300 border-none font-display btn-shimmer ${
                     isProcessing 
                       ? 'opacity-80 cursor-wait' 
                       : 'hover:shadow-[0_4px_20px_rgba(255,95,0,0.4)] hover:scale-[1.02] cursor-pointer'

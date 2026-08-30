@@ -2002,7 +2002,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               closed_until: selectedPackage.closed_until,
                               vendors: selectedPartner
                             })}
-                            className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
+                            className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0 btn-shimmer"
                           >
                             {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice
                               ? `PAY ₹${advanceAmount.toLocaleString('en-IN')} TO BOOK →`
@@ -2117,7 +2117,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                                   vendors: selectedPartner
                                 });
                               }}
-                              className="py-2.5 sm:py-3 px-4 sm:px-6 bg-accent-gradient text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg hover:shadow-accent/30 hover:scale-[1.02] transition-all border-none cursor-pointer font-display flex items-center justify-center gap-1.5"
+                              className="py-2.5 sm:py-3 px-4 sm:px-6 bg-accent-gradient text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg hover:shadow-accent/30 hover:scale-[1.02] transition-all border-none cursor-pointer font-display flex items-center justify-center gap-1.5 btn-shimmer"
                             >
                               <span>
                                 {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, LogIn, MessageSquare, X, 
@@ -7,38 +7,53 @@ import {
 } from 'lucide-react';
 import { supabase } from './supabase';
 
-// Pages
+// Core Landing Pages
 import Home from './pages/Home';
-import Rafting from './pages/Rafting';
-import Zipline from './pages/Zipline';
-import Paragliding from './pages/Paragliding';
-import Swing from './pages/Swing';
-import Bungee from './pages/Bungee';
-import Camping from './pages/Camping';
-import BikeRent from './pages/BikeRent';
-import Pickup from './pages/Pickup';
-import Hotels from './pages/Hotels';
-import Tours from './pages/Tours';
-import TourPartnerSelection from './pages/TourPartnerSelection';
-import Kayaking from './pages/Kayaking';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
-import RefundPolicy from './pages/RefundPolicy';
-import CustomComboPage from './pages/CustomComboPage';
 
-// Components
+// Lazy Loaded Activity & Destination Pages
+const Rafting = lazy(() => import('./pages/Rafting'));
+const Zipline = lazy(() => import('./pages/Zipline'));
+const Paragliding = lazy(() => import('./pages/Paragliding'));
+const Swing = lazy(() => import('./pages/Swing'));
+const Bungee = lazy(() => import('./pages/Bungee'));
+const Camping = lazy(() => import('./pages/Camping'));
+const BikeRent = lazy(() => import('./pages/BikeRent'));
+const Pickup = lazy(() => import('./pages/Pickup'));
+const Hotels = lazy(() => import('./pages/Hotels'));
+const Tours = lazy(() => import('./pages/Tours'));
+const TourPartnerSelection = lazy(() => import('./pages/TourPartnerSelection'));
+const Kayaking = lazy(() => import('./pages/Kayaking'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Terms = lazy(() => import('./pages/Terms'));
+const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
+const CustomComboPage = lazy(() => import('./pages/CustomComboPage'));
+
+// Core UI Components (Instant Render)
 import BookingModal from './components/BookingModal';
 import CartModal from './components/CartModal';
 import CookieConsent from './components/CookieConsent';
 import SupportFloatingWidget from './components/SupportFloatingWidget';
-import AdminDashboard from './components/AdminDashboard';
-import VendorPortal from './components/VendorPortal';
 import LoginModal from './components/LoginModal';
 import AccountModal from './components/AccountModal';
 import MaintenanceMode from './components/MaintenanceMode';
 import AdminPreviewBanner from './components/AdminPreviewBanner';
-import WhatsAppSupportApp from './components/WhatsAppSupportApp';
-import BookingTicketPage from './components/BookingTicketPage';
+
+// Lazy Loaded Heavy Portals & Sub-Apps
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const VendorPortal = lazy(() => import('./components/VendorPortal'));
+const WhatsAppSupportApp = lazy(() => import('./components/WhatsAppSupportApp'));
+const BookingTicketPage = lazy(() => import('./components/BookingTicketPage'));
+
+function PageLoadingFallback() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center">
+      <div className="w-9 h-9 border-3 border-[#FF5F00] border-t-transparent rounded-full animate-spin" />
+      <span className="mt-3 text-[11px] font-black text-slate-400 tracking-wider uppercase font-display">
+        Loading TripGod...
+      </span>
+    </div>
+  );
+}
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -574,70 +589,72 @@ export default function App() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
           >
-            {route === 'home' && (
-              <Home 
-                setRoute={navigateTo} 
-                openBookingModal={openBookingModal} 
-                prefDate={prefDate}
-                setPrefDate={setPrefDate}
-                prefGuests={prefGuests}
-                setPrefGuests={setPrefGuests}
-              />
-            )}
-            {route === 'rafting' && <ErrorBoundary><Rafting currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'zipline' && <ErrorBoundary><Zipline currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'paragliding' && <ErrorBoundary><Paragliding currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'bungee' && <ErrorBoundary><Bungee currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'swing' && <ErrorBoundary><Swing currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'camping' && <ErrorBoundary><Camping currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'kayaking' && <ErrorBoundary><Kayaking currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
-            {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
-            {route === 'hotels' && <ErrorBoundary><Hotels currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
-            {route === 'tours' && (
-              <Tours
-                currentCity={currentCity}
-                openBookingModal={openBookingModal}
-                selectedTour={selectedTour}
-                setSelectedTour={setSelectedTour}
-                navigateTo={navigateTo}
-              />
-            )}
-            {route === 'admin' && (
-              <ErrorBoundary>
-                <AdminDashboard 
+            <Suspense fallback={<PageLoadingFallback />}>
+              {route === 'home' && (
+                <Home 
                   setRoute={navigateTo} 
-                  maintenanceConfig={maintenanceConfig} 
-                  setMaintenanceConfig={setMaintenanceConfig} 
-                  isMaintenanceActive={maintenanceConfig?.enabled} 
-                  setIsMaintenanceActive={(val) => setMaintenanceConfig(prev => ({ ...prev, enabled: val }))} 
+                  openBookingModal={openBookingModal} 
+                  prefDate={prefDate}
+                  setPrefDate={setPrefDate}
+                  prefGuests={prefGuests}
+                  setPrefGuests={setPrefGuests}
                 />
-              </ErrorBoundary>
-            )}
-            {(route === 'vendor' || route === 'vendor-app' || route === 'partner') && <VendorPortal onNavigateHome={() => navigateTo('home')} />}
-            {route === 'whatsapp-app' && (
-              <ErrorBoundary>
-                <WhatsAppSupportApp onNavigateHome={() => navigateTo('home')} />
-              </ErrorBoundary>
-            )}
-            {route === 'privacy' && <Privacy />}
-            {route === 'terms' && <Terms />}
-            {route === 'refund' && <RefundPolicy />}
-            {route === 'custom-combo' && (
-              <ErrorBoundary>
-                <CustomComboPage 
-                  onClose={() => navigateTo('home')}
-                  onBookCustomCombo={(bookingPayload) => {
-                    openBookingModal(bookingPayload);
-                  }}
+              )}
+              {route === 'rafting' && <ErrorBoundary><Rafting currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'zipline' && <ErrorBoundary><Zipline currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'paragliding' && <ErrorBoundary><Paragliding currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'bungee' && <ErrorBoundary><Bungee currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'swing' && <ErrorBoundary><Swing currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'camping' && <ErrorBoundary><Camping currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'kayaking' && <ErrorBoundary><Kayaking currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'bikerent' && <BikeRent currentCity={currentCity} openBookingModal={openBookingModal} />}
+              {route === 'pickup' && <Pickup openBookingModal={openBookingModal} />}
+              {route === 'hotels' && <ErrorBoundary><Hotels currentCity={currentCity} openBookingModal={openBookingModal} /></ErrorBoundary>}
+              {route === 'tours' && (
+                <Tours
+                  currentCity={currentCity}
+                  openBookingModal={openBookingModal}
+                  selectedTour={selectedTour}
+                  setSelectedTour={setSelectedTour}
+                  navigateTo={navigateTo}
                 />
-              </ErrorBoundary>
-            )}
-            {route === 'booking-ticket' && (
-              <ErrorBoundary>
-                <BookingTicketPage token={ticketToken} onNavigateHome={() => navigateTo('home')} />
-              </ErrorBoundary>
-            )}
+              )}
+              {route === 'admin' && (
+                <ErrorBoundary>
+                  <AdminDashboard 
+                    setRoute={navigateTo} 
+                    maintenanceConfig={maintenanceConfig} 
+                    setMaintenanceConfig={setMaintenanceConfig} 
+                    isMaintenanceActive={maintenanceConfig?.enabled} 
+                    setIsMaintenanceActive={(val) => setMaintenanceConfig(prev => ({ ...prev, enabled: val }))} 
+                  />
+                </ErrorBoundary>
+              )}
+              {(route === 'vendor' || route === 'vendor-app' || route === 'partner') && <VendorPortal onNavigateHome={() => navigateTo('home')} />}
+              {route === 'whatsapp-app' && (
+                <ErrorBoundary>
+                  <WhatsAppSupportApp onNavigateHome={() => navigateTo('home')} />
+                </ErrorBoundary>
+              )}
+              {route === 'privacy' && <Privacy />}
+              {route === 'terms' && <Terms />}
+              {route === 'refund' && <RefundPolicy />}
+              {route === 'custom-combo' && (
+                <ErrorBoundary>
+                  <CustomComboPage 
+                    onClose={() => navigateTo('home')}
+                    onBookCustomCombo={(bookingPayload) => {
+                      openBookingModal(bookingPayload);
+                    }}
+                  />
+                </ErrorBoundary>
+              )}
+              {route === 'booking-ticket' && (
+                <ErrorBoundary>
+                  <BookingTicketPage token={ticketToken} onNavigateHome={() => navigateTo('home')} />
+                </ErrorBoundary>
+              )}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </main>
