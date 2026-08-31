@@ -411,7 +411,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
   const stats = [
     { label: 'Happy Customers', value: '12,000+' },
     { label: 'Partner Vendors', value: '50+' },
-    { label: 'Adventure Types', value: '5+' },
     { label: 'Refund Guarantee', value: '100%' }
   ];
 
@@ -1229,8 +1228,6 @@ export default function Home({ setRoute, openBookingModal, prefDate, setPrefDate
                 <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">12,000+</strong> HAPPY CUSTOMERS</span>
                 <span className="text-white/20 text-lg">•</span>
                 <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">50+</strong> PARTNER VENDORS</span>
-                <span className="text-white/20 text-lg">•</span>
-                <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">5+</strong> ADVENTURE TYPES</span>
                 <span className="text-white/20 text-lg">•</span>
                 <span className="flex items-center gap-2"><strong className="text-accent text-base sm:text-lg">100%</strong> REFUND GUARANTEE</span>
                 <span className="text-white/20 text-lg">•</span>
