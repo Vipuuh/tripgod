@@ -1935,9 +1935,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       <div className="absolute -bottom-14 -left-14 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
 
                       {/* Header */}
-                      <div className="border-b border-slate-800/80 pb-3.5 relative z-10 space-y-2">
-                        <div className="flex items-start sm:items-center gap-3">
-                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(255,95,0,0.4)] shrink-0 mt-0.5 sm:mt-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(255,95,0,0.4)] shrink-0">
                             <Wallet size={19} />
                           </div>
                           <div>
@@ -1945,21 +1945,19 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white font-display">
                                 Reserve with Minimum Token
                               </h3>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/90 border border-emerald-500/40 px-2.5 py-0.5 rounded-md font-display">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/90 border border-emerald-500/40 px-2 py-0.5 rounded-md font-display">
                                 Pay Balance at Venue
                               </span>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-[#FF6B00] bg-[#FF5F00]/15 border border-[#FF5F00]/30 px-2.5 py-0.5 rounded-md font-display">
-                                Zero Convenience Fee
-                              </span>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-amber-300 bg-amber-950/80 border border-amber-500/30 px-2.5 py-0.5 rounded-md font-display">
-                                0% Upfront Risk
-                              </span>
                             </div>
-                            <p className="text-[11px] sm:text-xs text-slate-300 font-medium mt-1 leading-relaxed">
-                              Never risk 100% full payment upfront on travel! Lock your guaranteed VIP slot today with just a tiny pocket-friendly token — and pay the remaining balance in person only after arriving at the venue counter.
+                            <p className="text-[10.5px] sm:text-[11px] text-slate-300 font-medium mt-0.5">
+                              No full upfront payment needed • Lock your official VIP slot with a small token
                             </p>
                           </div>
                         </div>
+                        {/* Visible only on desktop, hidden on mobile */}
+                        <span className="hidden sm:inline-flex text-[9.5px] font-black uppercase tracking-widest bg-[#FF5F00]/15 text-[#FF6B00] border border-[#FF5F00]/30 px-3 py-1 rounded-full font-display shrink-0">
+                          Zero Convenience Fee
+                        </span>
                       </div>
 
                       {/* Split Breakdown Grid */}
