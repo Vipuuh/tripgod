@@ -1689,8 +1689,172 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     </p>
                   </div>
 
+                  {/* Safety & Eligibility Guidelines */}
+                  <div className="space-y-3 pt-4 border-t border-slate-200">
+                    <h3 className="text-xs font-bold font-display text-slate-900 uppercase">Safety & Eligibility Criteria</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Weight Range</span>
+                        <span className="text-xs font-black text-slate-800">
+                          {selectedPackage.rules?.bungee_rules?.weight_range || (
+                            activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
+                            activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
+                            activityType === 'paragliding' ? '30 kg - 90 kg' :
+                            activityType === 'zipline' ? '30 kg - 115 kg' : 'No Limit'
+                          )}
+                        </span>
+                      </div>
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Age Limit</span>
+                        <span className="text-xs font-black text-slate-800">
+                          {selectedPackage.rules?.age_limit_text || (
+                            activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
+                            activityType === 'bungee' || activityType === 'swing' ? `${selectedPackage.age_limit || 12} - 45 Years` :
+                            activityType === 'paragliding' ? '10 - 60 Years' :
+                            activityType === 'zipline' ? '10 - 65 Years' : 'All Ages'
+                          )}
+                        </span>
+                      </div>
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pregnant Ladies</span>
+                        <span className="text-xs font-black text-red-650">
+                          {activityType === 'camping' ? 'Allowed with caution' : 'Strictly Not Allowed'}
+                        </span>
+                      </div>
+                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Medical Fitness</span>
+                        <span className="text-[10px] font-semibold text-slate-600 leading-tight block">
+                          {activityType === 'camping' ? 'Basic physical fitness' : 'Avoid if Heart patient, Asthma or High BP'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Inclusions / Exclusions */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Inclusions</h4>
+                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                        {selectedPackage.inclusions && selectedPackage.inclusions.length > 0 ? (
+                          selectedPackage.inclusions.map((inc, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                              <span>{inc}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                              <span>Certified guides & safety equipment</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
+                              <span>Standard safety gear: helmet, life-jackets or harness</span>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Exclusions</h4>
+                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                        {selectedPackage.exclusions && selectedPackage.exclusions.length > 0 ? (
+                          selectedPackage.exclusions.map((exc, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-rose-600 font-bold shrink-0">✗</span>
+                              <span>{exc}</span>
+                            </li>
+                          ))
+                        ) : (
+                          <>
+                            <li className="flex items-start gap-2">
+                              <span className="text-rose-600 font-bold shrink-0">✗</span>
+                              <span>Photos & videos (GoPro/DSLR) extra cost</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-rose-600 font-bold shrink-0">✗</span>
+                              <span>Personal travel expenses</span>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Partner Location & Reporting Guidelines (Directly Under Inclusions / Exclusions) */}
+                  <div className="pt-4 border-t border-slate-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                        <MapPin size={16} className="text-[#FF6B00]" />
+                        Activity Reporting Office
+                      </h3>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+                        Verified Address
+                      </span>
+                    </div>
+                    <div className="bg-white/85 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Left Column: Location & Maps */}
+                        <div className="space-y-3.5 md:border-r md:border-slate-200/80 md:pr-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                              <MapPin size={15} className="text-[#FF6B00]" />
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Reporting Location</span>
+                              <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.name || 'Local Activity Partner'} Office</p>
+                              <p className="text-[11px] text-slate-600 font-medium leading-snug">{selectedPartner?.address} ({selectedPartner?.landmark})</p>
+                            </div>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-semibold text-slate-500">Exact GPS Coordinates</span>
+                            {selectedPartner?.google_maps_link ? (
+                              <a
+                                href={selectedPartner.google_maps_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:from-[#FF6F1A] hover:to-[#FF4E00] text-white text-[11px] font-black uppercase rounded-xl shadow-xs hover:shadow-md transition-all no-underline shrink-0 font-display"
+                              >
+                                <ExternalLink size={12} /> Open Maps
+                              </a>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 font-bold">Maps link on confirmation</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right Column: Timing & Parking */}
+                        <div className="space-y-3.5">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                              <Clock size={15} className="text-amber-600" />
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Check-in & Reporting</span>
+                              <p className="text-xs font-black text-slate-900 font-display mt-0.5">Arrive 15 mins before slot ({selectedPartner?.reporting_time || 'Morning Departure'})</p>
+                              <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPackage?.meeting_instructions || selectedPartner?.meeting_instructions || 'Show booking voucher at desk'}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 pt-2 border-t border-slate-100">
+                            <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                              <Car size={15} className="text-sky-600" />
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Parking Facility</span>
+                              <p className="text-[11px] text-slate-800 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free parking available'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Who is this perfect for? — Dynamic Option Grid */}
-                  <div className="space-y-2.5 pt-1">
+                  <div className="space-y-2.5 pt-4 border-t border-slate-200">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-black font-display text-slate-900 uppercase tracking-tight">Who is this perfect for?</h4>
                       <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100/80">Safety Verified</span>
@@ -1826,100 +1990,6 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       </div>
                     </div>
                   )}
-
-                  {/* Safety & Eligibility Guidelines */}
-                  <div className="space-y-3 pt-4 border-t border-slate-200">
-                    <h3 className="text-xs font-bold font-display text-slate-900 uppercase">Safety & Eligibility Criteria</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Weight Range</span>
-                        <span className="text-xs font-black text-slate-800">
-                          {selectedPackage.rules?.bungee_rules?.weight_range || (
-                            activityType === 'rafting' || activityType === 'kayaking' ? '35 kg - 100 kg' :
-                            activityType === 'bungee' || activityType === 'swing' ? '35 kg - 110 kg' :
-                            activityType === 'paragliding' ? '30 kg - 90 kg' :
-                            activityType === 'zipline' ? '30 kg - 115 kg' : 'No Limit'
-                          )}
-                        </span>
-                      </div>
-                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Age Limit</span>
-                        <span className="text-xs font-black text-slate-800">
-                          {selectedPackage.rules?.age_limit_text || (
-                            activityType === 'rafting' || activityType === 'kayaking' ? '12 - 60 Years' :
-                            activityType === 'bungee' || activityType === 'swing' ? `${selectedPackage.age_limit || 12} - 45 Years` :
-                            activityType === 'paragliding' ? '10 - 60 Years' :
-                            activityType === 'zipline' ? '10 - 65 Years' : 'All Ages'
-                          )}
-                        </span>
-                      </div>
-                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Pregnant Ladies</span>
-                        <span className="text-xs font-black text-red-650">
-                          {activityType === 'camping' ? 'Allowed with caution' : 'Strictly Not Allowed'}
-                        </span>
-                      </div>
-                      <div className="p-3.5 bg-slate-50 border border-slate-200/60 rounded-xl space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Medical Fitness</span>
-                        <span className="text-[10px] font-semibold text-slate-600 leading-tight block">
-                          {activityType === 'camping' ? 'Basic physical fitness' : 'Avoid if Heart patient, Asthma or High BP'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Inclusions / Exclusions */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Inclusions</h4>
-                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
-                        {selectedPackage.inclusions && selectedPackage.inclusions.length > 0 ? (
-                          selectedPackage.inclusions.map((inc, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                              <span>{inc}</span>
-                            </li>
-                          ))
-                        ) : (
-                          <>
-                            <li className="flex items-start gap-2">
-                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                              <span>Certified guides & safety equipment</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <span className="text-emerald-600 font-bold shrink-0">✓</span>
-                              <span>Standard safety gear: helmet, life-jackets or harness</span>
-                            </li>
-                          </>
-                        )}
-                      </ul>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-display">Exclusions</h4>
-                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
-                        {selectedPackage.exclusions && selectedPackage.exclusions.length > 0 ? (
-                          selectedPackage.exclusions.map((exc, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-rose-600 font-bold shrink-0">✗</span>
-                              <span>{exc}</span>
-                            </li>
-                          ))
-                        ) : (
-                          <>
-                            <li className="flex items-start gap-2">
-                              <span className="text-rose-600 font-bold shrink-0">✗</span>
-                              <span>Photos & videos (GoPro/DSLR) extra cost</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <span className="text-rose-600 font-bold shrink-0">✗</span>
-                              <span>Personal travel expenses</span>
-                            </li>
-                          </>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
 
                   {/* SECTION: SMART TOKEN ADVANCE BREAKDOWN (TripGod Direct Platform Model) */}
                   {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice && (
@@ -2131,76 +2201,6 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       </span>
                     </div>
                   </motion.div>
-
-                  {/* Dynamic Partner Location & Reporting Guidelines */}
-                  <div className="pt-2 border-t border-slate-100">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-black font-display text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                        <MapPin size={16} className="text-[#FF6B00]" />
-                        Activity Reporting Office
-                      </h3>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
-                        Verified Address
-                      </span>
-                    </div>
-                    <div className="bg-white/85 backdrop-blur-xl border border-slate-200/90 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)] relative overflow-hidden">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Left Column: Location & Maps */}
-                        <div className="space-y-3.5 md:border-r md:border-slate-200/80 md:pr-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                              <MapPin size={15} className="text-[#FF6B00]" />
-                            </div>
-                            <div>
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Reporting Location</span>
-                              <p className="text-xs font-black text-slate-900 font-display mt-0.5">{selectedPartner?.name || 'Local Activity Partner'} Office</p>
-                              <p className="text-[11px] text-slate-600 font-medium leading-snug">{selectedPartner?.address} ({selectedPartner?.landmark})</p>
-                            </div>
-                          </div>
-
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                            <span className="text-[10px] font-semibold text-slate-500">Exact GPS Coordinates</span>
-                            {selectedPartner?.google_maps_link ? (
-                              <a
-                                href={selectedPartner.google_maps_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] hover:from-[#FF6F1A] hover:to-[#FF4E00] text-white text-[11px] font-black uppercase rounded-xl shadow-xs hover:shadow-md transition-all no-underline shrink-0 font-display"
-                              >
-                                <ExternalLink size={12} /> Open Maps
-                              </a>
-                            ) : (
-                              <span className="text-[11px] text-slate-400 font-bold">Maps link on confirmation</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Right Column: Timing & Parking */}
-                        <div className="space-y-3.5">
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                              <Clock size={15} className="text-amber-600" />
-                            </div>
-                            <div>
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Check-in & Reporting</span>
-                              <p className="text-xs font-black text-slate-900 font-display mt-0.5">Arrive 15 mins before slot ({selectedPartner?.reporting_time || 'Morning Departure'})</p>
-                              <p className="text-[10px] text-slate-500 font-medium leading-tight mt-1">{selectedPackage?.meeting_instructions || selectedPartner?.meeting_instructions || 'Show booking voucher at desk'}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start gap-3 pt-2 border-t border-slate-100">
-                            <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                              <Car size={15} className="text-sky-600" />
-                            </div>
-                            <div>
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block font-display">Parking Facility</span>
-                              <p className="text-[11px] text-slate-800 font-bold leading-tight mt-0.5">{selectedPartner?.parking_details || 'Free parking available'}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Trust and Reviews Section */}
                   <div className="pt-6 border-t border-slate-200">
