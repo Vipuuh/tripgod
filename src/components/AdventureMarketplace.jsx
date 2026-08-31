@@ -2429,7 +2429,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             </button>
                           )}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })()}
 
