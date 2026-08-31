@@ -551,7 +551,8 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                   return (
                     <div 
                       key={pkg.id || idx}
-                      className="flex flex-col md:flex-row bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-slate-350 transition-all w-full relative"
+                      onClick={() => navigateToVehicle(pkg)}
+                      className="flex flex-col md:flex-row bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-[#FF5F00]/50 hover:shadow-[0_14px_35px_rgba(255,95,0,0.1)] transition-all w-full relative cursor-pointer select-none group/pkg"
                     >
                       {closed && (
                         <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex items-center justify-center z-10">
@@ -562,13 +563,13 @@ export default function BikeRent({ currentCity, openBookingModal }) {
                       )}
 
                       <div className="w-full md:w-[200px] h-40 md:h-auto shrink-0 relative overflow-hidden bg-slate-100">
-                        <img src={pkg.images[0]} alt={pkg.name} className="w-full h-full object-cover" />
+                        <img src={pkg.images[0]} alt={pkg.name} className="w-full h-full object-cover group-hover/pkg:scale-105 transition-transform duration-500" />
                       </div>
 
                       <div className="p-5 flex-grow flex flex-col justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-4">
-                            <h4 className="font-extrabold text-base font-display text-slate-900 uppercase">
+                            <h4 className="font-extrabold text-base font-display text-slate-900 uppercase group-hover/pkg:text-[#FF5F00] transition-colors">
                               {pkg.name}
                             </h4>
                             <span className="text-[10px] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded uppercase font-black tracking-wide text-slate-600 shrink-0">
@@ -614,7 +615,10 @@ export default function BikeRent({ currentCity, openBookingModal }) {
 
                             <button
                               type="button"
-                              onClick={() => navigateToVehicle(pkg)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigateToVehicle(pkg);
+                              }}
                               className="py-2.5 px-4 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.2)] hover:scale-[1.02] transition-all border-none cursor-pointer"
                             >
                               View Details

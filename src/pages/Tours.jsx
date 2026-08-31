@@ -494,7 +494,8 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                   return (
                     <div
                       key={pkg.id || idx}
-                      className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-[0_6px_24px_rgba(0,0,0,0.06)] hover:border-slate-300 transition-all w-full relative"
+                      onClick={() => navigateToTour(pkg)}
+                      className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-[0_12px_32px_rgba(255,95,0,0.1)] hover:border-[#FF5F00]/50 transition-all w-full relative cursor-pointer select-none group/tour"
                     >
                       {closed && (
                         <div className="absolute inset-0 bg-black/55 backdrop-blur-[1px] flex items-center justify-center z-10">
@@ -509,7 +510,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
                         <MediaDisplay
                           src={pkg.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600'}
                           alt={pkg.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          className="w-full h-full object-cover group-hover/tour:scale-105 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                       </div>
@@ -531,7 +532,7 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
 
                       {/* Tour name + location */}
                       <div className="px-4 pt-3 pb-0 space-y-1">
-                        <h4 className="font-black text-sm font-display text-slate-900 uppercase leading-tight tracking-tight">
+                        <h4 className="font-black text-sm font-display text-slate-900 uppercase leading-tight tracking-tight group-hover/tour:text-[#FF5F00] transition-colors">
                           {pkg.name}
                         </h4>
                         <p className="text-[11px] text-slate-500 font-bold flex items-center gap-1">
@@ -600,7 +601,10 @@ export default function Tours({ currentCity, openBookingModal, selectedTour: par
 
                         <button
                           type="button"
-                          onClick={() => navigateToTour(pkg)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigateToTour(pkg);
+                          }}
                           className="flex items-center gap-1.5 py-2.5 px-4 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_12px_rgba(255,95,0,0.25)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0"
                         >
                           View Details <ArrowRight size={12} />
