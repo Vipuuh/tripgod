@@ -2366,29 +2366,24 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     const remainingAmount = Math.max(0, totalPrice - advanceAmount);
 
                     return (
-                      <motion.div 
-                        initial={{ y: 50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
-                        className="fixed bottom-0 left-0 right-0 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-3xl shadow-[0_-12px_35px_rgba(0,0,0,0.14)] md:hidden"
+                      <div 
+                        className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-2xl shadow-[0_-10px_30px_rgba(0,0,0,0.08)] md:hidden !m-0"
                       >
                         <div>
-                          <div className="mb-0.5">
-                            <span className="block text-[10px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[170px] sm:max-w-[240px]">
-                              {selectedPackage.name}
-                            </span>
-                          </div>
+                          <span className="block text-[9px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[150px] sm:max-w-[220px]">
+                            {selectedPackage.name}
+                          </span>
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-base sm:text-lg font-black text-slate-900 leading-none font-display">
                               ₹{totalPrice.toLocaleString('en-IN')}
                             </span>
                             {advanceAmount > 0 && advanceAmount < totalPrice && (
-                              <span className="text-[10px] text-[#FF5F00] font-black bg-orange-100/90 border border-orange-300 px-2 py-0.5 rounded-md font-display">
+                              <span className="text-[9.5px] text-[#FF5F00] font-black bg-orange-100/90 border border-orange-300 px-1.5 py-0.5 rounded-md font-display">
                                 Pay ₹{advanceAmount.toLocaleString('en-IN')} Token
                               </span>
                             )}
                           </div>
-                          <span className="text-[9px] text-emerald-700 font-bold block mt-0.5">
+                          <span className="text-[9.5px] text-emerald-700 font-bold block -mt-0.5">
                             {advanceAmount > 0 && advanceAmount < totalPrice
                               ? `Pay ₹${advanceAmount.toLocaleString('en-IN')} online • ₹${remainingAmount.toLocaleString('en-IN')} at counter`
                               : (activityType === 'camping' 
@@ -2398,35 +2393,32 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          {checkIfClosed(selectedPackage).closed ? (
+                          {selectedPackage.is_closed ? (
                             <button
                               disabled
-                              className="py-3 px-5 text-gray-400 bg-gray-200 text-xs font-black uppercase rounded-xl cursor-not-allowed font-display"
+                              className="py-3 px-5 sm:px-6 bg-gray-300 text-gray-500 text-xs font-black uppercase tracking-wider rounded-xl border-none cursor-not-allowed font-display"
                             >
                               Closed
                             </button>
                           ) : (
                             <button
                               onClick={() => {
+                                const packageDuration = (activityType === 'rafting' || activityType === 'kayaking')
+                                  ? (selectedPackage.distance_km ? `${selectedPackage.distance_km} KM` : (selectedPackage.duration || '2-3 Hours'))
+                                  : (selectedPackage.duration || 'Standard Duration');
+
                                 openBookingModal({
                                   id: selectedPackage.id,
-                                  name: `${selectedPackage.name}${selectedCategoryName ? ' (' + selectedCategoryName + ')' : ''} - ${selectedPartner?.name}`,
-                                  stretch: selectedPackage.route || selectedPackage.stretch,
+                                  name: `${selectedPackage.name} - ${selectedPartner?.name || 'Verified Operator'}`,
+                                  stretch: packageDuration,
                                   price: totalPrice,
-                                  room_price: activeRoomPrice,
-                                  num_rooms: calculatedTents,
-                                  num_adults: numAdults,
-                                  num_kids: numKids,
-                                  rooms_left: tentsLeft,
-                                  tents_left: tentsLeft,
-                                  selected_meals: selectedMeals,
                                   category: activityType,
                                   city_id: selectedPackage.city_id,
                                   vendor_id: selectedPackage.vendor_id || selectedPartner?.id,
-                                  maps_link: selectedPartner?.google_maps_link || selectedPartner?.maps_link || selectedPackage?.maps_link || selectedPackage?.google_maps_link,
-                                  google_maps_link: selectedPartner?.google_maps_link || selectedPartner?.maps_link || selectedPackage?.maps_link || selectedPackage?.google_maps_link,
-                                  operatorPhone: selectedPartner?.whatsapp || selectedPartner?.phone || selectedPackage?.whatsapp_number || selectedPackage?.phone_number,
-                                  whatsapp_number: selectedPartner?.whatsapp || selectedPartner?.phone || selectedPackage?.whatsapp_number || selectedPackage?.phone_number,
+                                  maps_link: selectedPartner?.google_maps_link || selectedPackage?.google_maps_link,
+                                  google_maps_link: selectedPartner?.google_maps_link || selectedPackage?.google_maps_link,
+                                  operatorPhone: selectedPartner?.whatsapp || selectedPartner?.phone,
+                                  whatsapp_number: selectedPartner?.whatsapp || selectedPartner?.phone,
                                   payment_mode: pMode,
                                   commission_type: commType,
                                   commission_value: commVal,
@@ -2442,7 +2434,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                                   vendors: selectedPartner
                                 });
                               }}
-                              className="py-2.5 sm:py-3 px-4 sm:px-6 bg-accent-gradient text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg hover:shadow-accent/30 hover:scale-[1.02] transition-all border-none cursor-pointer font-display flex items-center justify-center gap-1.5 btn-shimmer"
+                              className="py-3 px-5 sm:px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg hover:shadow-accent/30 hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display flex items-center justify-center gap-1.5"
                             >
                               <span>
                                 {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice
@@ -2453,7 +2445,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                             </button>
                           )}
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })()}
 
