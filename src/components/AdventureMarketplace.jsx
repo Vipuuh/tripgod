@@ -5,7 +5,8 @@ import {
   HelpCircle, Sparkles, Smartphone, Calendar, Phone, 
   MessageSquare, ExternalLink, Info, ArrowRight, Check,
   Hotel, Utensils, Car, Compass, Users,
-  Shield, Camera, Award, Flame, Tent, Zap, Activity
+  Shield, Camera, Award, Flame, Tent, Zap, Activity,
+  RefreshCw, CheckCircle2, Wallet, CloudSun, BadgePercent
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import MarketplaceFilters from './MarketplaceFilters';
@@ -1168,6 +1169,45 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     ? selectedPackage.rules.room_categories[selectedRoomIdx].name
                     : (activityType === 'camping' ? 'Standard Tent' : ''));
 
+              const pMode = selectedPackage.payment_mode || 'commission_advance';
+              const commType = selectedPackage.commission_type || selectedPartner?.commission_type || (selectedPackage.fixed_advance_amount > 0 ? 'flat' : 'percentage');
+              const commVal = selectedPackage.commission_value !== undefined && selectedPackage.commission_value !== null
+                ? Number(selectedPackage.commission_value)
+                : (selectedPackage.fixed_advance_amount > 0
+                    ? Number(selectedPackage.fixed_advance_amount)
+                    : (selectedPackage.commission_percentage !== undefined && selectedPackage.commission_percentage !== null
+                        ? Number(selectedPackage.commission_percentage)
+                        : 0));
+
+              const fixedAmt = activeFixedAdvance > 0
+                ? activeFixedAdvance
+                : (selectedPackage.fixed_advance_amount !== undefined && selectedPackage.fixed_advance_amount !== null && selectedPackage.fixed_advance_amount !== ''
+                    ? Number(selectedPackage.fixed_advance_amount)
+                    : (commType === 'flat' ? commVal : 0));
+
+              const commPct = commType === 'percentage' ? commVal : (selectedPackage.commission_percentage || 0);
+
+              let advanceAmount = 0;
+              if (pMode === 'full_payment') {
+                advanceAmount = totalPrice;
+              } else if (fixedAmt > 0) {
+                const units = (activeOccupancy || activityType === 'camping') ? 1 : totalGuests;
+                advanceAmount = Math.min(totalPrice, fixedAmt * units);
+              } else if (commType === 'flat' && commVal > 0) {
+                const units = (activeOccupancy || activityType === 'camping') ? 1 : totalGuests;
+                advanceAmount = Math.min(totalPrice, commVal * units);
+              } else {
+                advanceAmount = Math.max(1, Math.round((totalPrice * commPct) / 100));
+              }
+              const remainingAmount = Math.max(0, totalPrice - advanceAmount);
+
+              let paymentTermsLabel = '';
+              if (pMode === 'full_payment') {
+                paymentTermsLabel = 'Pay 100% online now to secure your slot.';
+              } else {
+                paymentTermsLabel = `Pay ₹${advanceAmount.toLocaleString('en-IN')} token advance online to secure your slot • Pay remaining ₹${remainingAmount.toLocaleString('en-IN')} directly to operator at venue.`;
+              }
+
               return (
                 <>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1195,18 +1235,41 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       </div>
                     </div>
 
-                    {/* Price card styled as checkout widget */}
-                    <div className="bg-[#FF5F00]/5 border border-[#FF5F00]/15 p-4 rounded-2xl flex flex-col min-w-[160px] xs:text-right shrink-0">
-                      <span className="text-[9px] font-bold text-slate-450 uppercase block">Total Price</span>
+                    {/* Price card styled as checkout widget with Token Split */}
+                    <div className="bg-gradient-to-br from-orange-50/80 via-white to-amber-50/60 border-2 border-[#FF6B00]/30 p-3.5 sm:p-4 rounded-2xl flex flex-col min-w-[210px] xs:text-right shrink-0 shadow-[0_4px_20px_rgba(255,95,0,0.08)] relative overflow-hidden">
+                      <div className="flex items-center justify-between xs:justify-end gap-2 mb-1">
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block font-display">Total Package</span>
+                        {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice && (
+                          <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Minimum Token
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-baseline gap-1 xs:justify-end">
-                        <span className="text-2xl font-black text-slate-900">₹{totalPrice.toLocaleString('en-IN')}</span>
+                        <span className="text-2xl sm:text-3xl font-black text-slate-900 font-display">₹{totalPrice.toLocaleString('en-IN')}</span>
                         {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
                           <span className="text-xs text-slate-400 line-through font-semibold">₹{(activeOriginalPrice * (activityType === 'camping' ? calculatedTents : totalGuests)).toLocaleString('en-IN')}</span>
                         )}
                       </div>
-                      <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5">
-                        {activityType === 'camping' ? `${calculatedTents} Tent${calculatedTents > 1 ? 's' : ''} · ${totalGuests} Guest${totalGuests > 1 ? 's' : ''}` : 'Book with Token Advance'}
-                      </span>
+
+                      {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice ? (
+                        <div className="mt-2 pt-2 border-t border-orange-200/70 space-y-1">
+                          <div className="flex items-center justify-between xs:justify-end gap-2 text-[10.5px]">
+                            <span className="text-slate-600 font-bold">Pay Online:</span>
+                            <span className="font-black text-[#FF5F00] bg-orange-100/80 px-2 py-0.5 rounded-md font-display">
+                              ₹{advanceAmount.toLocaleString('en-IN')} Token
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between xs:justify-end gap-2 text-[10px] text-slate-500">
+                            <span className="font-medium">Pay on Arrival:</span>
+                            <span className="font-bold text-slate-800">₹{remainingAmount.toLocaleString('en-IN')}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5 font-display">
+                          {activityType === 'camping' ? `${calculatedTents} Tent${calculatedTents > 1 ? 's' : ''} · ${totalGuests} Guest${totalGuests > 1 ? 's' : ''}` : 'Instant Confirmed Voucher'}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -1832,6 +1895,216 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     </div>
                   </div>
 
+                  {/* SECTION: SMART TOKEN ADVANCE BREAKDOWN (TripGod Direct Platform Model) */}
+                  {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 22 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                      className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 border border-slate-800 shadow-[0_12px_40px_rgba(0,0,0,0.22)] relative overflow-hidden text-left space-y-4"
+                    >
+                      {/* Signature Ambient Glows */}
+                      <div className="absolute -top-14 -right-14 w-44 h-44 bg-[#FF5F00]/20 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-14 -left-14 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(255,95,0,0.4)] shrink-0">
+                            <Wallet size={19} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white font-display">
+                                Reserve with Minimum Token
+                              </h3>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/90 border border-emerald-500/40 px-2 py-0.5 rounded-md">
+                                Pay Balance at Venue
+                              </span>
+                            </div>
+                            <p className="text-[10.5px] sm:text-[11px] text-slate-300 font-medium mt-0.5">
+                              No full upfront payment needed • Lock official slot with small token
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[9.5px] font-black uppercase tracking-widest bg-[#FF5F00]/15 text-[#FF6B00] border border-[#FF5F00]/30 px-3 py-1 rounded-full self-start sm:self-auto font-display">
+                          Zero Convenience Fee
+                        </span>
+                      </div>
+
+                      {/* Split Breakdown Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative z-10">
+                        {/* 1. Pay Online Token */}
+                        <motion.div 
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          className="bg-slate-900/90 border-2 border-orange-500/40 hover:border-orange-500/80 rounded-2xl p-4 space-y-2.5 transition-all shadow-sm"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9.5px] font-black uppercase tracking-widest text-[#FF5F00] font-display">
+                              Step 1 • Online Platform Token
+                            </span>
+                            <span className="flex items-center gap-1 text-[9px] font-black uppercase text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Pay Today
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-2xl sm:text-3xl font-black text-white font-display">
+                              ₹{advanceAmount.toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">
+                              Token Advance
+                            </span>
+                          </div>
+                          <ul className="text-[11px] text-slate-300 space-y-1.5 font-medium pt-1 border-t border-slate-800">
+                            <li className="flex items-center gap-2 text-emerald-300">
+                              <CheckCircle2 size={13} className="shrink-0 text-emerald-400" />
+                              <span>Instant Slot Confirmation & Official Voucher</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle2 size={13} className="text-slate-500 shrink-0" />
+                              <span>VIP Direct WhatsApp Entry Pass</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle2 size={13} className="text-slate-500 shrink-0" />
+                              <span>100% Refundable if canceled 24h prior</span>
+                            </li>
+                          </ul>
+                        </motion.div>
+
+                        {/* 2. Pay Balance on Arrival */}
+                        <motion.div 
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          className="bg-slate-900/90 border-2 border-emerald-500/40 hover:border-emerald-500/80 rounded-2xl p-4 space-y-2.5 transition-all shadow-sm"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9.5px] font-black uppercase tracking-widest text-emerald-400 font-display">
+                              Step 2 • Operator Balance
+                            </span>
+                            <span className="text-[9px] font-black uppercase text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                              At Venue
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-2xl sm:text-3xl font-black text-white font-display">
+                              ₹{remainingAmount.toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase">
+                              Remaining Balance
+                            </span>
+                          </div>
+                          <ul className="text-[11px] text-slate-300 space-y-1.5 font-medium pt-1 border-t border-slate-800">
+                            <li className="flex items-center gap-2 text-emerald-300">
+                              <CheckCircle2 size={13} className="shrink-0 text-emerald-400" />
+                              <span>Pay directly to {selectedPartner?.name || 'operator'} at counter</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle2 size={13} className="text-slate-500 shrink-0" />
+                              <span>UPI (GPay / PhonePe / Paytm) or Cash accepted</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <CheckCircle2 size={13} className="text-slate-500 shrink-0" />
+                              <span>Pay only after checking in & verifying safety gear</span>
+                            </li>
+                          </ul>
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* SECTION: TRIPGOD CANCELLATION, WEATHER & 100% REFUND POLICY */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 22 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                    className="bg-gradient-to-br from-white via-emerald-50/40 to-teal-50/30 border-2 border-emerald-500/35 rounded-3xl p-5 sm:p-6 text-left shadow-[0_10px_35px_rgba(16,185,129,0.08)] space-y-4 relative overflow-hidden"
+                  >
+                    {/* Ambient Glow */}
+                    <div className="absolute -top-10 -right-10 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100/90 pb-3.5 relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-[0_4px_16px_rgba(16,185,129,0.3)] shrink-0">
+                          <ShieldCheck size={20} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight text-slate-900 font-display">
+                              TripGod Cancellation & Refund Policy
+                            </h3>
+                            <span className="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                              100% Risk Free
+                            </span>
+                          </div>
+                          <p className="text-[10.5px] sm:text-[11px] text-slate-600 font-semibold mt-0.5">
+                            Fair, traveler-first protection guarantee on every advance booking
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-black text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl shadow-2xs self-start sm:self-auto font-display flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        2-Hour Instant UPI Refund
+                      </span>
+                    </div>
+
+                    {/* 3 Pillar Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 relative z-10">
+                      {/* 1. Free 24h Cancellation */}
+                      <div className="bg-white/95 backdrop-blur-sm border border-emerald-200/80 p-4 rounded-2xl space-y-1.5 shadow-2xs hover:border-emerald-400 hover:shadow-xs transition-all">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-100/90 text-emerald-700 flex items-center justify-center font-bold">
+                          <Clock size={16} />
+                        </div>
+                        <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 font-display">
+                          24H Free Cancellation
+                        </h4>
+                        <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                          Cancel up to 24 hours before your scheduled slot time for a <strong className="text-emerald-700 font-black">100% instant refund</strong> of your token. No questions asked.
+                        </p>
+                      </div>
+
+                      {/* 2. Bad Weather & River Safety Guarantee */}
+                      <div className="bg-white/95 backdrop-blur-sm border border-amber-200/90 p-4 rounded-2xl space-y-1.5 shadow-2xs hover:border-amber-400 hover:shadow-xs transition-all">
+                        <div className="w-8 h-8 rounded-xl bg-amber-100/90 text-amber-800 flex items-center justify-center font-bold">
+                          <CloudSun size={16} />
+                        </div>
+                        <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 font-display">
+                          Bad Weather Guarantee
+                        </h4>
+                        <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                          If {activityType} is paused or halted by authorities due to rain, high winds, or river safety protocols, you receive an <strong className="text-amber-800 font-black">instant 100% refund or free date change</strong>.
+                        </p>
+                      </div>
+
+                      {/* 3. 1-Click Free Date Rescheduling */}
+                      <div className="bg-white/95 backdrop-blur-sm border border-sky-200/90 p-4 rounded-2xl space-y-1.5 shadow-2xs hover:border-sky-400 hover:shadow-xs transition-all">
+                        <div className="w-8 h-8 rounded-xl bg-sky-100/90 text-sky-800 flex items-center justify-center font-bold">
+                          <RefreshCw size={16} />
+                        </div>
+                        <h4 className="text-xs font-black uppercase tracking-tight text-slate-900 font-display">
+                          Free Date Reschedule
+                        </h4>
+                        <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                          Travel plans delayed? Reschedule your slot date or time free of cost anytime up to 12 hours before activity reporting time with 1 tap.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Footer Guarantee Strip */}
+                    <div className="bg-emerald-950/5 border border-emerald-500/20 rounded-xl px-3.5 py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10.5px] text-slate-700 font-medium relative z-10">
+                      <div className="flex items-center gap-2">
+                        <Check size={14} className="text-emerald-600 shrink-0 font-bold" />
+                        <span>Cancellations made within 24h of slot are non-refundable as operator locks equipment & guide slots.</span>
+                      </div>
+                      <span className="text-[10px] font-extrabold text-emerald-800 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-200 shrink-0 font-display">
+                        Verified Operator Assurance
+                      </span>
+                    </div>
+                  </motion.div>
+
                   {/* Dynamic Partner Location & Reporting Guidelines */}
                   <div className="pt-2 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-3">
@@ -1949,13 +2222,28 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     }
 
                     return (
-                      <div className="bg-[#FFF0E5] border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-xs">
+                      <motion.div 
+                        initial={{ opacity: 0, y: 15 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="bg-gradient-to-br from-[#FFF5ED] via-[#FFF0E5] to-orange-50/80 border-2 border-[#FF6B00] rounded-3xl p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mt-6 shadow-[0_8px_30px_rgba(255,95,0,0.12)] relative overflow-hidden"
+                      >
                         <div className="flex items-start gap-3.5">
-                          <ShieldCheck size={28} className="text-[#FF6B00] shrink-0 mt-0.5" />
+                          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_14px_rgba(255,95,0,0.35)] shrink-0 mt-0.5">
+                            <ShieldCheck size={24} />
+                          </div>
                           <div className="space-y-1 text-left">
-                            <h4 className="font-black text-xs uppercase tracking-wider text-slate-900">Secure Slot with Token Advance</h4>
-                            <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                              {paymentTermsLabel} Cancel up to 24 hours prior for a 100% refund.
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-black text-xs sm:text-sm uppercase tracking-wider text-slate-900 font-display">
+                                Reserve Slot with Minimum Token
+                              </h4>
+                              <span className="text-[9px] font-black uppercase text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-full">
+                                100% Refund Guarantee
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 font-semibold leading-relaxed">
+                              {paymentTermsLabel} <span className="text-emerald-700 font-bold">Free cancellation up to 24h before slot.</span>
                             </p>
                           </div>
                         </div>
@@ -1963,7 +2251,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         {checkIfClosed(selectedPackage).closed ? (
                           <button
                             disabled
-                            className="w-full md:w-auto py-3 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
+                            className="w-full md:w-auto py-3.5 px-6 bg-slate-300 text-slate-500 text-xs font-black uppercase rounded-xl border-none cursor-not-allowed font-display shrink-0"
                           >
                             Closed Temporarily
                           </button>
@@ -2002,14 +2290,17 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               closed_until: selectedPackage.closed_until,
                               vendors: selectedPartner
                             })}
-                            className="w-full md:w-auto py-3 px-6 bg-accent-gradient text-white text-xs font-black uppercase rounded-xl hover:shadow-[0_4px_15px_rgba(255,95,0,0.3)] hover:scale-[1.02] transition-all border-none cursor-pointer font-display shrink-0 btn-shimmer"
+                            className="w-full md:w-auto py-3.5 px-7 bg-accent-gradient text-white text-xs font-black uppercase rounded-2xl hover:shadow-[0_6px_25px_rgba(255,95,0,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none cursor-pointer font-display shrink-0 btn-shimmer flex items-center justify-center gap-2"
                           >
-                            {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice
-                              ? `PAY ₹${advanceAmount.toLocaleString('en-IN')} TO BOOK →`
-                              : 'BOOK OPERATOR →'}
+                            <span>
+                              {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice
+                                ? `PAY ₹${advanceAmount.toLocaleString('en-IN')} TOKEN TO BOOK`
+                                : 'BOOK OPERATOR'}
+                            </span>
+                            <ArrowRight size={14} className="stroke-[3]" />
                           </button>
                         )}
-                      </div>
+                      </motion.div>
                     );
                   })()}
 
@@ -2048,24 +2339,34 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     const remainingAmount = Math.max(0, totalPrice - advanceAmount);
 
                     return (
-                      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-black/10 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-2xl sm:rounded-t-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.12)] md:hidden">
+                      <motion.div 
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="fixed bottom-0 left-0 right-0 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-3xl shadow-[0_-12px_35px_rgba(0,0,0,0.14)] md:hidden"
+                      >
                         <div>
-                          <span className="block text-[9px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[140px] sm:max-w-[220px]">
-                            {selectedPackage.name}
-                          </span>
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="block text-[9.5px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[130px] sm:max-w-[200px]">
+                              {selectedPackage.name}
+                            </span>
+                            <span className="text-[8.5px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-display">
+                              ✓ 24h Refund
+                            </span>
+                          </div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-base sm:text-lg font-black text-slate-900 leading-none">
+                            <span className="text-base sm:text-lg font-black text-slate-900 leading-none font-display">
                               ₹{totalPrice.toLocaleString('en-IN')}
                             </span>
                             {advanceAmount > 0 && advanceAmount < totalPrice && (
-                              <span className="text-[9.5px] text-orange-700 font-extrabold bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">
-                                ₹{advanceAmount.toLocaleString('en-IN')} Token
+                              <span className="text-[10px] text-[#FF5F00] font-black bg-orange-100/90 border border-orange-300 px-2 py-0.5 rounded-md font-display">
+                                Pay ₹{advanceAmount.toLocaleString('en-IN')} Token
                               </span>
                             )}
                           </div>
-                          <span className="text-[9.5px] text-emerald-700 font-black block mt-0.5">
+                          <span className="text-[9px] text-emerald-700 font-bold block mt-0.5">
                             {advanceAmount > 0 && advanceAmount < totalPrice
-                              ? `Pay ₹${advanceAmount.toLocaleString('en-IN')} online • ₹${remainingAmount.toLocaleString('en-IN')} at venue`
+                              ? `Pay ₹${advanceAmount.toLocaleString('en-IN')} online • ₹${remainingAmount.toLocaleString('en-IN')} at counter`
                               : (activityType === 'camping' 
                                   ? `${calculatedTents} Tent(s) · ${totalGuests} Guest(s)` 
                                   : (totalGuests > 1 ? `${totalGuests} Guests (₹${activeRoomPrice}/person)` : 'per person • direct voucher'))}
