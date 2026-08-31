@@ -2438,7 +2438,7 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                                   vendors: selectedPartner
                                 });
                               }}
-                              className="py-3 px-5 sm:px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg hover:shadow-accent/30 hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display flex items-center justify-center gap-1.5"
+                              className="py-3 px-5 sm:px-6 bg-gradient-to-r from-[#FF5F00] to-[#FF3E00] text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-lg hover:shadow-accent/30 hover:scale-[1.01] active:scale-[0.99] transition-all border-none cursor-pointer font-display flex items-center justify-center gap-1.5 btn-shimmer"
                             >
                               <span>
                                 {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice
