@@ -1210,66 +1210,27 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
 
               return (
                 <>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] bg-black text-accent font-black tracking-widest px-2 py-0.5 rounded uppercase">
-                          {activityType}
-                        </span>
-                        <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-black tracking-widest px-2 py-0.5 rounded uppercase flex items-center gap-1">
-                          <Sparkles size={10} /> BEST IN CLASS
-                        </span>
-                      </div>
-                      <h1 className="text-xl md:text-2xl font-bold font-display text-slate-900 uppercase">
-                        {selectedPackage.name}
-                      </h1>
-                      
-                      <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-500">
-                        <div className="flex items-center gap-1 text-slate-800">
-                          <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
-                          <span>{selectedPartner?.star_rating || 4.7}</span>
-                          <span className="text-slate-400">({selectedPartner?.bookings_count || 120} reviews)</span>
-                        </div>
-                        <span>•</span>
-                        <span className="text-emerald-700">Operator: {selectedPartner?.name}</span>
-                      </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] bg-black text-accent font-black tracking-widest px-2 py-0.5 rounded uppercase">
+                        {activityType}
+                      </span>
+                      <span className="text-[10px] bg-[#FF5F00]/10 text-[#FF5F00] border border-[#FF5F00]/20 font-black tracking-widest px-2 py-0.5 rounded uppercase flex items-center gap-1">
+                        <Sparkles size={10} /> BEST IN CLASS
+                      </span>
                     </div>
-
-                    {/* Price card styled as checkout widget with Token Split */}
-                    <div className="bg-gradient-to-br from-orange-50/80 via-white to-amber-50/60 border-2 border-[#FF6B00]/30 p-3.5 sm:p-4 rounded-2xl flex flex-col min-w-[210px] xs:text-right shrink-0 shadow-[0_4px_20px_rgba(255,95,0,0.08)] relative overflow-hidden">
-                      <div className="flex items-center justify-between xs:justify-end gap-2 mb-1">
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider block font-display">Total Package</span>
-                        {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice && (
-                          <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Minimum Token
-                          </span>
-                        )}
+                    <h1 className="text-xl md:text-2xl font-bold font-display text-slate-900 uppercase">
+                      {selectedPackage.name}
+                    </h1>
+                    
+                    <div className="flex items-center gap-2 flex-wrap text-xs font-bold text-slate-500">
+                      <div className="flex items-center gap-1 text-slate-800">
+                        <Star size={12} className="text-[#FF5F00]" fill="#FF5F00" />
+                        <span>{selectedPartner?.star_rating || 4.7}</span>
+                        <span className="text-slate-400">({selectedPartner?.bookings_count || 120} reviews)</span>
                       </div>
-                      <div className="flex items-baseline gap-1 xs:justify-end">
-                        <span className="text-2xl sm:text-3xl font-black text-slate-900 font-display">₹{totalPrice.toLocaleString('en-IN')}</span>
-                        {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
-                          <span className="text-xs text-slate-400 line-through font-semibold">₹{(activeOriginalPrice * (activityType === 'camping' ? calculatedTents : totalGuests)).toLocaleString('en-IN')}</span>
-                        )}
-                      </div>
-
-                      {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice ? (
-                        <div className="mt-2 pt-2 border-t border-orange-200/70 space-y-1">
-                          <div className="flex items-center justify-between xs:justify-end gap-2 text-[10.5px]">
-                            <span className="text-slate-600 font-bold">Pay Online:</span>
-                            <span className="font-black text-[#FF5F00] bg-orange-100/80 px-2 py-0.5 rounded-md font-display">
-                              ₹{advanceAmount.toLocaleString('en-IN')} Token
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between xs:justify-end gap-2 text-[10px] text-slate-500">
-                            <span className="font-medium">Pay on Arrival:</span>
-                            <span className="font-bold text-slate-800">₹{remainingAmount.toLocaleString('en-IN')}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-[9px] font-bold text-[#FF5F00] uppercase mt-0.5 font-display">
-                          {activityType === 'camping' ? `${calculatedTents} Tent${calculatedTents > 1 ? 's' : ''} · ${totalGuests} Guest${totalGuests > 1 ? 's' : ''}` : 'Instant Confirmed Voucher'}
-                        </span>
-                      )}
+                      <span>•</span>
+                      <span className="text-emerald-700">Operator: {selectedPartner?.name}</span>
                     </div>
                   </div>
 
@@ -1360,6 +1321,55 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         <ShieldCheck size={12} className="stroke-[2.5]" /> Safe & Verified
                       </div>
                     </div>
+                  </div>
+
+                  {/* Repositioned Price Card with Token Split (Directly Below Image & Specs) */}
+                  <div className="bg-gradient-to-br from-orange-50/90 via-white to-amber-50/70 border-2 border-[#FF6B00]/35 p-4 sm:p-5 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_6px_25px_rgba(255,95,0,0.09)] relative overflow-hidden text-left">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider font-display">Total Package Rate</span>
+                        {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice && (
+                          <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Reserve with Token
+                          </span>
+                        )}
+                        {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
+                          <span className="text-[9.5px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                            Save {Math.round((1 - activeRoomPrice / activeOriginalPrice) * 100)}%
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-3xl sm:text-4xl font-black text-slate-900 font-display">₹{totalPrice.toLocaleString('en-IN')}</span>
+                        {activeOriginalPrice && activeOriginalPrice > activeRoomPrice && (
+                          <span className="text-sm text-slate-400 line-through font-semibold">
+                            ₹{(activeOriginalPrice * (activityType === 'camping' ? calculatedTents : totalGuests)).toLocaleString('en-IN')}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-slate-500 font-bold uppercase">
+                          {activityType === 'camping' ? `(${calculatedTents} Tent · ${totalGuests} Pax)` : (totalGuests > 1 ? `(${totalGuests} Persons)` : 'Per Person')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {pMode !== 'full_payment' && advanceAmount > 0 && advanceAmount < totalPrice && (
+                      <div className="bg-white/95 border border-orange-200/90 rounded-2xl p-3 sm:p-3.5 space-y-1.5 sm:min-w-[250px] shadow-2xs">
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <span className="text-slate-700 font-bold flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-[#FF5F00] animate-ping" />
+                            Pay Online Token:
+                          </span>
+                          <span className="font-black text-[#FF5F00] bg-orange-100/90 border border-orange-200 px-2.5 py-0.5 rounded-lg font-display">
+                            ₹{advanceAmount.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                          <span className="font-medium">Remaining at Venue:</span>
+                          <span className="font-bold text-slate-900 font-display">₹{remainingAmount.toLocaleString('en-IN')}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* SECTION: MULTI-OCCUPANCY SELECTOR (10x Ultra-Luxurious Single-Line Layout) */}
@@ -1725,57 +1735,73 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                     </div>
                   </div>
 
-                  {/* Bungee / High-Altitude Jump Experience Flow Timeline */}
+                  {/* Bungee / High-Altitude Jump Experience Flow Timeline (Obsidian Luxury Styling) */}
                   {(activityType === 'bungee' || activityType === 'swing' || (selectedPackage.name || '').toLowerCase().includes('bungee')) && (
-                    <div className="pt-5 border-t border-slate-200/80 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#FF5F00] to-[#FF8533] flex items-center justify-center text-white shadow-xs">
-                            <Zap size={14} className="stroke-[2.5]" />
+                    <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 border border-slate-800 shadow-[0_12px_40px_rgba(0,0,0,0.22)] relative overflow-hidden text-left space-y-4">
+                      {/* Ambient Glows */}
+                      <div className="absolute -top-14 -right-14 w-44 h-44 bg-[#FF5F00]/15 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-14 -left-14 w-44 h-44 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(255,95,0,0.4)] shrink-0">
+                            <Zap size={18} className="stroke-[2.5]" />
                           </div>
                           <div>
-                            <h3 className="text-xs font-black font-display text-slate-900 uppercase tracking-tight leading-none">Bungee Jump Experience Flow</h3>
-                            <span className="text-[9.5px] text-slate-400 font-bold block mt-0.5">4-Step Safety Verified Jump Procedure</span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-xs sm:text-sm font-black font-display text-white uppercase tracking-tight">
+                                Bungee Jump Experience Flow
+                              </h3>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-950/80 border border-amber-500/40 px-2 py-0.5 rounded-md">
+                                4-Step Jump Procedure
+                              </span>
+                            </div>
+                            <p className="text-[10.5px] sm:text-[11px] text-slate-300 font-medium mt-0.5">
+                              International safety verified protocol administered by certified Jump Masters
+                            </p>
                           </div>
                         </div>
-                        <span className="text-[9px] font-black text-amber-700 bg-amber-50/90 px-2.5 py-1 rounded-full border border-amber-200/80 shadow-2xs flex items-center gap-1">
-                          <Award size={11} /> Daredevil Certified
+                        <span className="text-[9.5px] font-black text-amber-300 bg-amber-950/90 px-3 py-1 rounded-full border border-amber-500/30 shadow-2xs flex items-center gap-1.5 self-start sm:self-auto font-display">
+                          <Award size={13} className="text-amber-400" /> Daredevil Certified
                         </span>
                       </div>
 
-                      {/* Connected Timeline Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative">
+                      {/* Connected 4-Step Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
                         {/* Step 1 */}
-                        <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
+                        <div className="p-4 bg-slate-900/90 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800 hover:border-slate-700 transition-all shadow-sm group">
                           <div className="flex items-center justify-between">
                             <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">01</span>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Deck Briefing</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-display">Deck Briefing</span>
                           </div>
-                          <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">Body Weight & Safety Check</div>
-                          <p className="text-[10px] text-slate-300 leading-relaxed font-medium">Verified weight range ({selectedPackage.rules?.bungee_rules?.weight_range || '35kg - 110kg'}) and medical declaration form at jump deck.</p>
+                          <div className="text-xs font-black font-display text-white group-hover:text-[#FF5F00] transition-colors">Body Weight & Safety Check</div>
+                          <p className="text-[10.5px] text-slate-300 leading-relaxed font-medium">Verified weight range ({selectedPackage.rules?.bungee_rules?.weight_range || '35kg - 110kg'}) and medical declaration form at jump deck.</p>
                         </div>
 
                         {/* Step 2 */}
-                        <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
+                        <div className="p-4 bg-slate-900/90 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800 hover:border-slate-700 transition-all shadow-sm group">
                           <div className="flex items-center justify-between">
                             <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">02</span>
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Safety Gear</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-display">Safety Gear</span>
                           </div>
-                          <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">Triple Lock Harness</div>
-                          <p className="text-[10px] text-slate-300 leading-relaxed font-medium">{selectedPackage.rules?.bungee_rules?.safety_harness || 'EN 12277 triple redundant waist & ankle harness fitting by Jump Masters.'}</p>
+                          <div className="text-xs font-black font-display text-white group-hover:text-[#FF5F00] transition-colors">Triple Lock Harness</div>
+                          <p className="text-[10.5px] text-slate-300 leading-relaxed font-medium">{selectedPackage.rules?.bungee_rules?.safety_harness || 'EN 12277 triple redundant waist & ankle harness fitting by Jump Masters.'}</p>
                         </div>
 
-                        {/* Step 3 - Highlighted Jump Leap */}
-                        <div className="p-4 bg-gradient-to-br from-[#FF5F00] via-[#FF6B00] to-[#E04F00] text-white rounded-2xl space-y-2 relative overflow-hidden shadow-md border border-orange-400/30 group scale-[1.01]">
+                        {/* Step 3 - The Extreme Leap with Glowing Neon Border */}
+                        <div className="p-4 bg-gradient-to-br from-orange-950/70 via-slate-900 to-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden shadow-[0_0_30px_rgba(255,95,0,0.22)] border-2 border-[#FF5F00] group scale-[1.01]">
                           <div className="flex items-center justify-between">
-                            <span className="w-6 h-6 rounded-full bg-white/20 text-white text-[10px] font-black font-display flex items-center justify-center backdrop-blur-xs border border-white/30">03</span>
-                            <span className="text-[9px] font-black text-amber-200 uppercase tracking-widest">The Extreme Leap</span>
+                            <span className="w-6 h-6 rounded-full bg-[#FF5F00] text-white text-[10px] font-black font-display flex items-center justify-center shadow-xs">03</span>
+                            <span className="text-[9px] font-black text-[#FF6B00] uppercase tracking-widest font-display flex items-center gap-1">
+                              <Flame size={11} /> The Extreme Leap
+                            </span>
                           </div>
                           <div className="text-xs font-black font-display text-white">3 - 2 - 1 BUNGEE!</div>
-                          <p className="text-[10px] text-orange-100 leading-relaxed font-medium">Adrenaline free fall leap off the {selectedPackage.distance_km || 117}M cantilever steel platform into the river valley!</p>
+                          <p className="text-[10.5px] text-slate-200 leading-relaxed font-medium">Adrenaline free fall leap off the {selectedPackage.distance_km || 117}M cantilever steel platform into the river valley!</p>
                         </div>
 
-                        {/* Step 4 - Media & Certificate */}
+                        {/* Step 4 */}
                         {(() => {
                           const freeVid = (selectedPackage.free_video_type || '').toLowerCase();
                           const incs = Array.isArray(selectedPackage.inclusions) ? selectedPackage.inclusions : [];
@@ -1787,13 +1813,13 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                           const vidText = isDslr ? 'HD DSLR' : isGopro ? 'HD GoPro' : 'HD Jump';
 
                           return (
-                            <div className="p-4 bg-slate-950 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800/80 shadow-sm hover:border-amber-500/40 transition-all group">
+                            <div className="p-4 bg-slate-900/90 text-white rounded-2xl space-y-2 relative overflow-hidden border border-slate-800 hover:border-slate-700 transition-all shadow-sm group">
                               <div className="flex items-center justify-between">
                                 <span className="w-6 h-6 rounded-full bg-slate-800 text-amber-400 text-[10px] font-black font-display flex items-center justify-center border border-slate-700">04</span>
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{badgeText}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-display">{badgeText}</span>
                               </div>
-                              <div className="text-xs font-black font-display text-white group-hover:text-amber-400 transition-colors">{titleText}</div>
-                              <p className="text-[10px] text-slate-300 leading-relaxed font-medium">Safely lowered to river recovery deck; collect your {vidText} Video & official Daredevil Certificate.</p>
+                              <div className="text-xs font-black font-display text-white group-hover:text-[#FF5F00] transition-colors">{titleText}</div>
+                              <p className="text-[10.5px] text-slate-300 leading-relaxed font-medium">Safely lowered to river recovery deck; collect your {vidText} Video & official Daredevil Certificate.</p>
                             </div>
                           );
                         })()}
@@ -1909,9 +1935,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                       <div className="absolute -bottom-14 -left-14 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
 
                       {/* Header */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3.5 relative z-10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(255,95,0,0.4)] shrink-0">
+                      <div className="border-b border-slate-800/80 pb-3.5 relative z-10 space-y-2">
+                        <div className="flex items-start sm:items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF3E00] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(255,95,0,0.4)] shrink-0 mt-0.5 sm:mt-0">
                             <Wallet size={19} />
                           </div>
                           <div>
@@ -1919,18 +1945,21 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                               <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white font-display">
                                 Reserve with Minimum Token
                               </h3>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/90 border border-emerald-500/40 px-2 py-0.5 rounded-md">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/90 border border-emerald-500/40 px-2.5 py-0.5 rounded-md font-display">
                                 Pay Balance at Venue
                               </span>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-[#FF6B00] bg-[#FF5F00]/15 border border-[#FF5F00]/30 px-2.5 py-0.5 rounded-md font-display">
+                                Zero Convenience Fee
+                              </span>
+                              <span className="text-[9px] font-black uppercase tracking-wider text-amber-300 bg-amber-950/80 border border-amber-500/30 px-2.5 py-0.5 rounded-md font-display">
+                                0% Upfront Risk
+                              </span>
                             </div>
-                            <p className="text-[10.5px] sm:text-[11px] text-slate-300 font-medium mt-0.5">
-                              No full upfront payment needed • Lock official slot with small token
+                            <p className="text-[11px] sm:text-xs text-slate-300 font-medium mt-1 leading-relaxed">
+                              Never risk 100% full payment upfront on travel! Lock your guaranteed VIP slot today with just a tiny pocket-friendly token — and pay the remaining balance in person only after arriving at the venue counter.
                             </p>
                           </div>
                         </div>
-                        <span className="text-[9.5px] font-black uppercase tracking-widest bg-[#FF5F00]/15 text-[#FF6B00] border border-[#FF5F00]/30 px-3 py-1 rounded-full self-start sm:self-auto font-display">
-                          Zero Convenience Fee
-                        </span>
                       </div>
 
                       {/* Split Breakdown Grid */}
@@ -2346,12 +2375,9 @@ export default function AdventureMarketplace({ activityType, currentCity, openBo
                         className="fixed bottom-0 left-0 right-0 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 p-3 sm:p-4 z-40 flex items-center justify-between max-w-4xl mx-auto rounded-t-3xl shadow-[0_-12px_35px_rgba(0,0,0,0.14)] md:hidden"
                       >
                         <div>
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="block text-[9.5px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[130px] sm:max-w-[200px]">
+                          <div className="mb-0.5">
+                            <span className="block text-[10px] text-slate-500 uppercase font-black tracking-wider truncate max-w-[170px] sm:max-w-[240px]">
                               {selectedPackage.name}
-                            </span>
-                            <span className="text-[8.5px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded font-display">
-                              ✓ 24h Refund
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap">
