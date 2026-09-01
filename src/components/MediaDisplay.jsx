@@ -118,6 +118,8 @@ export default function MediaDisplay({
       <img
         src={fallbackSrc}
         alt={alt}
+        loading="lazy"
+        decoding="async"
         className={className}
         style={{ objectFit, ...style }}
         onClick={onClick}
@@ -200,6 +202,8 @@ export default function MediaDisplay({
     <img
       src={currentSrc}
       alt={alt}
+      loading="lazy"
+      decoding="async"
       className={className}
       style={{ objectFit, ...style }}
       onError={handleError}

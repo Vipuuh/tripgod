@@ -14,6 +14,12 @@ export default defineConfig({
       input: {
         main: './index.html',
         vendor: './vendor.html'
+      },
+      output: {
+        manualChunks: {
+          'vendor-ui': ['framer-motion', 'lucide-react'],
+          'vendor-supabase': ['@supabase/supabase-js']
+        }
       }
     }
   }
