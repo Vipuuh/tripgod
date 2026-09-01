@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import VendorImageCarousel from '../components/VendorImageCarousel';
+import { trackLead } from '../utils/pixel';
 
 // Helper to convert raw address text into clean short landmark badges like "📍 Tapovan", "📍 Janki Setu", "📍 Triveni Ghat"
 const toShortLandmark = (fullAddress, fallback = 'Tapovan') => {
@@ -385,13 +386,14 @@ export default function CustomComboPage({ onClose, onBookCustomCombo }) {
   };
 
   const handleWhatsAppBooking = () => {
+    trackLead('Custom Combo Page WhatsApp Quote', { value: grandTotal });
     let msg = `Hi TripGod! I built a Custom Bundle on your website:\n\n`;
     cartItems.forEach((item, i) => {
       msg += `${i + 1}. [${item.category}] Vendor: ${item.vendorName} (${item.name}) — ₹${item.price}\n`;
     });
     msg += `\n📅 Travel Date: ${travelDate}\n👥 Guests: ${persons} Persons\n🔥 Combo Discount: ${discountPercent}% OFF (Saved ₹${totalSaved})\n💰 Total Amount: ₹${grandTotal.toLocaleString('en-IN')}`;
 
-    window.open(`https://wa.me/919876543210?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(`https://wa.me/919410572857?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   // 1. Build Hotel Display List

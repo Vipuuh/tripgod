@@ -11,6 +11,7 @@ import {
   Coffee, CircleDollarSign, Clock, Baby
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import { trackLead } from '../utils/pixel';
 
 const AMENITY_ICONS = {
   wifi: Wifi,
@@ -754,6 +755,7 @@ export default function Hotels({ currentCity, openBookingModal }) {
   }, [currentCity, sortBy]);
 
   const handleContactWhatsApp = () => {
+    trackLead('Hotels WhatsApp Enquiry');
     const text = encodeURIComponent(`*ENQUIRY ABOUT STAYS - TRIPGOD*\nHello! I am planning a trip to Rishikesh and want to book accommodations. Please let me know what options are available.`);
     window.open(`https://wa.me/919410572857?text=${text}`, '_blank');
   };

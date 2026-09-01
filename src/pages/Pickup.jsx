@@ -4,6 +4,7 @@ import {
   MapPin, ShieldCheck, MessageSquare, Phone, 
   Compass, Info, ArrowRightLeft, Clock, Sparkles, AlertCircle
 } from 'lucide-react';
+import { trackLead } from '../utils/pixel';
 
 const locations = [
   'Rishikesh (City/Local)',
@@ -81,6 +82,7 @@ export default function Pickup() {
       alert('Please select both Pickup and Drop points.');
       return;
     }
+    trackLead('Pickup & Drop WhatsApp Enquiry');
     const vehicleName = fleet.find(f => f.id === selectedVehicle)?.name || selectedVehicle;
     const text = encodeURIComponent(
       `Hi TripGod! I want to enquire about a pickup and drop ride:\n\n` +

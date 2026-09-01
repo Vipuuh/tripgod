@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Headset, PhoneCall, X, MessageCircle } from 'lucide-react';
+import { trackLead, trackContact } from '../utils/pixel';
 
 export default function SupportFloatingWidget({ phone = '919410572857' }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function SupportFloatingWidget({ phone = '919410572857' }) {
             {/* Call Support Button */}
             <a
               href={callUrl}
+              onClick={() => trackContact('Floating Call Button')}
               className="flex items-center gap-3 bg-neutral-900/95 hover:bg-black backdrop-blur-xl border border-white/15 text-white px-4 py-2.5 rounded-full shadow-[0_8px_25px_rgba(0,0,0,0.4)] transition-all group no-underline"
             >
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -39,6 +41,7 @@ export default function SupportFloatingWidget({ phone = '919410572857' }) {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackLead('Floating WhatsApp Button')}
               className="flex items-center gap-3 bg-neutral-900/95 hover:bg-black backdrop-blur-xl border border-white/15 text-white px-4 py-2.5 rounded-full shadow-[0_8px_25px_rgba(0,0,0,0.4)] transition-all group no-underline"
             >
               <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center group-hover:scale-110 transition-transform">

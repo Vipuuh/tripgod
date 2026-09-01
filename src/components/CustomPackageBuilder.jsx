@@ -4,6 +4,7 @@ import {
   ArrowRight, ShieldCheck, Calendar, Users, Percent, Plus, Check, Trash2, Info
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import { trackLead } from '../utils/pixel';
 
 export default function CustomPackageBuilder({ onBookCustomCombo }) {
   // Database State Lists
@@ -125,6 +126,7 @@ export default function CustomPackageBuilder({ onBookCustomCombo }) {
   };
 
   const handleWhatsAppTrigger = () => {
+    trackLead('Custom Combo WhatsApp Quote', { value: grandTotal });
     let summaryText = `Hi TripGod! I built a Custom Combo on your website:\n\n`;
     if (selectedHotel) summaryText += `🏨 Hotel: ${selectedHotel.name} (₹${hotelPrice})\n`;
     if (selectedRafting) summaryText += `🚣 Rafting: ${selectedRafting.name} (₹${raftingPrice})\n`;
@@ -132,7 +134,7 @@ export default function CustomPackageBuilder({ onBookCustomCombo }) {
     if (selectedCamping) summaryText += `⛺ Camping Upgrade (₹999)\n`;
     summaryText += `\n📅 Travel Date: ${travelDate}\n👥 Guests: ${persons} Persons\n🔥 Combo Discount: ${discountPercent}% OFF (Saved ₹${totalSaved})\n💰 Total Amount: ₹${grandTotal.toLocaleString('en-IN')}`;
 
-    window.open(`https://wa.me/919876543210?text=${encodeURIComponent(summaryText)}`, '_blank');
+    window.open(`https://wa.me/919410572857?text=${encodeURIComponent(summaryText)}`, '_blank');
   };
 
   return (
